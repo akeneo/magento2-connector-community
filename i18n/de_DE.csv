@@ -1,0 +1,133 @@
+"Build your query using a json.<br/>
+For example :<br/>
+<pre>
+{
+    ""search"": {
+        ""enabled"": [{
+            ""operator"": ""="",
+            ""value"": true
+        }],
+        ""sku"": [{
+            ""operator"": ""STARTS WITH"",
+            ""value"": ""A""
+        }]
+    },
+    ""scope"": ""ecommerce"",
+    ""locales"": ""fr_FR,de_DE""
+}</pre>","Erstelle deine Suchanfrage mit einem json.<br/>
+Zum Beispiel :<br/>
+<pre>
+{
+    ""search"": {
+        ""enabled"": [{
+            ""operator"": ""="",
+            ""value"": true
+        }],
+        ""sku"": [{
+            ""operator"": ""STARTS WITH"",
+            ""value"": ""A""
+        }]
+    },
+    ""scope"": ""ecommerce"",
+    ""locales"": ""fr_FR,de_DE""
+}</pre>"
+"%1 Import already running","%1 Import läuft bereits"
+"%1 Import code not found","%1 Import-Code nicht gefunden"
+"%1 Start import","%1 Import starten"
+"--code","--code"
+"Activate new categories","Activ Kategorien"
+"Admin Website Channel","Admin Website-Kanal"
+"Advanced filters contain an unauthorized scope, please add check your filters and website mapping.","Erweiterte Filter enthalten einen nicht autorisierten umfang. Bitte überprüfen Sie Ihre Filter und das Website-Mapping."
+"After","Nach dem"
+"Akeneo API client ID","Akeneo API-Client-ID"
+"Akeneo API client secret","Akeneo-API-Client-Geheimnis"
+"Akeneo API Configuration","Akeneo-API-Konfiguration"
+"Akeneo base URL","Akeneo Basis-URL"
+"Akeneo password","Akeneo Passwort"
+"Akeneo username","Akeneo Benutzername"
+"Set new categories in anchor mode","Verankern Kategorien"
+"Area code already set","Ortsvorwahl bereits eingestellt"
+"Available codes:","Verfügbare Codes:"
+"Before","Vor"
+"Between","Zwischen"
+"Category","Kategorie"
+"Channel","Kanal"
+"Completeness type","Vollständigkeitstyp"
+"Completeness value","Vollständigkeitswert"
+"Could not insert Product data in temp table","Produktdaten konnten nicht in die Temp-Tabelle eingefügt werden."
+"Differ","Unterscheiden"
+"Disabled","Deaktiviert"
+"Duplicates sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1","Duplicate sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1"
+"Enabled","Freigegeben"
+"Equals","Gleich"
+"Example:","Beispiel:"
+"Extension Version","Modul Version"
+"Families","Familie"
+"Filter products","Filterprodukte"
+"Fill configurable attributes with default value, leave blank to take simple product value or Product Model value if exists. Value must be a chain between quotes or an SQL statement.","Füllen Sie konfigurierbare Attribute mit einem Standardwert, lassen Sie das Feld leer, um einen einfachen Produktwert oder einen Produktmodellwert zu erhalten, falls vorhanden. Der Wert muss eine SQL-Anweisung oder zwischen Anführungszeichen sein."
+"General","Allgemeines"
+"Greater or equals than on all locales","Größer oder gleich als in allen Gebietsschemata"
+"Greater or equals than","Größer oder gleich"
+"Greater than on all locales","Größer als in allen Gebietsschemata"
+"Greater than","Größer als"
+"Import API","API importieren"
+"Import ID : %1","Import-ID: %1"
+"Import Media Files","Mediendateien importieren"
+"Import only product updated after the given date. Leave at least one blank for no filter.","Nur Produkte importieren, die seit nach dem angegebenen Datum aktualisiert wurden. Lassen Sie das Feld leer, um keinen Filter zu verwenden."
+"Import only product updated after the given date. Leave blank for no filter.","Nur Produkte importieren, die seit nach dem angegebenen Datum aktualisiert wurden Lassen Sie das Feld leer, um keinen Filter zu verwenden."
+"Import only product updated before the given date. Leave at least one blank for no filter.","Nur Produkte importieren, die seit vor den angegebenen Datum aktualisiert wurden Lassen Sie das Feld leer, um keinen Filter zu verwenden."
+"Import only product updated before the given date. Leave blank for no filter.","Nur Produkte importieren, die seit vor den angegebenen Datum aktualisiert wurden Lassen Sie das Feld leer, um keinen Filter zu verwenden."
+"Import only product updated since last X days. Leave blank for no filter.","Import only product updated since last X days. Leave blank for no filter."
+"Import","Importieren"
+"Newly imported categories will be activated","Importiert Kategorien activ sind"
+"Newly imported categories will be in anchor mode","Importiert Kategorien verankern sind"
+"Newly imported categories categories will be included in menu","Importiert Kategorien in Menü begriffen sind"
+"Include new categories in menu","Begriffen in Menü"
+"Label for '%1' in %2 is missing. ","Beschriftung für '%1' in %2 fehlt. "
+"Locales","Sprachumgebungen"
+"Lower or equals than on all locales","Niedriger oder gleich als in allen Gebietsschemata"
+"Lower or equals than","Niedriger oder gleich als"
+"Lower than on all locales","Niedriger als in allen Gebietsschematas"
+"Lower than","Niedriger als"
+"Magento Attribute","Magento-Attribut"
+"Match Magento website with Akeneo channel","Magento-Webseite mit Akeneo-Kanal verknüpfen"
+"Media import is not enabled","Medienimport ist nicht aktiviert"
+"Must be a value between 1 and 100. Default value is 100.","Muss ein Wert zwischen 1 und 100 sein. Der Standardwert ist 100."
+"No condition","Keine Kondition"
+"No options found","Keine Optionen gefunden"
+"No Product data to insert in temp table for scope: %s","Keine Produktdaten zum Einfügen in die Temp-Tabelle für den Umfang : %s"
+"No results from Akeneo","Keine Ergebnisse von Akeneo"
+"No website/channel mapped. Please check your configurations.","Keine Website / Kanal verknüpft. Bitte überprüfen Sie Ihre Konfigurationen."
+"Options:","Optionen:"
+"Pagination size","Seitengröße"
+"Akeneo API connection error","Akeneo API verbindungsfehler"
+"Akeneo Attribute","Akeneo-Attribut"
+"Akeneo Images Attributes is empty","Akeneo-Bildattribute ist leer"
+"Akeneo Images Attributes","Akeneo-Bildattribute"
+"Akeneo Connector Section","Akeneo-Connector-Sektion"
+"Akeneo Connector","Akeneo Connector"
+"akeneo_connector:import --code=%1","akeneo_connector:import --code=%1"
+"Product Images Mapping","Produktbildmapping"
+"Select import type:","Import-Typ auswählen:"
+"Select the channel to apply the completeness filter on","Wählen Sie den Kanal, auf dem der Vollständigkeitsfilter angewendet werden soll"
+"Select the families you don't want to retrieve products from.<br/> If the multiselect is empty, it means you don't have any families in your Akeneo, or the provided credentials are wrong.","Wähle die Familien, aus denen du keine Produkte abrufen möchtest, aus.<br/> Wenn der Multiselect leer ist, bedeutet dies, dass du keine Familien in deinem Akeneo hast, oder die angegebenen Zugangsdaten falsch sind"
+"Select the locales to apply the completeness filter on","Wählen Sie die Gebietsschemata, in denen der Vollständigkeitsfilter angewendet werden soll"
+"Set Magento Admin website default Akeneo channel","Konfigurieren Sie den Standard-Akeneo-Kanal der Magento Admin-Website"
+"Since last n days","Seit den letzten X Tagen"
+"Since last X days","Seit den letzten X Tagen"
+"Start import","Importieren starten"
+"Status","Status"
+"Test API credentials","Test API Anmeldedaten"
+"The Akeneo user should have permissions to list","Der Akeneo-Benutzer sollte Berechtigungen zum Auflisten haben"
+"The connection is working fine","Die Verbindung funktioniert einwandfrei"
+"Updated","Updated"
+"Updated after","Aktualisiert nach dem"
+"Updated before","Aktualisiert vor"
+"Updated mode","Filtermodus"
+"Updated since","Aktualisiert seit"
+"Waiting for import...","Warten auf den Import..."
+"Warning: %1 attribute does not exist","Warnung: %1 Attribut existiert nicht"
+"Website Mapping","Website-Mapping"
+"Website","Webseite"
+"Regenerate url rewrites","URL-Rewrites regenerieren"
+"Url rewrite generation is not enabled","URL-Rewrites generation ist nich aktiviert"

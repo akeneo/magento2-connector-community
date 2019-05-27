@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<!--
+/**
+ * @author    Agence Dn'D <contact@dnd.fr>
+ * @copyright 2019 Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @link      https://www.dnd.fr/
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Akeneo_Connector::akeneo_connector" title="Akeneo Connector" module="Akeneo_Connector" sortOrder="110" parent="Magento_Backend::system" resource="Akeneo_Connector::akeneo_connector"/>
+        <add id="Akeneo_Connector::import" title="Import" module="Akeneo_Connector" sortOrder="10" parent="Akeneo_Connector::akeneo_connector" resource="Akeneo_Connector::import" action="akeneo_connector/import"/>
+        <add id="Akeneo_Connector::akeneo_connector_log" title="Log" module="Akeneo_Connector" sortOrder="20" parent="Akeneo_Connector::akeneo_connector" resource="Akeneo_Connector::akeneo_connector_log" action="akeneo_connector/log" />
+    </menu>
+</config>

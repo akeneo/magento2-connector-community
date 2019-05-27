@@ -1,0 +1,133 @@
+"%1 Import already running","%1 Import already running"
+"%1 Import code not found","%1 Import code not found"
+"%1 Start import","%1 Start import"
+"--code","--code"
+"Admin Website Channel","Admin Website Channel"
+"Activate new categories","Activate new categories"
+"Advanced filters contain an unauthorized scope, please add check your filters and website mapping.","Advanced filters contain an unauthorized scope, please add check your filters and website mapping."
+"After","After"
+"Akeneo API client ID","Akeneo API client ID"
+"Akeneo API client secret","Akeneo API client secret"
+"Akeneo API Configuration","Akeneo API Configuration"
+"Akeneo base URL","Akeneo base URL"
+"Akeneo password","Akeneo password"
+"Akeneo username","Akeneo username"
+"Set new categories in anchor mode","Set new categories in anchor mode"
+"Area code already set","Area code already set"
+"Available codes:","Available codes:"
+"Before","Before"
+"Between","Between"
+"Build your query using a json.<br/>
+For example :<br/>
+<pre>
+{
+    ""search"": {
+        ""enabled"": [{
+            ""operator"": ""="",
+            ""value"": true
+        }],
+        ""sku"": [{
+            ""operator"": ""STARTS WITH"",
+            ""value"": ""A""
+        }]
+    },
+    ""scope"": ""ecommerce"",
+    ""locales"": ""fr_FR,de_DE""
+}</pre>","Build your query using a json.<br/>
+For example :<br/>
+<pre>
+{
+    ""search"": {
+        ""enabled"": [{
+            ""operator"": ""="",
+            ""value"": true
+        }],
+        ""sku"": [{
+            ""operator"": ""STARTS WITH"",
+            ""value"": ""A""
+        }]
+    },
+    ""scope"": ""ecommerce"",
+    ""locales"": ""fr_FR,de_DE""
+}</pre>"
+"Category","Category"
+"Channel","Channel"
+"Completeness type","Completeness type"
+"Completeness value","Completeness value"
+"Could not insert Product data in temp table","Could not insert Product data in temp table"
+"Differ","Differ"
+"Disabled","Disabled"
+"Duplicates sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1","Duplicate sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1"
+"Enabled","Enabled"
+"Equals","Equals"
+"Example:","Example:"
+"Extension Version","Extension Version"
+"Families","Families"
+"Filter products","Filter products"
+"Fill configurable attributes with default value, leave blank to take simple product value or Product Model value if exists. Value must be a chain between quotes or an SQL statement.","Fill configurable attributes with default value, leave blank to take simple product value or Product Model value if exists. Value must be a chain between quotes or an SQL statement."
+"General","General"
+"Greater or equals than on all locales","Greater or equals than on all locales"
+"Greater or equals than","Greater or equals than"
+"Greater than on all locales","Greater than on all locales"
+"Greater than","Greater than"
+"Import API","Import API"
+"Import ID : %1","Import ID : %1"
+"Import Media Files","Import Media Files"
+"Import only product updated after the given date. Leave at least one blank for no filter.","Import only product updated after the given date. Leave at least one blank for no filter."
+"Import only product updated after the given date. Leave blank for no filter.","Import only product updated after the given date. Leave blank for no filter."
+"Import only product updated before the given date. Leave at least one blank for no filter.","Import only product updated before the given date. Leave at least one blank for no filter."
+"Import only product updated before the given date. Leave blank for no filter.","Import only product updated before the given date. Leave blank for no filter."
+"Import only product updated since last X days. Leave blank for no filter.","Import only product updated since last X days. Leave blank for no filter."
+"Import","Import"
+"Newly imported categories will be activated","Newly imported categories will be activated"
+"Newly imported categories will be in anchor mode","Newly imported categories will be in anchor mode"
+"Newly imported categories categories will be included in menu","Newly imported categories categories will be included in menu"
+"Include new categories in menu","Include new categories in menu"
+"Label for '%1' in %2 is missing. ","Label for '%1' in %2 is missing. "
+"Locales","Locales"
+"Lower or equals than on all locales","Lower or equals than on all locales"
+"Lower or equals than","Lower or equals than"
+"Lower than on all locales","Lower than on all locales"
+"Lower than","Lower than"
+"Magento Attribute","Magento Attribute"
+"Match Magento website with Akeneo channel","Match Magento website with Akeneo channel"
+"Media import is not enabled","Media import is not enabled"
+"Must be a value between 1 and 100. Default value is 100.","Must be a value between 1 and 100. Default value is 100."
+"No condition","No condition"
+"No options found","No options found"
+"No Product data to insert in temp table for scope: %s","No Product data to insert in temp table for scope: %s"
+"No results from Akeneo","No results from Akeneo"
+"No website/channel mapped. Please check your configurations.","No website/channel mapped. Please check your configurations."
+"Options:","Options:"
+"Pagination size","Pagination size"
+"Akeneo API connection error","Akeneo API connection error"
+"Akeneo Attribute","Akeneo Attribute"
+"Akeneo Images Attributes is empty","Akeneo Images Attributes is empty"
+"Akeneo Images Attributes","Akeneo Images Attributes"
+"Akeneo Connector Section","Akeneo Connector Section"
+"Akeneo Connector","Akeneo Connector"
+"akeneo_connector:import --code=%1","akeneo_connector:import --code=%1"
+"Product Images Mapping","Product Images Mapping"
+"Select import type:","Select import type:"
+"Select the channel to apply the completeness filter on","Select the channel to apply the completeness filter on"
+"Select the families you don't want to retrieve products from.<br/> If the multiselect is empty, it means you don't have any families in your Akeneo, or the provided credentials are wrong.","Select the families you don't want to retrieve products from.<br/> If the multiselect is empty, it means you don't have any families in your Akeneo, or the provided credentials are wrong."
+"Select the locales to apply the completeness filter on","Select the locales to apply the completeness filter on"
+"Set Magento Admin website default Akeneo channel","Set Magento Admin website default Akeneo channel"
+"Since last n days","Since last n days"
+"Since last X days","Since last X days"
+"Start import","Start import"
+"Status","Status"
+"Test API credentials","Test API credentials"
+"The Akeneo user should have permissions to list","The Akeneo user should have permissions to list"
+"The connection is working fine","The connection is working fine"
+"Updated","Updated"
+"Updated after","Updated after"
+"Updated before","Updated before"
+"Updated mode","Updated mode"
+"Updated since","Updated since"
+"Waiting for import...","Waiting for import..."
+"Warning: %1 attribute does not exist","Warning: %1 attribute does not exist"
+"Website Mapping","Website Mapping"
+"Website","Website"
+"Regenerate url rewrites","Regenerate url rewrites"
+"Url rewrite generation is not enabled","Url rewrite generation is not enabled"

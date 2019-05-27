@@ -1,0 +1,88 @@
+/**
+ * @author    Agence Dn'D <contact@dnd.fr>
+ * @copyright 2019 Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @link      https://www.dnd.fr/
+ */
+
+.akeneo-connector-uploader,
+.akeneo-connector-console {
+    float: left;
+}
+
+.akeneo-connector-uploader {
+    width: 600px;
+    border: 1px solid #CCC;
+    padding: 10px;
+    background: #F8F8F8;
+    margin-right: 5px;
+    min-height: 430px;
+}
+
+.import-type {
+    background: #FFF;
+    border: 1px solid #CCC;
+    width: 170px;
+    float: left;
+    margin: 0 0.8rem 0.8rem;
+    text-align: center;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 5px;
+}
+
+.import-type {
+    height: 30px;
+    font-size: 1.2rem;
+}
+
+.akeneo-connector-types .import-type:hover,
+.akeneo-connector-types .active {
+    background: #EB5202;
+    color: #FFF;
+}
+
+.akeneo-connector-types,
+.akeneo-connector-import {
+    margin-bottom: 30px;
+}
+
+.akeneo-connector-step {
+    float: left;
+    clear: both;
+    margin-bottom: 37px;
+    width: 580px;
+}
+
+.step-last {
+    margin-bottom: 0;
+}
+
+.akeneo-connector-step .primary {
+    float: right;
+}
+
+.akeneo-connector-console {
+    border: 1px solid #CCC;
+    background: #000;
+    padding: 5px 10px;
+    width: 610px;
+    margin: 0;
+    color: #0F0;
+    height: 430px;
+    overflow-y: scroll;
+}
+
+.akeneo-connector-console .waiting {
+    background: url(../images/loader.gif) no-repeat right;
+}
+
+.akeneo-connector-console .error {
+    color: #C00;
+}
+
+.akeneo-connector-console .success {
+    color: #E38D13;
+}

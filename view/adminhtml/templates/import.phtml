@@ -1,0 +1,50 @@
+<?php
+/**
+ * @author    Agence Dn'D <contact@dnd.fr>
+ * @copyright 2019 Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @link      https://www.dnd.fr/
+ */
+
+/**
+ * @var string $runUrl
+ * @var \Akeneo\Connector\Block\Adminhtml\Import $block
+ */
+?>
+<div class="akeneo-connector-uploader">
+    <div class="akeneo-connector-step">
+        <h2><?php echo __('Select import type:') ?></h2>
+        <div class="akeneo-connector-types">
+            <?php $collection = $block->getCollection() ?>
+            <?php /** @var mixed $import */ ?>
+            <?php foreach ($collection as $import): ?>
+                <?php if ($block->isAllowed($import->getCode())): ?>
+                    <div class="import-type" onclick="Akeneo_Connector.type('<?php echo $import->getCode() ?>', this)">
+                        <?php echo $import->getName() ?>
+                    </div>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <div class="akeneo-connector-step step-last">
+        <button type="button" class="primary" onclick="Akeneo_Connector.run()">
+            <span class="ui-button-text">
+                <span><?php echo __('Import') ?></span>
+            </span>
+        </button>
+    </div>
+</div>
+
+<ul class="akeneo-connector-console">
+    <li class="selected"><?php echo __('Waiting for import...') ?></li>
+</ul>
+
+<script>
+    require(
+        ["Akeneo_Connector/js/akeneo_connector"],
+        function (akeneoConnector) {
+            akeneoConnector.init('<?php echo $runUrl; ?>', '.akeneo-connector-console');
+            window.Akeneo_Connector = akeneoConnector;
+        }
+    );
+</script>
