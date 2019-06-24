@@ -7,7 +7,7 @@ use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Catalog\Model\Product\Link;
 use Magento\Catalog\Model\ProductLink\Link as ProductLink;
 use Magento\Catalog\Model\Product\Visibility;
-use Magento\Catalog\Model\Product as ProductModel;
+use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Category as CategoryModel;
 use Magento\Framework\App\Cache\Type\Block;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -162,7 +162,7 @@ class Product extends Import
     /**
      * This variable contains a ProductModel
      *
-     * @var ProductModel $product
+     * @var BaseProductModel $product
      */
     protected $product;
     /**
@@ -195,7 +195,7 @@ class Product extends Import
      * @param ProductFilters          $productFilters
      * @param ScopeConfigInterface    $scopeConfig
      * @param JsonSerializer          $serializer
-     * @param ProductModel            $product
+     * @param BaseProductModel        $product
      * @param ProductUrlPathGenerator $productUrlPathGenerator
      * @param TypeListInterface       $cacheTypeList
      * @param StoreHelper             $storeHelper
@@ -210,7 +210,7 @@ class Product extends Import
         ProductFilters $productFilters,
         ScopeConfigInterface $scopeConfig,
         JsonSerializer $serializer,
-        ProductModel $product,
+        BaseProductModel $product,
         ProductUrlPathGenerator $productUrlPathGenerator,
         TypeListInterface $cacheTypeList,
         StoreHelper $storeHelper,
@@ -971,7 +971,7 @@ class Product extends Import
         }
 
         /** @var int $entityTypeId */
-        $entityTypeId = $this->configHelper->getEntityTypeId(ProductModel::ENTITY);
+        $entityTypeId = $this->configHelper->getEntityTypeId(BaseProductModel::ENTITY);
 
         /**
          * @var string   $storeId
@@ -1475,7 +1475,7 @@ class Product extends Import
 
                 /** @var array $row */
                 while (($row = $query->fetch())) {
-                    /** @var ProductModel $product */
+                    /** @var BaseProductModel $product */
                     $product = $this->product;
                     $product->setData($row);
 
@@ -1695,7 +1695,7 @@ class Product extends Import
         $query = $connection->query($select);
 
         /** @var \Magento\Catalog\Model\ResourceModel\Eav\Attribute $galleryAttribute */
-        $galleryAttribute = $this->configHelper->getAttribute(ProductModel::ENTITY, 'media_gallery');
+        $galleryAttribute = $this->configHelper->getAttribute(BaseProductModel::ENTITY, 'media_gallery');
         /** @var string $galleryTable */
         $galleryTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery');
         /** @var string $galleryEntityTable */

@@ -516,7 +516,7 @@ abstract class Import extends DataObject implements ImportInterface
      *
      * @return string
      */
-    public function checkLabelPerLocales(array $entity, array $lang, string $response): string
+    public function checkLabelPerLocales(array $entity, array $lang, string $response)
     {
         /** @var string[] $labels */
         $labels = $entity['labels'];
