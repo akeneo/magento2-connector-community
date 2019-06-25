@@ -8,7 +8,7 @@ You can discover Akeneo Connector on the [Akeneo Marketplace](https://marketplac
 
 ### Documentation:
 
-Akeneo Connector complete documentation is available [here](doc/summary.md).
+Akeneo Connector complete documentation is available [here](https://help.akeneo.com/magento2-connector/index.html).
 
 Akeneo API complete documentation is available [here](https://api.akeneo.com/).
 
@@ -32,7 +32,7 @@ With Akeneo Connector for Magento 2, you can import:
 
 ### Migration:
 
-If you want to migrate from previous PIMGento 2 connectors, please follow our [migration guides](doc/install/migration_guide.md).
+If you want to migrate from previous PIMGento 2 connectors, please follow our [migration guides](https://help.akeneo.com/magento2-connector/index.html).
 
 ### About us
 
