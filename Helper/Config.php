@@ -5,7 +5,7 @@ namespace Akeneo\Connector\Helper;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Encryption\Encryptor;
-use Magento\Directory\Helper\Data;
+use Magento\Directory\Helper\Data as DirectoryHelper;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\Data\WebsiteInterface;
 use Magento\Store\Model\ScopeInterface;

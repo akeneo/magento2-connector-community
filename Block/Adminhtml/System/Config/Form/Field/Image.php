@@ -12,7 +12,7 @@ use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Eav\Api\Data\AttributeSearchResultsInterface;
 use Magento\Framework\Api\SearchResults;
-use Magento\Catalog\Model\ResourceModel\Eav\Attribute;
+use Magento\Catalog\Model\ResourceModel\Eav\Attribute as EavAttributeModel;
 
 /**
  * Class Image
