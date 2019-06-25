@@ -445,7 +445,7 @@ class Config extends AbstractHelper
     public function getDefaultLocale($storeId = null)
     {
         return $this->scopeConfig->getValue(
-            Data::XML_PATH_DEFAULT_LOCALE,
+            DirectoryHelper::XML_PATH_DEFAULT_LOCALE,
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
