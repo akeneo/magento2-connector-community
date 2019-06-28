@@ -426,17 +426,55 @@ class Attribute extends Import
 
                 foreach ($attributeSetIds as $attributeSetId) {
                     if (is_numeric($attributeSetId)) {
-                        $this->eavSetup->addAttributeGroup(
-                            $this->getEntityTypeId(),
-                            $attributeSetId,
-                            ucfirst($row['group'])
-                        );
-                        $this->eavSetup->addAttributeToSet(
-                            $this->getEntityTypeId(),
-                            $attributeSetId,
+                        /* Verify if the group already exists */
+                        /** @var int $setId */
+                        $setId = $this->eavSetup->getAttributeSetId($this->getEntityTypeId(), $attributeSetId);
+                        /** @var int $groupId */
+                        $groupId = $this->eavSetup->getSetup()->getTableRow(
+                            'eav_attribute_group',
+                            'attribute_group_name',
                             ucfirst($row['group']),
-                            $row['_entity_id']
+                            'attribute_group_id',
+                            'attribute_set_id',
+                            $setId
                         );
+
+                        if ($groupId) {
+                            /* The group already exists, update it */
+                            /** @var string[] $dataGroup */
+                            $dataGroup = [
+                                'attribute_set_id' => $setId,
+                                'attribute_group_name' => ucfirst($row['group']),
+                            ];
+
+                            $this->eavSetup->updateAttributeGroup(
+                                $this->getEntityTypeId(),
+                                $setId,
+                                $groupId,
+                                $dataGroup
+                            );
+
+                            $this->eavSetup->addAttributeToSet(
+                                $this->getEntityTypeId(),
+                                $attributeSetId,
+                                $groupId,
+                                $row['_entity_id']
+                            );
+                        } else {
+                            /* The group doesn't exists, create it */
+                            $this->eavSetup->addAttributeGroup(
+                                $this->getEntityTypeId(),
+                                $attributeSetId,
+                                ucfirst($row['group'])
+                            );
+
+                            $this->eavSetup->addAttributeToSet(
+                                $this->getEntityTypeId(),
+                                $attributeSetId,
+                                ucfirst($row['group']),
+                                $row['_entity_id']
+                            );
+                        }
                     }
                 }
             }
