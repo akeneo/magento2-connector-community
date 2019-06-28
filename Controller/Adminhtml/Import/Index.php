@@ -34,6 +34,6 @@ class Index extends Action
      */
     protected function _isAllowed()
     {
-        return $this->_authorization->isAllowed('Akeneo_Connector_Api::import');
+        return $this->_authorization->isAllowed('Akeneo_Connector::import');
     }
 }
