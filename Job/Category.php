@@ -520,6 +520,45 @@ class Category extends Import
     }
 
     /**
+     * Remove categories from category filter configuration
+     *
+     * @return void
+     */
+    public function removeCategoriesByFilter()
+    {
+        /** @var string|string[] $filteredCategories */
+        $filteredCategories = $this->configHelper->getCategoriesFilter();
+        if (!$filteredCategories || empty($filteredCategories)) {
+            $this->setMessage(
+                __('No category to ignore')
+            );
+            return;
+        }
+        /** @var string $tableName */
+        $tableName = $this->entitiesHelper->getTableName($this->getCode());
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        $filteredCategories = explode(',', $filteredCategories);
+        /** @var mixed[]|null $categoriesToDelete */
+        $categoriesToDelete = $connection->fetchAll(
+            $connection->select()->from($tableName)->where('code IN (?)', $filteredCategories)
+        );
+        if (!$categoriesToDelete) {
+            $this->setMessage(
+                __('No category found')
+            );
+            return;
+        }
+        foreach ($categoriesToDelete as $category) {
+            if (!isset($category['_entity_id'])) {
+                continue;
+            }
+            $connection->delete($tableName, ['path LIKE ?' => '%/' . $category['_entity_id'] . '/%']);
+            $connection->delete($tableName, ['path LIKE ?'   => '%/' . $category['_entity_id']]);
+        }
+    }
+
+    /**
      * Set Url Rewrite
      *
      * @return void
