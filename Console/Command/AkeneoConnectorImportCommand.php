@@ -7,7 +7,7 @@ use Magento\Framework\App\State;
 use Magento\Framework\Data\Collection;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Phrase;
-use Akeneo\Connector\Api\ImportRepositoryInterface;
+use Akeneo\Connector\Api\ImportRepositoryInterface\Proxy;
 use Akeneo\Connector\Job\Import;
 use \Symfony\Component\Console\Command\Command;
 use \Symfony\Component\Console\Input\InputInterface;
@@ -26,7 +26,6 @@ use \Symfony\Component\Console\Input\InputOption;
  */
 class AkeneoConnectorImportCommand extends Command
 {
-
     /**
      * This constant contains a string
      *
@@ -49,12 +48,12 @@ class AkeneoConnectorImportCommand extends Command
     /**
      * AkeneoConnectorImportCommand constructor.
      *
-     * @param ImportRepositoryInterface\Proxy $importRepository
+     * @param Proxy $importRepository
      * @param State $appState
-     * @param null $name
+     * @param null  $name
      */
     public function __construct(
-        ImportRepositoryInterface\Proxy $importRepository,
+        Proxy $importRepository,
         State $appState,
         $name = null
     ) {
@@ -69,9 +68,11 @@ class AkeneoConnectorImportCommand extends Command
      */
     protected function configure()
     {
-        $this->setName('akeneo_connector:import')
-            ->setDescription('Import Akeneo data to Magento')
-            ->addOption(self::IMPORT_CODE,null,InputOption::VALUE_REQUIRED);
+        $this->setName('akeneo_connector:import')->setDescription('Import Akeneo data to Magento')->addOption(
+                self::IMPORT_CODE,
+                null,
+                InputOption::VALUE_REQUIRED
+            );
     }
 
     /**
@@ -135,19 +136,19 @@ class AkeneoConnectorImportCommand extends Command
     /**
      * Run import
      *
-     * @param string $code
+     * @param string          $code
      * @param OutputInterface $output
      *
      * @return bool
      */
-    protected function import($code, OutputInterface $output)
+    protected function import(string $code, OutputInterface $output)
     {
         /** @var Import $import */
         $import = $this->importRepository->getByCode($code);
         if (!$import) {
             /** @var Phrase $message */
             $message = __('Import code not found');
-            $output->writeln('<error>' . $message . '</error>');
+            $this->displayError($message, $output);
 
             return false;
         }
@@ -158,17 +159,17 @@ class AkeneoConnectorImportCommand extends Command
             while ($import->canExecute()) {
                 /** @var string $comment */
                 $comment = $import->getComment();
-                $output->writeln($comment);
+                $this->displayInfo($comment, $output);
 
                 $import->execute();
 
                 /** @var string $message */
                 $message = $import->getMessage();
                 if (!$import->getStatus()) {
-                    $message = '<error>' . $message . '</error>';
+                    $this->displayError($message, $output);
+                } else {
+                    $this->displayComment($message, $output);
                 }
-
-                $output->writeln($message);
 
                 if ($import->isDone()) {
                     break;
@@ -177,7 +178,7 @@ class AkeneoConnectorImportCommand extends Command
         } catch (\Exception $exception) {
             /** @var string $message */
             $message = $exception->getMessage();
-            $output->writeln($message);
+            $this->displayError($message, $output);
         }
 
         return true;
@@ -196,15 +197,15 @@ class AkeneoConnectorImportCommand extends Command
         $imports = $this->importRepository->getList();
 
         // Options
-        $output->writeln('<comment>' . __('Options:') . '</comment>');
-        $output->writeln('<info>' . __('--code') . '</info>');
+        $this->displayComment(__('Options:'), $output);
+        $this->displayInfo(__('--code'), $output);
         $output->writeln('');
 
         // Codes
-        $output->writeln('<comment>' . __('Available codes:') . '</comment>');
+        $this->displayComment(__('Available codes:'), $output);
         /** @var Import $import */
         foreach ($imports as $import) {
-            $output->writeln('<info>' . $import->getCode() . '</info>');
+            $this->displayInfo($import->getCode(), $output);
         }
         $output->writeln('');
 
@@ -214,8 +215,59 @@ class AkeneoConnectorImportCommand extends Command
         /** @var string $code */
         $code = $import->getCode();
         if ($code) {
-            $output->writeln('<comment>' . __('Example:') . '</comment>');
-            $output->writeln('<info>' . __('akeneo_connector:import --code=%1', $code) . '</info>');
+            $this->displayComment(__('Example:'), $output);
+            $this->displayInfo(__('akeneo-connector:import --code=%1', $code), $output);
+        }
+    }
+
+    /**
+     * Display info in console
+     *
+     * @param string          $message
+     * @param OutputInterface $output
+     *
+     * @return void
+     */
+    public function displayInfo(string $message, OutputInterface $output)
+    {
+        if (!empty($message)) {
+            /** @var string $coloredMessage */
+            $coloredMessage = '<info>' . $message . '</info>';
+            $output->writeln($coloredMessage);
+        }
+    }
+
+    /**
+     * Display comment in console
+     *
+     * @param string          $message
+     * @param OutputInterface $output
+     *
+     * @return void
+     */
+    public function displayComment(string $message, OutputInterface $output)
+    {
+        if (!empty($message)) {
+            /** @var string $coloredMessage */
+            $coloredMessage = '<comment>' . $message . '</comment>';
+            $output->writeln($coloredMessage);
+        }
+    }
+
+    /**
+     * Display error in console
+     *
+     * @param string          $message
+     * @param OutputInterface $output
+     *
+     * @return void
+     */
+    public function displayError(string $message, OutputInterface $output)
+    {
+        if (!empty($message)) {
+            /** @var string $coloredMessage */
+            $coloredMessage = '<error>' . $message . '</error>';
+            $output->writeln($coloredMessage);
         }
     }
 }
