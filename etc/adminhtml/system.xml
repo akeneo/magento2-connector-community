@@ -176,6 +176,17 @@
                     </depends>
                     <can_be_empty>1</can_be_empty>
                 </field>
+                <field id="categories" translate="label comment" type="multiselect" sortOrder="135" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Categories</label>
+                    <source_model>Akeneo\Connector\Model\Source\Filters\Category</source_model>
+                    <comment>
+                        <![CDATA[Select the categories you don't want to import.<br/> If the field is empty, it means you don't have any categories in your Akeneo, or the provided credentials are wrong.]]>
+                    </comment>
+                    <can_be_empty>1</can_be_empty>
+                    <depends>
+                        <field id="mode">standard</field>
+                    </depends>
+                </field>
                 <field id="advanced_filter" translate="label comment" type="textarea" sortOrder="140" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Advanced Filter</label>
                     <backend_model>Akeneo\Connector\Model\Backend\Json</backend_model>
