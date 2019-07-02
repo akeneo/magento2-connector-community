@@ -1,9 +1,12 @@
 <?php
+
 namespace Akeneo\Connector\Model\Source\Filters;
+
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Framework\Option\ArrayInterface;
 use Akeneo\Connector\Helper\Authenticator;
+
 /**
  * Class Category
  *
@@ -22,18 +25,21 @@ class Category implements ArrayInterface
      * @var Authenticator $akeneoAuthenticator
      */
     protected $akeneoAuthenticator;
+
     /**
      *
      *
      * @var \Psr\Log\LoggerInterface $logger
      */
     private $logger;
+
     /**
      * This variable contains Categories options
      *
      * @var string[] $options
      */
     protected $options = [];
+
     /**
      * Category constructor
      *
@@ -48,6 +54,7 @@ class Category implements ArrayInterface
         $this->logger              = $logger;
         $this->init();
     }
+
     /**
      * Initialize options
      *
@@ -74,6 +81,7 @@ class Category implements ArrayInterface
             $this->logger->warning($exception->getMessage());
         }
     }
+
     /**
      * Retrieve options value and label in an array
      *
@@ -83,6 +91,7 @@ class Category implements ArrayInterface
     {
         /** @var array $optionArray */
         $optionArray = [];
+
         /**
          * @var int    $optionValue
          * @var string $optionLabel
@@ -93,6 +102,7 @@ class Category implements ArrayInterface
                 'label' => $optionLabel,
             ];
         }
+
         return $optionArray;
     }
 }
