@@ -211,15 +211,26 @@ For example :<br/>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>Newly imported categories will be activated</comment>
                 </field>
-                <field id="include_in_menu" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="include_in_menu" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Include new categories in menu</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>Newly imported categories categories will be included in menu</comment>
                 </field>
-                <field id="is_anchor" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="is_anchor" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Set new categories in anchor mode</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>Newly imported categories will be in anchor mode</comment>
+                </field>
+                <field id="categories" translate="label comment" type="multiselect" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Categories</label>
+                    <source_model>Akeneo\Connector\Model\Source\Filters\Category</source_model>
+                    <comment>
+                        <![CDATA[Select the categories you don't want to import.<br/> If the field is empty, it means you don't have any categories in your Akeneo, or the provided credentials are wrong.]]>
+                    </comment>
+                    <can_be_empty>1</can_be_empty>
+                    <depends>
+                        <field id="mode">standard</field>
+                    </depends>
                 </field>
             </group>
             <group id="attribute" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">

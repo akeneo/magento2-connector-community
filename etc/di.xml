@@ -52,30 +52,34 @@
                         <item name="comment" xsi:type="string">Create structure</item>
                     </item>
                     <item name="6" xsi:type="array">
+                        <item name="method" xsi:type="string">removeCategoriesByFilter</item>
+                        <item name="comment" xsi:type="string">Remove Categories By Filter</item>
+                    </item>
+                    <item name="7" xsi:type="array">
                         <item name="method" xsi:type="string">setPosition</item>
                         <item name="comment" xsi:type="string">Create position</item>
                     </item>
-                    <item name="7" xsi:type="array">
+                    <item name="8" xsi:type="array">
                         <item name="method" xsi:type="string">createEntities</item>
                         <item name="comment" xsi:type="string">Create and update category entities</item>
                     </item>
-                    <item name="8" xsi:type="array">
+                    <item name="9" xsi:type="array">
                         <item name="method" xsi:type="string">setValues</item>
                         <item name="comment" xsi:type="string">Set values to attributes</item>
                     </item>
-                    <item name="9" xsi:type="array">
+                    <item name="10" xsi:type="array">
                         <item name="method" xsi:type="string">updateChildrenCount</item>
                         <item name="comment" xsi:type="string">Count of child categories</item>
                     </item>
-                    <item name="10" xsi:type="array">
+                    <item name="11" xsi:type="array">
                         <item name="method" xsi:type="string">setUrlRewrite</item>
                         <item name="comment" xsi:type="string">Set Url Rewrite</item>
                     </item>
-                    <item name="11" xsi:type="array">
+                    <item name="12" xsi:type="array">
                         <item name="method" xsi:type="string">dropTable</item>
                         <item name="comment" xsi:type="string">Drop temporary table</item>
                     </item>
-                    <item name="12" xsi:type="array">
+                    <item name="13" xsi:type="array">
                         <item name="method" xsi:type="string">cleanCache</item>
                         <item name="comment" xsi:type="string">Clean cache</item>
                     </item>

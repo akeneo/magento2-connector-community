@@ -58,6 +58,7 @@ class Config extends AbstractHelper
     const PRODUCTS_CATEGORY_IS_ACTIVE = 'akeneo_connector/category/is_active';
     const PRODUCTS_CATEGORY_INCLUDE_IN_MENU = 'akeneo_connector/category/include_in_menu';
     const PRODUCTS_CATEGORY_IS_ANCHOR = 'akeneo_connector/category/is_anchor';
+    const PRODUCTS_CATEGORY_CATEGORIES = 'akeneo_connector/category/categories';
     const PRODUCT_ATTRIBUTE_MAPPING = 'akeneo_connector/product/attribute_mapping';
     const PRODUCT_CONFIGURABLE_ATTRIBUTES = 'akeneo_connector/product/configurable_attributes';
     const PRODUCT_TAX_CLASS = 'akeneo_connector/product/tax_class';
@@ -365,6 +366,16 @@ class Config extends AbstractHelper
     public function getIsCategoryAnchor()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_IS_ANCHOR);
+    }
+
+    /**
+     * Retrieve the categories to filter the category import
+     *
+     * @return string
+     */
+    public function getCategoriesFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_CATEGORIES);
     }
 
     /**
