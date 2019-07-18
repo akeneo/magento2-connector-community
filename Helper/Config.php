@@ -60,6 +60,7 @@ class Config extends AbstractHelper
     const PRODUCTS_CATEGORY_IS_ANCHOR = 'akeneo_connector/category/is_anchor';
     const PRODUCTS_CATEGORY_CATEGORIES = 'akeneo_connector/category/categories';
     const PRODUCT_ATTRIBUTE_MAPPING = 'akeneo_connector/product/attribute_mapping';
+    const PRODUCT_WEBSITE_ATTRIBUTE = 'akeneo_connector/product/website_attribute';
     const PRODUCT_CONFIGURABLE_ATTRIBUTES = 'akeneo_connector/product/configurable_attributes';
     const PRODUCT_TAX_CLASS = 'akeneo_connector/product/tax_class';
     const PRODUCT_URL_GENERATION_ENABLED = 'akeneo_connector/product/url_generation_enabled';
@@ -386,6 +387,17 @@ class Config extends AbstractHelper
     public function getAdminDefaultChannel()
     {
         return $this->scopeConfig->getValue(self::AKENEO_API_ADMIN_CHANNEL);
+    }
+
+    /**
+     * Retrieve the name of the website association attribute
+     *
+     * @return array
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    public function getWebsiteAttribute()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCT_WEBSITE_ATTRIBUTE);
     }
 
     /**

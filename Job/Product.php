@@ -9,6 +9,7 @@ use Magento\Catalog\Model\ProductLink\Link as ProductLink;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Category as CategoryModel;
+use Magento\Eav\Model\Config as EavConfig;
 use Magento\Framework\App\Cache\Type\Block;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
@@ -136,6 +137,12 @@ class Product extends Import
      */
     protected $configHelper;
     /**
+     * This variable contains an EavConfig
+     *
+     * @var  EavConfig $eavConfig
+     */
+    protected $eavConfig;
+    /**
      * This variable contains a ProductFilters
      *
      * @var ProductFilters $productFilters
@@ -192,6 +199,7 @@ class Product extends Import
      * @param Authenticator           $authenticator
      * @param ProductImportHelper     $entitiesHelper
      * @param ConfigHelper            $configHelper
+     * @param EavConfig               $eavConfig
      * @param ProductFilters          $productFilters
      * @param ScopeConfigInterface    $scopeConfig
      * @param JsonSerializer          $serializer
@@ -207,6 +215,7 @@ class Product extends Import
         Authenticator $authenticator,
         ProductImportHelper $entitiesHelper,
         ConfigHelper $configHelper,
+        EavConfig $eavConfig,
         ProductFilters $productFilters,
         ScopeConfigInterface $scopeConfig,
         JsonSerializer $serializer,
@@ -220,6 +229,7 @@ class Product extends Import
 
         $this->entitiesHelper          = $entitiesHelper;
         $this->configHelper            = $configHelper;
+        $this->eavConfig               = $eavConfig;
         $this->productFilters          = $productFilters;
         $this->scopeConfig             = $scopeConfig;
         $this->serializer              = $serializer;
@@ -1177,35 +1187,141 @@ class Product extends Import
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
-        /** @var array $websites */
-        $websites = $this->storeHelper->getStores('website_id');
+        /** @var string $websiteAttribute */
+        $websiteAttribute = $this->configHelper->getWebsiteAttribute();
+        if ($websiteAttribute != null) {
+            $attribute = $this->eavConfig->getAttribute('catalog_product', $websiteAttribute);
+            if ($attribute->getAttributeId() != null) {
+                /** @var string[] $options */
+                $options = $attribute->getSource()->getAllOptions();
+                /** @var array $websites */
+                $websites      = $this->storeHelper->getStores('website_code');
+                /** @var string[] $optionMapping */
+                $optionMapping = [];
+                // Generate the option_id / website_id mapping
+                /** @var string[] $option */
+                foreach ($options as $option) {
+                    /** @var bool $websiteMatch */
+                    $websiteMatch = false;
+                    /**
+                     * @var string $websiteCode
+                     * @var array  $affected
+                     */
+                    foreach ($websites as $websiteCode => $affected) {
+                        if ($option['label'] == $websiteCode) {
+                            $websiteMatch = true;
+                            $optionMapping += [$option['value'] => $affected[0]['website_id']];
+                        }
+                    }
 
-        /**
-         * @var int   $websiteId
-         * @var array $affected
-         */
-        foreach ($websites as $websiteId => $affected) {
-            if ($websiteId == 0) {
-                continue;
+                    if ($websiteMatch === false) {
+                        $this->setAdditionalMessage(__('Warning: The option %1 is not a website code.',$option['label']));
+                    }
+                }
+
+                /** @var \Magento\Framework\DB\Select $select */
+                $select = $connection->select()->from(
+                    $tmpTable,
+                    [
+                        'entity_id'          => '_entity_id',
+                        'associated_website' => $websiteAttribute,
+                    ]
+                );
+                /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+                $query = $connection->query($select);
+                /** @var array $row */
+                while (($row = $query->fetch())) {
+                    /** @var string[] $associatedWebsites */
+                    $associatedWebsites = $row['associated_website'];
+                    if ($associatedWebsites != null) {
+                        $associatedWebsites = explode(',', $associatedWebsites);
+                        /** @var string $associatedWebsite */
+                        foreach ($associatedWebsites as $associatedWebsite) {
+                            /** @var bool $websiteSet */
+                            $websiteSet = false;
+                            /**
+                             * @var string $optionId
+                             * @var string $websiteId
+                             */
+                            foreach ($optionMapping as $optionId => $websiteId) {
+                                if ($associatedWebsite == $optionId) {
+                                    $websiteSet = true;
+                                    // Prepare the select to remove any associated website
+                                    /** @var Select $deleteSelect */
+                                    $deleteSelect = $connection->select()->from(
+                                        $this->entitiesHelper->getTable('catalog_product_website'),
+                                        [
+                                            'product_id' => new Expr($row['entity_id']),
+                                        ]
+                                    );
+                                    /** @var Select $insertSelect */
+                                    $insertSelect = $connection->select()->from(
+                                        $tmpTable,
+                                        [
+                                            'product_id' => new Expr($row['entity_id']),
+                                            'website_id' => new Expr($websiteId),
+                                        ]
+                                    );
+
+                                    $connection->query(
+                                        $connection->deleteFromSelect(
+                                            $deleteSelect,
+                                            $this->entitiesHelper->getTable('catalog_product_website')
+                                        )
+                                    );
+
+                                    $connection->query(
+                                        $connection->insertFromSelect(
+                                            $insertSelect,
+                                            $this->entitiesHelper->getTable('catalog_product_website'),
+                                            ['product_id', 'website_id'],
+                                            AdapterInterface::INSERT_ON_DUPLICATE
+                                        )
+                                    );
+                                }
+                            }
+
+                            if ($websiteSet === false) {
+                                $this->setAdditionalMessage(__('Warning: The product with id %1 has an option that does not correspond to a magento website.', $row['entity_id']));
+                            }
+                        }
+                    } else {
+                        $this->setAdditionalMessage( __('Warning: The product with id %1 has no associated website in the custom attribute.', $row['entity_id']));
+                    }
+                }
+            } else {
+                $this->setAdditionalMessage(__('Warning: The website attribute code given does not match any Magento attribute.'));
             }
+        } else {
+            /** @var array $websites */
+            $websites = $this->storeHelper->getStores('website_id');
+            /**
+             * @var int   $websiteId
+             * @var array $affected
+             */
+            foreach ($websites as $websiteId => $affected) {
+                if ($websiteId == 0) {
+                    continue;
+                }
 
-            /** @var Select $select */
-            $select = $connection->select()->from(
-                $tmpTable,
-                [
-                    'product_id' => '_entity_id',
-                    'website_id' => new Expr($websiteId),
-                ]
-            );
+                /** @var Select $select */
+                $select = $connection->select()->from(
+                    $tmpTable,
+                    [
+                        'product_id' => '_entity_id',
+                        'website_id' => new Expr($websiteId),
+                    ]
+                );
 
-            $connection->query(
-                $connection->insertFromSelect(
-                    $select,
-                    $this->entitiesHelper->getTable('catalog_product_website'),
-                    ['product_id', 'website_id'],
-                    AdapterInterface::INSERT_ON_DUPLICATE
-                )
-            );
+                $connection->query(
+                    $connection->insertFromSelect(
+                        $select,
+                        $this->entitiesHelper->getTable('catalog_product_website'),
+                        ['product_id', 'website_id'],
+                        AdapterInterface::INSERT_ON_DUPLICATE
+                    )
+                );
+            }
         }
     }
 
