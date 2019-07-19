@@ -60,7 +60,7 @@ Par exemple :<br/>
 "Disabled","Désactivé"
 "Duplicates sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1","Doublon de sku detecté. Assurez-vous que le code d'un modèle de produit n'est pas utilisé pour un produit simple. Doublons : %1"
 "Enabled","Activé"
-"Enter the code of the select attribute used to associate products to your websites, leave blank to ignore","Entrer le code de l'attribut select utilisé pour associer les produits aux websites. Laisser vide pour ignorer"
+"Enter the code of the select or multiselect attribute used to associate products to your websites, leave blank to ignore","Entrer le code de l'attribut select utilisé pour associer les produits aux websites. Laisser vide pour ignorer"
 "Equals","Egal à"
 "Example:","Exemple:"
 "Extension Version","Version de l'extension"

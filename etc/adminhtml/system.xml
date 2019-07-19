@@ -246,7 +246,7 @@ For example :<br/>
                 <label>Products</label>
                 <field id="website_attribute" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Website Attribute</label>
-                    <comment>Enter the code of the select attribute used to associate products to your websites, leave blank to ignore</comment>
+                    <comment>Enter the code of the select or multiselect attribute used to associate products to your websites, leave blank to ignore</comment>
                 </field>
                 <field id="attribute_mapping" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Attribute Mapping</label>
