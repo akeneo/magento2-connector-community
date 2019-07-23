@@ -286,6 +286,11 @@ For example :<br/>
                     <label>Regenerate url rewrites</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="metrics" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Metrics management</label>
+                    <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Metrics</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                </field>
             </group>
         </section>
     </system>

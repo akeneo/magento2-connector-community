@@ -135,3 +135,7 @@ Par exemple :<br/>
 "Website","Site web"
 "Regenerate url rewrites","Regénérer les réécritures d'URL"
 "Url rewrite generation is not enabled","La génération des réécritures d'URL n'est pas activée"
+"Metrics management","Gestion des métriques"
+"Akeneo Metric Attribute","Attribut métrique Akeneo"
+"Use as Variant","Utiliser comme Variant"
+"Add metric unit to value","Ajouter l'unité métrique à la valeur"

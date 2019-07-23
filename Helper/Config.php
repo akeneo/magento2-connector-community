@@ -24,7 +24,6 @@ use Magento\Catalog\Helper\Product as ProductHelper;
 /**
  * Class Config
  *
- * @category  Class
  * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2019 Agence Dn'D
@@ -66,6 +65,7 @@ class Config extends AbstractHelper
     const PRODUCT_MEDIA_ENABLED = 'akeneo_connector/product/media_enabled';
     const PRODUCT_MEDIA_IMAGES = 'akeneo_connector/product/media_images';
     const PRODUCT_MEDIA_GALLERY = 'akeneo_connector/product/media_gallery';
+    const PRODUCT_METRICS = 'akeneo_connector/product/metrics';
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     /**
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
@@ -662,6 +662,30 @@ class Config extends AbstractHelper
         }
 
         return $images;
+    }
+
+    /**
+     * Retrieve metrics columns
+     *
+     * @return array
+     */
+    public function getMetricsColumns()
+    {
+        /** @var array $metrics */
+        $metrics = [];
+        /** @var string $config */
+        $config = $this->scopeConfig->getValue(self::PRODUCT_METRICS);
+        if (!$config) {
+            return $metrics;
+        }
+
+        /** @var array $unserializeMetrics */
+        $unserializeMetrics = $this->serializer->unserialize($config);
+        if (!$unserializeMetrics) {
+            return $metrics;
+        }
+
+        return $unserializeMetrics;
     }
 
     /**
