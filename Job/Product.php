@@ -28,6 +28,7 @@ use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Helper\ProductFilters;
 use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Import\Product as ProductImportHelper;
+use Psr\Http\Message\ResponseInterface;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Pdo;
 
@@ -1722,8 +1723,11 @@ class Product extends Import
                 $name = basename($media['code']);
 
                 if (!$this->configHelper->mediaFileExists($name)) {
+                    /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
-                    $this->configHelper->saveMediaFile($name, $binary);
+                    /** @var string $image */
+                    $image = $binary->getBody()->getContents();
+                    $this->configHelper->saveMediaFile($name, $image);
                 }
 
                 /** @var string $file */
