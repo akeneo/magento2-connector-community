@@ -1214,7 +1214,7 @@ class Product extends Import
                         }
                     }
 
-                    if ($websiteMatch === false) {
+                    if ($websiteMatch === false && $option['label'] != ' ') {
                         $this->setAdditionalMessage(__('Warning: The option %1 is not a website code.',$option['label']));
                     }
                 }
@@ -1234,6 +1234,21 @@ class Product extends Import
                     /** @var string[] $associatedWebsites */
                     $associatedWebsites = $row['associated_website'];
                     if ($associatedWebsites != null) {
+                        /** @var Select $deleteSelect */
+                        $deleteSelect = $connection->select()->from(
+                            $this->entitiesHelper->getTable('catalog_product_website'),
+                            [
+                                'product_id' => new Expr($row['entity_id']),
+                            ]
+                        );
+
+                        $connection->query(
+                            $connection->deleteFromSelect(
+                                $deleteSelect,
+                                $this->entitiesHelper->getTable('catalog_product_website')
+                            )
+                        );
+
                         $associatedWebsites = explode(',', $associatedWebsites);
                         /** @var string $associatedWebsite */
                         foreach ($associatedWebsites as $associatedWebsite) {
@@ -1246,14 +1261,6 @@ class Product extends Import
                             foreach ($optionMapping as $optionId => $websiteId) {
                                 if ($associatedWebsite == $optionId) {
                                     $websiteSet = true;
-                                    // Prepare the select to remove any associated website
-                                    /** @var Select $deleteSelect */
-                                    $deleteSelect = $connection->select()->from(
-                                        $this->entitiesHelper->getTable('catalog_product_website'),
-                                        [
-                                            'product_id' => new Expr($row['entity_id']),
-                                        ]
-                                    );
                                     /** @var Select $insertSelect */
                                     $insertSelect = $connection->select()->from(
                                         $tmpTable,
@@ -1261,13 +1268,6 @@ class Product extends Import
                                             'product_id' => new Expr($row['entity_id']),
                                             'website_id' => new Expr($websiteId),
                                         ]
-                                    );
-
-                                    $connection->query(
-                                        $connection->deleteFromSelect(
-                                            $deleteSelect,
-                                            $this->entitiesHelper->getTable('catalog_product_website')
-                                        )
                                     );
 
                                     $connection->query(
