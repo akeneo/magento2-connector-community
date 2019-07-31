@@ -287,6 +287,21 @@ For example :<br/>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
             </group>
+            <group id="advanced" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Advanced</label>
+                <field id="pm_batch_size" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Product Model Batch Size</label>
+                    <comment>
+                        <![CDATA[The number of products grouped per database update. Lower this value for products with many and/or big attributes to stay below database limitations.<br />If set to 0, "Update Length" below is applicable.]]>
+                    </comment>
+                </field>
+                <field id="pm_update_length" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Product Model Update Length</label>
+                    <comment>
+                        <![CDATA[If above "Batch Size" is set to 0, the database command to update the product will be sliced into separate statements no bigger than "Update Length" parts. This is an approximate value, and must be >= 1000.]]>
+                    </comment>
+                </field>
+            </group>
         </section>
     </system>
 </config>

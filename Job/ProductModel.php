@@ -192,6 +192,47 @@ class ProductModel extends Import
     }
 
     /**
+     * sliceInsertOnDuplicate slices InsertOnDuplicate into separate updates to
+     * prevent MySQL hitting row size max.
+     *
+     * @param string $table The table to insert data into.
+     * @param array $data Column-value pairs or array of column-value pairs.
+     * @return void
+     */
+    public function sliceInsertOnDuplicate($table, array $data, array $fields = [])
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var int $updateLength */
+        $updateLength = $this->configHelper->getAdvancedPmUpdateLength();
+        foreach ($data as $row) {
+            // create empty row with primaryKey if not present
+            $primaryKey = $row['code'];
+            if (!$connection->select()->from($table)->where('code = ?', $primaryKey)) {
+                $connection->insert($table, ['code = ?', $primaryKey]);
+            }
+            unset($row['code']);
+            // slice the data in separate updates
+            while (count($row)) {
+                $sliceSize = 0;
+                $slice = [];
+                foreach ($row as $column => $value) {
+                    $sliceSize += strlen($column) + strlen($value);
+                    // Ignore "Update Length" on first column update to prevent
+                    // possible endless loop if a column is bigger.
+                    if (count($slice) && ($sliceSize >= $updateLength)) {
+                        break;
+                    }
+                    $slice[$column] = $value;
+                    unset($row[$column]);
+                }
+                $connection->update($table, $slice, ['code = ?' => $primaryKey]);
+            }
+        }
+        return;
+    }
+
+    /**
      * Add or update data in product model table
      *
      * @return void
@@ -200,6 +241,8 @@ class ProductModel extends Import
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
+        /** @var int $updateLength */
+        $batchSize = $this->configHelper->getAdvancedPmBatchSize();
         /** @var array $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var array $variantTable */
@@ -248,14 +291,22 @@ class ProductModel extends Import
                 }
             }
             $i++;
-            if (count($values) > self::BATCH_SIZE) {
-                $connection->insertOnDuplicate($variantTable, $values, $keys);
+            if (count($values) > $batchSize) {
+                if (0 == $batchSize) {
+                    $this->sliceInsertOnDuplicate($variantTable, $values);
+                } else {
+                    $connection->insertOnDuplicate($variantTable, $values, $keys);
+                }
                 $values = [];
                 $i      = 0;
             }
         }
         if (count($values) > 0) {
-            $connection->insertOnDuplicate($variantTable, $values, $keys);
+            if (0 == $batchSize) {
+                $this->sliceInsertOnDuplicate($variantTable, $values);
+            } else {
+                $connection->insertOnDuplicate($variantTable, $values, $keys);
+            }
         }
     }
 

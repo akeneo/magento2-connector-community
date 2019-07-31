@@ -36,6 +36,10 @@
                 <include_in_menu>1</include_in_menu>
                 <is_anchor>1</is_anchor>
             </category>
+            <advanced>
+                <pm_batch_size>500</pm_batch_size>
+                <pm_update_length>5000</pm_update_length>
+            </advanced>
         </akeneo_connector>
     </default>
 </config>

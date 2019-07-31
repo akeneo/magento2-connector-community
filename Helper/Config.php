@@ -67,10 +67,24 @@ class Config extends AbstractHelper
     const PRODUCT_MEDIA_IMAGES = 'akeneo_connector/product/media_images';
     const PRODUCT_MEDIA_GALLERY = 'akeneo_connector/product/media_gallery';
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
+    const ADANCED_PM_BATCH_SIZE = 'akeneo_connector/advanced/pm_batch_size';
+    const ADANCED_PM_UPDATE_LENGTH = 'akeneo_connector/advanced/pm_update_length';
     /**
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
      */
     const PAGINATION_SIZE_DEFAULT_VALUE = 10;
+    /**
+     * @var int ADANCED_PM_BATCH_SIZE_DEFAULT_VALUE
+     */
+    const ADANCED_PM_BATCH_SIZE_DEFAULT_VALUE = 500;
+    /**
+     * @var int ADANCED_PM_UPDATE_LENGTH_DEFAULT_VALUE
+     */
+    const ADANCED_PM_UPDATE_LENGTH_DEFAULT_VALUE = 5000;
+    /**
+     * @var int ADANCED_PM_UPDATE_LENGTH_MINIMUM
+     */
+    const ADANCED_PM_UPDATE_LENGTH_MINIMUM = 1000;
     /**
      * This variable contains a Encryptor
      *
@@ -751,5 +765,37 @@ class Config extends AbstractHelper
         }
 
         return false;
+    }
+
+    /**
+     * Retrieve product_model batch size
+     *
+     * @return int
+     */
+    public function getAdvancedPmBatchSize()
+    {
+        /** @var int $AdvancedPmBatchSize */
+        $AdvancedPmBatchSize = $this->scopeConfig->getValue(self::ADANCED_PM_BATCH_SIZE);
+        if (false === filter_var($AdvancedPmBatchSize, FILTER_VALIDATE_INT)) {
+            $AdvancedPmBatchSize = self::ADANCED_PM_BATCH_SIZE_DEFAULT_VALUE;
+        }
+
+        return $AdvancedPmBatchSize;
+    }
+
+    /**
+     * Retrieve product_model update length
+     *
+     * @return int
+     */
+    public function getAdvancedPmUpdateLength()
+    {
+        /** @var int $AdvancedPmUpdateLength */
+        $AdvancedPmUpdateLength = $this->scopeConfig->getValue(self::ADANCED_PM_UPDATE_LENGTH);
+        if ((false === filter_var($AdvancedPmUpdateLength, FILTER_VALIDATE_INT)) || ($AdvancedPmUpdateLength < self::ADANCED_PM_UPDATE_LENGTH_MINIMUM)) {
+            $AdvancedPmUpdateLength = self::ADANCED_PM_UPDATE_LENGTH_DEFAULT_VALUE;
+        }
+
+        return $AdvancedPmUpdateLength;
     }
 }
