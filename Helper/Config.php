@@ -65,7 +65,7 @@ class Config extends AbstractHelper
     const PRODUCT_MEDIA_ENABLED = 'akeneo_connector/product/media_enabled';
     const PRODUCT_MEDIA_IMAGES = 'akeneo_connector/product/media_images';
     const PRODUCT_MEDIA_GALLERY = 'akeneo_connector/product/media_gallery';
-    const PRODUCT_METRICS = 'akeneo_connector/product/metrics';
+    const PRODUCT_METRICS = 'akeneo_connector/product/product_metrics';
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     /**
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
@@ -203,9 +203,9 @@ class Config extends AbstractHelper
     /**
      * Retrieve the filter mode used
      *
+     * @return string
      * @see \Akeneo\Connector\Model\Source\Filters\Mode
      *
-     * @return string
      */
     public function getFilterMode()
     {
@@ -215,9 +215,9 @@ class Config extends AbstractHelper
     /**
      * Retrieve the type of filter to apply on the completeness
      *
+     * @return string
      * @see \Akeneo\Connector\Model\Source\Filters\Completeness
      *
-     * @return string
      */
     public function getCompletenessTypeFilter()
     {
@@ -247,9 +247,9 @@ class Config extends AbstractHelper
     /**
      * Retrieve the status filter
      *
+     * @return string
      * @see \Akeneo\Connector\Model\Source\Filters\Status
      *
-     * @return string
      */
     public function getStatusFilter()
     {
@@ -392,9 +392,10 @@ class Config extends AbstractHelper
      * Retrieve website mapping
      *
      * @param bool $withDefault
-     * @throws \Exception
      *
      * @return mixed[]
+     * @throws \Exception
+     *
      */
     public function getWebsiteMapping($withDefault = true)
     {
@@ -685,7 +686,17 @@ class Config extends AbstractHelper
             return $metrics;
         }
 
-        return $unserializeMetrics;
+        /** @var mixed[] $metricsColumns */
+        $metricsColumns = [];
+        foreach ($unserializeMetrics as $unserializeMetric) {
+            /** @var string $metricAttributeCode */
+            $metricAttributeCode = $unserializeMetric['akeneo_metrics'];
+            unset($unserializeMetric['akeneo_metrics']);
+
+            $metricsColumns[$metricAttributeCode] = $unserializeMetric;
+        }
+
+        return $metricsColumns;
     }
 
     /**

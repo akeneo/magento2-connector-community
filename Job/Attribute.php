@@ -158,14 +158,24 @@ class Attribute extends Import
         $paginationSize = $this->configHelper->getPanigationSize();
         /** @var ResourceCursorInterface $attributes */
         $attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize);
+        /** @var [] $metricsSetting */
+        $metricsSetting = $this->configHelper->getMetricsColumns();
 
         /**
-         * @var int $index
+         * @var int   $index
          * @var array $attribute
          */
         foreach ($attributes as $index => $attribute) {
-            $attribute['code'] = strtolower($attribute['code']);
+            /** @var string $attributeCode */
+            $attributeCode     = strtolower($attribute['code']);
+            $attribute['code'] = $attributeCode;
 
+            if ($attribute['type'] == 'pim_catalog_metric' && key_exists(
+                    $attributeCode,
+                    $metricsSetting
+                ) && $metricsSetting[$attributeCode]['is_variant']) {
+                $attribute['type'] .= '_select';
+            }
             $this->entitiesHelper->insertDataFromApi($attribute, $this->getCode());
         }
         $index++;
