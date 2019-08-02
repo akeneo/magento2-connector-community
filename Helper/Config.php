@@ -65,7 +65,7 @@ class Config extends AbstractHelper
     const PRODUCT_MEDIA_ENABLED = 'akeneo_connector/product/media_enabled';
     const PRODUCT_MEDIA_IMAGES = 'akeneo_connector/product/media_images';
     const PRODUCT_MEDIA_GALLERY = 'akeneo_connector/product/media_gallery';
-    const PRODUCT_METRICS = 'akeneo_connector/product/product_metrics';
+    const PRODUCT_METRICS = 'akeneo_connector/product/metrics';
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     /**
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
@@ -668,9 +668,12 @@ class Config extends AbstractHelper
     /**
      * Retrieve metrics columns
      *
-     * @return array
+     * @param bool $returnVariant
+     * @param bool $returnConcat
+     *
+     * @return array|mixed[]
      */
-    public function getMetricsColumns()
+    public function getMetricsColumns($returnVariant = false, $returnConcat = false)
     {
         /** @var array $metrics */
         $metrics = [];
@@ -689,11 +692,16 @@ class Config extends AbstractHelper
         /** @var mixed[] $metricsColumns */
         $metricsColumns = [];
         foreach ($unserializeMetrics as $unserializeMetric) {
+            if ($returnVariant && $unserializeMetric['is_variant'] == 0) {
+                continue;
+            }
+            if ($returnConcat && $unserializeMetric['is_concat'] == 0) {
+                continue;
+            }
             /** @var string $metricAttributeCode */
             $metricAttributeCode = $unserializeMetric['akeneo_metrics'];
-            unset($unserializeMetric['akeneo_metrics']);
 
-            $metricsColumns[$metricAttributeCode] = $unserializeMetric;
+            $metricsColumns[] = $metricAttributeCode;
         }
 
         return $metricsColumns;

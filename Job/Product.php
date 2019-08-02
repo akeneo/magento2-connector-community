@@ -274,6 +274,10 @@ class Product extends Import
         $index = 0;
         /** @var mixed[] $filters */
         $filters = $this->getFilters();
+        /** @var mixed[] $metricsConcatSettings */
+        $metricsConcatSettings = $this->configHelper->getMetricsColumns(false, true);
+        /** @var string[] $metricSymbols */
+        $metricSymbols = $this->getMetricsSymbols();
         /** @var mixed[] $filter */
         foreach ($filters as $filter) {
             /** @var Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface $products */
@@ -283,6 +287,31 @@ class Product extends Import
              * @var mixed[] $product
              */
             foreach ($products as $product) {
+                /**
+                 * @var mixed[] $metricsConcatSetting
+                 */
+                foreach ($metricsConcatSettings as $metricsConcatSetting) {
+                    if (!isset($product['values'][$metricsConcatSetting])) {
+                        continue;
+                    }
+
+                    /**
+                     * @var int     $key
+                     * @var mixed[] $metric
+                     */
+                    foreach ($product['values'][$metricsConcatSetting] as $key => $metric) {
+                        /** @var string $unit */
+                        $unit = $metric['data']['unit'];
+                        /** @var string|false $symbol */
+                        $symbol = array_key_exists($unit, $metricSymbols);
+
+                        if (!array_key_exists($unit, $metricSymbols)) {
+                            continue;
+                        }
+
+                        $product['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
+                    }
+                }
                 /** @var bool $result */
                 $result = $this->entitiesHelper->insertDataFromApi($product, $this->getCode());
                 if (!$result) {
@@ -304,6 +333,28 @@ class Product extends Import
         }
 
         $this->setMessage(__('%1 line(s) found', $index));
+    }
+
+    /**
+     * Generate array of metrics with unit in key and symbol for value
+     *
+     * @return string[]
+     */
+    public function getMetricsSymbols()
+    {
+        /** @var mixed[] $measures */
+        $measures = $this->akeneoClient->getMeasureFamilyApi()->all();
+        /** @var string[] $metricsSymbols */
+        $metricsSymbols = [];
+        /** @var mixed[] $measure */
+        foreach ($measures as $measure) {
+            /** @var mixed[] $unit */
+            foreach ($measure['units'] as $unit) {
+                $metricsSymbols[$unit['code']] = $unit['symbol'];
+            }
+        }
+
+        return $metricsSymbols;
     }
 
     /**
