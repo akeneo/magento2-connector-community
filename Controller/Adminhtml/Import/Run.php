@@ -90,7 +90,7 @@ class Run extends Action
             return $this->arrayToJsonResponseConverter->convert($response);
         }
 
-        $import->setIdentifier($identifier)->setStep($step);
+        $import->setIdentifier($identifier)->setStep($step)->setSetFromAdmin(true);
 
         /** @var array $response */
         $response = $import->execute();
