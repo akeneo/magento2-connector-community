@@ -1726,8 +1726,9 @@ class Product extends Import
                     /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
                     /** @var string $image */
-                    $image = $binary->getBody()->getContents();
-                    $this->configHelper->saveMediaFile($name, $image);
+                    $imageContent = $binary->getBody()->getContents();
+
+                    $this->configHelper->saveMediaFile($name, $imageContent);
                 }
 
                 /** @var string $file */
