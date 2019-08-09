@@ -1215,7 +1215,7 @@ class Product extends Import
                     }
 
                     if ($websiteMatch === false && $option['label'] != ' ') {
-                        $this->setAdditionalMessage(__('Warning: The option %1 is not a website code.',$option['label']));
+                        $this->setAdditionalMessage(__('Warning: The option %1 is not a website code.', $option['label']));
                     }
                 }
 
@@ -1224,6 +1224,7 @@ class Product extends Import
                     $tmpTable,
                     [
                         'entity_id'          => '_entity_id',
+                        'identifier'         => 'identifier',
                         'associated_website' => $websiteAttribute,
                     ]
                 );
@@ -1282,11 +1283,12 @@ class Product extends Import
                             }
 
                             if ($websiteSet === false) {
-                                $this->setAdditionalMessage(__('Warning: The product with id %1 has an option that does not correspond to a magento website.', $row['entity_id']));
+                                $optionLabel = $attribute->getSource()->getOptionText($associatedWebsite);
+                                $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.', $row['identifier'], $optionLabel));
                             }
                         }
                     } else {
-                        $this->setAdditionalMessage( __('Warning: The product with id %1 has no associated website in the custom attribute.', $row['entity_id']));
+                        $this->setAdditionalMessage( __('Warning: The product with Akeneo id %1 has no associated website in the custom attribute.', $row['identifier']));
                     }
                 }
             } else {
