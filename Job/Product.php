@@ -1198,27 +1198,37 @@ class Product extends Import
                 $websites      = $this->storeHelper->getStores('website_code');
                 /** @var string[] $optionMapping */
                 $optionMapping = [];
+                /** @var array $apiAttribute */
+                $apiAttribute = $this->akeneoClient->getAttributeOptionApi()->all($websiteAttribute, 1);
                 // Generate the option_id / website_id mapping
-                /** @var string[] $option */
-                foreach ($options as $option) {
-                    /** @var bool $websiteMatch */
-                    $websiteMatch = false;
-                    /**
-                     * @var string $websiteCode
-                     * @var array  $affected
-                     */
-                    foreach ($websites as $websiteCode => $affected) {
-                        if ($option['label'] == $websiteCode) {
-                            $websiteMatch = true;
-                            $optionMapping += [$option['value'] => $affected[0]['website_id']];
+                /**
+                 * @var int   $index
+                 * @var array $optionApiAttribute
+                 */
+                foreach ($apiAttribute as $index => $optionApiAttribute) {
+                    /** @var string[] $option */
+                    foreach ($options as $option) {
+                        if (in_array($option['label'], $optionApiAttribute['labels'])) {
+                            $websiteMatch = false;
+                            /**
+                             * @var string $websiteCode
+                             * @var array  $affected
+                             */
+                            foreach ($websites as $websiteCode => $affected) {
+                                if ($optionApiAttribute['code'] == $websiteCode) {
+                                    $websiteMatch  = true;
+                                    $optionMapping += [$option['value'] => $affected[0]['website_id']];
+                                }
+                            }
+
+                            if ($websiteMatch === false && $option['label'] != ' ') {
+                                $this->setAdditionalMessage(
+                                    __('Warning: The option %1 is not a website code.', $optionApiAttribute['code'])
+                                );
+                            }
                         }
                     }
-
-                    if ($websiteMatch === false && $option['label'] != ' ') {
-                        $this->setAdditionalMessage(__('Warning: The option %1 is not a website code.', $option['label']));
-                    }
                 }
-
                 /** @var \Magento\Framework\DB\Select $select */
                 $select = $connection->select()->from(
                     $tmpTable,
