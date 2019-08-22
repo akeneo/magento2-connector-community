@@ -458,12 +458,12 @@ class Product extends Import
 
         /** @var array $match */
         foreach ($matches as $match) {
-            if (!isset($match['pim_attribute'], $match['magento_attribute'])) {
+            if (!isset($match['akeneo_attribute'], $match['magento_attribute'])) {
                 continue;
             }
 
             /** @var string $pimAttribute */
-            $pimAttribute = $match['pim_attribute'];
+            $pimAttribute = $match['akeneo_attribute'];
             /** @var string $magentoAttribute */
             $magentoAttribute = $match['magento_attribute'];
 
