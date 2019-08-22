@@ -751,7 +751,7 @@ class Config extends AbstractHelper
 
         /** @var mixed[] $match */
         foreach ($matches as $match) {
-            if (!isset($match['pim_attribute'], $match['magento_attribute'])) {
+            if (!isset($match['akeneo_attribute'], $match['magento_attribute'])) {
                 continue;
             }
 
