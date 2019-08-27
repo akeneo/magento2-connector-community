@@ -1208,23 +1208,27 @@ class Product extends Import
                 foreach ($apiAttribute as $index => $optionApiAttribute) {
                     /** @var string[] $option */
                     foreach ($options as $option) {
-                        if (in_array($option['label'], $optionApiAttribute['labels'])) {
-                            $websiteMatch = false;
-                            /**
-                             * @var string $websiteCode
-                             * @var array  $affected
-                             */
-                            foreach ($websites as $websiteCode => $affected) {
-                                if ($optionApiAttribute['code'] == $websiteCode) {
-                                    $websiteMatch  = true;
-                                    $optionMapping += [$option['value'] => $affected[0]['website_id']];
+                        if (isset($option['label']) && isset($optionApiAttribute['labels']) && isset($optionApiAttribute['code'])) {
+                            if (in_array($option['label'], $optionApiAttribute['labels'])) {
+                                $websiteMatch = false;
+                                /**
+                                 * @var string $websiteCode
+                                 * @var array  $affected
+                                 */
+                                foreach ($websites as $websiteCode => $affected) {
+                                    if ($optionApiAttribute['code'] == $websiteCode) {
+                                        if (isset($affected[0]['website_id'])){
+                                            $websiteMatch  = true;
+                                            $optionMapping += [$option['value'] => $affected[0]['website_id']];
+                                        }
+                                    }
                                 }
-                            }
 
-                            if ($websiteMatch === false && $option['label'] != ' ') {
-                                $this->setAdditionalMessage(
-                                    __('Warning: The option %1 is not a website code.', $optionApiAttribute['code'])
-                                );
+                                if ($websiteMatch === false && $option['label'] != ' ') {
+                                    $this->setAdditionalMessage(
+                                        __('Warning: The option %1 is not a website code.', $optionApiAttribute['code'])
+                                    );
+                                }
                             }
                         }
                     }
