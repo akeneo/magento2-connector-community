@@ -3,6 +3,8 @@
 namespace Akeneo\Connector\Helper;
 
 use Magento\Framework\App\Helper\AbstractHelper;
+use Magento\Framework\App\Helper\Context;
+use Magento\Framework\Serialize\Serializer\Serialize as Serialize;
 
 /**
  * Class Serializer
@@ -16,6 +18,27 @@ use Magento\Framework\App\Helper\AbstractHelper;
  */
 class Serializer extends AbstractHelper
 {
+    /**
+     * This variable contains a Serialize
+     *
+     * @var Serialize $serialize
+     */
+    protected $serialize;
+
+    /**
+     * Config constructor
+     *
+     * @param Context                       $context
+     * @param Serialize                     $serialize
+     */
+    public function __construct(
+        Context $context,
+        Serialize $serialize
+    ) {
+        parent::__construct($context);
+        $this->serialize = $serialize;
+    }
+
     /**
      * Unserialize data from config (keep compatibility with Magento < 2.2)
      * This will be replaced by \Magento\Framework\Serialize\Serializer\Json in some time
@@ -34,7 +57,7 @@ class Serializer extends AbstractHelper
         }
 
         try {
-            $data = unserialize($value);
+            $data = $this->serialize->unserialize($value);
         } catch (\Exception $exception) {
             $data = [];
         }
