@@ -1229,32 +1229,47 @@ class Product extends Import
                 $websites      = $this->storeHelper->getStores('website_code');
                 /** @var string[] $optionMapping */
                 $optionMapping = [];
+                /** @var array $apiAttribute */
+                $apiAttribute = $this->akeneoClient->getAttributeOptionApi()->all($websiteAttribute, 1);
                 // Generate the option_id / website_id mapping
-                /** @var string[] $option */
-                foreach ($options as $option) {
-                    /** @var bool $websiteMatch */
-                    $websiteMatch = false;
-                    /**
-                     * @var string $websiteCode
-                     * @var array  $affected
-                     */
-                    foreach ($websites as $websiteCode => $affected) {
-                        if ($option['label'] == $websiteCode) {
-                            $websiteMatch = true;
-                            $optionMapping += [$option['value'] => $affected[0]['website_id']];
+                /**
+                 * @var int   $index
+                 * @var array $optionApiAttribute
+                 */
+                foreach ($apiAttribute as $index => $optionApiAttribute) {
+                    /** @var string[] $option */
+                    foreach ($options as $option) {
+                        if (isset($option['label']) && isset($optionApiAttribute['labels']) && isset($optionApiAttribute['code'])) {
+                            if (in_array($option['label'], $optionApiAttribute['labels'])) {
+                                $websiteMatch = false;
+                                /**
+                                 * @var string $websiteCode
+                                 * @var array  $affected
+                                 */
+                                foreach ($websites as $websiteCode => $affected) {
+                                    if ($optionApiAttribute['code'] == $websiteCode) {
+                                        if (isset($affected[0]['website_id'])){
+                                            $websiteMatch  = true;
+                                            $optionMapping += [$option['value'] => $affected[0]['website_id']];
+                                        }
+                                    }
+                                }
+
+                                if ($websiteMatch === false && $option['label'] != ' ') {
+                                    $this->setAdditionalMessage(
+                                        __('Warning: The option %1 is not a website code.', $optionApiAttribute['code'])
+                                    );
+                                }
+                            }
                         }
                     }
-
-                    if ($websiteMatch === false && $option['label'] != ' ') {
-                        $this->setAdditionalMessage(__('Warning: The option %1 is not a website code.',$option['label']));
-                    }
                 }
-
                 /** @var \Magento\Framework\DB\Select $select */
                 $select = $connection->select()->from(
                     $tmpTable,
                     [
                         'entity_id'          => '_entity_id',
+                        'identifier'         => 'identifier',
                         'associated_website' => $websiteAttribute,
                     ]
                 );
@@ -1313,11 +1328,12 @@ class Product extends Import
                             }
 
                             if ($websiteSet === false) {
-                                $this->setAdditionalMessage(__('Warning: The product with id %1 has an option that does not correspond to a magento website.', $row['entity_id']));
+                                $optionLabel = $attribute->getSource()->getOptionText($associatedWebsite);
+                                $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.', $row['identifier'], $optionLabel));
                             }
                         }
                     } else {
-                        $this->setAdditionalMessage( __('Warning: The product with id %1 has no associated website in the custom attribute.', $row['entity_id']));
+                        $this->setAdditionalMessage( __('Warning: The product with Akeneo id %1 has no associated website in the custom attribute.', $row['identifier']));
                     }
                 }
             } else {
