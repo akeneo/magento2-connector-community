@@ -270,18 +270,20 @@ For example :<br/>
                     <label>Import Media Files</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="media_gallery" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Akeneo Images Attributes</label>
+                <field id="media_gallery" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Akeneo Attributes for Image Gallery</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Gallery</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <comment>Enter all PIM attributes containing product images. All images specified will be imported to the product image gallery.</comment>
                     <depends>
                         <field id="media_enabled">1</field>
                     </depends>
                 </field>
-                <field id="media_images" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Product Images Mapping</label>
+                <field id="media_images" translate="label comment" type="text" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Product Image Association</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Image</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <comment>Map Magento image type for products. Associate the image type option to a PIM attribute specified in the Akeneo Attribute for Image Gallery field. After import, all specified options will be filled by their image if provided.</comment>
                     <depends>
                         <field id="media_enabled">1</field>
                     </depends>
