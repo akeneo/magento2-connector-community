@@ -471,7 +471,7 @@ class Product extends Import
 
             /**
              * @var string $local
-             * @var string $affected
+             * @var array $affected
              */
             foreach ($stores as $local => $affected) {
                 $this->entitiesHelper->copyColumn(
@@ -479,6 +479,37 @@ class Product extends Import
                     $pimAttribute . '-' . $local,
                     $magentoAttribute . '-' . $local
                 );
+
+                // Format url-key if it is mapped
+                /** @var bool $isUrlKeyMapped */
+                $isUrlKeyMapped = $this->configHelper->isUrlKeyMapped();
+
+                if ($magentoAttribute === 'url_key' && $isUrlKeyMapped && $connection->tableColumnExists($tmpTable, $pimAttribute . '-' . $local)) {
+                    /** @var \Magento\Framework\DB\Select $select */
+                    $select = $connection->select()->from(
+                        $tmpTable,
+                        [
+                            'identifier' => 'identifier',
+                            'url_key'    => 'url_key-' . $local,
+                        ]
+                    );
+                    /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+                    $query = $connection->query($select);
+
+                    /** @var array $row */
+                    while (($row = $query->fetch())) {
+                        if (isset($row['url_key'])) {
+                            $row['url_key'] = $this->product->formatUrlKey($row['url_key']);
+                            $connection->update(
+                                $tmpTable,
+                                [
+                                    'url_key-' . $local => $row['url_key'],
+                                ],
+                                ['identifier = ?' => $row['identifier']]
+                            );
+                        }
+                    }
+                }
             }
         }
     }
@@ -1553,7 +1584,7 @@ class Product extends Import
          * @var array  $affected
          */
         foreach ($stores as $local => $affected) {
-            if (!$isUrlKeyMapped && !$connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
+            if (!$connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
                 $connection->addColumn(
                     $tmpTable,
                     'url_key-' . $local,
