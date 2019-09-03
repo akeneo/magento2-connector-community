@@ -480,38 +480,12 @@ class Product extends Import
                     $magentoAttribute . '-' . $local
                 );
 
-                // Format url-key if it is mapped
-                /** @var bool $isUrlKeyMapped */
-                $isUrlKeyMapped = $this->configHelper->isUrlKeyMapped();
-
-                if ($magentoAttribute === 'url_key' && $isUrlKeyMapped && $connection->tableColumnExists($tmpTable, $pimAttribute . '-' . $local)) {
-                    /** @var \Magento\Framework\DB\Select $select */
-                    $select = $connection->select()->from(
-                        $tmpTable,
-                        [
-                            'identifier' => 'identifier',
-                            'url_key'    => 'url_key-' . $local,
-                        ]
-                    );
-                    /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
-                    $query = $connection->query($select);
-
-                    /** @var array $row */
-                    while (($row = $query->fetch())) {
-                        if (isset($row['url_key'])) {
-                            $row['url_key'] = $this->product->formatUrlKey($row['url_key']);
-                            $connection->update(
-                                $tmpTable,
-                                [
-                                    'url_key-' . $local => $row['url_key'],
-                                ],
-                                ['identifier = ?' => $row['identifier']]
-                            );
-                        }
-                    }
+                if ($magentoAttribute === 'url_key') {
+                    $this->entitiesHelper->formatUrlKeyColumn($tmpTable, $local);
                 }
             }
         }
+        $this->entitiesHelper->formatUrlKeyColumn($tmpTable);
     }
 
     /**
