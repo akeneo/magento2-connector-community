@@ -6,7 +6,7 @@
 ### Version 100.1.1 :
 * Fix attribute mapping key
 
-### Version 100.2.0 :
+### Version 100.2.1 :
 * Add website mapping from select or multiselect attribute in Akeneo
 * Use native Magento serializer
 * Fix proxy class injection in command construct
