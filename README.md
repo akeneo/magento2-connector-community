@@ -12,6 +12,10 @@ Akeneo Connector complete documentation is available [here](https://help.akeneo.
 
 Akeneo API complete documentation is available [here](https://api.akeneo.com/).
 
+### How to download and install the connector:
+
+Akeneo Connector install guide is available [here](https://help.akeneo.com/magento2-connector/v100/articles/download-connector.html).
+
 ### Features:
 
 With Akeneo Connector for Magento 2, you can import:
