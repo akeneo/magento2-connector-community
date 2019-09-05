@@ -9,6 +9,7 @@ use Magento\Catalog\Model\ProductLink\Link as ProductLink;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Category as CategoryModel;
+use Magento\Eav\Model\Config as EavConfig;
 use Magento\Framework\App\Cache\Type\Block;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
@@ -136,6 +137,12 @@ class Product extends Import
      */
     protected $configHelper;
     /**
+     * This variable contains an EavConfig
+     *
+     * @var  EavConfig $eavConfig
+     */
+    protected $eavConfig;
+    /**
      * This variable contains a ProductFilters
      *
      * @var ProductFilters $productFilters
@@ -192,6 +199,7 @@ class Product extends Import
      * @param Authenticator           $authenticator
      * @param ProductImportHelper     $entitiesHelper
      * @param ConfigHelper            $configHelper
+     * @param EavConfig               $eavConfig
      * @param ProductFilters          $productFilters
      * @param ScopeConfigInterface    $scopeConfig
      * @param JsonSerializer          $serializer
@@ -207,6 +215,7 @@ class Product extends Import
         Authenticator $authenticator,
         ProductImportHelper $entitiesHelper,
         ConfigHelper $configHelper,
+        EavConfig $eavConfig,
         ProductFilters $productFilters,
         ScopeConfigInterface $scopeConfig,
         JsonSerializer $serializer,
@@ -220,6 +229,7 @@ class Product extends Import
 
         $this->entitiesHelper          = $entitiesHelper;
         $this->configHelper            = $configHelper;
+        $this->eavConfig               = $eavConfig;
         $this->productFilters          = $productFilters;
         $this->scopeConfig             = $scopeConfig;
         $this->serializer              = $serializer;
@@ -461,7 +471,7 @@ class Product extends Import
 
             /**
              * @var string $local
-             * @var string $affected
+             * @var array $affected
              */
             foreach ($stores as $local => $affected) {
                 $this->entitiesHelper->copyColumn(
@@ -469,8 +479,13 @@ class Product extends Import
                     $pimAttribute . '-' . $local,
                     $magentoAttribute . '-' . $local
                 );
+
+                if ($magentoAttribute === 'url_key') {
+                    $this->entitiesHelper->formatUrlKeyColumn($tmpTable, $local);
+                }
             }
         }
+        $this->entitiesHelper->formatUrlKeyColumn($tmpTable);
     }
 
     /**
@@ -1177,35 +1192,157 @@ class Product extends Import
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
-        /** @var array $websites */
-        $websites = $this->storeHelper->getStores('website_id');
+        /** @var string $websiteAttribute */
+        $websiteAttribute = $this->configHelper->getWebsiteAttribute();
+        if ($websiteAttribute != null) {
+            $attribute = $this->eavConfig->getAttribute('catalog_product', $websiteAttribute);
+            if ($attribute->getAttributeId() != null) {
+                /** @var string[] $options */
+                $options = $attribute->getSource()->getAllOptions();
+                /** @var array $websites */
+                $websites      = $this->storeHelper->getStores('website_code');
+                /** @var string[] $optionMapping */
+                $optionMapping = [];
+                /** @var array $apiAttribute */
+                $apiAttribute = $this->akeneoClient->getAttributeOptionApi()->all($websiteAttribute, 1);
+                // Generate the option_id / website_id mapping
+                /**
+                 * @var int   $index
+                 * @var array $optionApiAttribute
+                 */
+                foreach ($apiAttribute as $index => $optionApiAttribute) {
+                    /** @var string[] $option */
+                    foreach ($options as $option) {
+                        if (isset($option['label']) && isset($optionApiAttribute['labels']) && isset($optionApiAttribute['code'])) {
+                            if (in_array($option['label'], $optionApiAttribute['labels'])) {
+                                $websiteMatch = false;
+                                /**
+                                 * @var string $websiteCode
+                                 * @var array  $affected
+                                 */
+                                foreach ($websites as $websiteCode => $affected) {
+                                    if ($optionApiAttribute['code'] == $websiteCode) {
+                                        if (isset($affected[0]['website_id'])){
+                                            $websiteMatch  = true;
+                                            $optionMapping += [$option['value'] => $affected[0]['website_id']];
+                                        }
+                                    }
+                                }
 
-        /**
-         * @var int   $websiteId
-         * @var array $affected
-         */
-        foreach ($websites as $websiteId => $affected) {
-            if ($websiteId == 0) {
-                continue;
+                                if ($websiteMatch === false && $option['label'] != ' ') {
+                                    $this->setAdditionalMessage(
+                                        __('Warning: The option %1 is not a website code.', $optionApiAttribute['code'])
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+                /** @var \Magento\Framework\DB\Select $select */
+                $select = $connection->select()->from(
+                    $tmpTable,
+                    [
+                        'entity_id'          => '_entity_id',
+                        'identifier'         => 'identifier',
+                        'associated_website' => $websiteAttribute,
+                    ]
+                );
+                /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+                $query = $connection->query($select);
+                /** @var array $row */
+                while (($row = $query->fetch())) {
+                    /** @var string[] $associatedWebsites */
+                    $associatedWebsites = $row['associated_website'];
+                    if ($associatedWebsites != null) {
+                        /** @var Select $deleteSelect */
+                        $deleteSelect = $connection->select()->from(
+                            $this->entitiesHelper->getTable('catalog_product_website'),
+                            [
+                                'product_id' => new Expr($row['entity_id']),
+                            ]
+                        );
+
+                        $connection->query(
+                            $connection->deleteFromSelect(
+                                $deleteSelect,
+                                $this->entitiesHelper->getTable('catalog_product_website')
+                            )
+                        );
+
+                        $associatedWebsites = explode(',', $associatedWebsites);
+                        /** @var string $associatedWebsite */
+                        foreach ($associatedWebsites as $associatedWebsite) {
+                            /** @var bool $websiteSet */
+                            $websiteSet = false;
+                            /**
+                             * @var string $optionId
+                             * @var string $websiteId
+                             */
+                            foreach ($optionMapping as $optionId => $websiteId) {
+                                if ($associatedWebsite == $optionId) {
+                                    $websiteSet = true;
+                                    /** @var Select $insertSelect */
+                                    $insertSelect = $connection->select()->from(
+                                        $tmpTable,
+                                        [
+                                            'product_id' => new Expr($row['entity_id']),
+                                            'website_id' => new Expr($websiteId),
+                                        ]
+                                    );
+
+                                    $connection->query(
+                                        $connection->insertFromSelect(
+                                            $insertSelect,
+                                            $this->entitiesHelper->getTable('catalog_product_website'),
+                                            ['product_id', 'website_id'],
+                                            AdapterInterface::INSERT_ON_DUPLICATE
+                                        )
+                                    );
+                                }
+                            }
+
+                            if ($websiteSet === false) {
+                                $optionLabel = $attribute->getSource()->getOptionText($associatedWebsite);
+                                $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.', $row['identifier'], $optionLabel));
+                            }
+                        }
+                    } else {
+                        $this->setAdditionalMessage( __('Warning: The product with Akeneo id %1 has no associated website in the custom attribute.', $row['identifier']));
+                    }
+                }
+            } else {
+                $this->setAdditionalMessage(__('Warning: The website attribute code given does not match any Magento attribute.'));
             }
+        } else {
+            /** @var array $websites */
+            $websites = $this->storeHelper->getStores('website_id');
+            /**
+             * @var int   $websiteId
+             * @var array $affected
+             */
+            foreach ($websites as $websiteId => $affected) {
+                if ($websiteId == 0) {
+                    continue;
+                }
 
-            /** @var Select $select */
-            $select = $connection->select()->from(
-                $tmpTable,
-                [
-                    'product_id' => '_entity_id',
-                    'website_id' => new Expr($websiteId),
-                ]
-            );
+                /** @var Select $select */
+                $select = $connection->select()->from(
+                    $tmpTable,
+                    [
+                        'product_id' => '_entity_id',
+                        'website_id' => new Expr($websiteId),
+                    ]
+                );
 
-            $connection->query(
-                $connection->insertFromSelect(
-                    $select,
-                    $this->entitiesHelper->getTable('catalog_product_website'),
-                    ['product_id', 'website_id'],
-                    AdapterInterface::INSERT_ON_DUPLICATE
-                )
-            );
+                $connection->query(
+                    $connection->insertFromSelect(
+                        $select,
+                        $this->entitiesHelper->getTable('catalog_product_website'),
+                        ['product_id', 'website_id'],
+                        AdapterInterface::INSERT_ON_DUPLICATE
+                    )
+                );
+            }
         }
     }
 
@@ -1437,7 +1574,7 @@ class Product extends Import
          * @var array  $affected
          */
         foreach ($stores as $local => $affected) {
-            if (!$isUrlKeyMapped && !$connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
+            if (!$connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
                 $connection->addColumn(
                     $tmpTable,
                     'url_key-' . $local,

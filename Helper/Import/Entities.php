@@ -13,6 +13,8 @@ use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Framework\Config\ConfigOptionsListConstants;
 use Zend_Db_Expr as Expr;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Magento\Catalog\Model\Product as BaseProductModel;
 
 /**
  * Class Entities
@@ -52,6 +54,18 @@ class Entities extends AbstractHelper
      */
     protected $connection;
     /**
+     * This variable contains a ProductModel
+     *
+     * @var BaseProductModel $product
+     */
+    protected $product;
+    /**
+     * This variable contains a ConfigHelper
+     *
+     * @var ConfigHelper $configHelper
+     */
+    protected $configHelper;
+    /**
      * @var DeploymentConfig $deploymentConfig
      */
     private $deploymentConfig;
@@ -77,19 +91,25 @@ class Entities extends AbstractHelper
     /**
      * Entities constructor
      *
-     * @param Context $context
+     * @param Context            $context
      * @param ResourceConnection $connection
-     * @param DeploymentConfig $deploymentConfig
+     * @param DeploymentConfig   $deploymentConfig
+     * @param ConfigHelper       $configHelper
+     * @param BaseProductModel   $product
      */
     public function __construct(
         Context $context,
         ResourceConnection $connection,
-        DeploymentConfig $deploymentConfig
+        DeploymentConfig $deploymentConfig,
+        BaseProductModel $product,
+        ConfigHelper $configHelper
     ) {
         parent::__construct($context);
 
-        $this->connection = $connection->getConnection();
+        $this->connection       = $connection->getConnection();
         $this->deploymentConfig = $deploymentConfig;
+        $this->configHelper     = $configHelper;
+        $this->product          = $product;
     }
 
     /**
@@ -697,5 +717,49 @@ class Entities extends AbstractHelper
             }
         }
         return $newValues;
+    }
+
+    /**
+     * Format the url_key column of a given table, suffix is optional
+     *
+     * @param string      $tmpTable
+     * @param null|string $local
+     *
+     * @return void
+     */
+    public function formatUrlKeyColumn($tmpTable, $local = null) {
+        /** @var bool $isUrlKeyMapped */
+        $isUrlKeyMapped = $this->configHelper->isUrlKeyMapped();
+        /** @var string $columnKey */
+        $columnKey = 'url_key';
+        if ($local !== null) {
+            $columnKey = 'url_key-' . $local;
+        }
+        if ($isUrlKeyMapped && $this->connection->tableColumnExists($tmpTable, $columnKey)) {
+            /** @var \Magento\Framework\DB\Select $select */
+            $select = $this->connection->select()->from(
+                $tmpTable,
+                [
+                    'identifier' => 'identifier',
+                    'url_key'    => $columnKey,
+                ]
+            );
+            /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+            $query = $this->connection->query($select);
+
+            /** @var array $row */
+            while (($row = $query->fetch())) {
+                if (isset($row['url_key'])) {
+                    $row['url_key'] = $this->product->formatUrlKey($row['url_key']);
+                    $this->connection->update(
+                        $tmpTable,
+                        [
+                            $columnKey => $row['url_key'],
+                        ],
+                        ['identifier = ?' => $row['identifier']]
+                    );
+                }
+            }
+        }
     }
 }
