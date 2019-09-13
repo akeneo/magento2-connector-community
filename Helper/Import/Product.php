@@ -174,7 +174,7 @@ class Product extends Entities
              * @var array  $product
              */
             foreach ($types as $key => $products) {
-                if (empty($products)) {
+                if (empty(array_filter($products))) {
                     continue;
                 }
                 /** @var string $name */
