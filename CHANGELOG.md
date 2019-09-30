@@ -12,3 +12,7 @@
 * Fix proxy class injection in command construct
 * Fix association import when result is empty
 * Fix url_key mapping and generation
+
+### Version 100.2.2 :
+* Fix issue when importing associations
+* Improve attribute option import
