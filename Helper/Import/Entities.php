@@ -212,7 +212,7 @@ class Entities extends AbstractHelper
 
         $table->addColumn(
             'identifier',
-            Table::TYPE_VARBINARY,
+            Table::TYPE_TEXT,
             255,
             [],
             'identifier'
