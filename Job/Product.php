@@ -1256,11 +1256,8 @@ class Product extends Import
                     if ($associatedWebsites != null) {
                         /** @var Select $deleteSelect */
                         $deleteSelect = $connection->select()->from(
-                            $this->entitiesHelper->getTable('catalog_product_website'),
-                            [
-                                'product_id' => new Expr($row['entity_id']),
-                            ]
-                        );
+                            $this->entitiesHelper->getTable('catalog_product_website')
+                        )->where('product_id = ?', $row['entity_id']);
 
                         $connection->query(
                             $connection->deleteFromSelect(
