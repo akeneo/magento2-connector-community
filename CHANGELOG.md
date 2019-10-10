@@ -16,3 +16,10 @@
 ### Version 100.2.2 :
 * Fix issue when importing associations
 * Improve attribute option import
+
+### Version 100.2.3 :
+* Fix identifier column type in temporary product import table
+* Fix missing where statement on delete in website association feature
+* Fix product website request if attribute is not filled in Akeneo
+* Fix duplicate node in config.xml file
+* Add check on family label to prevent import error on duplicate labels in Akeneo
