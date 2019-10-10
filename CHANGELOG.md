@@ -16,3 +16,9 @@
 ### Version 100.2.2 :
 * Fix issue when importing associations
 * Improve attribute option import
+
+### Version 100.2.3 :
+* Fix duplicate node in config.xml
+* Fix identifier column type in temporary import table
+* Fix product website mapping delete request
+* Add check on family duplicate label to prevent error during import
