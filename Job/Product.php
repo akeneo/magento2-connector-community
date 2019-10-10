@@ -1238,73 +1238,76 @@ class Product extends Import
                         }
                     }
                 }
-                /** @var \Magento\Framework\DB\Select $select */
-                $select = $connection->select()->from(
-                    $tmpTable,
-                    [
-                        'entity_id'          => '_entity_id',
-                        'identifier'         => 'identifier',
-                        'associated_website' => $websiteAttribute,
-                    ]
-                );
-                /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
-                $query = $connection->query($select);
-                /** @var array $row */
-                while (($row = $query->fetch())) {
-                    /** @var string[] $associatedWebsites */
-                    $associatedWebsites = $row['associated_website'];
-                    if ($associatedWebsites != null) {
-                        /** @var Select $deleteSelect */
-                        $deleteSelect = $connection->select()->from(
-                            $this->entitiesHelper->getTable('catalog_product_website')
-                        )->where('product_id = ?', $row['entity_id']);
 
-                        $connection->query(
-                            $connection->deleteFromSelect(
-                                $deleteSelect,
+                if ($connection->tableColumnExists($tmpTable, $websiteAttribute)) {
+                    /** @var \Magento\Framework\DB\Select $select */
+                    $select = $connection->select()->from(
+                        $tmpTable,
+                        [
+                            'entity_id'          => '_entity_id',
+                            'identifier'         => 'identifier',
+                            'associated_website' => $websiteAttribute,
+                        ]
+                    );
+                    /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+                    $query = $connection->query($select);
+                    /** @var array $row */
+                    while (($row = $query->fetch())) {
+                        /** @var string[] $associatedWebsites */
+                        $associatedWebsites = $row['associated_website'];
+                        if ($associatedWebsites != null) {
+                            /** @var Select $deleteSelect */
+                            $deleteSelect = $connection->select()->from(
                                 $this->entitiesHelper->getTable('catalog_product_website')
-                            )
-                        );
+                            )->where('product_id = ?', $row['entity_id']);
 
-                        $associatedWebsites = explode(',', $associatedWebsites);
-                        /** @var string $associatedWebsite */
-                        foreach ($associatedWebsites as $associatedWebsite) {
-                            /** @var bool $websiteSet */
-                            $websiteSet = false;
-                            /**
-                             * @var string $optionId
-                             * @var string $websiteId
-                             */
-                            foreach ($optionMapping as $optionId => $websiteId) {
-                                if ($associatedWebsite == $optionId) {
-                                    $websiteSet = true;
-                                    /** @var Select $insertSelect */
-                                    $insertSelect = $connection->select()->from(
-                                        $tmpTable,
-                                        [
-                                            'product_id' => new Expr($row['entity_id']),
-                                            'website_id' => new Expr($websiteId),
-                                        ]
-                                    );
+                            $connection->query(
+                                $connection->deleteFromSelect(
+                                    $deleteSelect,
+                                    $this->entitiesHelper->getTable('catalog_product_website')
+                                )
+                            );
 
-                                    $connection->query(
-                                        $connection->insertFromSelect(
-                                            $insertSelect,
-                                            $this->entitiesHelper->getTable('catalog_product_website'),
-                                            ['product_id', 'website_id'],
-                                            AdapterInterface::INSERT_ON_DUPLICATE
-                                        )
-                                    );
+                            $associatedWebsites = explode(',', $associatedWebsites);
+                            /** @var string $associatedWebsite */
+                            foreach ($associatedWebsites as $associatedWebsite) {
+                                /** @var bool $websiteSet */
+                                $websiteSet = false;
+                                /**
+                                 * @var string $optionId
+                                 * @var string $websiteId
+                                 */
+                                foreach ($optionMapping as $optionId => $websiteId) {
+                                    if ($associatedWebsite == $optionId) {
+                                        $websiteSet = true;
+                                        /** @var Select $insertSelect */
+                                        $insertSelect = $connection->select()->from(
+                                            $tmpTable,
+                                            [
+                                                'product_id' => new Expr($row['entity_id']),
+                                                'website_id' => new Expr($websiteId),
+                                            ]
+                                        );
+
+                                        $connection->query(
+                                            $connection->insertFromSelect(
+                                                $insertSelect,
+                                                $this->entitiesHelper->getTable('catalog_product_website'),
+                                                ['product_id', 'website_id'],
+                                                AdapterInterface::INSERT_ON_DUPLICATE
+                                            )
+                                        );
+                                    }
+                                }
+
+                                if ($websiteSet === false) {
+                                    $optionLabel = $attribute->getSource()->getOptionText($associatedWebsite);
+                                    $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.', $row['identifier'], $optionLabel));
                                 }
                             }
-
-                            if ($websiteSet === false) {
-                                $optionLabel = $attribute->getSource()->getOptionText($associatedWebsite);
-                                $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.', $row['identifier'], $optionLabel));
-                            }
+                        } else {
+                            $this->setAdditionalMessage( __('Warning: The product with Akeneo id %1 has no associated website in the custom attribute.', $row['identifier']));
                         }
-                    } else {
-                        $this->setAdditionalMessage( __('Warning: The product with Akeneo id %1 has no associated website in the custom attribute.', $row['identifier']));
                     }
                 }
             } else {
