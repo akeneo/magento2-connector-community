@@ -51,6 +51,11 @@ class Metrics extends AbstractSource
     {
         /** @var ResourceCursorInterface|mixed[] $attributes */
         $attributes = $this->getAttributes();
+
+        if (!$attributes) {
+            return $this->_options;
+        }
+
         foreach ($attributes as $attribute) {
             if ($attribute['type'] != 'pim_catalog_metric') {
                 continue;
