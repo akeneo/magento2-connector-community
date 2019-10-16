@@ -23,3 +23,8 @@
 * Fix product website request if attribute is not filled in Akeneo
 * Fix duplicate node in config.xml file
 * Add check on family label to prevent import error on duplicate labels in Akeneo
+
+### Version 100.2.4 :
+* Fix import command description
+* Convert uppercase attribute mapping to lowercase
+* Set import job response after step finish events

@@ -443,8 +443,6 @@ abstract class Import extends DataObject implements ImportInterface
             $this->stop(true);
             $this->setMessage($exception->getMessage());
         }
-        /** @var array $response */
-        $response = $this->getResponse();
 
         $this->eventManager->dispatch('akeneo_connector_import_step_finish', ['import' => $this]);
         $this->eventManager->dispatch(
@@ -452,7 +450,7 @@ abstract class Import extends DataObject implements ImportInterface
             ['import' => $this]
         );
 
-        return $response;
+        return $this->getResponse();
     }
 
     /**

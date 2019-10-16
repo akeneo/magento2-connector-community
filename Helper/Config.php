@@ -742,9 +742,7 @@ class Config extends AbstractHelper
     public function isUrlKeyMapped()
     {
         /** @var mixed $matches */
-        $matches = $this->scopeConfig->getValue(self::PRODUCT_ATTRIBUTE_MAPPING);
-        /** @var mixed[] $matches */
-        $matches = $this->serializer->unserialize($matches);
+        $matches = $this->getAttributeMapping();
         if (!is_array($matches)) {
             return false;
         }
@@ -763,5 +761,26 @@ class Config extends AbstractHelper
         }
 
         return false;
+    }
+
+    /**
+     * Get the attribute mapping, with lowered values
+     *
+     * @return mixed
+     */
+    public function getAttributeMapping()
+    {
+        /** @var mixed $matches */
+        $matches = $this->scopeConfig->getValue(self::PRODUCT_ATTRIBUTE_MAPPING);
+        $matches = $this->serializer->unserialize($matches);
+        /** @var mixed $loweredMatchs */
+        $loweredMatches = [];
+        /** @var string[] $match */
+        foreach ($matches as $match) {
+            $match           = array_map('strtolower', $match);
+            $loweredMatches[] = $match;
+        }
+
+        return $loweredMatches;
     }
 }

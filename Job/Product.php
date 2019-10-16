@@ -447,8 +447,7 @@ class Product extends Import
         }
 
         /** @var string|array $matches */
-        $matches = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING);
-        $matches = $this->serializer->unserialize($matches);
+        $matches = $this->configHelper->getAttributeMapping();
         if (!is_array($matches)) {
             return;
         }
