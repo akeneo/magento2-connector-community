@@ -170,10 +170,10 @@ class Attribute extends Import
             $attributeCode     = strtolower($attribute['code']);
             $attribute['code'] = $attributeCode;
 
-            if ($attribute['type'] == 'pim_catalog_metric' && key_exists(
+            if ($attribute['type'] == 'pim_catalog_metric' && in_array(
                     $attributeCode,
                     $metricsSetting
-                ) && $metricsSetting[$attributeCode]['is_variant']) {
+                )) {
                 $attribute['type'] .= '_select';
             }
             $this->entitiesHelper->insertDataFromApi($attribute, $this->getCode());
