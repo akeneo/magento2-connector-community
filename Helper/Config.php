@@ -67,6 +67,7 @@ class Config extends AbstractHelper
     const PRODUCT_MEDIA_ENABLED = 'akeneo_connector/product/media_enabled';
     const PRODUCT_MEDIA_IMAGES = 'akeneo_connector/product/media_images';
     const PRODUCT_MEDIA_GALLERY = 'akeneo_connector/product/media_gallery';
+    const PRODUCT_ACTIVATION = 'akeneo_connector/product/activation';
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     /**
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
@@ -398,6 +399,16 @@ class Config extends AbstractHelper
     public function getWebsiteAttribute()
     {
         return $this->scopeConfig->getValue(self::PRODUCT_WEBSITE_ATTRIBUTE);
+    }
+
+    /**
+     * Retrieve the status of newly imported products
+     *
+     * @return string
+     */
+    public function getProductActivation()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCT_ACTIVATION);
     }
 
     /**
