@@ -77,6 +77,7 @@ class Product extends Import
         Link::LINK_TYPE_RELATED   => [
             'SUBSTITUTION-products',
             'SUBSTITUTION-product_models',
+            'related_products-products',
         ],
         Link::LINK_TYPE_UPSELL    => [
             'UPSELL-products',
