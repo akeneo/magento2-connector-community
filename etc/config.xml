@@ -28,7 +28,7 @@
             </products_filters>
             <product>
                 <url_generation_enabled>1</url_generation_enabled>
-                <activation>0</activation>
+                <activation>2</activation>
             </product>
             <category>
                 <is_active>1</is_active>

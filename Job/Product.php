@@ -142,7 +142,8 @@ class Product extends Import
      *
      * @var  EavConfig $eavConfig
      */
-    protected $eavConfig;/**
+    protected $eavConfig;
+    /**
      * This variable contains an EavAttribute
      *
      * @var  EavConfig $eavConfig
