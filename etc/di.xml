@@ -372,4 +372,9 @@
             <argument name="readFactory" xsi:type="object">Magento\Framework\Filesystem\Directory\ReadFactory</argument>
         </arguments>
     </type>
+    <type name="Akeneo\Connector\Console\Command\AkeneoConnectorImportCommand">
+        <arguments>
+            <argument name="importRepository" xsi:type="object">Akeneo\Connector\Api\ImportRepositoryInterface\Proxy</argument>
+        </arguments>
+    </type>
 </config>

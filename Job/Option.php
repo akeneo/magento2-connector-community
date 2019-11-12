@@ -94,6 +94,12 @@ class Option extends Import
      * @var TypeListInterface $cacheTypeList
      */
     protected $cacheTypeList;
+    /**
+     * This variable contains attributes from an API call
+     *
+     * @var PageInterface $attributes
+     */
+    protected $attributes;
 
     /**
      * Option constructor
@@ -144,7 +150,7 @@ class Option extends Import
     public function createTable()
     {
         /** @var PageInterface $attributes */
-        $attributes = $this->akeneoClient->getAttributeApi()->all();
+        $attributes = $this->getAllAttributes();
         /** @var bool $hasOptions */
         $hasOptions = false;
         /** @var array $attribute */
@@ -189,7 +195,7 @@ class Option extends Import
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPanigationSize();
         /** @var PageInterface $attributes */
-        $attributes = $this->akeneoClient->getAttributeApi()->all();
+        $attributes = $this->getAllAttributes();
         /** @var int $lines */
         $lines = 0;
         /** @var array $attribute */
@@ -351,5 +357,19 @@ class Option extends Import
         $index++;
 
         return $index;
+    }
+
+    /**
+     * Get all attributes from the API
+     *
+     * @return ResourceCursorInterface|mixed
+     */
+    public function getAllAttributes()
+    {
+        if (!$this->attributes) {
+            $this->attributes = $this->akeneoClient->getAttributeApi()->all();
+        }
+
+        return $this->attributes;
     }
 }

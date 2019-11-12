@@ -171,9 +171,12 @@ class Product extends Entities
         foreach ($values as $group => $types) {
             /**
              * @var string $key
-             * @var array $product
+             * @var array  $product
              */
             foreach ($types as $key => $products) {
+                if (empty(array_filter($products))) {
+                    continue;
+                }
                 /** @var string $name */
                 $name = $group . '-' . $key;
 

@@ -1,78 +1,30 @@
-# Akeneo Connector change Log
+# Akeneo Connector change log
 
-### 100.1.1 :
-Add Magento 2.3 compatibility
+### Version 100.1.0 :
+* Initial Akeneo Connector Release
 
-Fix wrong encoding for de_DE.csv file
+### Version 100.1.1 :
+* Fix attribute mapping key
 
-Fix family variant class
+### Version 100.2.1 :
+* Add website mapping from select or multiselect attribute in Akeneo
+* Use native Magento serializer
+* Fix proxy class injection in command construct
+* Fix association import when result is empty
+* Fix url_key mapping and generation
 
-### 100.1.2 :
-Fix connector behavior with Magento table prefix
+### Version 100.2.2 :
+* Fix issue when importing associations
+* Improve attribute option import
 
-Handle full path URL for products
+### Version 100.2.3 :
+* Fix identifier column type in temporary product import table
+* Fix missing where statement on delete in website association feature
+* Fix product website request if attribute is not filled in Akeneo
+* Fix duplicate node in config.xml file
+* Add check on family label to prevent import error on duplicate labels in Akeneo
 
-Fix duplicated URL
-
-Fix undefined offset 0 error on product import task
-
-Fix duplicate SKU with product model
-
-### 100.1.3 :
-Fix Magento 2.3 compatibility
-
-Fix configurable product creation with 2 axis
-
-Fix documentation
-
-Reformat translations
-
-Fix localized product URL
-
-### 100.1.4 :
-Add PHP 7.2 compatibility
-
-Fix error on product_model table
-
-Add configuration to enable or disable product URL rewriting
-
-### 100.2.1 :
-Fix ACL for import jobs
-
-Fix family exclusion configuration that was impossible to set empty
-
-Fix configurable product association import
-
-Fix product website association from channel mapping
-
-Add configuration to set channel for admin values
-
-Add configuration to choose to update product URL rewrite or not
-
-Prevent price from being set to "null" if empty
-
-Add no-whitespace validation to Akeneo API credential fields
-
-### 100.2.2 :
-Fix option import if first attribute has no valid options
-
-Force attribute code to be lowercase
-
-Manage attribute scope on import
-
-Fix SQL error when no association column is found using advanced filter
-
-### 100.2.3 :
-Fix undefined offset on product import
-
-### 100.2.4 :
-Change default pagination value to 100
-
-Change wording for advanced JSON configuration
-
-Add SQL statement possibility in configurable mapping
-
-Add category configurations for anchor, status and display in menu
-
-### 100.2.5 :
-Refactor API requests from configured mapping to improve performance and reduce data inserted in temporary table
+### Version 100.2.4 :
+* Fix import command description
+* Convert uppercase attribute mapping to lowercase
+* Set import job response after step finish events
