@@ -159,7 +159,7 @@ class Attribute extends Import
         /** @var ResourceCursorInterface $attributes */
         $attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize);
         /** @var [] $metricsSetting */
-        $metricsSetting = $this->configHelper->getMetricsColumns();
+        $metricsSetting = $this->configHelper->getMetricsColumns(true);
 
         /**
          * @var int   $index
@@ -174,13 +174,17 @@ class Attribute extends Import
                     $attributeCode,
                     $metricsSetting
                 )) {
+                if ($attribute['scopable'] || $attribute['localizable']) {
+                    $this->setAdditionalMessage(__('Attribute %1 is scopable or localizable please change configuration at Stores > Configuration > Catalog > Akeneo Connector > Products > Metrics management.', $attributeCode));
+                    continue;
+                }
                 $attribute['type'] .= '_select';
             }
             $this->entitiesHelper->insertDataFromApi($attribute, $this->getCode());
         }
         $index++;
 
-        $this->setMessage(
+        $this->setAdditionalMessage(
             __('%1 line(s) found', $index)
         );
     }
