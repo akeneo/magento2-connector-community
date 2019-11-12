@@ -666,14 +666,14 @@ class Config extends AbstractHelper
     }
 
     /**
-     * Retrieve metrics columns
+     * Retrieve metrics columns by define return needed
      *
-     * @param bool $returnVariant
-     * @param bool $returnConcat
+     * @param bool|null $returnVariant
+     * @param bool|null $returnConcat
      *
      * @return array|mixed[]
      */
-    public function getMetricsColumns($returnVariant = false, $returnConcat = false)
+    public function getMetricsColumns($returnVariant = null, $returnConcat = null)
     {
         /** @var array $metrics */
         $metrics = [];
@@ -692,12 +692,19 @@ class Config extends AbstractHelper
         /** @var mixed[] $metricsColumns */
         $metricsColumns = [];
         foreach ($unserializeMetrics as $unserializeMetric) {
-            if ($returnVariant && $unserializeMetric['is_variant'] == 0) {
+            if ($returnVariant === true && $returnConcat === null && $unserializeMetric['is_variant'] == 0) {
                 continue;
             }
-            if ($returnConcat && $unserializeMetric['is_concat'] == 0) {
+            if ($returnVariant === null && $returnConcat === true && $unserializeMetric['is_concat'] == 0) {
                 continue;
             }
+            if ($returnVariant === true && $returnConcat === false && $unserializeMetric['is_concat'] == 1) {
+                continue;
+            }
+            if ($returnVariant === false && $returnConcat === true && $unserializeMetric['is_variant'] == 1) {
+                continue;
+            }
+
             /** @var string $metricAttributeCode */
             $metricAttributeCode = $unserializeMetric['akeneo_metrics'];
 
