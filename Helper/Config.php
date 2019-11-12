@@ -24,6 +24,7 @@ use Magento\Catalog\Helper\Product as ProductHelper;
 /**
  * Class Config
  *
+ * @category  Class
  * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2019 Agence Dn'D
