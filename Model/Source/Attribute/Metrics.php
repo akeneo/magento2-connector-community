@@ -43,7 +43,7 @@ class Metrics extends AbstractSource
     }
 
     /**
-     * Description getAllOptions function
+     * Generate array of all metrics options from connected akeneo
      *
      * @return array
      */
@@ -67,7 +67,7 @@ class Metrics extends AbstractSource
     }
 
     /**
-     * Description getAttributes function
+     * Generate cursor interface of pim metrics list
      *
      * @return ResourceCursorInterface|mixed[]
      */
