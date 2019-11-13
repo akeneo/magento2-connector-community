@@ -89,8 +89,8 @@ class Metrics extends AbstractFieldArray
     protected function _construct()
     {
         $this->addColumn('akeneo_metrics', ['label' => __('Akeneo Metric Attribute')]);
-        $this->addColumn('is_variant', ['label' => __('Use as Variant')]);
-        $this->addColumn('is_concat', ['label' => __('Add metric unit to value')]);
+        $this->addColumn('is_variant', ['label' => __('Used As Variant')]);
+        $this->addColumn('is_concat', ['label' => __('Concat Metric Unit')]);
         $this->_addAfter       = false;
         $this->_addButtonLabel = __('Add');
 
