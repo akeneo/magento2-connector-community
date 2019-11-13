@@ -4,6 +4,7 @@ namespace Akeneo\Connector\Job;
 
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
 use Magento\Catalog\Model\Product\Link;
 use Magento\Catalog\Model\ProductLink\Link as ProductLink;
 use Magento\Catalog\Model\Product\Visibility;
@@ -599,6 +600,8 @@ class Product extends Import
             $name = $attribute['attribute'];
             /** @var string $value */
             $value = $attribute['value'];
+            /** @var string $type */
+            $type = isset($attribute['type']) ? $attribute['type'] : null;
             /** @var array $columns */
             $columns = [trim($name)];
 
@@ -623,15 +626,34 @@ class Product extends Import
                     continue;
                 }
 
-                if (strlen($value) > 0) {
-                    $data[$column] = new Expr($value);
+                if ($type) {
+                    if ($type === TypeField::TYPE_VALUE) {
+                        $data[$column] = new Expr('"' . $value . '"');
+                    }
 
-                    continue;
-                }
+                    if ($type === TypeField::TYPE_QUERY) {
+                        $data[$column] = new Expr($value);
+                    }
 
-                $data[$column] = 'e.' . $column;
-                if ($connection->tableColumnExists($productModelTable, $column)) {
-                    $data[$column] = 'v.' . $column;
+                    if ($type === TypeField::TYPE_DEFAULT) {
+                        $data[$column] = 'v.' . $column;
+                    }
+
+                    if ($type === TypeField::TYPE_SIMPLE) {
+                        $data[$column] = 'e.' . $column;
+                    }
+
+                    if ($type === TypeField::TYPE_MAPPING) {
+                        /** @var string $mapping */
+                        $mapping = $value;
+                        if (($pos = strpos($column, '-')) !== false) {
+                            $mapping = $value . '-' . substr($column, $pos + 1);
+                        }
+                        if (!$connection->tableColumnExists($productModelTable, $mapping)) {
+                            $mapping = $value;
+                        }
+                        $data[$mapping] = 'v.' . $column;
+                    }
                 }
             }
         }
