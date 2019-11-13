@@ -154,6 +154,10 @@ class Attribute extends Import
      */
     public function insertData()
     {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPanigationSize();
         /** @var ResourceCursorInterface $attributes */
@@ -173,6 +177,34 @@ class Attribute extends Import
         $this->setMessage(
             __('%1 line(s) found', $index)
         );
+
+        /* Remove attribute without a admin store label */
+        /** @var string $localeCode */
+        $localeCode = $this->configHelper->getDefaultLocale();
+        /** @var \Magento\Framework\DB\Select $select */
+        $select = $connection->select()->from(
+            $tmpTable,
+            [
+                'label'     => 'labels-' . $localeCode,
+                'code'      => 'code',
+            ]
+        )->where('`labels-' . $localeCode . '` IS NULL');
+
+        /** @var \Zend_Db_Statement_Interface $query */
+        $query = $connection->query($select);
+        /** @var array $row */
+        while (($row = $query->fetch())) {
+            if (!isset($row['label']) || $row['label'] === null) {
+                $this->setAdditionalMessage(
+                    __(
+                        'The attribute %1 was not imported because it did not have a translation in admin store language : %2',
+                        $row['code'],
+                        $localeCode
+                    )
+                );
+                $connection->delete($tmpTable, ['code = ?' => $row['code']]);
+            }
+        }
     }
 
     /**
