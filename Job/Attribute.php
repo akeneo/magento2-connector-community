@@ -33,6 +33,12 @@ use \Zend_Db_Expr as Expr;
 class Attribute extends Import
 {
     /**
+     * This contains the default name for the attribute set
+     *
+     * @var string DEFAULT_ATTRIBUTE_SET_NAME
+     */
+    const DEFAULT_ATTRIBUTE_SET_NAME = 'Akeneo';
+    /**
      * This variable contains a string value
      *
      * @var string $code
@@ -438,14 +444,45 @@ class Attribute extends Import
                             'attribute_set_id',
                             $setId
                         );
+                        /** @var bool $akeneoGroup */
+                        $akeneoGroup = false;
+                        /* Test if the default group was created instead */
+                        if (!$groupId) {
+                            $akeneoGroup = true;
+                            $groupId     = $this->eavSetup->getSetup()->getTableRow(
+                                'eav_attribute_group',
+                                'attribute_group_name',
+                                self::DEFAULT_ATTRIBUTE_SET_NAME,
+                                'attribute_group_id',
+                                'attribute_set_id',
+                                $setId
+                            );
+                        }
 
+                        /** @var bool $existingAttribute */
+                        $existingAttribute = $connection->fetchOne(
+                            $connection->select()->from(
+                                $this->entitiesHelper->getTable('eav_entity_attribute'),
+                                ['COUNT(*)']
+                            )->where('attribute_set_id = ?', $setId)->where('attribute_id = ?', $row['_entity_id'])
+                        );
+                        /* The attribute was already imported at least once, skip it */
+                        if ($existingAttribute) {
+                            continue;
+                        }
                         if ($groupId) {
                             /* The group already exists, update it */
                             /** @var string[] $dataGroup */
                             $dataGroup = [
-                                'attribute_set_id' => $setId,
+                                'attribute_set_id'     => $setId,
                                 'attribute_group_name' => ucfirst($row['group']),
                             ];
+                            if ($akeneoGroup) {
+                                $dataGroup = [
+                                    'attribute_set_id'     => $setId,
+                                    'attribute_group_name' => self::DEFAULT_ATTRIBUTE_SET_NAME,
+                                ];
+                            }
 
                             $this->eavSetup->updateAttributeGroup(
                                 $this->getEntityTypeId(),
@@ -465,13 +502,13 @@ class Attribute extends Import
                             $this->eavSetup->addAttributeGroup(
                                 $this->getEntityTypeId(),
                                 $attributeSetId,
-                                ucfirst($row['group'])
+                                self::DEFAULT_ATTRIBUTE_SET_NAME
                             );
 
                             $this->eavSetup->addAttributeToSet(
                                 $this->getEntityTypeId(),
                                 $attributeSetId,
-                                ucfirst($row['group']),
+                                self::DEFAULT_ATTRIBUTE_SET_NAME,
                                 $row['_entity_id']
                             );
                         }
