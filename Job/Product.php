@@ -26,9 +26,12 @@ use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
+use Akeneo\Connector\Helper\Locales as LocalesHelper;
 use Akeneo\Connector\Helper\ProductFilters;
 use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Import\Product as ProductImportHelper;
+use Akeneo\Connector\Job\Option as JobOption;
+use Magento\Backend\Model\Locale\Manager as LocaleManager;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Pdo;
 
@@ -190,6 +193,24 @@ class Product extends Import
      * @var StoreHelper $storeHelper
      */
     protected $storeHelper;
+    /**
+     * This variable contains a LocalesHelper
+     *
+     * @var LocalesHelper $localesHelper
+     */
+    protected $localesHelper;
+    /**
+     * This variable contains a JobOption
+     *
+     * @var JobOption $jobOption
+     */
+    protected $jobOption;
+    /**
+     * This variable contains a LocaleManager
+     *
+     * @var LocaleManager $localeManager
+     */
+    protected $localeManager;
 
     /**
      * Product constructor.
@@ -207,6 +228,8 @@ class Product extends Import
      * @param ProductUrlPathGenerator $productUrlPathGenerator
      * @param TypeListInterface       $cacheTypeList
      * @param StoreHelper             $storeHelper
+     * @param LocalesHelper           $localesHelper
+     * @param LocaleManager           $localeManager
      * @param array                   $data
      */
     public function __construct(
@@ -223,6 +246,9 @@ class Product extends Import
         ProductUrlPathGenerator $productUrlPathGenerator,
         TypeListInterface $cacheTypeList,
         StoreHelper $storeHelper,
+        LocalesHelper $localesHelper,
+        JobOption $jobOption,
+        LocaleManager $localeManager,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
@@ -236,6 +262,9 @@ class Product extends Import
         $this->product                 = $product;
         $this->cacheTypeList           = $cacheTypeList;
         $this->storeHelper             = $storeHelper;
+        $this->localesHelper           = $localesHelper;
+        $this->jobOption               = $jobOption;
+        $this->localeManager           = $localeManager;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
     }
 
@@ -284,6 +313,10 @@ class Product extends Import
         $index = 0;
         /** @var mixed[] $filters */
         $filters = $this->getFilters();
+        /** @var mixed[] $metricsConcatSettings */
+        $metricsConcatSettings = $this->configHelper->getMetricsColumns(null, true);
+        /** @var string[] $metricSymbols */
+        $metricSymbols = $this->getMetricsSymbols();
         /** @var mixed[] $filter */
         foreach ($filters as $filter) {
             /** @var Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface $products */
@@ -293,6 +326,31 @@ class Product extends Import
              * @var mixed[] $product
              */
             foreach ($products as $product) {
+                /**
+                 * @var mixed[] $metricsConcatSetting
+                 */
+                foreach ($metricsConcatSettings as $metricsConcatSetting) {
+                    if (!isset($product['values'][$metricsConcatSetting])) {
+                        continue;
+                    }
+
+                    /**
+                     * @var int     $key
+                     * @var mixed[] $metric
+                     */
+                    foreach ($product['values'][$metricsConcatSetting] as $key => $metric) {
+                        /** @var string $unit */
+                        $unit = $metric['data']['unit'];
+                        /** @var string|false $symbol */
+                        $symbol = array_key_exists($unit, $metricSymbols);
+
+                        if (!array_key_exists($unit, $metricSymbols)) {
+                            continue;
+                        }
+
+                        $product['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
+                    }
+                }
                 /** @var bool $result */
                 $result = $this->entitiesHelper->insertDataFromApi($product, $this->getCode());
                 if (!$result) {
@@ -314,6 +372,28 @@ class Product extends Import
         }
 
         $this->setMessage(__('%1 line(s) found', $index));
+    }
+
+    /**
+     * Generate array of metrics with unit in key and symbol for value
+     *
+     * @return string[]
+     */
+    public function getMetricsSymbols()
+    {
+        /** @var mixed[] $measures */
+        $measures = $this->akeneoClient->getMeasureFamilyApi()->all();
+        /** @var string[] $metricsSymbols */
+        $metricsSymbols = [];
+        /** @var mixed[] $measure */
+        foreach ($measures as $measure) {
+            /** @var mixed[] $unit */
+            foreach ($measure['units'] as $unit) {
+                $metricsSymbols[$unit['code']] = $unit['symbol'];
+            }
+        }
+
+        return $metricsSymbols;
     }
 
     /**
@@ -485,6 +565,65 @@ class Product extends Import
             }
         }
         $this->entitiesHelper->formatUrlKeyColumn($tmpTable);
+    }
+
+    /**
+     * Create Temporary metric table and insert option
+     *
+     * @return void
+     */
+    public function createMetricsOptions()
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        /** @var mixed[] $metricsVariantSettings */
+        $metricsVariantSettings = $this->configHelper->getMetricsColumns(true);
+        /** @var string[] $metricsSymbols */
+        $metricsSymbols = $this->getMetricsSymbols();
+        /** @var string $adminLocale */
+        $adminLocale = $this->localeManager->getGeneralLocale();
+
+        $this->jobOption->createTable();
+
+        foreach ($metricsVariantSettings as $metricsVariantSetting) {
+            $columnExist = $connection->tableColumnExists($tmpTable, $metricsVariantSetting);
+
+            if (!$columnExist) {
+                continue;
+            }
+
+            /** @var Select $select */
+            $select = $connection->select()->from($tmpTable, [$metricsVariantSetting])->group([$metricsVariantSetting]);
+            /** @var mixed[] $options */
+            $options = $connection->fetchCol($select);
+
+            foreach ($options as $option) {
+                if (!$option) {
+                    continue;
+                }
+
+                /** @var string[] $labels */
+                $labels = [];
+
+                $labels[$adminLocale] = $option;
+
+                /** @var mixed[] $insertedData */
+                $insertedData = [
+                    'code'      => $option,
+                    'attribute' => $metricsVariantSetting,
+                    'labels'    => $labels,
+                ];
+
+                $this->entitiesHelper->insertDataFromApi($insertedData, $this->jobOption->getCode());
+            }
+        }
+
+        $this->jobOption->matchEntities();
+        $this->jobOption->insertOptions();
+        $this->jobOption->insertValues();
+        $this->jobOption->dropTable();
     }
 
     /**

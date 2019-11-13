@@ -164,19 +164,33 @@ class Attribute extends Import
         $paginationSize = $this->configHelper->getPanigationSize();
         /** @var ResourceCursorInterface $attributes */
         $attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize);
+        /** @var [] $metricsSetting */
+        $metricsSetting = $this->configHelper->getMetricsColumns(true);
 
         /**
-         * @var int $index
+         * @var int   $index
          * @var array $attribute
          */
         foreach ($attributes as $index => $attribute) {
-            $attribute['code'] = strtolower($attribute['code']);
+            /** @var string $attributeCode */
+            $attributeCode     = strtolower($attribute['code']);
+            $attribute['code'] = $attributeCode;
 
+            if ($attribute['type'] == 'pim_catalog_metric' && in_array(
+                    $attributeCode,
+                    $metricsSetting
+                )) {
+                if ($attribute['scopable'] || $attribute['localizable']) {
+                    $this->setAdditionalMessage(__('Attribute %1 is scopable or localizable please change configuration at Stores > Configuration > Catalog > Akeneo Connector > Products > Metrics management.', $attributeCode));
+                    continue;
+                }
+                $attribute['type'] .= '_select';
+            }
             $this->entitiesHelper->insertDataFromApi($attribute, $this->getCode());
         }
         $index++;
 
-        $this->setMessage(
+        $this->setAdditionalMessage(
             __('%1 line(s) found', $index)
         );
     }
