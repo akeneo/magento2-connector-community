@@ -592,7 +592,7 @@ class Product extends Import
 
         /** @var array $attribute */
         foreach ($additional as $attribute) {
-            if (!isset($attribute['attribute'], $attribute['value'])) {
+            if (!isset($attribute['attribute'], $attribute['value'], $attribute['type'])) {
                 continue;
             }
 
@@ -601,7 +601,7 @@ class Product extends Import
             /** @var string $value */
             $value = $attribute['value'];
             /** @var string $type */
-            $type = isset($attribute['type']) ? $attribute['type'] : null;
+            $type = $attribute['type'];
             /** @var array $columns */
             $columns = [trim($name)];
 
@@ -622,38 +622,53 @@ class Product extends Import
                     }
                 }
 
-                if (!$connection->tableColumnExists($tmpTable, $column)) {
+                if ($type !== TypeField::TYPE_MAPPING && !$connection->tableColumnExists($tmpTable, $column)) {
                     continue;
                 }
 
-                if ($type) {
-                    if ($type === TypeField::TYPE_VALUE) {
-                        $data[$column] = new Expr('"' . $value . '"');
-                    }
+                if ($type === TypeField::TYPE_VALUE) {
+                    $data[$column] = new Expr('"' . $value . '"');
+                }
 
-                    if ($type === TypeField::TYPE_QUERY) {
-                        $data[$column] = new Expr($value);
-                    }
+                if ($type === TypeField::TYPE_QUERY) {
+                    $data[$column] = new Expr($value);
+                }
 
-                    if ($type === TypeField::TYPE_DEFAULT) {
-                        $data[$column] = 'v.' . $column;
+                if ($type === TypeField::TYPE_DEFAULT) {
+                    if (!$connection->tableColumnExists($productModelTable, $column)) {
+                        $this->setMessage(__('Warning: column %1 not found in product model', $column));
+                        continue;
                     }
+                    $data[$column] = 'v.' . $column;
+                }
 
-                    if ($type === TypeField::TYPE_SIMPLE) {
-                        $data[$column] = 'e.' . $column;
-                    }
+                if ($type === TypeField::TYPE_SIMPLE) {
+                    $data[$column] = 'e.' . $column;
+                }
 
-                    if ($type === TypeField::TYPE_MAPPING) {
-                        /** @var string $mapping */
-                        $mapping = $value;
-                        if (($pos = strpos($column, '-')) !== false) {
-                            $mapping = $value . '-' . substr($column, $pos + 1);
-                        }
-                        if (!$connection->tableColumnExists($productModelTable, $mapping)) {
-                            $mapping = $value;
-                        }
-                        $data[$mapping] = 'v.' . $column;
+                if ($type === TypeField::TYPE_MAPPING) {
+                    if (!$connection->tableColumnExists($productModelTable, $column)) {
+                        continue;
                     }
+                    /** @var string $mapping */
+                    $mapping = $value;
+                    if (($pos = strpos($column, '-')) !== false) {
+                        $mapping = $value . '-' . substr($column, $pos + 1);
+                    }
+                    if (!$connection->tableColumnExists($tmpTable, $mapping)) {
+                        $connection->addColumn(
+                            $tmpTable,
+                            $mapping,
+                            [
+                                'type'     => 'text',
+                                'length'   => 255,
+                                'default'  => null,
+                                'COMMENT'  => ' ',
+                                'nullable' => true,
+                            ]
+                        );
+                    }
+                    $data[$mapping] = 'v.' . $column;
                 }
             }
         }
