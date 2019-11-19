@@ -28,3 +28,8 @@
 * Fix import command description
 * Convert uppercase attribute mapping to lowercase
 * Set import job response after step finish events
+
+### Version 100.2.5 :
+* Improve configurable attributes feature with specific types
+
+**Warning :** *After updating connector to this version, please check the `Configurable` configuration under the `Products` section in the Akeneo Connector configuration and update the `Type` column of your mapping with the appropriate value if necessary.*
