@@ -1538,11 +1538,11 @@ class Product extends Import
                     'link_type_id'      => new Expr($typeId),
                 ]
             )->joinInner(['e' => $productsTable], sprintf('c.entity_id = e.%s', $columnIdentifier), []);
-
+            $productIds = $connection->select()->from($tmpTable, ['product_id' => '_entity_id']);
             /* Remove old link */
             $connection->delete(
                 $linkTable,
-                ['(product_id, linked_product_id, link_type_id) NOT IN (?)' => $select, 'link_type_id = ?' => $typeId]
+                ['(product_id, linked_product_id, link_type_id) NOT IN (?)' => $select, 'link_type_id = ?' => $typeId, 'product_id IN (?)' => $productIds]
             );
 
             /* Insert new link */
