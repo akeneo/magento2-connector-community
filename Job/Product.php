@@ -1521,6 +1521,9 @@ class Product extends Import
             }
         }
 
+        /** @var \Magento\Framework\DB\Select $productIds */
+        $productIds = $connection->select()->from($tmpTable, ['product_id' => '_entity_id']);
+
         /**
          * @var int      $typeId
          * @var string[] $columns
@@ -1538,7 +1541,7 @@ class Product extends Import
                     'link_type_id'      => new Expr($typeId),
                 ]
             )->joinInner(['e' => $productsTable], sprintf('c.entity_id = e.%s', $columnIdentifier), []);
-            $productIds = $connection->select()->from($tmpTable, ['product_id' => '_entity_id']);
+
             /* Remove old link */
             $connection->delete(
                 $linkTable,
