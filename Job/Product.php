@@ -31,6 +31,7 @@ use Akeneo\Connector\Helper\ProductFilters;
 use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Import\Product as ProductImportHelper;
 use Akeneo\Connector\Job\Option as JobOption;
+use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
 use Magento\Backend\Model\Locale\Manager as LocaleManager;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Pdo;
@@ -211,6 +212,12 @@ class Product extends Import
      * @var LocaleManager $localeManager
      */
     protected $localeManager;
+    /**
+     * This variable contains an AttributeMetrics
+     *
+     * @var AttributeMetrics $attributeMetrics
+     */
+    protected $attributeMetrics;
 
     /**
      * Product constructor.
@@ -230,6 +237,7 @@ class Product extends Import
      * @param StoreHelper             $storeHelper
      * @param LocalesHelper           $localesHelper
      * @param LocaleManager           $localeManager
+     * @param AttributeMetrics        $attributeMetrics
      * @param array                   $data
      */
     public function __construct(
@@ -249,6 +257,7 @@ class Product extends Import
         LocalesHelper $localesHelper,
         JobOption $jobOption,
         LocaleManager $localeManager,
+        AttributeMetrics $attributeMetrics,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
@@ -266,6 +275,7 @@ class Product extends Import
         $this->jobOption               = $jobOption;
         $this->localeManager           = $localeManager;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
+        $this->attributeMetrics        = $attributeMetrics;
     }
 
     /**
@@ -317,6 +327,8 @@ class Product extends Import
         $metricsConcatSettings = $this->configHelper->getMetricsColumns(null, true);
         /** @var string[] $metricSymbols */
         $metricSymbols = $this->getMetricsSymbols();
+        /** @var string[] $attributeMetrics */
+        $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
         /** @var mixed[] $filter */
         foreach ($filters as $filter) {
             /** @var Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface $products */
@@ -327,6 +339,23 @@ class Product extends Import
              */
             foreach ($products as $product) {
                 /**
+                 * @var string $attributeMetric
+                 */
+                foreach ($attributeMetrics as $attributeMetric) {
+                    if (!isset($product['values'][$attributeMetric])) {
+                        continue;
+                    }
+
+                    foreach ($product['values'][$attributeMetric] as $key => $metric) {
+                        /** @var string|float $amount */
+                        $amount = $metric['data']['amount'];
+                        $amount = floatval($amount);
+
+                        $product['values'][$attributeMetric][$key]['data']['amount'] = $amount;
+                    }
+                }
+
+                 /**
                  * @var mixed[] $metricsConcatSetting
                  */
                 foreach ($metricsConcatSettings as $metricsConcatSetting) {
