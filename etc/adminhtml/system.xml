@@ -254,7 +254,7 @@ For example :<br/>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>
                         <![CDATA[Fill additional Magento attributes from Akeneo attributes.<br/>
-"price" and "special_price" attributes won't be automatically mapped unless you explicitely declare them in this configuration.]]>
+"price" "special_price" and "cost" attributes won't be automatically mapped unless you explicitely declare them in this configuration.]]>
                     </comment>
                 </field>
                 <field id="metrics" translate="label" type="text" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0">

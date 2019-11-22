@@ -154,6 +154,9 @@ class Product extends Entities
             if ($attribute === 'special_price' && !$this->isFieldInAttributeMapping('special_price')) {
                 continue;
             }
+            if ($attribute === 'cost' && !$this->isFieldInAttributeMapping('cost')) {
+                continue;
+            }
             /** @var array $attributeValue */
             foreach ($value as $attributeValue) {
                 /** @var string $key */
