@@ -762,4 +762,34 @@ class Entities extends AbstractHelper
             }
         }
     }
+
+    /**
+     * Format media filename, removing hash and stoppig at 90 characters
+     *
+     * @param string $filename
+     *
+     * @return string
+     */
+    public function formatMediaName($filename)
+    {
+        /** @var string[] $filenameParts */
+        $filenameParts = explode('.', $filename);
+        // Get the extention
+        /** @var string $extension */
+        $extension = array_pop($filenameParts);
+        // Get the hash
+        $filename = implode('.', $filenameParts);
+        $filename = explode('_', $filename);
+        /** @var string $shortHash */
+        $shortHash = array_shift($filename);
+        $shortHash = substr($shortHash, 0, 4);
+        $filename  = implode('_', $filename);
+        // Form the final file name
+        /** @var string $shortName */
+        $shortName = substr($filename, 0, 79);
+        /** @var string $finalName */
+        $finalName = $shortName . '_' . $shortHash . '.' . $extension;
+
+        return $finalName;
+    }
 }
