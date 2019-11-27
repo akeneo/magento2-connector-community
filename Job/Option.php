@@ -230,6 +230,37 @@ class Option extends Import
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+
+        /* Remove option without a admin store label */
+        /** @var string $localeCode */
+        $localeCode = $this->configHelper->getDefaultLocale();
+        /** @var \Magento\Framework\DB\Select $select */
+        $select = $connection->select()->from(
+            $tmpTable,
+            [
+                'entity_id' => '_entity_id',
+                'label'     => 'labels-' . $localeCode,
+                'code'      => 'code',
+                'attribute' => 'attribute',
+            ]
+        )->where('`labels-' . $localeCode . '` IS NULL');
+        /** @var \Zend_Db_Statement_Interface $query */
+        $query = $connection->query($select);
+        /** @var array $row */
+        while (($row = $query->fetch())) {
+            if (!isset($row['label']) || $row['label'] === null) {
+                $connection->delete($tmpTable, ['_entity_id = ?' => $row['entity_id']]);
+                $this->setAdditionalMessage(
+                    __(
+                        'The option %1 from attribute %2 was not imported because it did not have a translation in admin store language : %3',
+                        $row['code'],
+                        $row['attribute'],
+                        $localeCode
+                    )
+                );
+            }
+        }
+
         /** @var array $columns */
         $columns = [
             'option_id'  => 'a._entity_id',

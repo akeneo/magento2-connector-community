@@ -4,6 +4,7 @@ namespace Akeneo\Connector\Job;
 
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
 use Magento\Catalog\Model\Product\Link;
 use Magento\Catalog\Model\ProductLink\Link as ProductLink;
 use Magento\Catalog\Model\Product\Visibility;
@@ -759,7 +760,7 @@ class Product extends Import
 
         /** @var array $attribute */
         foreach ($additional as $attribute) {
-            if (!isset($attribute['attribute'], $attribute['value'])) {
+            if (!isset($attribute['attribute'], $attribute['value'], $attribute['type'])) {
                 continue;
             }
 
@@ -767,6 +768,8 @@ class Product extends Import
             $name = $attribute['attribute'];
             /** @var string $value */
             $value = $attribute['value'];
+            /** @var string $type */
+            $type = $attribute['type'];
             /** @var array $columns */
             $columns = [trim($name)];
 
@@ -787,19 +790,53 @@ class Product extends Import
                     }
                 }
 
-                if (!$connection->tableColumnExists($tmpTable, $column)) {
+                if ($type !== TypeField::TYPE_MAPPING && !$connection->tableColumnExists($tmpTable, $column)) {
                     continue;
                 }
 
-                if (strlen($value) > 0) {
+                if ($type === TypeField::TYPE_VALUE) {
+                    $data[$column] = new Expr('"' . $value . '"');
+                }
+
+                if ($type === TypeField::TYPE_QUERY) {
                     $data[$column] = new Expr($value);
-
-                    continue;
                 }
 
-                $data[$column] = 'e.' . $column;
-                if ($connection->tableColumnExists($productModelTable, $column)) {
+                if ($type === TypeField::TYPE_DEFAULT) {
+                    if (!$connection->tableColumnExists($productModelTable, $column)) {
+                        $this->setMessage(__('Warning: column %1 not found in product model', $column));
+                        continue;
+                    }
                     $data[$column] = 'v.' . $column;
+                }
+
+                if ($type === TypeField::TYPE_SIMPLE) {
+                    $data[$column] = 'e.' . $column;
+                }
+
+                if ($type === TypeField::TYPE_MAPPING) {
+                    if (!$connection->tableColumnExists($productModelTable, $column)) {
+                        continue;
+                    }
+                    /** @var string $mapping */
+                    $mapping = $value;
+                    if (($pos = strpos($column, '-')) !== false) {
+                        $mapping = $value . '-' . substr($column, $pos + 1);
+                    }
+                    if (!$connection->tableColumnExists($tmpTable, $mapping)) {
+                        $connection->addColumn(
+                            $tmpTable,
+                            $mapping,
+                            [
+                                'type'     => 'text',
+                                'length'   => 255,
+                                'default'  => null,
+                                'COMMENT'  => ' ',
+                                'nullable' => true,
+                            ]
+                        );
+                    }
+                    $data[$mapping] = 'v.' . $column;
                 }
             }
         }
@@ -1652,6 +1689,9 @@ class Product extends Import
             }
         }
 
+        /** @var \Magento\Framework\DB\Select $productIds */
+        $productIds = $connection->select()->from($tmpTable, ['product_id' => '_entity_id']);
+
         /**
          * @var int      $typeId
          * @var string[] $columns
@@ -1673,7 +1713,7 @@ class Product extends Import
             /* Remove old link */
             $connection->delete(
                 $linkTable,
-                ['(product_id, linked_product_id, link_type_id) NOT IN (?)' => $select, 'link_type_id = ?' => $typeId]
+                ['(product_id, linked_product_id, link_type_id) NOT IN (?)' => $select, 'link_type_id = ?' => $typeId, 'product_id IN (?)' => $productIds]
             );
 
             /* Insert new link */

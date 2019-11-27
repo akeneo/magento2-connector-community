@@ -272,7 +272,23 @@ For example :<br/>
                     <label>Configurable</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment>Fill configurable attributes with default value, leave blank to take simple product value or Product Model value if exists. Value must be a chain between quotes or a SQL statement.</comment>
+                    <comment>
+                        <![CDATA[
+                        <strong>Attribute:</strong> Declare each product model attributes that has to be imported in the configurable product.
+                        <br /><br />
+                        <strong>Type:</strong>
+                        <br />
+                        - <u>Product Model value</u>: Use the product model value for specified attribute. Leave the value field empty.
+                        <br />
+                        - <u>First Variant value</u>: Use the first simple product value for specified attribute. Leave the value field empty.
+                        <br />
+                        - <u>Mapping</u>: Fill the value field with a Magento attribute to map the product model attribute to another Magento attribute. Example: name_product_model to name
+                        <br />
+                        - <u>SQL Statement</u>: Use a SQL statement in the value field for custom value assignation from Akeneo Connector temporary tables. Example: url_key to LOWER(url_key)
+                        <br />
+                        - <u>Default value</u>: Fill the value field to assign a constant default value for a given attribute. Example: enabled to 1
+                        ]]>
+                    </comment>
                 </field>
                 <field id="media_enabled" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Import Media Files</label>
