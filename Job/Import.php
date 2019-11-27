@@ -65,6 +65,12 @@ abstract class Import extends DataObject implements ImportInterface
      */
     protected $outputHelper;
     /**
+     * This variable contains an Authenticator
+     *
+     * @var mixed $authenticator
+     */
+    protected $authenticator;
+    /**
      * This variable contains a mixed value
      *
      * @var ManagerInterface $eventManager
@@ -117,11 +123,7 @@ abstract class Import extends DataObject implements ImportInterface
     ) {
         parent::__construct($data);
 
-        try {
-            $this->akeneoClient = $authenticator->getAkeneoApiClient();
-        } catch (\Exception $e) {
-            $this->akeneoClient = false;
-        }
+        $this->authenticator = $authenticator;
         $this->outputHelper = $outputHelper;
         $this->eventManager = $eventManager;
         $this->step         = 0;
@@ -427,6 +429,10 @@ abstract class Import extends DataObject implements ImportInterface
         }
 
         if (!$this->akeneoClient) {
+            $this->akeneoClient = $this->getAkeneoClient();
+        }
+
+        if (!$this->akeneoClient) {
             return $this->outputHelper->getApiConnectionError();
         }
 
@@ -594,5 +600,22 @@ abstract class Import extends DataObject implements ImportInterface
             }
         }
         return $response;
+    }
+
+    /**
+     * Get Akeneo Client instance
+     *
+     * @return AkeneoPimEnterpriseClientInterface|false
+     */
+    public function getAkeneoClient()
+    {
+        try {
+            /** @var AkeneoPimEnterpriseClientInterface|false $akeneoClient */
+            $akeneoClient = $this->authenticator->getAkeneoApiClient();
+        } catch (\Exception $e) {
+            $akeneoClient = false;
+        }
+
+        return $akeneoClient;
     }
 }
