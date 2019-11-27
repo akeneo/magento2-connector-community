@@ -86,4 +86,31 @@ class Metrics extends AbstractSource
             return [];
         }
     }
+
+    /**
+     * Get list of all metric attributes only
+     *
+     * @return array|string[]
+     */
+    public function getMetricsAttributes()
+    {
+        /** @var string[] $metrics */
+        $metrics = [];
+        /** @var ResourceCursorInterface|mixed[] $attributes */
+        $attributes = $this->getAttributes();
+
+        if (!$attributes) {
+            return $this->_options;
+        }
+
+        foreach ($attributes as $attribute) {
+            if ($attribute['type'] != 'pim_catalog_metric') {
+                continue;
+            }
+
+            $metrics[] = $attribute['code'];
+        }
+
+        return $metrics;
+    }
 }
