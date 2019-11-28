@@ -107,7 +107,7 @@ class Configurable extends AbstractFieldArray
         /** @var array $options */
         $options = [
             self::TYPE_DEFAULT => __('Product model value'),
-            self::TYPE_SIMPLE  => __('First Variant value'),
+            self::TYPE_SIMPLE  => __('First Variation value'),
             self::TYPE_MAPPING => __('Mapping'),
             self::TYPE_QUERY   => __('SQL Statement'),
             self::TYPE_VALUE   => __('Default value'),

@@ -2,6 +2,13 @@
 
 namespace Akeneo\Connector\Helper\Import;
 
+use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Helper\Serializer as JsonSerializer;
+use Magento\Catalog\Model\Product as BaseProductModel;
+use Magento\Framework\App\DeploymentConfig;
+use Magento\Framework\App\Helper\Context;
+use Magento\Framework\App\ResourceConnection;
+
 /**
  * Class Product
  *
@@ -26,6 +33,34 @@ class Product extends Entities
      * @var string VALUES_KEY
      */
     const VALUES_KEY = 'values';
+    /**
+     * This variable contains a JsonSerializer
+     *
+     * @var JsonSerializer $serializer
+     */
+    protected $serializer;
+
+    /**
+     * Product constructor
+     *
+     * @param Context            $context
+     * @param ResourceConnection $connection
+     * @param DeploymentConfig   $deploymentConfig
+     * @param BaseProductModel   $product
+     * @param ConfigHelper       $configHelper
+     * @param JsonSerializer     $serializer
+     */
+    public function __construct(
+        Context $context,
+        ResourceConnection $connection,
+        DeploymentConfig $deploymentConfig,
+        BaseProductModel $product,
+        ConfigHelper $configHelper,
+        JsonSerializer $serializer
+    ) {
+        $this->serializer = $serializer;
+        parent::__construct($context, $connection, $deploymentConfig, $product, $configHelper);
+    }
 
     /**
      * Get columns from the api result
@@ -113,6 +148,15 @@ class Product extends Entities
          * @var array  $value
          */
         foreach ($values as $attribute => $value) {
+            if ($attribute === 'price' && !$this->isFieldInAttributeMapping('price')) {
+                continue;
+            }
+            if ($attribute === 'special_price' && !$this->isFieldInAttributeMapping('special_price')) {
+                continue;
+            }
+            if ($attribute === 'cost' && !$this->isFieldInAttributeMapping('cost')) {
+                continue;
+            }
             /** @var array $attributeValue */
             foreach ($value as $attributeValue) {
                 /** @var string $key */
@@ -212,5 +256,33 @@ class Product extends Entities
         }
 
         return (string)$key;
+    }
+
+    /**
+     * Check if a given attribute is mapped magento-side
+     *
+     * @param string $field
+     *
+     * @return bool
+     */
+    public function isFieldInAttributeMapping($field)
+    {
+        /** @var string|array $matches */
+        $matches = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING);
+        $matches = $this->serializer->unserialize($matches);
+        if (!is_array($matches)) {
+            return false;
+        }
+        /** @var string[] $match */
+        foreach ($matches as $match) {
+            if (!isset($match['akeneo_attribute'], $match['magento_attribute'])) {
+                continue;
+            }
+            if ($match['magento_attribute'] === $field) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

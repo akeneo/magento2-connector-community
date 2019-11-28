@@ -252,7 +252,15 @@ For example :<br/>
                     <label>Attribute Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Attribute</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment>Fill additional Magento attributes from Akeneo attributes</comment>
+                    <comment>
+                        <![CDATA[Fill additional Magento attributes from Akeneo attributes.<br/>
+"price" "special_price" and "cost" attributes won't be automatically mapped unless you explicitely declare them in this configuration.]]>
+                    </comment>
+                </field>
+                <field id="metrics" translate="label" type="text" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Metric Attributes</label>
+                    <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Metrics</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                 </field>
                 <field id="tax_class" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Default Tax Class</label>
@@ -270,15 +278,15 @@ For example :<br/>
                         <br /><br />
                         <strong>Type:</strong>
                         <br />
-                        - <u>Product Model value</u>: Use the product model value for specified attribute. Leave the value field empty.
+                        - <u>Product Model value</u>: Declare each PIM common attributes you want to be imported in the Magento configurable products. Leave the value field empty.
                         <br />
-                        - <u>First Variant value</u>: Use the first simple product value for specified attribute. Leave the value field empty.
+                        - <u>First Variation value</u>: Declare each PIM variation specific attributes you want to be imported in the Magento configurable products. The value of the first variation associated to the product model will be inserted in the corresponding Magento configurable product attribute. Leave the value field empty.
                         <br />
-                        - <u>Mapping</u>: Fill the value field with a Magento attribute to map the product model attribute to another Magento attribute. Example: name_product_model to name
+                        - <u>Mapping</u>: Declare each PIM common attributes you want to be mapped with another Magento attribute. Fill the value field with the corresponding Magento attribute. Example: Attribute = name_product_model and Value = name
                         <br />
-                        - <u>SQL Statement</u>: Use a SQL statement in the value field for custom value assignation from Akeneo Connector temporary tables. Example: url_key to LOWER(url_key)
+                        - <u>SQL Statement</u>: Use a SQL statement in the value field for custom value assignation from Akeneo Connector temporary tables. Example: Attribute = url_key and Value = LOWER(url_key)
                         <br />
-                        - <u>Default value</u>: Fill the value field to assign a constant default value for a given attribute. Example: enabled to 1
+                        - <u>Default value</u>: Fill the value field to assign a constant default value for a given attribute. Example: Attribute = enabled and Value = 0
                         ]]>
                     </comment>
                 </field>
