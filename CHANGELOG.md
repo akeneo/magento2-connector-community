@@ -37,3 +37,9 @@
 ### Version 100.2.6 :
 * Add check to prevent the creation of attributes and options with empty admin label
 * Fix product association deletion with differential product import
+
+### Version 100.3.0 :
+* Remove Akeneo attribute group import from connector (https://help.akeneo.com/magento2-connector/v100/articles/where-attributes.html#where-to-find-my-attribute-groups-in-magento-2)
+* Remove automatic mapping for attributes "price", "special_price" and "cost" (https://help.akeneo.com/magento2-connector/v100/articles/what-data.html#attribute-types)
+* Add metric as product variant and unit concatenation feature (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#metric-attributes)
+* Update wording for configurable product attribute mapping
