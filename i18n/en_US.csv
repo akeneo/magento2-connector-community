@@ -143,3 +143,7 @@ For example :<br/>
 "Website","Website"
 "Regenerate url rewrites","Regenerate url rewrites"
 "Url rewrite generation is not enabled","Url rewrite generation is not enabled"
+"Metric Attributes","Metric Attributes"
+"Akeneo Metric Attribute","Akeneo Metric Attribute"
+"Used As Variant","Used As Variant"
+"Concat Metric Unit","Add metric unit to value"
