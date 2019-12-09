@@ -18,6 +18,7 @@ use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\App\Cache\TypeListInterface;
+use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\PageCache\Model\Cache\Type;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
@@ -219,6 +220,12 @@ class Product extends Import
      * @var AttributeMetrics $attributeMetrics
      */
     protected $attributeMetrics;
+    /**
+     * This variable contains an PriceCurrencyInterface
+     *
+     * @var PriceCurrencyInterface $priceCurrency
+     */
+    protected $priceCurrency;
 
     /**
      * Product constructor.
@@ -239,6 +246,7 @@ class Product extends Import
      * @param LocalesHelper           $localesHelper
      * @param LocaleManager           $localeManager
      * @param AttributeMetrics        $attributeMetrics
+     * @param PriceCurrencyInterface  $priceCurrency
      * @param array                   $data
      */
     public function __construct(
@@ -259,6 +267,7 @@ class Product extends Import
         JobOption $jobOption,
         LocaleManager $localeManager,
         AttributeMetrics $attributeMetrics,
+        PriceCurrencyInterface $priceCurrency,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
@@ -277,6 +286,7 @@ class Product extends Import
         $this->localeManager           = $localeManager;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
         $this->attributeMetrics        = $attributeMetrics;
+        $this->priceCurrency           = $priceCurrency;
     }
 
     /**
@@ -1099,11 +1109,8 @@ class Product extends Import
         /** @var string[] $columns */
         $columns = array_keys($connection->describeTable($tmpTable));
 
-        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $helper        = $objectManager->get('\Magento\Directory\Helper\Data');
-
         /** @var string $adminBaseCurrency */
-        $adminBaseCurrency = $helper->getBaseCurrencyCode();
+        $adminBaseCurrency = $this->priceCurrency->getCurrency()->getCurrencyCode();
         /** @var mixed[] $values */
         $values = [
             0 => [
