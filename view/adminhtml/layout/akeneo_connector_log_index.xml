@@ -62,12 +62,6 @@
                             <argument name="index" xsi:type="string">name</argument>
                         </arguments>
                     </block>
-                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="file">
-                        <arguments>
-                            <argument name="header" xsi:type="string" translate="true">File</argument>
-                            <argument name="index" xsi:type="string">file</argument>
-                        </arguments>
-                    </block>
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="status">
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Status</argument>
