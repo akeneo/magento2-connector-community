@@ -43,3 +43,12 @@
 * Remove automatic mapping for attributes "price", "special_price" and "cost" (https://help.akeneo.com/magento2-connector/v100/articles/what-data.html#attribute-types)
 * Add metric as product variant and unit concatenation feature (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#metric-attributes)
 * Update wording for configurable product attribute mapping
+
+### Version 100.3.1 :
+* Fix product image name that should not exceed 90 characters since Magento 2.3.3
+
+**Warning :** *After updating connector to this version, all image names will be renamed. To know more, please consult documentation (https://help.akeneo.com/magento2-connector/v100/articles/06-import-images-configuration.html#how-can-i-retrieve-images-from-asset-collection-attributes)*
+
+* Remove unused "file" column on log grid
+* Move API client call from construct
+* Fix category URL issue adding -1, -2 to url-key when category had same name but not same parent category
