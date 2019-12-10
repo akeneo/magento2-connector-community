@@ -187,73 +187,6 @@ class Category extends Import
     }
 
     /**
-     * Set categories Url Key
-     *
-     * @return void
-     */
-    public function setUrlKey()
-    {
-        /** @var AdapterInterface $connection */
-        $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tableName */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
-        /** @var array $stores */
-        $stores = $this->storeHelper->getStores('lang');
-
-        /**
-         * @var string $local
-         * @var array $affected
-         */
-        foreach ($stores as $local => $affected) {
-            /** @var array $keys */
-            $keys = [];
-            if ($connection->tableColumnExists($tmpTable, 'labels-' . $local)) {
-                $connection->addColumn($tmpTable, 'url_key-' . $local, [
-                    'type' => 'text',
-                    'length' => 255,
-                    'default' => '',
-                    'COMMENT' => ' ',
-                    'nullable' => false
-                ]);
-
-                /** @var \Magento\Framework\DB\Select $select */
-                $select = $connection->select()
-                    ->from($tmpTable, ['entity_id' => '_entity_id', 'name' => 'labels-' . $local]);
-
-                $updateUrl = true; // TODO retrieve update URL from config
-
-                if (!$updateUrl) {
-                    $select->where('_is_new = ?', 1);
-                }
-
-                /** @var \Zend_Db_Statement_Interface $query */
-                $query = $connection->query($select);
-
-                /** @var array $row */
-                while (($row = $query->fetch())) {
-                    /** @var string $urlKey */
-                    $urlKey = $this->categoryModel->formatUrlKey($row['name']);
-                    /** @var string $finalKey */
-                    $finalKey = $urlKey;
-                    /** @var int $increment */
-                    $increment = 1;
-                    while (in_array($finalKey, $keys)) {
-                        $finalKey = $urlKey . '-' . $increment++;
-                    }
-
-                    $keys[] = $finalKey;
-
-                    $connection->update(
-                        $tmpTable,
-                        ['url_key-' . $local => $finalKey],
-                        ['_entity_id = ?' => $row['entity_id']]
-                    );
-                }
-            }
-        }
-    }
-
-    /**
      * Set Categories structure
      *
      * @return void
@@ -306,6 +239,73 @@ class Category extends Import
                     c1.`parent_id` = c2.`_entity_id`
                 WHERE c1.`level` <= c2.`level` - 1
             ');
+        }
+    }
+
+    /**
+     * Set categories Url Key
+     *
+     * @return void
+     */
+    public function setUrlKey()
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tableName */
+        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        /** @var array $stores */
+        $stores = $this->storeHelper->getStores('lang');
+
+        /**
+         * @var string $local
+         * @var array $affected
+         */
+        foreach ($stores as $local => $affected) {
+            /** @var array $keys */
+            $keys = [];
+            if ($connection->tableColumnExists($tmpTable, 'labels-' . $local)) {
+                $connection->addColumn($tmpTable, 'url_key-' . $local, [
+                    'type' => 'text',
+                    'length' => 255,
+                    'default' => '',
+                    'COMMENT' => ' ',
+                    'nullable' => false
+                ]);
+
+                /** @var \Magento\Framework\DB\Select $select */
+                $select = $connection->select()
+                    ->from($tmpTable, ['entity_id' => '_entity_id', 'name' => 'labels-' . $local]);
+
+                $updateUrl = true; // TODO retrieve update URL from config
+
+                if (!$updateUrl) {
+                    $select->where('_is_new = ?', 1);
+                }
+
+                /** @var \Zend_Db_Statement_Interface $query */
+                $query = $connection->query($select);
+
+                /** @var array $row */
+                while (($row = $query->fetch())) {
+                    /** @var string $urlKey */
+                    $urlKey = $this->categoryModel->formatUrlKey($row['name']);
+                    /** @var string $finalKey */
+                    $finalKey = $urlKey;
+                    /** @var int $increment */
+                    $increment = 1;
+                    while (isset($keys[$row['parent_id']]) && in_array($finalKey, $keys[$row['parent_id']])) {
+                        $finalKey = $urlKey . '-' . $increment++;
+                    }
+
+                    $keys[$row['parent_id']][] = $finalKey;
+
+                    $connection->update(
+                        $tmpTable,
+                        ['url_key-' . $local => $finalKey],
+                        ['_entity_id = ?' => $row['entity_id']]
+                    );
+                }
+            }
         }
     }
 
