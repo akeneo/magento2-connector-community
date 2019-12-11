@@ -2063,7 +2063,7 @@ class Product extends Import
                 /** @var array $media */
                 $media = $this->akeneoClient->getProductMediaFileApi()->get($row[$image]);
                 /** @var string $name */
-                $name = basename($media['code']);
+                $name = $this->entitiesHelper->formatMediaName(basename($media['code']));
 
                 if (!$this->configHelper->mediaFileExists($name)) {
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);

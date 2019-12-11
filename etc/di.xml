@@ -44,12 +44,12 @@
                         <item name="comment" xsi:type="string">Match code with Magento ID</item>
                     </item>
                     <item name="4" xsi:type="array">
-                        <item name="method" xsi:type="string">setUrlKey</item>
-                        <item name="comment" xsi:type="string">Create URL key</item>
-                    </item>
-                    <item name="5" xsi:type="array">
                         <item name="method" xsi:type="string">setStructure</item>
                         <item name="comment" xsi:type="string">Create structure</item>
+                    </item>
+                    <item name="5" xsi:type="array">
+                        <item name="method" xsi:type="string">setUrlKey</item>
+                        <item name="comment" xsi:type="string">Create URL key</item>
                     </item>
                     <item name="6" xsi:type="array">
                         <item name="method" xsi:type="string">removeCategoriesByFilter</item>
