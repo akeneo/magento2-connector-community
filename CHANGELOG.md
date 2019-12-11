@@ -47,7 +47,7 @@
 ### Version 100.3.1 :
 * Fix product image name that should not exceed 90 characters since Magento 2.3.3
 
-**Warning :** *After updating connector to this version, all image names will be renamed. To know more, please consult documentation (https://help.akeneo.com/magento2-connector/v100/articles/06-import-images-configuration.html#how-can-i-retrieve-images-from-asset-collection-attributes)*
+**Warning :** *After updating connector to this version, all image names will be renamed. To know more, please consult documentation (https://help.akeneo.com/magento2-connector/v100/articles/06-import-images-configuration.html)*
 
 * Remove unused "file" column on log grid
 * Move API client call from construct
