@@ -22,6 +22,7 @@ use Magento\PageCache\Model\Cache\Type;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Staging\Model\VersionManager;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
@@ -219,6 +220,12 @@ class Product extends Import
      * @var AttributeMetrics $attributeMetrics
      */
     protected $attributeMetrics;
+    /**
+     * This variable contains an StoreManagerInterface
+     *
+     * @var StoreManagerInterface $storeManager
+     */
+    protected $storeManager;
 
     /**
      * Product constructor.
@@ -239,6 +246,7 @@ class Product extends Import
      * @param LocalesHelper           $localesHelper
      * @param LocaleManager           $localeManager
      * @param AttributeMetrics        $attributeMetrics
+     * @param StoreManagerInterface   $storeManager
      * @param array                   $data
      */
     public function __construct(
@@ -259,6 +267,7 @@ class Product extends Import
         JobOption $jobOption,
         LocaleManager $localeManager,
         AttributeMetrics $attributeMetrics,
+        StoreManagerInterface $storeManager,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
@@ -277,6 +286,7 @@ class Product extends Import
         $this->localeManager           = $localeManager;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
         $this->attributeMetrics        = $attributeMetrics;
+        $this->storeManager            = $storeManager;
     }
 
     /**
@@ -1099,11 +1109,8 @@ class Product extends Import
         /** @var string[] $columns */
         $columns = array_keys($connection->describeTable($tmpTable));
 
-        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $helper        = $objectManager->get('\Magento\Directory\Helper\Data');
-
         /** @var string $adminBaseCurrency */
-        $adminBaseCurrency = $helper->getBaseCurrencyCode();
+        $adminBaseCurrency = $this->storeManager->getStore()->getBaseCurrencyCode();
         /** @var mixed[] $values */
         $values = [
             0 => [
