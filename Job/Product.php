@@ -18,11 +18,11 @@ use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\App\Cache\TypeListInterface;
-use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\PageCache\Model\Cache\Type;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Staging\Model\VersionManager;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
@@ -221,11 +221,11 @@ class Product extends Import
      */
     protected $attributeMetrics;
     /**
-     * This variable contains an PriceCurrencyInterface
+     * This variable contains an StoreManagerInterface
      *
-     * @var PriceCurrencyInterface $priceCurrency
+     * @var StoreManagerInterface $storeManager
      */
-    protected $priceCurrency;
+    protected $storeManager;
 
     /**
      * Product constructor.
@@ -246,7 +246,7 @@ class Product extends Import
      * @param LocalesHelper           $localesHelper
      * @param LocaleManager           $localeManager
      * @param AttributeMetrics        $attributeMetrics
-     * @param PriceCurrencyInterface  $priceCurrency
+     * @param StoreManagerInterface   $storeManager
      * @param array                   $data
      */
     public function __construct(
@@ -267,7 +267,7 @@ class Product extends Import
         JobOption $jobOption,
         LocaleManager $localeManager,
         AttributeMetrics $attributeMetrics,
-        PriceCurrencyInterface $priceCurrency,
+        StoreManagerInterface $storeManager,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
@@ -286,7 +286,7 @@ class Product extends Import
         $this->localeManager           = $localeManager;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
         $this->attributeMetrics        = $attributeMetrics;
-        $this->priceCurrency           = $priceCurrency;
+        $this->storeManager            = $storeManager;
     }
 
     /**
@@ -1110,7 +1110,7 @@ class Product extends Import
         $columns = array_keys($connection->describeTable($tmpTable));
 
         /** @var string $adminBaseCurrency */
-        $adminBaseCurrency = $this->priceCurrency->getCurrency()->getCurrencyCode();
+        $adminBaseCurrency = $this->storeManager->getStore()->getBaseCurrencyCode();
         /** @var mixed[] $values */
         $values = [
             0 => [
