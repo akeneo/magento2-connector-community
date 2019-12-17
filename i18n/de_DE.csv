@@ -126,6 +126,7 @@ Zum Beispiel :<br/>
 "Status","Status"
 "Test API credentials","Test API Anmeldedaten"
 "The Akeneo user should have permissions to list","Der Akeneo-Benutzer sollte Berechtigungen zum Auflisten haben"
+"The attribute %1 was skipped because its type is not the same between Akeneo and Magento. Please delete it in Magento and try a new import","Das Attribut lasst mit dre Code %1 aus. Sein Typ ist nicht der gleiche zwischen Akeneo und Magento. Bitte löschen Sie es in Magento und versuchen Sie es erneut"
 "The connection is working fine","Die Verbindung funktioniert einwandfrei"
 "Updated","Updated"
 "Updated after","Aktualisiert nach dem"
