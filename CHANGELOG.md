@@ -52,3 +52,7 @@
 * Remove unused "file" column on log grid
 * Move API client call from construct
 * Fix category URL issue adding -1, -2 to url-key when category had same name but not same parent category
+
+### Version 100.3.2 :
+* Fix Object Manager usage
+* Fix category URL request missing "parent_id" select
