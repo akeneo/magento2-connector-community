@@ -272,9 +272,10 @@ class Category extends Import
                     'nullable' => false
                 ]);
 
-                /** @var \Magento\Framework\DB\Select $select */
-                $select = $connection->select()
-                    ->from($tmpTable, ['entity_id' => '_entity_id', 'name' => 'labels-' . $local]);
+                $select = $connection->select()->from(
+                    $tmpTable,
+                    ['entity_id' => '_entity_id', 'name' => 'labels-' . $local, 'parent_id' => 'parent_id']
+                );
 
                 $updateUrl = true; // TODO retrieve update URL from config
 
