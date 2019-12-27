@@ -97,6 +97,7 @@ Par exemple :<br/>
 "Match Magento website with Akeneo channel","Correspondance entre le site web et le canal du Akeneo"
 "Media import is not enabled","L'import des images n'est pas activé"
 "Must be a value between 1 and 100. Default value is 100.","Doit être une valeur entre 1 et 100. La valeur par défaut est 100."
+"New products status","Statut des nouveaux produits"
 "No category found","Aucune catégorie trouvée"
 "No category to ignore","Aucune catégorie à ignorer"
 "No condition","Pas de condition"

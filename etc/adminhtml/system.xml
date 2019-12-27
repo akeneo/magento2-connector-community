@@ -248,6 +248,10 @@ For example :<br/>
                     <label>Website Attribute</label>
                     <comment>Enter the code of the select or multiselect attribute used to associate products to your websites, leave blank to ignore</comment>
                 </field>
+                <field id="activation" translate="label comment" type="select" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>New products status</label>
+                    <source_model>Akeneo\Connector\Model\Source\Activation</source_model>
+                </field>
                 <field id="attribute_mapping" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Attribute Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Attribute</frontend_model>
@@ -291,10 +295,6 @@ For example :<br/>
                 <field id="url_generation_enabled" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Regenerate url rewrites</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                </field>
-                <field id="activation" translate="label comment" type="select" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Enable new products</label>
-                    <source_model>Akeneo\Connector\Model\Source\Activation</source_model>
                 </field>
             </group>
         </section>
