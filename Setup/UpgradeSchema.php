@@ -2,10 +2,12 @@
 
 namespace Akeneo\Connector\Setup;
 
+use Magento\Eav\Model\Config;
 use Magento\Framework\Setup\UpgradeSchemaInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\SchemaSetupInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\DB\Ddl\TriggerFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\ConfigResource\ConfigInterface;
 use Akeneo\Connector\Helper\Serializer as JsonSerializer;
@@ -42,22 +44,40 @@ class UpgradeSchema implements UpgradeSchemaInterface
      * @var JsonSerializer $serializer
      */
     protected $serializer;
+    /**
+     * This variable contains a TriggerFactory
+     *
+     * @var TriggerFactory $triggerFactory
+     */
+    protected $triggerFactory;
+    /**
+     * This variable contains a Config
+     *
+     * @var Config $config
+     */
+    protected $config;
 
     /**
      * UpgradeSchema constructor.
      *
      * @param ScopeConfigInterface $scopeConfig
      * @param ConfigInterface      $resourceConfig
-     * @param JsonSerializer       $serializer
+     * @param JsonSerializer       $serializez
+     * @param TriggerFactory       $triggerFactory
+     * @param Config               $config
      */
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         ConfigInterface $resourceConfig,
-        JsonSerializer $serializer
+        JsonSerializer $serializer,
+        TriggerFactory $triggerFactory,
+        Config $config
     ) {
-        $this->scopeConfig = $scopeConfig;
+        $this->scopeConfig    = $scopeConfig;
         $this->resourceConfig = $resourceConfig;
-        $this->serializer = $serializer;
+        $this->serializer     = $serializer;
+        $this->triggerFactory = $triggerFactory;
+        $this->config         = $config;
     }
 
     /**
@@ -115,6 +135,69 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 );
             }
 
+        }
+
+        if (version_compare($context->getVersion(), '1.0.2', '<')) {
+            /* Create triggers for deletion in akeneo connector entity table */
+            /** @var \Magento\Framework\DB\Adapter\AdapterInterface $connection */
+            $connection = $setup->getConnection();
+            /** @var string $event */
+            $event = 'DELETE';
+            /** @var int $entityTypeId */
+            $entityTypeId = $this->config->getEntityType(
+                \Magento\Catalog\Api\Data\ProductAttributeInterface::ENTITY_TYPE_CODE
+            )->getEntityTypeId();
+
+            /* Category trigger */
+            /** @var string $triggerName */
+            $triggerName = 'akeneo_connector_after_delete_category';
+            /** @var \Magento\Framework\DB\Ddl\Trigger $trigger */
+            $trigger = $this->triggerFactory->create()->setName($triggerName)->setTime(
+                \Magento\Framework\DB\Ddl\Trigger::TIME_AFTER
+            )->setEvent($event)->setTable('catalog_category_entity')->addStatement(
+                'DELETE FROM akeneo_connector_entities WHERE OLD.entity_id = entity_id AND import = \'category\';'
+            );
+            $connection->dropTrigger($triggerName);
+            $connection->createTrigger($trigger);
+
+            /* Family trigger */
+            $triggerName = 'akeneo_connector_after_delete_family';
+            $trigger     = $this->triggerFactory->create()->setName($triggerName)->setTime(
+                \Magento\Framework\DB\Ddl\Trigger::TIME_AFTER
+            )->setEvent($event)->setTable('eav_attribute_set')->addStatement(
+                'DELETE FROM akeneo_connector_entities WHERE OLD.attribute_set_id = entity_id AND import = \'family\' AND OLD.entity_type_id = ' . $entityTypeId . ';'
+            );
+            $connection->dropTrigger($triggerName);
+            $connection->createTrigger($trigger);
+
+            /* Attribute trigger */
+            $triggerName = 'akeneo_connector_after_delete_attribute';
+            $trigger     = $this->triggerFactory->create()->setName($triggerName)->setTime(
+                \Magento\Framework\DB\Ddl\Trigger::TIME_AFTER
+            )->setEvent($event)->setTable('eav_attribute')->addStatement(
+                'DELETE FROM akeneo_connector_entities WHERE OLD.attribute_id = entity_id AND import = \'attribute\' AND OLD.entity_type_id = ' . $entityTypeId . ';'
+            );
+            $connection->dropTrigger($triggerName);
+            $connection->createTrigger($trigger);
+
+            /* Option trigger */
+            $triggerName = 'akeneo_cæonnector_after_delete_option';
+            $trigger     = $this->triggerFactory->create()->setName($triggerName)->setTime(
+                \Magento\Framework\DB\Ddl\Trigger::TIME_AFTER
+            )->setEvent($event)->setTable('eav_attribute_option')->addStatement(
+                'DELETE FROM akeneo_connector_entities WHERE OLD.option_id = entity_id AND import = \'option\';'
+            );
+            $connection->dropTrigger($triggerName);
+            $connection->createTrigger($trigger);
+
+            $triggerName = 'akeneo_connector_after_delete_product';
+            $trigger     = $this->triggerFactory->create()->setName($triggerName)->setTime(
+                \Magento\Framework\DB\Ddl\Trigger::TIME_AFTER
+            )->setEvent($event)->setTable('catalog_product_entity')->addStatement(
+                'DELETE FROM akeneo_connector_entities WHERE OLD.entity_id = entity_id AND import = \'product\';'
+            );
+            $connection->dropTrigger($triggerName);
+            $connection->createTrigger($trigger);
         }
 
         $installer->endSetup();
