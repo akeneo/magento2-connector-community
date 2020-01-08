@@ -18,6 +18,7 @@ use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Import\Attribute as AttributeHelper;
 use Akeneo\Connector\Helper\Import\Entities as EntitiesHelper;
+use Akeneo\Connector\Helper\Import\Option as OptionHelper;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
 use \Zend_Db_Expr as Expr;
@@ -58,6 +59,12 @@ class Option extends Import
      * @var EntitiesHelper $entitiesHelper
      */
     protected $entitiesHelper;
+    /**
+     * This variable contains an OptionHelper
+     *
+     * @var OptionHelper $optionHelper
+     */
+    protected $optionHelper;
     /**
      * This variable contains a ConfigHelper
      *
@@ -108,6 +115,7 @@ class Option extends Import
      * @param ManagerInterface  $eventManager
      * @param Authenticator     $authenticator
      * @param EntitiesHelper    $entitiesHelper
+     * @param OptionHelper      $optionHelper
      * @param ConfigHelper      $configHelper
      * @param Config            $eavConfig
      * @param AttributeHelper   $attributeHelper
@@ -123,6 +131,7 @@ class Option extends Import
         ManagerInterface $eventManager,
         Authenticator $authenticator,
         EntitiesHelper $entitiesHelper,
+        OptionHelper $optionHelper,
         ConfigHelper $configHelper,
         Config $eavConfig,
         AttributeHelper $attributeHelper,
@@ -134,6 +143,7 @@ class Option extends Import
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
 
         $this->entitiesHelper  = $entitiesHelper;
+        $this->optionHelper    = $optionHelper;
         $this->configHelper    = $configHelper;
         $this->eavConfig       = $eavConfig;
         $this->attributeHelper = $attributeHelper;
@@ -195,6 +205,10 @@ class Option extends Import
      */
     public function insertData()
     {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPanigationSize();
         /** @var PageInterface $attributes */
@@ -210,6 +224,35 @@ class Option extends Import
         $this->setMessage(
             __('%1 line(s) found', $lines)
         );
+
+        /* Remove option without an admin store label */
+        /** @var string $localeCode */
+        $localeCode = $this->configHelper->getDefaultLocale();
+        /** @var \Magento\Framework\DB\Select $select */
+        $select = $connection->select()->from(
+            $tmpTable,
+            [
+                'label'     => 'labels-' . $localeCode,
+                'code'      => 'code',
+                'attribute' => 'attribute',
+            ]
+        )->where('`labels-' . $localeCode . '` IS NULL');
+        /** @var \Zend_Db_Statement_Interface $query */
+        $query = $connection->query($select);
+        /** @var array $row */
+        while (($row = $query->fetch())) {
+            if (!isset($row['label']) || $row['label'] === null) {
+                $connection->delete($tmpTable, ['code = ?' => $row['code'], 'attribute = ?' => $row['attribute']]);
+                $this->setAdditionalMessage(
+                    __(
+                        'The option %1 from attribute %2 was not imported because it did not have a translation in admin store language : %3',
+                        $row['code'],
+                        $row['attribute'],
+                        $localeCode
+                    )
+                );
+            }
+        }
     }
 
     /**
@@ -219,7 +262,7 @@ class Option extends Import
      */
     public function matchEntities()
     {
-        $this->entitiesHelper->matchEntity('code', 'eav_attribute_option', 'option_id', $this->getCode(), 'attribute');
+        $this->optionHelper->matchEntity('code', 'eav_attribute_option', 'option_id', $this->getCode(), 'attribute');
     }
 
     /**
@@ -233,37 +276,6 @@ class Option extends Import
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
-
-        /* Remove option without a admin store label */
-        /** @var string $localeCode */
-        $localeCode = $this->configHelper->getDefaultLocale();
-        /** @var \Magento\Framework\DB\Select $select */
-        $select = $connection->select()->from(
-            $tmpTable,
-            [
-                'entity_id' => '_entity_id',
-                'label'     => 'labels-' . $localeCode,
-                'code'      => 'code',
-                'attribute' => 'attribute',
-            ]
-        )->where('`labels-' . $localeCode . '` IS NULL');
-        /** @var \Zend_Db_Statement_Interface $query */
-        $query = $connection->query($select);
-        /** @var array $row */
-        while (($row = $query->fetch())) {
-            if (!isset($row['label']) || $row['label'] === null) {
-                $connection->delete($tmpTable, ['_entity_id = ?' => $row['entity_id']]);
-                $this->setAdditionalMessage(
-                    __(
-                        'The option %1 from attribute %2 was not imported because it did not have a translation in admin store language : %3',
-                        $row['code'],
-                        $row['attribute'],
-                        $localeCode
-                    )
-                );
-            }
-        }
-
         /** @var array $columns */
         $columns = [
             'option_id'  => 'a._entity_id',
