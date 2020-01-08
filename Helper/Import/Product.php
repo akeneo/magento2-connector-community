@@ -183,7 +183,7 @@ class Product extends Entities
                 // Attribute is a price
                 /** @var array $price */
                 foreach ($attributeValue['data'] as $price) {
-                    if (!array_key_exists('currency', $price) || !array_key_exists('amount', $price)) {
+                    if (!is_array($price) || !array_key_exists('currency', $price) || !array_key_exists('amount', $price)) {
                         continue;
                     }
                     /** @var string $priceKey */
