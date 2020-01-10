@@ -2089,8 +2089,6 @@ class Product extends JobImport
             $this->storeHelper->getStores(['lang']), // en_US
             $this->storeHelper->getStores(['lang', 'channel_code']) // en_US-channel
         );
-        /** @var bool $isUrlKeyMapped */
-        $isUrlKeyMapped = $this->configHelper->isUrlKeyMapped();
 
         $defaultUrlKeyColumn = '`url_key`';
         /**
