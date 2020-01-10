@@ -2092,6 +2092,7 @@ class Product extends JobImport
         /** @var bool $isUrlKeyMapped */
         $isUrlKeyMapped = $this->configHelper->isUrlKeyMapped();
 
+        $defaultUrlKeyColumn = '`url_key`';
         /**
          * @var string $local
          * @var array  $affected
@@ -2109,8 +2110,9 @@ class Product extends JobImport
                         'nullable' => false,
                     ]
                 );
-                $connection->update($tmpTable, ['url_key-' . $local => new Expr('`url_key`')]);
+                $connection->update($tmpTable, ['url_key-' . $local => new Expr($defaultUrlKeyColumn)]);
             }
+            $defaultUrlKeyColumn = "`url_key-$local`";
 
             /**
              * @var array $affected
