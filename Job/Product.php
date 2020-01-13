@@ -371,8 +371,6 @@ class Product extends Import
                     foreach ($product['values'][$metricsConcatSetting] as $key => $metric) {
                         /** @var string $unit */
                         $unit = $metric['data']['unit'];
-                        /** @var string|false $symbol */
-                        $symbol = array_key_exists($unit, $metricSymbols);
 
                         if (!array_key_exists($unit, $metricSymbols)) {
                             continue;
