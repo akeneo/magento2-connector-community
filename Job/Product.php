@@ -628,6 +628,7 @@ class Product extends Import
         $this->jobOption->createTable();
 
         foreach ($metricsVariantSettings as $metricsVariantSetting) {
+            $metricsVariantSetting = strtolower($metricsVariantSetting);
             $columnExist = $connection->tableColumnExists($tmpTable, $metricsVariantSetting);
 
             if (!$columnExist) {
