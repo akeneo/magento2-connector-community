@@ -34,7 +34,6 @@ use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Import\Product as ProductImportHelper;
 use Akeneo\Connector\Job\Option as JobOption;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
-use Magento\Backend\Model\Locale\Manager as LocaleManager;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Pdo;
 
@@ -209,12 +208,6 @@ class Product extends Import
      */
     protected $jobOption;
     /**
-     * This variable contains a LocaleManager
-     *
-     * @var LocaleManager $localeManager
-     */
-    protected $localeManager;
-    /**
      * This variable contains an AttributeMetrics
      *
      * @var AttributeMetrics $attributeMetrics
@@ -244,7 +237,6 @@ class Product extends Import
      * @param TypeListInterface       $cacheTypeList
      * @param StoreHelper             $storeHelper
      * @param LocalesHelper           $localesHelper
-     * @param LocaleManager           $localeManager
      * @param AttributeMetrics        $attributeMetrics
      * @param StoreManagerInterface   $storeManager
      * @param array                   $data
@@ -265,7 +257,6 @@ class Product extends Import
         StoreHelper $storeHelper,
         LocalesHelper $localesHelper,
         JobOption $jobOption,
-        LocaleManager $localeManager,
         AttributeMetrics $attributeMetrics,
         StoreManagerInterface $storeManager,
         array $data = []
@@ -283,7 +274,6 @@ class Product extends Import
         $this->storeHelper             = $storeHelper;
         $this->localesHelper           = $localesHelper;
         $this->jobOption               = $jobOption;
-        $this->localeManager           = $localeManager;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
         $this->attributeMetrics        = $attributeMetrics;
         $this->storeManager            = $storeManager;
@@ -620,10 +610,8 @@ class Product extends Import
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var mixed[] $metricsVariantSettings */
         $metricsVariantSettings = $this->configHelper->getMetricsColumns(true);
-        /** @var string[] $metricsSymbols */
-        $metricsSymbols = $this->getMetricsSymbols();
-        /** @var string $adminLocale */
-        $adminLocale = $this->localeManager->getGeneralLocale();
+        /** @var string[] $locales */
+        $locales = $this->localesHelper->getAkeneoLocales();
 
         $this->jobOption->createTable();
 
@@ -646,9 +634,7 @@ class Product extends Import
                 }
 
                 /** @var string[] $labels */
-                $labels = [];
-
-                $labels[$adminLocale] = $option;
+                $labels = array_fill_keys($locales, $option);
 
                 /** @var mixed[] $insertedData */
                 $insertedData = [
