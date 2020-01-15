@@ -527,4 +527,50 @@ abstract class Import extends DataObject implements ImportInterface
         }
         return $response;
     }
+
+    /**
+     * Slice InsertOnDuplicate into separate updates to prevent MySQL hitting row size max.
+     *
+     * @param string $table
+     * @param array $data
+     * @param array $fields
+     *
+     * @return void
+     */
+    public function sliceInsertOnDuplicate($table, array $data, array $fields = [])
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var int $updateLength */
+        $updateLength = $this->configHelper->getAdvancedPmUpdateLength();
+        /** @var array $row */
+        foreach ($data as $row) {
+            // create empty row with primaryKey if not present
+            /** @var string $primaryKey */
+            $primaryKey = $row['code'];
+            if (!$connection->select()->from($table)->where('code = ?', $primaryKey)) {
+                $connection->insert($table, ['code = ?', $primaryKey]);
+            }
+            unset($row['code']);
+            // slice the data in separate updates
+            while (count($row)) {
+                /** @var int $sliceSize */
+                $sliceSize = 0;
+                /** @var array $slice */
+                $slice = [];
+                foreach ($row as $column => $value) {
+                    $sliceSize += strlen($column) + strlen($value);
+                    // Ignore "Update Length" on first column update to prevent
+                    // possible endless loop if a column is bigger.
+                    if (count($slice) && ($sliceSize >= $updateLength)) {
+                        break;
+                    }
+                    $slice[$column] = $value;
+                    unset($row[$column]);
+                }
+                $connection->update($table, $slice, ['code = ?' => $primaryKey]);
+            }
+        }
+        return;
+    }
 }

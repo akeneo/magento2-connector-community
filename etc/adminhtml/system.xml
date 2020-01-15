@@ -262,11 +262,23 @@ For example :<br/>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>Fill configurable attributes with default value, leave blank to take simple product value or Product Model value if exists. Value must be a chain between quotes or a SQL statement.</comment>
                 </field>
-                <field id="media_enabled" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="product_model_batch_size" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Product Model Batch Size</label>
+                    <comment>
+                        <![CDATA[The number of products handled per database update. Lower this value for products with many and/or big attributes to stay below database limitations.<br />If set to 0, "Update Length" below will be used instead.]]>
+                    </comment>
+                </field>
+                <field id="product_model_update_length" translate="label comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Product Model Update Length</label>
+                    <comment>
+                        <![CDATA[If the above "Batch Size" is set to 0, the database command to update the product will be sliced into separate statements no bigger than the given value. This is an approximate value, and must be superior to 1000 characters.]]>
+                    </comment>
+                </field>
+                <field id="media_enabled" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Import Media Files</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="media_gallery" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="media_gallery" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Akeneo Images Attributes</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Gallery</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -274,7 +286,7 @@ For example :<br/>
                         <field id="media_enabled">1</field>
                     </depends>
                 </field>
-                <field id="media_images" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="media_images" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Product Images Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Image</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -285,21 +297,6 @@ For example :<br/>
                 <field id="url_generation_enabled" translate="label" type="select" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Regenerate url rewrites</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                </field>
-            </group>
-            <group id="advanced" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
-                <label>Advanced</label>
-                <field id="pm_batch_size" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Product Model Batch Size</label>
-                    <comment>
-                        <![CDATA[The number of products grouped per database update. Lower this value for products with many and/or big attributes to stay below database limitations.<br />If set to 0, "Update Length" below is applicable.]]>
-                    </comment>
-                </field>
-                <field id="pm_update_length" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Product Model Update Length</label>
-                    <comment>
-                        <![CDATA[If above "Batch Size" is set to 0, the database command to update the product will be sliced into separate statements no bigger than "Update Length" parts. This is an approximate value, and must be >= 1000.]]>
-                    </comment>
                 </field>
             </group>
         </section>

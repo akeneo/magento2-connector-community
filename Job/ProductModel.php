@@ -26,11 +26,6 @@ use Akeneo\Connector\Helper\Output as OutputHelper;
 class ProductModel extends Import
 {
     /**
-     * @var int BATCH_SIZE
-     */
-    const BATCH_SIZE = 500;
-
-    /**
      * This variable contains a string value
      *
      * @var string $code
@@ -189,47 +184,6 @@ class ProductModel extends Import
                 'COMMENT' => ' '
             ]);
         }
-    }
-
-    /**
-     * sliceInsertOnDuplicate slices InsertOnDuplicate into separate updates to
-     * prevent MySQL hitting row size max.
-     *
-     * @param string $table The table to insert data into.
-     * @param array $data Column-value pairs or array of column-value pairs.
-     * @return void
-     */
-    public function sliceInsertOnDuplicate($table, array $data, array $fields = [])
-    {
-        /** @var AdapterInterface $connection */
-        $connection = $this->entitiesHelper->getConnection();
-        /** @var int $updateLength */
-        $updateLength = $this->configHelper->getAdvancedPmUpdateLength();
-        foreach ($data as $row) {
-            // create empty row with primaryKey if not present
-            $primaryKey = $row['code'];
-            if (!$connection->select()->from($table)->where('code = ?', $primaryKey)) {
-                $connection->insert($table, ['code = ?', $primaryKey]);
-            }
-            unset($row['code']);
-            // slice the data in separate updates
-            while (count($row)) {
-                $sliceSize = 0;
-                $slice = [];
-                foreach ($row as $column => $value) {
-                    $sliceSize += strlen($column) + strlen($value);
-                    // Ignore "Update Length" on first column update to prevent
-                    // possible endless loop if a column is bigger.
-                    if (count($slice) && ($sliceSize >= $updateLength)) {
-                        break;
-                    }
-                    $slice[$column] = $value;
-                    unset($row[$column]);
-                }
-                $connection->update($table, $slice, ['code = ?' => $primaryKey]);
-            }
-        }
-        return;
     }
 
     /**
