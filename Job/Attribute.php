@@ -177,8 +177,8 @@ class Attribute extends Import
          */
         foreach ($attributes as $index => $attribute) {
             /** @var string $attributeCode */
-            $attributeCode     = strtolower($attribute['code']);
-            $attribute['code'] = $attributeCode;
+            $attributeCode     = $attribute['code'];
+            $attribute['code'] = strtolower($attributeCode);
 
             if ($attribute['type'] == 'pim_catalog_metric' && in_array(
                     $attributeCode,
