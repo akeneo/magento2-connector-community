@@ -24,15 +24,13 @@
                 <completeness_type>=</completeness_type>
                 <completeness_value>100</completeness_value>
                 <status>1</status>
+                <updated_mode>SINCE LAST N DAYS</updated_mode>
             </products_filters>
             <product>
                 <url_generation_enabled>1</url_generation_enabled>
                 <product_model_batch_size>500</product_model_batch_size>
                 <product_model_update_length>5000</product_model_update_length>
             </product>
-            <products_filters>
-                <updated_mode>SINCE LAST N DAYS</updated_mode>
-            </products_filters>
             <category>
                 <is_active>1</is_active>
                 <include_in_menu>1</include_in_menu>

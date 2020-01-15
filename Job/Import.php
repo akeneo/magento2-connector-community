@@ -65,6 +65,12 @@ abstract class Import extends DataObject implements ImportInterface
      */
     protected $outputHelper;
     /**
+     * This variable contains an Authenticator
+     *
+     * @var mixed $authenticator
+     */
+    protected $authenticator;
+    /**
      * This variable contains a mixed value
      *
      * @var ManagerInterface $eventManager
@@ -94,6 +100,12 @@ abstract class Import extends DataObject implements ImportInterface
      * @var bool $continue
      */
     private $continue;
+    /**
+     * This variable contains a bool value
+     *
+     * @var bool $setFromAdmin
+     */
+    private $setFromAdmin;
 
     /**
      * Import constructor.
@@ -111,14 +123,11 @@ abstract class Import extends DataObject implements ImportInterface
     ) {
         parent::__construct($data);
 
-        try {
-            $this->akeneoClient = $authenticator->getAkeneoApiClient();
-        } catch (\Exception $e) {
-            $this->akeneoClient = false;
-        }
+        $this->authenticator = $authenticator;
         $this->outputHelper = $outputHelper;
         $this->eventManager = $eventManager;
         $this->step         = 0;
+        $this->setFromAdmin = false;
         $this->initStatus();
         $this->initSteps();
     }
@@ -202,6 +211,30 @@ abstract class Import extends DataObject implements ImportInterface
     }
 
     /**
+     * Set set from admin
+     *
+     * @param $value
+     *
+     * @return $this
+     */
+    public function setSetFromAdmin($value)
+    {
+        $this->setFromAdmin = $value;
+
+        return $this;
+    }
+
+    /**
+     * Get set from admin
+     *
+     * @return bool
+     */
+    public function getSetFromAdmin()
+    {
+        return $this->setFromAdmin;
+    }
+
+    /**
      * Set current step index
      *
      * @param int $step
@@ -223,6 +256,21 @@ abstract class Import extends DataObject implements ImportInterface
     public function getStep()
     {
         return $this->step;
+    }
+
+    /**
+     * Get end of line for command line or console
+     *
+     * @return string
+     */
+    public function getEndOfLine()
+    {
+        if ($this->getSetFromAdmin() === false) {
+
+            return PHP_EOL;
+        }
+
+        return '</br>';
     }
 
     /**
@@ -249,6 +297,20 @@ abstract class Import extends DataObject implements ImportInterface
     public function setMessage($message)
     {
         $this->message = $message;
+
+        return $this;
+    }
+
+    /**
+     * Set additional message during import
+     *
+     * @param $message
+     *
+     * @return $this
+     */
+    public function setAdditionalMessage($message)
+    {
+        $this->message = $this->getMessageWithoutPrefix() . $this->getEndOfLine() . $message;
 
         return $this;
     }
@@ -304,13 +366,23 @@ abstract class Import extends DataObject implements ImportInterface
     }
 
     /**
-     * Description getMessage function
+     * Return current message with the timestamp prefix
      *
      * @return string
      */
     public function getMessage()
     {
         return (string)$this->outputHelper->getPrefix().$this->message;
+    }
+
+    /**
+     * Return current message without the timestamp prefix
+     *
+     * @return string
+     */
+    public function getMessageWithoutPrefix()
+    {
+        return (string)$this->message;
     }
 
     /**
@@ -357,6 +429,10 @@ abstract class Import extends DataObject implements ImportInterface
         }
 
         if (!$this->akeneoClient) {
+            $this->akeneoClient = $this->getAkeneoClient();
+        }
+
+        if (!$this->akeneoClient) {
             return $this->outputHelper->getApiConnectionError();
         }
 
@@ -373,8 +449,6 @@ abstract class Import extends DataObject implements ImportInterface
             $this->stop(true);
             $this->setMessage($exception->getMessage());
         }
-        /** @var array $response */
-        $response = $this->getResponse();
 
         $this->eventManager->dispatch('akeneo_connector_import_step_finish', ['import' => $this]);
         $this->eventManager->dispatch(
@@ -382,7 +456,7 @@ abstract class Import extends DataObject implements ImportInterface
             ['import' => $this]
         );
 
-        return $response;
+        return $this->getResponse();
     }
 
     /**
@@ -572,5 +646,22 @@ abstract class Import extends DataObject implements ImportInterface
             }
         }
         return;
+    }
+
+    /**
+     * Get Akeneo Client instance
+     *
+     * @return AkeneoPimEnterpriseClientInterface|false
+     */
+    public function getAkeneoClient()
+    {
+        try {
+            /** @var AkeneoPimEnterpriseClientInterface|false $akeneoClient */
+            $akeneoClient = $this->authenticator->getAkeneoApiClient();
+        } catch (\Exception $e) {
+            $akeneoClient = false;
+        }
+
+        return $akeneoClient;
     }
 }

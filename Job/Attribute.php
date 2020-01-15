@@ -33,6 +33,12 @@ use \Zend_Db_Expr as Expr;
 class Attribute extends Import
 {
     /**
+     * This contains the default name for the attribute set
+     *
+     * @var string DEFAULT_ATTRIBUTE_SET_NAME
+     */
+    const DEFAULT_ATTRIBUTE_SET_NAME = 'Akeneo';
+    /**
      * This variable contains a string value
      *
      * @var string $code
@@ -154,25 +160,71 @@ class Attribute extends Import
      */
     public function insertData()
     {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPanigationSize();
         /** @var ResourceCursorInterface $attributes */
         $attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize);
+        /** @var [] $metricsSetting */
+        $metricsSetting = $this->configHelper->getMetricsColumns(true);
 
         /**
-         * @var int $index
+         * @var int   $index
          * @var array $attribute
          */
         foreach ($attributes as $index => $attribute) {
-            $attribute['code'] = strtolower($attribute['code']);
+            /** @var string $attributeCode */
+            $attributeCode     = $attribute['code'];
+            $attribute['code'] = strtolower($attributeCode);
 
+            if ($attribute['type'] == 'pim_catalog_metric' && in_array(
+                    $attributeCode,
+                    $metricsSetting
+                )) {
+                if ($attribute['scopable'] || $attribute['localizable']) {
+                    $this->setAdditionalMessage(__('Attribute %1 is scopable or localizable please change configuration at Stores > Configuration > Catalog > Akeneo Connector > Products > Metrics management.', $attributeCode));
+                    continue;
+                }
+                $attribute['type'] .= '_select';
+            }
             $this->entitiesHelper->insertDataFromApi($attribute, $this->getCode());
         }
         $index++;
 
-        $this->setMessage(
+        $this->setAdditionalMessage(
             __('%1 line(s) found', $index)
         );
+
+        /* Remove attribute without a admin store label */
+        /** @var string $localeCode */
+        $localeCode = $this->configHelper->getDefaultLocale();
+        /** @var \Magento\Framework\DB\Select $select */
+        $select = $connection->select()->from(
+            $tmpTable,
+            [
+                'label'     => 'labels-' . $localeCode,
+                'code'      => 'code',
+            ]
+        )->where('`labels-' . $localeCode . '` IS NULL');
+
+        /** @var \Zend_Db_Statement_Interface $query */
+        $query = $connection->query($select);
+        /** @var array $row */
+        while (($row = $query->fetch())) {
+            if (!isset($row['label']) || $row['label'] === null) {
+                $this->setAdditionalMessage(
+                    __(
+                        'The attribute %1 was not imported because it did not have a translation in admin store language : %2',
+                        $row['code'],
+                        $localeCode
+                    )
+                );
+                $connection->delete($tmpTable, ['code = ?' => $row['code']]);
+            }
+        }
     }
 
     /**
@@ -438,14 +490,45 @@ class Attribute extends Import
                             'attribute_set_id',
                             $setId
                         );
+                        /** @var bool $akeneoGroup */
+                        $akeneoGroup = false;
+                        /* Test if the default group was created instead */
+                        if (!$groupId) {
+                            $akeneoGroup = true;
+                            $groupId     = $this->eavSetup->getSetup()->getTableRow(
+                                'eav_attribute_group',
+                                'attribute_group_name',
+                                self::DEFAULT_ATTRIBUTE_SET_NAME,
+                                'attribute_group_id',
+                                'attribute_set_id',
+                                $setId
+                            );
+                        }
 
+                        /** @var bool $existingAttribute */
+                        $existingAttribute = $connection->fetchOne(
+                            $connection->select()->from(
+                                $this->entitiesHelper->getTable('eav_entity_attribute'),
+                                ['COUNT(*)']
+                            )->where('attribute_set_id = ?', $setId)->where('attribute_id = ?', $row['_entity_id'])
+                        );
+                        /* The attribute was already imported at least once, skip it */
+                        if ($existingAttribute) {
+                            continue;
+                        }
                         if ($groupId) {
                             /* The group already exists, update it */
                             /** @var string[] $dataGroup */
                             $dataGroup = [
-                                'attribute_set_id' => $setId,
+                                'attribute_set_id'     => $setId,
                                 'attribute_group_name' => ucfirst($row['group']),
                             ];
+                            if ($akeneoGroup) {
+                                $dataGroup = [
+                                    'attribute_set_id'     => $setId,
+                                    'attribute_group_name' => self::DEFAULT_ATTRIBUTE_SET_NAME,
+                                ];
+                            }
 
                             $this->eavSetup->updateAttributeGroup(
                                 $this->getEntityTypeId(),
@@ -465,13 +548,13 @@ class Attribute extends Import
                             $this->eavSetup->addAttributeGroup(
                                 $this->getEntityTypeId(),
                                 $attributeSetId,
-                                ucfirst($row['group'])
+                                self::DEFAULT_ATTRIBUTE_SET_NAME
                             );
 
                             $this->eavSetup->addAttributeToSet(
                                 $this->getEntityTypeId(),
                                 $attributeSetId,
-                                ucfirst($row['group']),
+                                self::DEFAULT_ATTRIBUTE_SET_NAME,
                                 $row['_entity_id']
                             );
                         }

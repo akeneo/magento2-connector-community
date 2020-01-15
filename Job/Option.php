@@ -94,6 +94,12 @@ class Option extends Import
      * @var TypeListInterface $cacheTypeList
      */
     protected $cacheTypeList;
+    /**
+     * This variable contains attributes from an API call
+     *
+     * @var PageInterface $attributes
+     */
+    protected $attributes;
 
     /**
      * Option constructor
@@ -144,12 +150,15 @@ class Option extends Import
     public function createTable()
     {
         /** @var PageInterface $attributes */
-        $attributes = $this->akeneoClient->getAttributeApi()->all();
+        $attributes = $this->getAllAttributes();
         /** @var bool $hasOptions */
         $hasOptions = false;
         /** @var array $attribute */
         foreach ($attributes as $attribute) {
             if ($attribute['type'] == 'pim_catalog_multiselect' || $attribute['type'] == 'pim_catalog_simpleselect') {
+                if (!$this->akeneoClient) {
+                    $this->akeneoClient = $this->getAkeneoClient();
+                }
                 /** @var PageInterface $options */
                 $options = $this->akeneoClient->getAttributeOptionApi()->listPerPage($attribute['code']);
                 if (empty($options->getItems())) {
@@ -189,7 +198,7 @@ class Option extends Import
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPanigationSize();
         /** @var PageInterface $attributes */
-        $attributes = $this->akeneoClient->getAttributeApi()->all();
+        $attributes = $this->getAllAttributes();
         /** @var int $lines */
         $lines = 0;
         /** @var array $attribute */
@@ -224,6 +233,37 @@ class Option extends Import
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+
+        /* Remove option without a admin store label */
+        /** @var string $localeCode */
+        $localeCode = $this->configHelper->getDefaultLocale();
+        /** @var \Magento\Framework\DB\Select $select */
+        $select = $connection->select()->from(
+            $tmpTable,
+            [
+                'entity_id' => '_entity_id',
+                'label'     => 'labels-' . $localeCode,
+                'code'      => 'code',
+                'attribute' => 'attribute',
+            ]
+        )->where('`labels-' . $localeCode . '` IS NULL');
+        /** @var \Zend_Db_Statement_Interface $query */
+        $query = $connection->query($select);
+        /** @var array $row */
+        while (($row = $query->fetch())) {
+            if (!isset($row['label']) || $row['label'] === null) {
+                $connection->delete($tmpTable, ['_entity_id = ?' => $row['entity_id']]);
+                $this->setAdditionalMessage(
+                    __(
+                        'The option %1 from attribute %2 was not imported because it did not have a translation in admin store language : %3',
+                        $row['code'],
+                        $row['attribute'],
+                        $localeCode
+                    )
+                );
+            }
+        }
+
         /** @var array $columns */
         $columns = [
             'option_id'  => 'a._entity_id',
@@ -340,6 +380,9 @@ class Option extends Import
      */
     protected function processAttributeOption($attributeCode, $paginationSize)
     {
+        if (!$this->akeneoClient) {
+            $this->akeneoClient = $this->getAkeneoClient();
+        }
         /** @var ResourceCursorInterface $options */
         $options = $this->akeneoClient->getAttributeOptionApi()->all($attributeCode, $paginationSize);
         /** @var int $index */
@@ -351,5 +394,22 @@ class Option extends Import
         $index++;
 
         return $index;
+    }
+
+    /**
+     * Get all attributes from the API
+     *
+     * @return ResourceCursorInterface|mixed
+     */
+    public function getAllAttributes()
+    {
+        if (!$this->attributes) {
+            if (!$this->akeneoClient) {
+                $this->akeneoClient = $this->getAkeneoClient();
+            }
+            $this->attributes = $this->akeneoClient->getAttributeApi()->all();
+        }
+
+        return $this->attributes;
     }
 }

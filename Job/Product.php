@@ -4,11 +4,13 @@ namespace Akeneo\Connector\Job;
 
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
 use Magento\Catalog\Model\Product\Link;
 use Magento\Catalog\Model\ProductLink\Link as ProductLink;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Category as CategoryModel;
+use Magento\Eav\Model\Config as EavConfig;
 use Magento\Framework\App\Cache\Type\Block;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
@@ -20,6 +22,7 @@ use Magento\PageCache\Model\Cache\Type;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Staging\Model\VersionManager;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
@@ -28,6 +31,8 @@ use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Helper\ProductFilters;
 use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Import\Product as ProductImportHelper;
+use Akeneo\Connector\Job\Option as JobOption;
+use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Pdo;
 
@@ -136,6 +141,12 @@ class Product extends Import
      */
     protected $configHelper;
     /**
+     * This variable contains an EavConfig
+     *
+     * @var  EavConfig $eavConfig
+     */
+    protected $eavConfig;
+    /**
      * This variable contains a ProductFilters
      *
      * @var ProductFilters $productFilters
@@ -183,6 +194,24 @@ class Product extends Import
      * @var StoreHelper $storeHelper
      */
     protected $storeHelper;
+    /**
+     * This variable contains a JobOption
+     *
+     * @var JobOption $jobOption
+     */
+    protected $jobOption;
+    /**
+     * This variable contains an AttributeMetrics
+     *
+     * @var AttributeMetrics $attributeMetrics
+     */
+    protected $attributeMetrics;
+    /**
+     * This variable contains an StoreManagerInterface
+     *
+     * @var StoreManagerInterface $storeManager
+     */
+    protected $storeManager;
 
     /**
      * Product constructor.
@@ -192,6 +221,7 @@ class Product extends Import
      * @param Authenticator           $authenticator
      * @param ProductImportHelper     $entitiesHelper
      * @param ConfigHelper            $configHelper
+     * @param EavConfig               $eavConfig
      * @param ProductFilters          $productFilters
      * @param ScopeConfigInterface    $scopeConfig
      * @param JsonSerializer          $serializer
@@ -199,6 +229,8 @@ class Product extends Import
      * @param ProductUrlPathGenerator $productUrlPathGenerator
      * @param TypeListInterface       $cacheTypeList
      * @param StoreHelper             $storeHelper
+     * @param AttributeMetrics        $attributeMetrics
+     * @param StoreManagerInterface   $storeManager
      * @param array                   $data
      */
     public function __construct(
@@ -207,6 +239,7 @@ class Product extends Import
         Authenticator $authenticator,
         ProductImportHelper $entitiesHelper,
         ConfigHelper $configHelper,
+        EavConfig $eavConfig,
         ProductFilters $productFilters,
         ScopeConfigInterface $scopeConfig,
         JsonSerializer $serializer,
@@ -214,19 +247,26 @@ class Product extends Import
         ProductUrlPathGenerator $productUrlPathGenerator,
         TypeListInterface $cacheTypeList,
         StoreHelper $storeHelper,
+        JobOption $jobOption,
+        AttributeMetrics $attributeMetrics,
+        StoreManagerInterface $storeManager,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
 
         $this->entitiesHelper          = $entitiesHelper;
         $this->configHelper            = $configHelper;
+        $this->eavConfig               = $eavConfig;
         $this->productFilters          = $productFilters;
         $this->scopeConfig             = $scopeConfig;
         $this->serializer              = $serializer;
         $this->product                 = $product;
         $this->cacheTypeList           = $cacheTypeList;
         $this->storeHelper             = $storeHelper;
+        $this->jobOption               = $jobOption;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
+        $this->attributeMetrics        = $attributeMetrics;
+        $this->storeManager            = $storeManager;
     }
 
     /**
@@ -274,6 +314,12 @@ class Product extends Import
         $index = 0;
         /** @var mixed[] $filters */
         $filters = $this->getFilters();
+        /** @var mixed[] $metricsConcatSettings */
+        $metricsConcatSettings = $this->configHelper->getMetricsColumns(null, true);
+        /** @var string[] $metricSymbols */
+        $metricSymbols = $this->getMetricsSymbols();
+        /** @var string[] $attributeMetrics */
+        $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
         /** @var mixed[] $filter */
         foreach ($filters as $filter) {
             /** @var Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface $products */
@@ -283,6 +329,48 @@ class Product extends Import
              * @var mixed[] $product
              */
             foreach ($products as $product) {
+                /**
+                 * @var string $attributeMetric
+                 */
+                foreach ($attributeMetrics as $attributeMetric) {
+                    if (!isset($product['values'][$attributeMetric])) {
+                        continue;
+                    }
+
+                    foreach ($product['values'][$attributeMetric] as $key => $metric) {
+                        /** @var string|float $amount */
+                        $amount = $metric['data']['amount'];
+                        $amount = floatval($amount);
+
+                        $product['values'][$attributeMetric][$key]['data']['amount'] = $amount;
+                    }
+                }
+
+                 /**
+                 * @var mixed[] $metricsConcatSetting
+                 */
+                foreach ($metricsConcatSettings as $metricsConcatSetting) {
+                    if (!isset($product['values'][$metricsConcatSetting])) {
+                        continue;
+                    }
+
+                    /**
+                     * @var int     $key
+                     * @var mixed[] $metric
+                     */
+                    foreach ($product['values'][$metricsConcatSetting] as $key => $metric) {
+                        /** @var string $unit */
+                        $unit = $metric['data']['unit'];
+                        /** @var string|false $symbol */
+                        $symbol = array_key_exists($unit, $metricSymbols);
+
+                        if (!$symbol) {
+                            continue;
+                        }
+
+                        $product['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
+                    }
+                }
                 /** @var bool $result */
                 $result = $this->entitiesHelper->insertDataFromApi($product, $this->getCode());
                 if (!$result) {
@@ -304,6 +392,28 @@ class Product extends Import
         }
 
         $this->setMessage(__('%1 line(s) found', $index));
+    }
+
+    /**
+     * Generate array of metrics with unit in key and symbol for value
+     *
+     * @return string[]
+     */
+    public function getMetricsSymbols()
+    {
+        /** @var mixed[] $measures */
+        $measures = $this->akeneoClient->getMeasureFamilyApi()->all();
+        /** @var string[] $metricsSymbols */
+        $metricsSymbols = [];
+        /** @var mixed[] $measure */
+        foreach ($measures as $measure) {
+            /** @var mixed[] $unit */
+            foreach ($measure['units'] as $unit) {
+                $metricsSymbols[$unit['code']] = $unit['symbol'];
+            }
+        }
+
+        return $metricsSymbols;
     }
 
     /**
@@ -437,8 +547,7 @@ class Product extends Import
         }
 
         /** @var string|array $matches */
-        $matches = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING);
-        $matches = $this->serializer->unserialize($matches);
+        $matches = $this->configHelper->getAttributeMapping();
         if (!is_array($matches)) {
             return;
         }
@@ -448,12 +557,12 @@ class Product extends Import
 
         /** @var array $match */
         foreach ($matches as $match) {
-            if (!isset($match['pim_attribute'], $match['magento_attribute'])) {
+            if (!isset($match['akeneo_attribute'], $match['magento_attribute'])) {
                 continue;
             }
 
             /** @var string $pimAttribute */
-            $pimAttribute = $match['pim_attribute'];
+            $pimAttribute = $match['akeneo_attribute'];
             /** @var string $magentoAttribute */
             $magentoAttribute = $match['magento_attribute'];
 
@@ -461,7 +570,7 @@ class Product extends Import
 
             /**
              * @var string $local
-             * @var string $affected
+             * @var array $affected
              */
             foreach ($stores as $local => $affected) {
                 $this->entitiesHelper->copyColumn(
@@ -469,8 +578,69 @@ class Product extends Import
                     $pimAttribute . '-' . $local,
                     $magentoAttribute . '-' . $local
                 );
+
+                if ($magentoAttribute === 'url_key') {
+                    $this->entitiesHelper->formatUrlKeyColumn($tmpTable, $local);
+                }
             }
         }
+        $this->entitiesHelper->formatUrlKeyColumn($tmpTable);
+    }
+
+    /**
+     * Create Temporary metric table and insert option
+     *
+     * @return void
+     */
+    public function createMetricsOptions()
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        /** @var mixed[] $metricsVariantSettings */
+        $metricsVariantSettings = $this->configHelper->getMetricsColumns(true);
+        /** @var string[] $locales */
+        $locales = $this->storeHelper->getMappedWebsitesStoreLangs();
+
+        $this->jobOption->createTable();
+
+        foreach ($metricsVariantSettings as $metricsVariantSetting) {
+            $metricsVariantSetting = strtolower($metricsVariantSetting);
+            $columnExist = $connection->tableColumnExists($tmpTable, $metricsVariantSetting);
+
+            if (!$columnExist) {
+                continue;
+            }
+
+            /** @var Select $select */
+            $select = $connection->select()->from($tmpTable, [$metricsVariantSetting])->group([$metricsVariantSetting]);
+            /** @var mixed[] $options */
+            $options = $connection->fetchCol($select);
+
+            foreach ($options as $option) {
+                if (!$option) {
+                    continue;
+                }
+
+                /** @var string[] $labels */
+                $labels = array_fill_keys($locales, $option);
+
+                /** @var mixed[] $insertedData */
+                $insertedData = [
+                    'code'      => $option,
+                    'attribute' => $metricsVariantSetting,
+                    'labels'    => $labels,
+                ];
+
+                $this->entitiesHelper->insertDataFromApi($insertedData, $this->jobOption->getCode());
+            }
+        }
+
+        $this->jobOption->matchEntities();
+        $this->jobOption->insertOptions();
+        $this->jobOption->insertValues();
+        $this->jobOption->dropTable();
     }
 
     /**
@@ -577,7 +747,7 @@ class Product extends Import
 
         /** @var array $attribute */
         foreach ($additional as $attribute) {
-            if (!isset($attribute['attribute'], $attribute['value'])) {
+            if (!isset($attribute['attribute'], $attribute['value'], $attribute['type'])) {
                 continue;
             }
 
@@ -585,6 +755,8 @@ class Product extends Import
             $name = $attribute['attribute'];
             /** @var string $value */
             $value = $attribute['value'];
+            /** @var string $type */
+            $type = $attribute['type'];
             /** @var array $columns */
             $columns = [trim($name)];
 
@@ -605,19 +777,53 @@ class Product extends Import
                     }
                 }
 
-                if (!$connection->tableColumnExists($tmpTable, $column)) {
+                if ($type !== TypeField::TYPE_MAPPING && !$connection->tableColumnExists($tmpTable, $column)) {
                     continue;
                 }
 
-                if (strlen($value) > 0) {
+                if ($type === TypeField::TYPE_VALUE) {
+                    $data[$column] = new Expr('"' . $value . '"');
+                }
+
+                if ($type === TypeField::TYPE_QUERY) {
                     $data[$column] = new Expr($value);
-
-                    continue;
                 }
 
-                $data[$column] = 'e.' . $column;
-                if ($connection->tableColumnExists($productModelTable, $column)) {
+                if ($type === TypeField::TYPE_DEFAULT) {
+                    if (!$connection->tableColumnExists($productModelTable, $column)) {
+                        $this->setMessage(__('Warning: column %1 not found in product model', $column));
+                        continue;
+                    }
                     $data[$column] = 'v.' . $column;
+                }
+
+                if ($type === TypeField::TYPE_SIMPLE) {
+                    $data[$column] = 'e.' . $column;
+                }
+
+                if ($type === TypeField::TYPE_MAPPING) {
+                    if (!$connection->tableColumnExists($productModelTable, $column)) {
+                        continue;
+                    }
+                    /** @var string $mapping */
+                    $mapping = $value;
+                    if (($pos = strpos($column, '-')) !== false) {
+                        $mapping = $value . '-' . substr($column, $pos + 1);
+                    }
+                    if (!$connection->tableColumnExists($tmpTable, $mapping)) {
+                        $connection->addColumn(
+                            $tmpTable,
+                            $mapping,
+                            [
+                                'type'     => 'text',
+                                'length'   => 255,
+                                'default'  => null,
+                                'COMMENT'  => ' ',
+                                'nullable' => true,
+                            ]
+                        );
+                    }
+                    $data[$mapping] = 'v.' . $column;
                 }
             }
         }
@@ -880,11 +1086,8 @@ class Product extends Import
         /** @var string[] $columns */
         $columns = array_keys($connection->describeTable($tmpTable));
 
-        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $helper        = $objectManager->get('\Magento\Directory\Helper\Data');
-
         /** @var string $adminBaseCurrency */
-        $adminBaseCurrency = $helper->getBaseCurrencyCode();
+        $adminBaseCurrency = $this->storeManager->getStore()->getBaseCurrencyCode();
         /** @var mixed[] $values */
         $values = [
             0 => [
@@ -1177,35 +1380,157 @@ class Product extends Import
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
-        /** @var array $websites */
-        $websites = $this->storeHelper->getStores('website_id');
+        /** @var string $websiteAttribute */
+        $websiteAttribute = $this->configHelper->getWebsiteAttribute();
+        if ($websiteAttribute != null) {
+            $attribute = $this->eavConfig->getAttribute('catalog_product', $websiteAttribute);
+            if ($attribute->getAttributeId() != null) {
+                /** @var string[] $options */
+                $options = $attribute->getSource()->getAllOptions();
+                /** @var array $websites */
+                $websites      = $this->storeHelper->getStores('website_code');
+                /** @var string[] $optionMapping */
+                $optionMapping = [];
+                /** @var array $apiAttribute */
+                $apiAttribute = $this->akeneoClient->getAttributeOptionApi()->all($websiteAttribute, 1);
+                // Generate the option_id / website_id mapping
+                /**
+                 * @var int   $index
+                 * @var array $optionApiAttribute
+                 */
+                foreach ($apiAttribute as $index => $optionApiAttribute) {
+                    /** @var string[] $option */
+                    foreach ($options as $option) {
+                        if (isset($option['label']) && isset($optionApiAttribute['labels']) && isset($optionApiAttribute['code'])) {
+                            if (in_array($option['label'], $optionApiAttribute['labels'])) {
+                                $websiteMatch = false;
+                                /**
+                                 * @var string $websiteCode
+                                 * @var array  $affected
+                                 */
+                                foreach ($websites as $websiteCode => $affected) {
+                                    if ($optionApiAttribute['code'] == $websiteCode) {
+                                        if (isset($affected[0]['website_id'])){
+                                            $websiteMatch  = true;
+                                            $optionMapping += [$option['value'] => $affected[0]['website_id']];
+                                        }
+                                    }
+                                }
 
-        /**
-         * @var int   $websiteId
-         * @var array $affected
-         */
-        foreach ($websites as $websiteId => $affected) {
-            if ($websiteId == 0) {
-                continue;
+                                if ($websiteMatch === false && $option['label'] != ' ') {
+                                    $this->setAdditionalMessage(
+                                        __('Warning: The option %1 is not a website code.', $optionApiAttribute['code'])
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if ($connection->tableColumnExists($tmpTable, $websiteAttribute)) {
+                    /** @var \Magento\Framework\DB\Select $select */
+                    $select = $connection->select()->from(
+                        $tmpTable,
+                        [
+                            'entity_id'          => '_entity_id',
+                            'identifier'         => 'identifier',
+                            'associated_website' => $websiteAttribute,
+                        ]
+                    );
+                    /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+                    $query = $connection->query($select);
+                    /** @var array $row */
+                    while (($row = $query->fetch())) {
+                        /** @var string[] $associatedWebsites */
+                        $associatedWebsites = $row['associated_website'];
+                        if ($associatedWebsites != null) {
+                            /** @var Select $deleteSelect */
+                            $deleteSelect = $connection->select()->from(
+                                $this->entitiesHelper->getTable('catalog_product_website')
+                            )->where('product_id = ?', $row['entity_id']);
+
+                            $connection->query(
+                                $connection->deleteFromSelect(
+                                    $deleteSelect,
+                                    $this->entitiesHelper->getTable('catalog_product_website')
+                                )
+                            );
+
+                            $associatedWebsites = explode(',', $associatedWebsites);
+                            /** @var string $associatedWebsite */
+                            foreach ($associatedWebsites as $associatedWebsite) {
+                                /** @var bool $websiteSet */
+                                $websiteSet = false;
+                                /**
+                                 * @var string $optionId
+                                 * @var string $websiteId
+                                 */
+                                foreach ($optionMapping as $optionId => $websiteId) {
+                                    if ($associatedWebsite == $optionId) {
+                                        $websiteSet = true;
+                                        /** @var Select $insertSelect */
+                                        $insertSelect = $connection->select()->from(
+                                            $tmpTable,
+                                            [
+                                                'product_id' => new Expr($row['entity_id']),
+                                                'website_id' => new Expr($websiteId),
+                                            ]
+                                        );
+
+                                        $connection->query(
+                                            $connection->insertFromSelect(
+                                                $insertSelect,
+                                                $this->entitiesHelper->getTable('catalog_product_website'),
+                                                ['product_id', 'website_id'],
+                                                AdapterInterface::INSERT_ON_DUPLICATE
+                                            )
+                                        );
+                                    }
+                                }
+
+                                if ($websiteSet === false) {
+                                    $optionLabel = $attribute->getSource()->getOptionText($associatedWebsite);
+                                    $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.', $row['identifier'], $optionLabel));
+                                }
+                            }
+                        } else {
+                            $this->setAdditionalMessage( __('Warning: The product with Akeneo id %1 has no associated website in the custom attribute.', $row['identifier']));
+                        }
+                    }
+                }
+            } else {
+                $this->setAdditionalMessage(__('Warning: The website attribute code given does not match any Magento attribute.'));
             }
+        } else {
+            /** @var array $websites */
+            $websites = $this->storeHelper->getStores('website_id');
+            /**
+             * @var int   $websiteId
+             * @var array $affected
+             */
+            foreach ($websites as $websiteId => $affected) {
+                if ($websiteId == 0) {
+                    continue;
+                }
 
-            /** @var Select $select */
-            $select = $connection->select()->from(
-                $tmpTable,
-                [
-                    'product_id' => '_entity_id',
-                    'website_id' => new Expr($websiteId),
-                ]
-            );
+                /** @var Select $select */
+                $select = $connection->select()->from(
+                    $tmpTable,
+                    [
+                        'product_id' => '_entity_id',
+                        'website_id' => new Expr($websiteId),
+                    ]
+                );
 
-            $connection->query(
-                $connection->insertFromSelect(
-                    $select,
-                    $this->entitiesHelper->getTable('catalog_product_website'),
-                    ['product_id', 'website_id'],
-                    AdapterInterface::INSERT_ON_DUPLICATE
-                )
-            );
+                $connection->query(
+                    $connection->insertFromSelect(
+                        $select,
+                        $this->entitiesHelper->getTable('catalog_product_website'),
+                        ['product_id', 'website_id'],
+                        AdapterInterface::INSERT_ON_DUPLICATE
+                    )
+                );
+            }
         }
     }
 
@@ -1348,6 +1673,9 @@ class Product extends Import
             }
         }
 
+        /** @var \Magento\Framework\DB\Select $productIds */
+        $productIds = $connection->select()->from($tmpTable, ['product_id' => '_entity_id']);
+
         /**
          * @var int      $typeId
          * @var string[] $columns
@@ -1369,7 +1697,7 @@ class Product extends Import
             /* Remove old link */
             $connection->delete(
                 $linkTable,
-                ['(product_id, linked_product_id, link_type_id) NOT IN (?)' => $select, 'link_type_id = ?' => $typeId]
+                ['(product_id, linked_product_id, link_type_id) NOT IN (?)' => $select, 'link_type_id = ?' => $typeId, 'product_id IN (?)' => $productIds]
             );
 
             /* Insert new link */
@@ -1437,7 +1765,7 @@ class Product extends Import
          * @var array  $affected
          */
         foreach ($stores as $local => $affected) {
-            if (!$isUrlKeyMapped && !$connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
+            if (!$connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
                 $connection->addColumn(
                     $tmpTable,
                     'url_key-' . $local,
@@ -1719,7 +2047,7 @@ class Product extends Import
                 /** @var array $media */
                 $media = $this->akeneoClient->getProductMediaFileApi()->get($row[$image]);
                 /** @var string $name */
-                $name = basename($media['code']);
+                $name = $this->entitiesHelper->formatMediaName(basename($media['code']));
 
                 if (!$this->configHelper->mediaFileExists($name)) {
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);

@@ -244,23 +244,51 @@ For example :<br/>
             </group>
             <group id="product" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Products</label>
-                <field id="attribute_mapping" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="website_attribute" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Website Attribute</label>
+                    <comment>Enter the code of the select or multiselect attribute used to associate products to your websites, leave blank to ignore</comment>
+                </field>
+                <field id="attribute_mapping" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Attribute Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Attribute</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment>Fill additional Magento attributes from Akeneo attributes</comment>
+                    <comment>
+                        <![CDATA[Fill additional Magento attributes from Akeneo attributes.<br/>
+"price" "special_price" and "cost" attributes won't be automatically mapped unless you explicitely declare them in this configuration.]]>
+                    </comment>
                 </field>
-                <field id="tax_class" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="metrics" translate="label" type="text" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Metric Attributes</label>
+                    <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Metrics</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                </field>
+                <field id="tax_class" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Default Tax Class</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Tax</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>Set up default tax class for website</comment>
                 </field>
-                <field id="configurable_attributes" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="configurable_attributes" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Configurable</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment>Fill configurable attributes with default value, leave blank to take simple product value or Product Model value if exists. Value must be a chain between quotes or a SQL statement.</comment>
+                    <comment>
+                        <![CDATA[
+                        <strong>Attribute:</strong> Declare each product model attributes that has to be imported in the configurable product.
+                        <br /><br />
+                        <strong>Type:</strong>
+                        <br />
+                        - <u>Product Model value</u>: Declare each PIM common attributes you want to be imported in the Magento configurable products. Leave the value field empty.
+                        <br />
+                        - <u>First Variation value</u>: Declare each PIM variation specific attributes you want to be imported in the Magento configurable products. The value of the first variation associated to the product model will be inserted in the corresponding Magento configurable product attribute. Leave the value field empty.
+                        <br />
+                        - <u>Mapping</u>: Declare each PIM common attributes you want to be mapped with another Magento attribute. Fill the value field with the corresponding Magento attribute. Example: Attribute = name_product_model and Value = name
+                        <br />
+                        - <u>SQL Statement</u>: Use a SQL statement in the value field for custom value assignation from Akeneo Connector temporary tables. Example: Attribute = url_key and Value = LOWER(url_key)
+                        <br />
+                        - <u>Default value</u>: Fill the value field to assign a constant default value for a given attribute. Example: Attribute = enabled and Value = 0
+                        ]]>
+                    </comment>
                 </field>
                 <field id="product_model_batch_size" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Product Model Batch Size</label>
@@ -288,6 +316,7 @@ For example :<br/>
                     <label>Akeneo Images Attributes</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Gallery</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <comment>Enter all PIM attributes containing product images. All images specified will be imported to the product image gallery.</comment>
                     <depends>
                         <field id="media_enabled">1</field>
                     </depends>
@@ -296,11 +325,12 @@ For example :<br/>
                     <label>Product Images Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Image</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <comment>Map Magento image type for products. Associate the image type option to a PIM attribute specified in the Akeneo Attribute for Image Gallery field. After import, all specified options will be filled by their image if provided.</comment>
                     <depends>
                         <field id="media_enabled">1</field>
                     </depends>
                 </field>
-                <field id="url_generation_enabled" translate="label" type="select" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="url_generation_enabled" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Regenerate url rewrites</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>

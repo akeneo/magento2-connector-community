@@ -60,6 +60,7 @@ class Config extends AbstractHelper
     const PRODUCTS_CATEGORY_IS_ANCHOR = 'akeneo_connector/category/is_anchor';
     const PRODUCTS_CATEGORY_CATEGORIES = 'akeneo_connector/category/categories';
     const PRODUCT_ATTRIBUTE_MAPPING = 'akeneo_connector/product/attribute_mapping';
+    const PRODUCT_WEBSITE_ATTRIBUTE = 'akeneo_connector/product/website_attribute';
     const PRODUCT_CONFIGURABLE_ATTRIBUTES = 'akeneo_connector/product/configurable_attributes';
     const PRODUCT_PRODUCT_MODEL_BATCH_SIZE = 'akeneo_connector/product/product_model_batch_size';
     const PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH = 'akeneo_connector/product/product_model_update_length';
@@ -68,6 +69,7 @@ class Config extends AbstractHelper
     const PRODUCT_MEDIA_ENABLED = 'akeneo_connector/product/media_enabled';
     const PRODUCT_MEDIA_IMAGES = 'akeneo_connector/product/media_images';
     const PRODUCT_MEDIA_GALLERY = 'akeneo_connector/product/media_gallery';
+    const PRODUCT_METRICS = 'akeneo_connector/product/metrics';
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     /**
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
@@ -217,9 +219,9 @@ class Config extends AbstractHelper
     /**
      * Retrieve the filter mode used
      *
+     * @return string
      * @see \Akeneo\Connector\Model\Source\Filters\Mode
      *
-     * @return string
      */
     public function getFilterMode()
     {
@@ -229,9 +231,9 @@ class Config extends AbstractHelper
     /**
      * Retrieve the type of filter to apply on the completeness
      *
+     * @return string
      * @see \Akeneo\Connector\Model\Source\Filters\Completeness
      *
-     * @return string
      */
     public function getCompletenessTypeFilter()
     {
@@ -261,9 +263,9 @@ class Config extends AbstractHelper
     /**
      * Retrieve the status filter
      *
+     * @return string
      * @see \Akeneo\Connector\Model\Source\Filters\Status
      *
-     * @return string
      */
     public function getStatusFilter()
     {
@@ -403,12 +405,24 @@ class Config extends AbstractHelper
     }
 
     /**
+     * Retrieve the name of the website association attribute
+     *
+     * @return array
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    public function getWebsiteAttribute()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCT_WEBSITE_ATTRIBUTE);
+    }
+
+    /**
      * Retrieve website mapping
      *
      * @param bool $withDefault
-     * @throws \Exception
      *
      * @return mixed[]
+     * @throws \Exception
+     *
      */
     public function getWebsiteMapping($withDefault = true)
     {
@@ -679,6 +693,55 @@ class Config extends AbstractHelper
     }
 
     /**
+     * Retrieve metrics columns by define return needed
+     *
+     * @param bool|null $returnVariant
+     * @param bool|null $returnConcat
+     *
+     * @return array|mixed[]
+     */
+    public function getMetricsColumns($returnVariant = null, $returnConcat = null)
+    {
+        /** @var array $metrics */
+        $metrics = [];
+        /** @var string $config */
+        $config = $this->scopeConfig->getValue(self::PRODUCT_METRICS);
+        if (!$config) {
+            return $metrics;
+        }
+
+        /** @var array $unserializeMetrics */
+        $unserializeMetrics = $this->serializer->unserialize($config);
+        if (!$unserializeMetrics) {
+            return $metrics;
+        }
+
+        /** @var mixed[] $metricsColumns */
+        $metricsColumns = [];
+        foreach ($unserializeMetrics as $unserializeMetric) {
+            if ($returnVariant === true && $returnConcat === null && $unserializeMetric['is_variant'] == 0) {
+                continue;
+            }
+            if ($returnVariant === null && $returnConcat === true && $unserializeMetric['is_concat'] == 0) {
+                continue;
+            }
+            if ($returnVariant === true && $returnConcat === false && $unserializeMetric['is_concat'] == 1) {
+                continue;
+            }
+            if ($returnVariant === false && $returnConcat === true && $unserializeMetric['is_variant'] == 1) {
+                continue;
+            }
+
+            /** @var string $metricAttributeCode */
+            $metricAttributeCode = $unserializeMetric['akeneo_metrics'];
+
+            $metricsColumns[] = $metricAttributeCode;
+        }
+
+        return $metricsColumns;
+    }
+
+    /**
      * Check if media file exists
      *
      * @param string $filename
@@ -744,16 +807,14 @@ class Config extends AbstractHelper
     public function isUrlKeyMapped()
     {
         /** @var mixed $matches */
-        $matches = $this->scopeConfig->getValue(self::PRODUCT_ATTRIBUTE_MAPPING);
-        /** @var mixed[] $matches */
-        $matches = $this->serializer->unserialize($matches);
+        $matches = $this->getAttributeMapping();
         if (!is_array($matches)) {
             return false;
         }
 
         /** @var mixed[] $match */
         foreach ($matches as $match) {
-            if (!isset($match['pim_attribute'], $match['magento_attribute'])) {
+            if (!isset($match['akeneo_attribute'], $match['magento_attribute'])) {
                 continue;
             }
 
@@ -797,5 +858,38 @@ class Config extends AbstractHelper
         }
 
         return $advancedPmUpdateLength;
+    }
+
+    /**
+     * Get the attribute mapping, with lowered values
+     *
+     * @return mixed
+     */
+    public function getAttributeMapping()
+    {
+        /** @var mixed $matches */
+        $matches = $this->scopeConfig->getValue(self::PRODUCT_ATTRIBUTE_MAPPING);
+        $matches = $this->serializer->unserialize($matches);
+        /** @var mixed $loweredMatchs */
+        $loweredMatches = [];
+        /** @var string[] $match */
+        foreach ($matches as $match) {
+            $match           = array_map('strtolower', $match);
+            $loweredMatches[] = $match;
+        }
+
+        return $loweredMatches;
+    }
+
+    /**
+     * Returns default attribute-set id for given entity
+     *
+     * @param string $entity
+     * @return int
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
+    public function getDefaultAttributeSetId($entity)
+    {
+        return $this->eavConfig->getEntityType($entity)->getDefaultAttributeSetId();
     }
 }

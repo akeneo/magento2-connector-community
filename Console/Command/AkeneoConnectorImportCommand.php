@@ -7,7 +7,7 @@ use Magento\Framework\App\State;
 use Magento\Framework\Data\Collection;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Phrase;
-use Akeneo\Connector\Api\ImportRepositoryInterface\Proxy;
+use Akeneo\Connector\Api\ImportRepositoryInterface;
 use Akeneo\Connector\Job\Import;
 use \Symfony\Component\Console\Command\Command;
 use \Symfony\Component\Console\Input\InputInterface;
@@ -48,12 +48,12 @@ class AkeneoConnectorImportCommand extends Command
     /**
      * AkeneoConnectorImportCommand constructor.
      *
-     * @param Proxy $importRepository
+     * @param ImportRepositoryInterface $importRepository
      * @param State $appState
      * @param null  $name
      */
     public function __construct(
-        Proxy $importRepository,
+        ImportRepositoryInterface $importRepository,
         State $appState,
         $name = null
     ) {
@@ -69,10 +69,11 @@ class AkeneoConnectorImportCommand extends Command
     protected function configure()
     {
         $this->setName('akeneo_connector:import')->setDescription('Import Akeneo data to Magento')->addOption(
-                self::IMPORT_CODE,
-                null,
-                InputOption::VALUE_REQUIRED
-            );
+            self::IMPORT_CODE,
+            null,
+            InputOption::VALUE_REQUIRED,
+            'Code of import job to run. To run multiple jobs consecutively, use comma-separated import job codes'
+        );
     }
 
     /**

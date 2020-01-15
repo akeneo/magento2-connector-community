@@ -1,78 +1,58 @@
-# Akeneo Connector change Log
+# Akeneo Connector change log
 
-### 100.1.1 :
-Add Magento 2.3 compatibility
+### Version 100.1.0 :
+* Initial Akeneo Connector Release
 
-Fix wrong encoding for de_DE.csv file
+### Version 100.1.1 :
+* Fix attribute mapping key
 
-Fix family variant class
+### Version 100.2.1 :
+* Add website mapping from select or multiselect attribute in Akeneo
+* Use native Magento serializer
+* Fix proxy class injection in command construct
+* Fix association import when result is empty
+* Fix url_key mapping and generation
 
-### 100.1.2 :
-Fix connector behavior with Magento table prefix
+### Version 100.2.2 :
+* Fix issue when importing associations
+* Improve attribute option import
 
-Handle full path URL for products
+### Version 100.2.3 :
+* Fix identifier column type in temporary product import table
+* Fix missing where statement on delete in website association feature
+* Fix product website request if attribute is not filled in Akeneo
+* Fix duplicate node in config.xml file
+* Add check on family label to prevent import error on duplicate labels in Akeneo
 
-Fix duplicated URL
+### Version 100.2.4 :
+* Fix import command description
+* Convert uppercase attribute mapping to lowercase
+* Set import job response after step finish events
 
-Fix undefined offset 0 error on product import task
+### Version 100.2.5 :
+* Improve configurable attributes feature with specific types
 
-Fix duplicate SKU with product model
+**Warning :** *After updating connector to this version, please check the `Configurable` configuration under the `Products` section in the Akeneo Connector configuration and update the `Type` column of your mapping with the appropriate value if necessary.*
 
-### 100.1.3 :
-Fix Magento 2.3 compatibility
+### Version 100.2.6 :
+* Add check to prevent the creation of attributes and options with empty admin label
+* Fix product association deletion with differential product import
 
-Fix configurable product creation with 2 axis
+### Version 100.3.0 :
+* Remove Akeneo attribute group import from connector (https://help.akeneo.com/magento2-connector/v100/articles/where-attributes.html#where-to-find-my-attribute-groups-in-magento-2)
+* Remove automatic mapping for attributes "price", "special_price" and "cost" (https://help.akeneo.com/magento2-connector/v100/articles/what-data.html#attribute-types)
+* Add metric as product variant and unit concatenation feature (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#metric-attributes)
+* Update wording for configurable product attribute mapping
 
-Fix documentation
+### Version 100.3.1 :
+* Fix product image name that should not exceed 90 characters since Magento 2.3.3
 
-Reformat translations
+**Warning :** *After updating connector to this version, all image names will be renamed. To know more, please consult documentation (https://help.akeneo.com/magento2-connector/v100/articles/06-import-images-configuration.html)*
 
-Fix localized product URL
+* Remove unused "file" column on log grid
+* Move API client call from construct
+* Fix category URL issue adding -1, -2 to url-key when category had same name but not same parent category
 
-### 100.1.4 :
-Add PHP 7.2 compatibility
-
-Fix error on product_model table
-
-Add configuration to enable or disable product URL rewriting
-
-### 100.2.1 :
-Fix ACL for import jobs
-
-Fix family exclusion configuration that was impossible to set empty
-
-Fix configurable product association import
-
-Fix product website association from channel mapping
-
-Add configuration to set channel for admin values
-
-Add configuration to choose to update product URL rewrite or not
-
-Prevent price from being set to "null" if empty
-
-Add no-whitespace validation to Akeneo API credential fields
-
-### 100.2.2 :
-Fix option import if first attribute has no valid options
-
-Force attribute code to be lowercase
-
-Manage attribute scope on import
-
-Fix SQL error when no association column is found using advanced filter
-
-### 100.2.3 :
-Fix undefined offset on product import
-
-### 100.2.4 :
-Change default pagination value to 100
-
-Change wording for advanced JSON configuration
-
-Add SQL statement possibility in configurable mapping
-
-Add category configurations for anchor, status and display in menu
-
-### 100.2.5 :
-Refactor API requests from configured mapping to improve performance and reduce data inserted in temporary table
+### Version 100.3.2 :
+* Fix Object Manager usage
+* Fix category URL request missing "parent_id" select
