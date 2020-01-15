@@ -834,4 +834,16 @@ class Config extends AbstractHelper
 
         return $loweredMatches;
     }
+
+    /**
+     * Returns default attribute-set id for given entity
+     *
+     * @param string $entity
+     * @return int
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
+    public function getDefaultAttributeSetId($entity)
+    {
+        return $this->eavConfig->getEntityType($entity)->getDefaultAttributeSetId();
+    }
 }
