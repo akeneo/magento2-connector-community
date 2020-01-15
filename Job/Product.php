@@ -28,7 +28,6 @@ use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
-use Akeneo\Connector\Helper\Locales as LocalesHelper;
 use Akeneo\Connector\Helper\ProductFilters;
 use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Import\Product as ProductImportHelper;
@@ -196,12 +195,6 @@ class Product extends Import
      */
     protected $storeHelper;
     /**
-     * This variable contains a LocalesHelper
-     *
-     * @var LocalesHelper $localesHelper
-     */
-    protected $localesHelper;
-    /**
      * This variable contains a JobOption
      *
      * @var JobOption $jobOption
@@ -236,7 +229,6 @@ class Product extends Import
      * @param ProductUrlPathGenerator $productUrlPathGenerator
      * @param TypeListInterface       $cacheTypeList
      * @param StoreHelper             $storeHelper
-     * @param LocalesHelper           $localesHelper
      * @param AttributeMetrics        $attributeMetrics
      * @param StoreManagerInterface   $storeManager
      * @param array                   $data
@@ -255,7 +247,6 @@ class Product extends Import
         ProductUrlPathGenerator $productUrlPathGenerator,
         TypeListInterface $cacheTypeList,
         StoreHelper $storeHelper,
-        LocalesHelper $localesHelper,
         JobOption $jobOption,
         AttributeMetrics $attributeMetrics,
         StoreManagerInterface $storeManager,
@@ -272,7 +263,6 @@ class Product extends Import
         $this->product                 = $product;
         $this->cacheTypeList           = $cacheTypeList;
         $this->storeHelper             = $storeHelper;
-        $this->localesHelper           = $localesHelper;
         $this->jobOption               = $jobOption;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
         $this->attributeMetrics        = $attributeMetrics;
@@ -371,8 +361,10 @@ class Product extends Import
                     foreach ($product['values'][$metricsConcatSetting] as $key => $metric) {
                         /** @var string $unit */
                         $unit = $metric['data']['unit'];
+                        /** @var string|false $symbol */
+                        $symbol = array_key_exists($unit, $metricSymbols);
 
-                        if (!array_key_exists($unit, $metricSymbols)) {
+                        if (!$symbol) {
                             continue;
                         }
 
@@ -609,7 +601,7 @@ class Product extends Import
         /** @var mixed[] $metricsVariantSettings */
         $metricsVariantSettings = $this->configHelper->getMetricsColumns(true);
         /** @var string[] $locales */
-        $locales = $this->localesHelper->getAkeneoLocales();
+        $locales = $this->storeHelper->getMappedWebsitesStoreLangs();
 
         $this->jobOption->createTable();
 
