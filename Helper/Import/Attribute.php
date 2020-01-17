@@ -3,6 +3,7 @@
 namespace Akeneo\Connector\Helper\Import;
 
 use Magento\Catalog\Model\Product\Attribute\Backend\Price;
+use Magento\Catalog\Model\Product\Attribute\Frontend\Image;
 use Magento\Eav\Model\Entity\Attribute\Backend\ArrayBackend;
 use Magento\Eav\Model\Entity\Attribute\Backend\Datetime;
 use Magento\Eav\Model\Entity\Attribute\Source\Boolean;
@@ -72,6 +73,7 @@ class Attribute extends AbstractHelper
             'pim_catalog_multiselect'      => 'multiselect',
             'pim_catalog_price_collection' => 'price',
             'pim_catalog_tax'              => 'tax',
+            'pim_catalog_image'            => 'media_image',
         ];
 
         $types = array_merge($types, $this->getAdditionalTypes());
@@ -178,6 +180,13 @@ class Attribute extends AbstractHelper
                 'source_model'   => null,
                 'frontend_model' => null,
             ],
+            'media_image' => [
+                'backend_type'   => 'varchar',
+                'frontend_input' => 'media_image',
+                'backend_model'  => null,
+                'source_model'   => null,
+                'frontend_model' => Image::class,
+            ],
         ];
 
         /** @var DataObject $response */
@@ -211,6 +220,7 @@ class Attribute extends AbstractHelper
             'select'      => 'select',
             'price'       => 'price',
             'tax'         => 'tax',
+            'media_image' => 'media_image',
         ];
         /** @var DataObject $response */
         $response = new DataObject();
