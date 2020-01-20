@@ -26,11 +26,6 @@ use Akeneo\Connector\Helper\Output as OutputHelper;
 class ProductModel extends Import
 {
     /**
-     * @var int BATCH_SIZE
-     */
-    const BATCH_SIZE = 500;
-
-    /**
      * This variable contains a string value
      *
      * @var string $code
@@ -200,6 +195,8 @@ class ProductModel extends Import
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
+        /** @var int $updateLength */
+        $batchSize = $this->configHelper->getAdvancedPmBatchSize();
         /** @var array $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var array $variantTable */
@@ -248,14 +245,22 @@ class ProductModel extends Import
                 }
             }
             $i++;
-            if (count($values) > self::BATCH_SIZE) {
-                $connection->insertOnDuplicate($variantTable, $values, $keys);
+            if (count($values) > $batchSize) {
+                if (0 == $batchSize) {
+                    $this->sliceInsertOnDuplicate($variantTable, $values);
+                } else {
+                    $connection->insertOnDuplicate($variantTable, $values, $keys);
+                }
                 $values = [];
                 $i      = 0;
             }
         }
         if (count($values) > 0) {
-            $connection->insertOnDuplicate($variantTable, $values, $keys);
+            if (0 == $batchSize) {
+                $this->sliceInsertOnDuplicate($variantTable, $values);
+            } else {
+                $connection->insertOnDuplicate($variantTable, $values, $keys);
+            }
         }
     }
 

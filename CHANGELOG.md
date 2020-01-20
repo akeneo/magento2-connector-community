@@ -56,3 +56,9 @@
 ### Version 100.3.2 :
 * Fix Object Manager usage
 * Fix category URL request missing "parent_id" select
+
+### Version 100.3.3 :
+* Fix error on price attribute import
+* Fix category attribute set getter to prevent mixed id in case of data migration
+* Fix metric import when metric attribute code contains uppercase characters
+* Add product model batch size and request size to prevent MYSQL errors (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#product-model-batch-size-and-product-model-update-length)
