@@ -397,7 +397,7 @@ class Category extends Import
         /** @var array $values */
         $values = [
             'entity_id'        => '_entity_id',
-            'attribute_set_id' => new Expr($this->configHelper->getEntityTypeId(CategoryModel::ENTITY)),
+            'attribute_set_id' => new Expr($this->configHelper->getDefaultAttributeSetId(CategoryModel::ENTITY)),
             'parent_id'        => 'parent_id',
             'updated_at'       => new Expr('now()'),
             'path'             => 'path',
