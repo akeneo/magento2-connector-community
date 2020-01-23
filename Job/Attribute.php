@@ -380,12 +380,17 @@ class Attribute extends Import
 
         while (($row = $query->fetch())) {
             /* Verify attribute type if already present in Magento */
+            /** @var string $attributeFrontendInput */
+            $attributeFrontendInput = $connection->fetchOne(
+                $connection->select()->from(
+                    $this->entitiesHelper->getTable('eav_attribute'),
+                    ['frontend_input']
+                )->where('attribute_code = ?', $row['code'])
+            );
             /** @var bool $skipAttribute */
             $skipAttribute = false;
-            /** @var Magento\Eav\Model\Entity\Attribute $attribute */
-            $attribute = $this->eavConfig->getAttribute('catalog_product', $row['code']);
-            if ($attribute && $row['frontend_input']) {
-                if ($attribute->getFrontendInput() !== $row['frontend_input'] && !in_array($row['code'], $this->excludedAttributes)) {
+            if ($attributeFrontendInput && $row['frontend_input']) {
+                if ($attributeFrontendInput !== $row['frontend_input'] && !in_array($row['code'],$this->excludedAttributes)) {
                     $skipAttribute = true;
                     /* Verify if attribute is mapped to an ignored attribute */
                     if (is_array($mapping)) {
