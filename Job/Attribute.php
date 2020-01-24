@@ -390,7 +390,7 @@ class Attribute extends Import
             /** @var bool $skipAttribute */
             $skipAttribute = false;
             if ($attributeFrontendInput && $row['frontend_input']) {
-                if ($attributeFrontendInput !== $row['frontend_input'] && !in_array($row['code'],$this->excludedAttributes)) {
+                if ($attributeFrontendInput !== $row['frontend_input'] && !in_array($row['code'], $this->excludedAttributes)) {
                     $skipAttribute = true;
                     /* Verify if attribute is mapped to an ignored attribute */
                     if (is_array($mapping)) {
