@@ -89,6 +89,12 @@ class Option extends Entities
         )->joinInner(
             ['e' => 'eav_attribute_option_value'],
             '`labels-' . $localeCode . '` = e.value'
+        )->joinInner(
+            ['o' => 'eav_attribute_option'],
+            'o.`option_id` = e.`option_id`'
+        )->joinInner(
+            ['a' => 'eav_attribute'],
+            'o.`attribute_id` = a.`attribute_id` AND t.`attribute` = a.`attribute_code`'
         )->where('e.store_id = ?', 0);
         /** @var string $query */
         $query = $connection->query($select);
