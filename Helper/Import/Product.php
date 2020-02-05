@@ -313,7 +313,7 @@ class Product extends Entities
         /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
         /** @var int $suffix */
-        $suffix = 0;
+        $suffix = 1;
         /** @var string|null $exists */
         do {
             /** @var bool $exists */
@@ -327,11 +327,11 @@ class Product extends Entities
                 )->where('store_id = ?', $product->getStoreId())->where('entity_id <> ?', $product->getEntityId())
             );
             if ($exists) {
-                if ($suffix == 0) {
+                if ($suffix == 1) {
                     $product->setUrlKey($product->getUrlKey() . '-' . $suffix);
                 }
-                if ($suffix >= 1) {
-                    $product->setUrlKey(substr($product->getUrlKey(), 0, -2) . '-' . $suffix);
+                if ($suffix >= 2) {
+                    $product->setUrlKey(substr($product->getUrlKey(), 0, -(strlen($suffix - 1) + 1)) . '-' . $suffix);
                 }
                 /** @var string $requestPath */
                 $requestPath = $this->productUrlPathGenerator->getUrlPathWithSuffix(
