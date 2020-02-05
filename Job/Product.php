@@ -578,13 +578,8 @@ class Product extends Import
                     $pimAttribute . '-' . $local,
                     $magentoAttribute . '-' . $local
                 );
-
-                if ($magentoAttribute === 'url_key') {
-                    $this->entitiesHelper->formatUrlKeyColumn($tmpTable, $local);
-                }
             }
         }
-        $this->entitiesHelper->formatUrlKeyColumn($tmpTable);
     }
 
     /**
@@ -841,6 +836,7 @@ class Product extends Import
         $connection->query($query);
     }
 
+
     /**
      * Match code with entity
      *
@@ -1085,6 +1081,34 @@ class Product extends Import
         $stores = $this->storeHelper->getAllStores();
         /** @var string[] $columns */
         $columns = array_keys($connection->describeTable($tmpTable));
+
+        // Format url_key columns
+        /** @var string|array $matches */
+        $matches = $this->configHelper->getAttributeMapping();
+        if (is_array($matches)) {
+            /** @var array $stores */
+            $stores = $this->storeHelper->getAllStores();
+
+            /** @var array $match */
+            foreach ($matches as $match) {
+                if (!isset($match['akeneo_attribute'], $match['magento_attribute'])) {
+                    continue;
+                }
+                /** @var string $magentoAttribute */
+                $magentoAttribute = $match['magento_attribute'];
+
+                /**
+                 * @var string $local
+                 * @var string $affected
+                 */
+                foreach ($stores as $local => $affected) {
+                    if ($magentoAttribute === 'url_key') {
+                        $this->entitiesHelper->formatUrlKeyColumn($tmpTable, $local);
+                    }
+                }
+            }
+            $this->entitiesHelper->formatUrlKeyColumn($tmpTable);
+        }
 
         /** @var string $adminBaseCurrency */
         $adminBaseCurrency = $this->storeManager->getStore()->getBaseCurrencyCode();
@@ -1820,21 +1844,7 @@ class Product extends Import
                         $product->getStoreId()
                     );
 
-                    /** @var string|null $exists */
-                    $exists = $connection->fetchOne(
-                        $connection->select()->from($this->entitiesHelper->getTable('url_rewrite'), new Expr(1))->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)->where(
-                            'request_path = ?',
-                            $requestPath
-                        )->where('store_id = ?', $product->getStoreId())->where('entity_id <> ?', $product->getEntityId())
-                    );
-                    if ($exists) {
-                        $product->setUrlKey($product->getUrlKey() . '-' . $product->getStoreId());
-                        /** @var string $requestPath */
-                        $requestPath = $this->productUrlPathGenerator->getUrlPathWithSuffix(
-                            $product,
-                            $product->getStoreId()
-                        );
-                    }
+                    $requestPath = $this->entitiesHelper->verifyProductUrl($requestPath, $product);
 
                     /** @var array $paths */
                     $paths = [
