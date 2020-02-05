@@ -62,3 +62,7 @@
 * Fix category attribute set getter to prevent mixed id in case of data migration
 * Fix metric import when metric attribute code contains uppercase characters
 * Add product model batch size and request size to prevent MYSQL errors (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#product-model-batch-size-and-product-model-update-length)
+
+### Version 100.3.4 :
+* Fix product URL rewrite generation to prevent duplicate entry errors
+* Fix product URL generation for configurable product in case of mapping with url_key
