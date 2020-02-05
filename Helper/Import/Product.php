@@ -5,9 +5,13 @@ namespace Akeneo\Connector\Helper\Import;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Magento\Catalog\Model\Product as BaseProductModel;
+use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
+use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Framework\App\DeploymentConfig;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\DB\Adapter\AdapterInterface;
+use Zend_Db_Expr as Expr;
 
 /**
  * Class Product
@@ -39,26 +43,35 @@ class Product extends Entities
      * @var JsonSerializer $serializer
      */
     protected $serializer;
+    /**
+     * This variable contains a ProductUrlPathGenerator
+     *
+     * @var ProductUrlPathGenerator $productUrlPathGenerator
+     */
+    protected $productUrlPathGenerator;
 
     /**
      * Product constructor
      *
-     * @param Context            $context
-     * @param ResourceConnection $connection
-     * @param DeploymentConfig   $deploymentConfig
-     * @param BaseProductModel   $product
-     * @param ConfigHelper       $configHelper
-     * @param JsonSerializer     $serializer
+     * @param Context                 $context
+     * @param ResourceConnection      $connection
+     * @param DeploymentConfig        $deploymentConfig
+     * @param BaseProductModel        $product
+     * @param ProductUrlPathGenerator $productUrlPathGenerator
+     * @param ConfigHelper            $configHelper
+     * @param JsonSerializer          $serializer
      */
     public function __construct(
         Context $context,
         ResourceConnection $connection,
         DeploymentConfig $deploymentConfig,
         BaseProductModel $product,
+        ProductUrlPathGenerator $productUrlPathGenerator,
         ConfigHelper $configHelper,
         JsonSerializer $serializer
     ) {
-        $this->serializer = $serializer;
+        $this->serializer              = $serializer;
+        $this->productUrlPathGenerator = $productUrlPathGenerator;
         parent::__construct($context, $connection, $deploymentConfig, $product, $configHelper);
     }
 
@@ -284,5 +297,51 @@ class Product extends Entities
         }
 
         return false;
+    }
+
+
+    /**
+     * Verify product url during url rewrite returns the correct request path
+     *
+     * @param string $requestPath
+     * @param Magento\Catalog\Model\Product $product
+     *
+     * @return string
+     */
+    public function verifyProductUrl($requestPath, $product)
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->getConnection();
+        /** @var int $suffix */
+        $suffix = 0;
+        /** @var string|null $exists */
+        do {
+            /** @var bool $exists */
+            $exists = $connection->fetchOne(
+                $connection->select()->from($this->getTable('url_rewrite'), new Expr(1))->where(
+                    'entity_type = ?',
+                    ProductUrlRewriteGenerator::ENTITY_TYPE
+                )->where(
+                    'request_path = ?',
+                    $requestPath
+                )->where('store_id = ?', $product->getStoreId())->where('entity_id <> ?', $product->getEntityId())
+            );
+            if ($exists) {
+                if ($suffix == 0) {
+                    $product->setUrlKey($product->getUrlKey() . '-' . $suffix);
+                }
+                if ($suffix >= 1) {
+                    $product->setUrlKey(substr($product->getUrlKey(), 0, -2) . '-' . $suffix);
+                }
+                /** @var string $requestPath */
+                $requestPath = $this->productUrlPathGenerator->getUrlPathWithSuffix(
+                    $product,
+                    $product->getStoreId()
+                );
+            }
+            $suffix += 1;
+        } while ($exists);
+
+        return $requestPath;
     }
 }
