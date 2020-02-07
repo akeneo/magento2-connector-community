@@ -239,6 +239,30 @@ class Attribute extends Import
     }
 
     /**
+     * Check already imported entities are still in Magento
+     *
+     * @return void
+     */
+    public function checkEntities()
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $akeneoConnectorTable */
+        $akeneoConnectorTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
+        /** @var string $entityTable */
+        $entityTable = $this->entitiesHelper->getTable('eav_attribute');
+        /** @var \Magento\Framework\DB\Select $selectExistingEntities */
+        $selectExistingEntities = $connection->select()->from($entityTable, 'attribute_id');
+        /** @var string[] $existingEntities */
+        $existingEntities = array_column($connection->query($selectExistingEntities)->fetchAll(), 'attribute_id');
+
+        $connection->delete(
+            $akeneoConnectorTable,
+            ['import = ?' => 'attribute', 'entity_id NOT IN (?)' => $existingEntities]
+        );
+    }
+
+    /**
      * Match code with entity
      *
      * @return void
