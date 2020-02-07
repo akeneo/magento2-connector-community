@@ -66,3 +66,7 @@
 ### Version 100.3.4 :
 * Fix product URL rewrite generation to prevent duplicate entry errors
 * Fix product URL generation for configurable product in case of mapping with url_key
+
+### Version 100.4.0 :
+* Add automatic mapping for existing attributes, attribute options and products in Magento (https://help.akeneo.com/magento2-connector/v100/articles/existing-magento.html)
+* Add entities check in connector entities table before import
