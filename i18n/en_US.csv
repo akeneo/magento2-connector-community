@@ -126,6 +126,7 @@ For example :<br/>
 "Status","Status"
 "Test API credentials","Test API credentials"
 "The Akeneo user should have permissions to list","The Akeneo user should have permissions to list"
+"The attribute %1 was skipped because its type is not the same between Akeneo and Magento. Please delete it in Magento and try a new import","The attribute %1 was skipped because its type is not the same between Akeneo and Magento. Please delete it in Magento and try a new import"
 "The connection is working fine","The connection is working fine"
 "Updated","Updated"
 "Updated after","Updated after"

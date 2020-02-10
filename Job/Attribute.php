@@ -92,6 +92,17 @@ class Attribute extends Import
      * @var EavSetup $eavSetup
      */
     protected $eavSetup;
+    /**
+     * List of attributes to exclude from attribute type validation
+     *
+     * @var string[]
+     */
+    protected $excludedAttributes = [
+        'image',
+        'thumbnail',
+        'small_image',
+        'weight',
+    ];
 
     /**
      * Attribute constructor
@@ -228,6 +239,30 @@ class Attribute extends Import
     }
 
     /**
+     * Check already imported entities are still in Magento
+     *
+     * @return void
+     */
+    public function checkEntities()
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $akeneoConnectorTable */
+        $akeneoConnectorTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
+        /** @var string $entityTable */
+        $entityTable = $this->entitiesHelper->getTable('eav_attribute');
+        /** @var \Magento\Framework\DB\Select $selectExistingEntities */
+        $selectExistingEntities = $connection->select()->from($entityTable, 'attribute_id');
+        /** @var string[] $existingEntities */
+        $existingEntities = array_column($connection->query($selectExistingEntities)->fetchAll(), 'attribute_id');
+
+        $connection->delete(
+            $akeneoConnectorTable,
+            ['import = ?' => 'attribute', 'entity_id NOT IN (?)' => $existingEntities]
+        );
+    }
+
+    /**
      * Match code with entity
      *
      * @return void
@@ -342,7 +377,7 @@ class Attribute extends Import
     }
 
     /**
-     * Add attributes if not exists
+     * Update or add attributes if not exists
      *
      * @return void
      */
@@ -364,8 +399,42 @@ class Attribute extends Import
         $import = $connection->select()->from($tmpTable);
         /** @var \Zend_Db_Statement_Interface $query */
         $query = $connection->query($import);
+        /** @var string[] $mapping */
+        $mapping = $this->configHelper->getAttributeMapping();
 
         while (($row = $query->fetch())) {
+            /* Verify attribute type if already present in Magento */
+            /** @var string $attributeFrontendInput */
+            $attributeFrontendInput = $connection->fetchOne(
+                $connection->select()->from(
+                    $this->entitiesHelper->getTable('eav_attribute'),
+                    ['frontend_input']
+                )->where('attribute_code = ?', $row['code'])
+            );
+            /** @var bool $skipAttribute */
+            $skipAttribute = false;
+            if ($attributeFrontendInput && $row['frontend_input']) {
+                if ($attributeFrontendInput !== $row['frontend_input'] && !in_array($row['code'], $this->excludedAttributes)) {
+                    $skipAttribute = true;
+                    /* Verify if attribute is mapped to an ignored attribute */
+                    if (is_array($mapping)) {
+                        foreach ($mapping as $match) {
+                            if (in_array($match['magento_attribute'], $this->excludedAttributes) && $row['code'] == $match['akeneo_attribute']) {
+                                $skipAttribute = false;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($skipAttribute === true) {
+                /** @var string $message */
+                $message = __('The attribute %1 was skipped because its type is not the same between Akeneo and Magento. Please delete it in Magento and try a new import', $row['code']);
+                $this->setAdditionalMessage($message);
+
+                continue;
+            }
+
             /* Insert base data (ignore if already exists) */
             /** @var string[] $values */
             $values = [
