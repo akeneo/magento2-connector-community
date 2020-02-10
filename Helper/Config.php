@@ -6,6 +6,7 @@ use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Encryption\Encryptor;
 use Magento\Directory\Helper\Data as DirectoryHelper;
+use Magento\Framework\Exception\FileSystemException;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\Data\WebsiteInterface;
 use Magento\Store\Model\ScopeInterface;
@@ -69,6 +70,8 @@ class Config extends AbstractHelper
     const PRODUCT_MEDIA_ENABLED = 'akeneo_connector/product/media_enabled';
     const PRODUCT_MEDIA_IMAGES = 'akeneo_connector/product/media_images';
     const PRODUCT_MEDIA_GALLERY = 'akeneo_connector/product/media_gallery';
+    const PRODUCT_FILE_ENABLED = 'akeneo_connector/product/file_enabled';
+    const PRODUCT_FILE_ATTRIBUTE = 'akeneo_connector/product/file_attribute';
     const PRODUCT_METRICS = 'akeneo_connector/product/metrics';
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     /**
@@ -129,6 +132,12 @@ class Config extends AbstractHelper
      * @var WriteInterface $mediaDirectory
      */
     protected $mediaDirectory;
+    /**
+     * This variable contains reference records media directory
+     *
+     * @var string $recordMediaFile
+     */
+    protected $filesMediaFile = 'akeneo_connector/media_files';
 
     /**
      * Config constructor
@@ -662,6 +671,47 @@ class Config extends AbstractHelper
     }
 
     /**
+     * Retrieve is asset import is enabled
+     *
+     * @return bool
+     */
+    public function isFileImportEnabled()
+    {
+        return $this->scopeConfig->isSetFlag(self::PRODUCT_FILE_ENABLED);
+    }
+
+    /**
+     * Retrieve asset attribute columns
+     *
+     * @return array
+     */
+    public function getFileImportColumns()
+    {
+        /** @var array $assets */
+        $fileAttributes = [];
+        /** @var string $config */
+        $config = $this->scopeConfig->getValue(self::PRODUCT_FILE_ATTRIBUTE);
+        if (!$config) {
+            return $fileAttributes;
+        }
+
+        /** @var array $media */
+        $attributes = $this->serializer->unserialize($config);
+        if (!$attributes) {
+            return $fileAttributes;
+        }
+
+        foreach ($attributes as $attribute) {
+            if (!isset($attribute['file_attribute'])) {
+                continue;
+            }
+            $fileAttributes[] = $attribute['file_attribute'];
+        }
+
+        return $fileAttributes;
+    }
+
+    /**
      * Retrieve media attribute column
      *
      * @return array
@@ -781,6 +831,45 @@ class Config extends AbstractHelper
     public function getMediaFilePath($filename)
     {
         return Uploader::getDispretionPath($filename) . '/' . Uploader::getCorrectFileName($filename);
+    }
+
+    /**
+     * Retrieve file media directory path
+     *
+     * @param string $fileName
+     * @param string $content
+     *
+     * @return string
+     * @throws FileSystemException
+     */
+    public function downloadFileMediaFile($fileName, $content)
+    {
+        if (!$this->mediaFileExists($fileName)) {
+            $this->mediaDirectory->writeFile(
+                $this->getFileMediaPath($this->getMediaFilePath($fileName)),
+                $content
+            );
+        }
+
+        $filePath = $this->getFileMediaPath($this->getMediaFilePath($fileName));
+
+        return $filePath;
+    }
+
+    /**
+     * Retrieve reference record media directory path
+     *
+     * @param string $fileName
+     *
+     * @return string
+     * @throws FileSystemException
+     */
+    public function getFileMediaPath($fileName)
+    {
+        /** @var string $filePath */
+        $filePath = $this->filesMediaFile . $fileName;
+
+        return $filePath;
     }
 
     /**
