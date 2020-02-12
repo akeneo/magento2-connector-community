@@ -331,15 +331,17 @@ For example :<br/>
                     </depends>
                 </field>
                 <field id="file_enabled" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Import Files Attributes</label>
+                    <label>Import File Attributes</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>All files will be downloaded in the 'pub/media/akeneo_connector/media_files' folder.</comment>
                 </field>
                 <field id="file_attribute" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Akeneo Files Attributes</label>
+                    <label>Akeneo File Attributes</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\File</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment>List all PIM files attributes you want to download if file import is enabled or preserve if file import is disabled. All files will be downloaded in the pub/media/akeneo_connector/media_files/ folder. The paths of each file will be associated to the corresponding product attribute.</comment>
-                </field>
+                    <comment>
+                        <![CDATA[List all PIM file attributes you want to download when 'Import File Attributes' is enabled.<br />The path of each file will be imported to the corresponding product text attribute.<br />If 'Import File Attributes' is disabled, it won't override previously imported values from your file attributes in this field.]]>
+                    </comment>                </field>
                 <field id="url_generation_enabled" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Regenerate url rewrites</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
