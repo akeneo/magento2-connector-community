@@ -334,6 +334,10 @@ For example :<br/>
                     <label>Regenerate url rewrites</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="activation" translate="label comment" type="select" sortOrder="130" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable new products. Akeneo status takes priority.</label>
+                    <source_model>Akeneo\Connector\Model\Source\Activation</source_model>
+                </field>
             </group>
         </section>
     </system>

@@ -71,6 +71,7 @@ class Config extends AbstractHelper
     const PRODUCT_MEDIA_GALLERY = 'akeneo_connector/product/media_gallery';
     const PRODUCT_METRICS = 'akeneo_connector/product/metrics';
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
+    const PRODUCT_ACTIVATION = 'akeneo_connector/product/activation';
     /**
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
      */
@@ -546,6 +547,16 @@ class Config extends AbstractHelper
     public function getAttribute($entityType, $code)
     {
         return $this->eavConfig->getAttribute($entityType, $code);
+    }
+
+    /**
+     * Retrieve the status of newly imported products
+     *
+     * @return string
+     */
+    public function getProductActivation()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCT_ACTIVATION);
     }
 
     /**

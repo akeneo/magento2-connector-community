@@ -59,6 +59,7 @@ Zum Beispiel :<br/>
 "Differ","Unterscheiden"
 "Disabled","Deaktiviert"
 "Duplicates sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1","Duplicate sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1"
+"Enable new products. Akeneo status takes priority.","Neue Produkte ermöglichen. Der Akeneo-Status hat Vorrang."
 "Enabled","Freigegeben"
 "Enter the code of the select or multiselect attribute used to associate products to your websites, leave blank to ignore","Geben Sie den Code des ausgewählten Attributs ein, das zum Zuordnen von Produkten zu Ihren Websites verwendet wird, und lassen Sie das Feld zum Ignorieren leer"
 "Enter all PIM attributes containing product images. All images specified will be imported to the product image gallery.","Geben Sie alle PIM-Attribute ein, die Produktbilder enthalten. Alle angegebenen Bilder werden in die Produkt-Bildergalerie importiert."
