@@ -794,12 +794,17 @@ class Config extends AbstractHelper
     /**
      * Check if media file exists
      *
-     * @param string $filename
+     * @param string      $filename
+     * @param string|null $subDirectory
      *
      * @return bool
      */
-    public function mediaFileExists($filename)
+    public function mediaFileExists($filename, $subDirectory = null)
     {
+        if ($subDirectory) {
+            return $this->mediaDirectory->isFile($subDirectory . $this->getMediaFilePath($filename));
+        }
+
         return $this->mediaDirectory->isFile($this->mediaConfig->getMediaPath($this->getMediaFilePath($filename)));
     }
 

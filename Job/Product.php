@@ -1175,23 +1175,16 @@ class Product extends Import
         // Get all attributes to import
         foreach ($attributesMapped as $attribute) {
             /** @var bool $attributeUsed */
-            $attributeUsed = false;
             if ($connection->tableColumnExists($tmpTable, $attribute)) {
                 $data[$attribute] = $attribute;
                 $attributeToImport[] = $attribute;
-                $attributeUsed = true;
             }
             // Get the scopable attributes
             foreach ($stores as $suffix => $storeData) {
                 if ($connection->tableColumnExists($tmpTable, $attribute . '-' . $suffix)) {
                     $data[$attribute . '-' . $suffix] = $attribute . '-' . $suffix;
                     $attributeToImport[]              = $attribute . '-' . $suffix;
-                    $attributeUsed                    = true;
                 }
-            }
-
-            if ($attributeUsed === false) {
-                $this->setMessage(__('Warning: %1 attribute does not exist', $attribute));
             }
         }
         /** @var \Magento\Framework\DB\Select $select */
@@ -1220,9 +1213,7 @@ class Product extends Import
                 $name = $this->entitiesHelper->formatMediaName(basename($file['code']));
 
                 // Don't import the file if it was already imported
-                if (!$this->configHelper->mediaFileExists(
-                    'akeneo_connector/media_files' . $this->configHelper->getMediaFilePath($name)
-                )) {
+                if (!$this->configHelper->mediaFileExists($name, 'akeneo_connector/media_files/')) {
                     /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$attribute]);
                     /** @var string $filePath */
