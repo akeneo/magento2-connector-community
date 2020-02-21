@@ -2222,7 +2222,7 @@ class Product extends Import
                 $media = $this->akeneoClient->getProductMediaFileApi()->get($row[$image]);
                 /** @var string $name */
                 $name = $this->entitiesHelper->formatMediaName(basename($media['code']));
-                /** @var string $filetPath */
+                /** @var string $filePath */
                 $filePath = $this->configHelper->getMediaFullPath($name);
 
                 if (!$this->configHelper->mediaFileExists($name)) {
