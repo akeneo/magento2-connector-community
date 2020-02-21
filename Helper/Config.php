@@ -794,36 +794,53 @@ class Config extends AbstractHelper
     /**
      * Check if media file exists
      *
-     * @param string      $filename
-     * @param string|null $subDirectory
+     * @param string $filePath
      *
      * @return bool
      */
-    public function mediaFileExists($filename, $subDirectory = null)
+    public function mediaFileExists($filePath)
     {
-        if ($subDirectory) {
-            return $this->mediaDirectory->isFile($subDirectory . $this->getMediaFilePath($filename));
-        }
-
-        return $this->mediaDirectory->isFile($this->mediaConfig->getMediaPath($this->getMediaFilePath($filename)));
+        return $this->mediaDirectory->isFile($filePath);
     }
 
     /**
-     * Retrieve media directory path
+     * Get media full path
+     *
+     * @param string      $fileName
+     * @param null|string $subDirectory
+     *
+     * @return string
+     * @throws FileSystemException
+     */
+    public function getMediaFullPath($fileName, $subDirectory = null)
+    {
+        if ($subDirectory) {
+            return $subDirectory . '/' . $this->getMediaFilePath($fileName);
+        }
+
+        return $this->mediaConfig->getMediaPath($this->getMediaFilePath($fileName));
+    }
+
+    /**
+     * Download media by fullpath
      *
      * @param string $filename
      * @param string $content
      *
      * @return void
      */
-    public function saveMediaFile($filename, $content)
+    public function saveMediaFile($filePath, $content)
     {
-        if (!$this->mediaFileExists($filename)) {
-            $this->mediaDirectory->writeFile(
-                $this->mediaConfig->getMediaPath($this->getMediaFilePath($filename)),
-                $content
-            );
-        }
+        $this->mediaDirectory->writeFile($filePath, $content);
+    }
+
+    /**
+     * Get Files Media Directory
+     *
+     * @return string
+     */
+    public function getFilesMediaDirectory() {
+        return $this->filesMediaFile;
     }
 
     /**
@@ -836,45 +853,6 @@ class Config extends AbstractHelper
     public function getMediaFilePath($filename)
     {
         return Uploader::getDispretionPath($filename) . '/' . Uploader::getCorrectFileName($filename);
-    }
-
-    /**
-     * Retrieve file media directory path
-     *
-     * @param string $fileName
-     * @param string $content
-     *
-     * @return string
-     * @throws FileSystemException
-     */
-    public function downloadFileMediaFile($fileName, $content)
-    {
-        if (!$this->mediaFileExists($fileName)) {
-            $this->mediaDirectory->writeFile(
-                $this->getFileMediaPath($this->getMediaFilePath($fileName)),
-                $content
-            );
-        }
-
-        $filePath = $this->getFileMediaPath($this->getMediaFilePath($fileName));
-
-        return $filePath;
-    }
-
-    /**
-     * Retrieve reference record media directory path
-     *
-     * @param string $fileName
-     *
-     * @return string
-     * @throws FileSystemException
-     */
-    public function getFileMediaPath($fileName)
-    {
-        /** @var string $filePath */
-        $filePath = $this->filesMediaFile . $fileName;
-
-        return $filePath;
     }
 
     /**

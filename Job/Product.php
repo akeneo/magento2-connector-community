@@ -1211,18 +1211,14 @@ class Product extends Import
                 $file = $this->akeneoClient->getProductMediaFileApi()->get($row[$attribute]);
                 /** @var string $name */
                 $name = $this->entitiesHelper->formatMediaName(basename($file['code']));
+                /** @var string $filePath */
+                $filePath = $this->configHelper->getMediaFullPath($name, $this->configHelper->getFilesMediaDirectory());
 
                 // Don't import the file if it was already imported
-                if (!$this->configHelper->mediaFileExists($name, 'akeneo_connector/media_files/')) {
+                if (!$this->configHelper->mediaFileExists($filePath)) {
                     /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$attribute]);
-                    /** @var string $filePath */
-                    $filePath = $this->configHelper->downloadFileMediaFile($name, $binary);
-                }
-
-                // Get the file path if it was already imported once
-                if (!isset($filePath)) {
-                    $filePath = $this->configHelper->getFileMediaPath($name);
+                    $this->configHelper->saveMediaFile($filePath, $binary);
                 }
 
                 // Change the Akeneo file path to Magento file path
@@ -2226,10 +2222,13 @@ class Product extends Import
                 $media = $this->akeneoClient->getProductMediaFileApi()->get($row[$image]);
                 /** @var string $name */
                 $name = $this->entitiesHelper->formatMediaName(basename($media['code']));
+                /** @var string $filetPath */
+                $filePath = $this->configHelper->getMediaFullPath($name);
 
                 if (!$this->configHelper->mediaFileExists($name)) {
+                    /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
-                    $this->configHelper->saveMediaFile($name, $binary);
+                    $this->configHelper->saveMediaFile($filePath, $binary);
                 }
 
                 /** @var string $file */
