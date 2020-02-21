@@ -2,24 +2,23 @@
 
 namespace Akeneo\Connector\Helper\Import;
 
+use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Magento\Catalog\Model\Product as BaseProductModel;
+use Magento\Eav\Api\Data\AttributeInterface;
+use Magento\Framework\App\DeploymentConfig;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\Config\ConfigOptionsListConstants;
+use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Ddl\Table;
 use Magento\Framework\DB\Select;
-use Magento\Framework\DB\Adapter\AdapterInterface;
-use Magento\Framework\App\DeploymentConfig;
-use Magento\Eav\Api\Data\AttributeInterface;
-use Magento\Framework\Config\ConfigOptionsListConstants;
 use Zend_Db_Expr as Expr;
-use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
-use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Magento\Catalog\Model\Product as BaseProductModel;
+use Zend_Db_Select_Exception;
 
 /**
  * Class Entities
  *
- * @category  Class
  * @package   Akeneo\Connector\Helper\Import
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2019 Agence Dn'D
@@ -87,6 +86,12 @@ class Entities extends AbstractHelper
      * @var string[] $attributeScopeMapping
      */
     protected $attributeScopeMapping = [];
+    /**
+     * Description $rowIdExists field
+     *
+     * @var bool[] $rowIdExists
+     */
+    protected $rowIdExists = [];
 
     /**
      * Entities constructor
@@ -517,19 +522,37 @@ class Entities extends AbstractHelper
 
             /** @var string $backendType */
             $backendType = $attribute[AttributeInterface::BACKEND_TYPE];
+            /** @var string $table */
+            $table = $this->getTable($entityTable . '_' . $backendType);
             /** @var string $identifier */
-            $identifier = $this->getColumnIdentifier($this->getTable($entityTable . '_' . $backendType));
+            $identifier = $this->getColumnIdentifier($table);
+            /** @var bool $rowIdExists */
+            $rowIdExists = $this->rowIdColumnExists($table);
 
-            /** @var \Magento\Framework\DB\Select $select */
-            $select = $connection->select()->from(
-                $tableName,
-                [
-                    'attribute_id' => new Expr($attribute[AttributeInterface::ATTRIBUTE_ID]),
-                    'store_id'     => new Expr($storeId),
-                    $identifier    => '_entity_id',
-                    'value'        => $value,
-                ]
-            );
+            if ($rowIdExists && $entityTable === $this->getTablePrefix() . 'catalog_product_entity') {
+                /** @var Select $select */
+                $select = $connection->select()
+                                     ->from(
+                                         $tableName,
+                                         [
+                                             'attribute_id' => new Expr($attribute[AttributeInterface::ATTRIBUTE_ID]),
+                                             'store_id'     => new Expr($storeId),
+                                             'value'        => $value,
+                                         ]
+                                     );
+                $this->addJoinForContentStaging($select, [$identifier => 'row_id']);
+            } else {
+                /** @var Select $select */
+                $select = $connection->select()->from(
+                    $tableName,
+                    [
+                        'attribute_id' => new Expr($attribute[AttributeInterface::ATTRIBUTE_ID]),
+                        'store_id'     => new Expr($storeId),
+                        'value'        => $value,
+                        $identifier    => '_entity_id',
+                    ]
+                );
+            }
 
             /** @var bool $columnExists */
             $columnExists = $connection->tableColumnExists($tableName, $value);
@@ -541,7 +564,7 @@ class Entities extends AbstractHelper
             $insert = $connection->insertFromSelect(
                 $select,
                 $this->getTable($entityTable . '_' . $backendType),
-                ['attribute_id', 'store_id', $identifier, 'value'],
+                ['attribute_id', 'store_id', 'value', $identifier],
                 $mode
             );
             $connection->query($insert);
@@ -629,6 +652,21 @@ class Entities extends AbstractHelper
     }
 
     /**
+     * Description rowIdColumnExists function
+     *
+     * @param string $table
+     *
+     * @return bool
+     */
+    public function rowIdColumnExists($table)
+    {
+        if (!isset($this->rowIdExists[$table])) {
+            $this->rowIdExists[$table] = $this->connection->tableColumnExists($table, 'row_id');
+        }
+
+        return $this->rowIdExists[$table];
+    }
+    /**
      * Retrieve if row id column exists
      *
      * @param string $table
@@ -638,7 +676,7 @@ class Entities extends AbstractHelper
      */
     public function getColumnIdentifier($table, $identifier = 'entity_id')
     {
-        if ($this->connection->tableColumnExists($table, 'row_id')) {
+        if ($this->rowIdColumnExists($table)) {
             $identifier = 'row_id';
         }
 
@@ -791,5 +829,45 @@ class Entities extends AbstractHelper
         $finalName = $shortName . '_' . $shortHash . '.' . $extension;
 
         return $finalName;
+    }
+    /**
+     * Description addJoinForContentStaging function
+     *
+     * @param Select   $select
+     * @param string[] $cols
+     *
+     * @return void
+     */
+    public function addJoinForContentStaging($select, $cols)
+    {
+        $select
+            ->joinLeft(
+            // retrieve each product entity for each row_id.
+            // We use "left join" to be able to create new product from Akeneo (they are not yet in catalog_product_entity)
+                ['p' => 'catalog_product_entity'],
+                '_entity_id = p.entity_id',
+                $cols
+            )
+            ->joinLeft( // retrieve all the staging update for the givens entities. We use "join left" to get the original entity
+                ['s' => 'staging_update'],
+                'p.created_in = s.id',
+                []
+            );
+
+        if (!$this->configHelper->isAkeneoMaster()) {
+            $select->where(
+            // filter to get only "default product entities"
+            // ie. product with 2 stagings scheduled will appear 5 times in catalog_product_entity table.
+            // We only want row not updated by the content staging (the first, the one between the 2 scheduled and the last).
+                's.rollback_id IS NULL'
+            );
+        }
+
+        try {
+            // if possible, we remove behaviour of the ContentStaging override on FromRenderer @see \Magento\Staging\Model\Select\FromRenderer
+            $select->setPart('disable_staging_preview', true);
+        } catch (Zend_Db_Select_Exception $e) {
+            $this->_logger->error($e->getMessage());
+        }
     }
 }

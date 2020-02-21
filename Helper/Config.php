@@ -70,6 +70,7 @@ class Config extends AbstractHelper
     const PRODUCT_MEDIA_IMAGES = 'akeneo_connector/product/media_images';
     const PRODUCT_MEDIA_GALLERY = 'akeneo_connector/product/media_gallery';
     const PRODUCT_METRICS = 'akeneo_connector/product/metrics';
+    const PRODUCT_AKENEO_MASTER = 'akeneo_connector/product/akeneo_master';
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     /**
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
@@ -635,6 +636,16 @@ class Config extends AbstractHelper
     public function isUrlGenerationEnabled()
     {
         return $this->scopeConfig->isSetFlag(self::PRODUCT_URL_GENERATION_ENABLED);
+    }
+
+    /**
+     * Description isAkeneoMaster function
+     *
+     * @return bool
+     */
+    public function isAkeneoMaster()
+    {
+        return $this->scopeConfig->isSetFlag(self::PRODUCT_AKENEO_MASTER);
     }
 
     /**
