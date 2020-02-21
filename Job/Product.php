@@ -1268,7 +1268,6 @@ class Product extends JobImport
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
 
-        // add @DND
         /** @var string $productEntityTable */
         $productEntityTable = $this->entitiesHelper->getTable('catalog_product_entity');
         /** @var string $eavAttrOptionTable */
@@ -1281,7 +1280,6 @@ class Product extends JobImport
         $productRelationTable = $this->entitiesHelper->getTable('catalog_product_relation');
         /** @var string $productSuperLinkTable */
         $productSuperLinkTable = $this->entitiesHelper->getTable('catalog_product_super_link');
-        // / add @DND
 
         /** @var string|null $groupColumn */
         $groupColumn = null;
@@ -1303,7 +1301,6 @@ class Product extends JobImport
             '_children IS NOT NULL'
         );
 
-        // add @DND
         /** @var string $pKeyColumn */
         $pKeyColumn = '_entity_id';
 
@@ -1313,7 +1310,6 @@ class Product extends JobImport
             $this->entities->addJoinForContentStaging($configurableSelect, ['p.row_id']);
             $pKeyColumn = 'row_id';
         }
-        // / add @DND
 
         /** @var int $stepSize */
         $stepSize = self::CONFIGURABLE_INSERTION_MAX_SIZE;
@@ -1359,7 +1355,7 @@ class Product extends JobImport
 
                 /** @var array $values */
                 $values = [
-                    'product_id'   => $row[$pKeyColumn], // add @DND /
+                    'product_id'   => $row[$pKeyColumn],
                     'attribute_id' => $id,
                     'position'     => $position++,
                 ];
@@ -1374,7 +1370,7 @@ class Product extends JobImport
                     $connection->select()
                                ->from($productSuperAttrTable)
                                ->where('attribute_id = ?', $id)
-                               ->where('product_id = ?', $row[$pKeyColumn]) // add @DND /
+                               ->where('product_id = ?', $row[$pKeyColumn])
                                ->limit(1)
                 );
 
@@ -1408,13 +1404,13 @@ class Product extends JobImport
                     }
 
                     $valuesRelations[] = [
-                        'parent_id' => $row[$pKeyColumn], // add @DND /
+                        'parent_id' => $row[$pKeyColumn],
                         'child_id'  => $childId,
                     ];
 
                     $valuesSuperLink[] = [
                         'product_id' => $childId,
-                        'parent_id'  => $row[$pKeyColumn], // add @DND /
+                        'parent_id'  => $row[$pKeyColumn],
                     ];
                 }
 
