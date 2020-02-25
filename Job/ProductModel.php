@@ -141,10 +141,17 @@ class ProductModel extends Import
         $except = ['code', 'axis'];
         /** @var array $variantTable */
         $variantTable = $this->entitiesHelper->getTable('akeneo_connector_product_model');
+        /** @var array $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        /** @var array $columnsTmp */
+        $columnsTmp = array_keys($connection->describeTable($tmpTable));
         /** @var array $columns */
         $columns = array_keys($connection->describeTable($variantTable));
+        /** @var array $columnsToDelete */
+        $columnsToDelete = array_diff($columns, $columnsTmp);
+
         /** @var string $column */
-        foreach ($columns as $column) {
+        foreach ($columnsToDelete as $column) {
             if (in_array($column, $except)) {
                 continue;
             }
@@ -167,10 +174,15 @@ class ProductModel extends Import
         $except = ['code', 'axis', 'type', '_entity_id', '_is_new'];
         /** @var array $variantTable */
         $variantTable = $this->entitiesHelper->getTable('akeneo_connector_product_model');
+        /** @var array $columnsTmp */
+        $columnsTmp = array_keys($connection->describeTable($tmpTable));
         /** @var array $columns */
-        $columns = array_keys($connection->describeTable($tmpTable));
+        $columns = array_keys($connection->describeTable($variantTable));
+        /** @var array $columnsToAdd */
+        $columnsToAdd = array_diff($columnsTmp, $columns);
+
         /** @var string $column */
-        foreach ($columns as $column) {
+        foreach ($columnsToAdd as $column) {
             if (in_array($column, $except)) {
                 continue;
             }
