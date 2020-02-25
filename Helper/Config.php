@@ -815,7 +815,7 @@ class Config extends AbstractHelper
     public function getMediaFullPath($fileName, $subDirectory = null)
     {
         if ($subDirectory) {
-            return $subDirectory . '/' . $this->getMediaFilePath($fileName);
+            return $subDirectory . $this->getMediaFilePath($fileName);
         }
 
         return $this->mediaConfig->getMediaPath($this->getMediaFilePath($fileName));
