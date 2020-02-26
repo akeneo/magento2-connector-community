@@ -34,6 +34,7 @@ use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Import\Product as ProductImportHelper;
 use Akeneo\Connector\Job\Option as JobOption;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
+use Psr\Http\Message\ResponseInterface;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Pdo;
 
@@ -391,6 +392,41 @@ class Product extends Import
                 }
 
                 $index++;
+            }
+        }
+
+        // Remove declared file attributes columns if file import is disabled
+        if (!$this->configHelper->isFileImportEnabled()) {
+            /** @var array $attributesToImport */
+            $attributesToImport = $this->configHelper->getFileImportColumns();
+
+            if (!empty($attributesToImport)) {
+                $attributesToImport = array_unique($attributesToImport);
+
+                /** @var array $stores */
+                $stores = array_merge(
+                    $this->storeHelper->getStores(['lang']), // en_US
+                    $this->storeHelper->getStores(['channel_code']), // channel
+                    $this->storeHelper->getStores(['lang', 'channel_code']) // en_US-channel
+                );
+
+                /** @var AdapterInterface $connection */
+                $connection = $this->entitiesHelper->getConnection();
+                /** @var string $tmpTable */
+                $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+                /** @var array $data */
+                foreach ($attributesToImport as $attribute) {
+                    if ($connection->tableColumnExists($tmpTable, $attribute)) {
+                        $connection->dropColumn($tmpTable, $attribute);
+                    }
+
+                    // Remove scopable colums
+                    foreach ($stores as $suffix => $storeData) {
+                        if ($connection->tableColumnExists($tmpTable, $attribute . '-' . $suffix)) {
+                            $connection->dropColumn($tmpTable, $attribute . '-' . $suffix);
+                        }
+                    }
+                }
             }
         }
 
@@ -1103,6 +1139,111 @@ class Product extends Import
                 'updated_in' => new Expr(VersionManager::MAX_VERSION),
             ];
             $connection->update($table, $values, 'created_in = 0 AND updated_in = 0');
+        }
+    }
+
+    /**
+     * Import the files
+     *
+     * @return void
+     */
+    public function importFiles()
+    {
+        if (!$this->configHelper->isFileImportEnabled()) {
+            $this->setStatus(false);
+            $this->setMessage(__('File import is not enabled'));
+
+            return;
+        }
+
+        /** @var array $stores */
+        $stores = array_merge(
+            $this->storeHelper->getStores(['lang']), // en_US
+            $this->storeHelper->getStores(['channel_code']), // channel
+            $this->storeHelper->getStores(['lang', 'channel_code']) // en_US-channel
+        );
+
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        /** @var array $attributesMapped */
+        $attributesMapped = $this->configHelper->getFileImportColumns();
+
+        if (empty($attributesMapped)) {
+            $this->setStatus(false);
+            $this->setMessage(__('Akeneo Files Attributes is empty'));
+
+            return;
+        }
+
+        $attributesMapped = array_unique($attributesMapped);
+
+        /** @var string $table */
+        $table = $this->entitiesHelper->getTable('catalog_product_entity');
+        /** @var string $columnIdentifier */
+        $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($table);
+
+        /** @var array $data */
+        $data = [
+            $columnIdentifier => '_entity_id',
+            'sku'             => 'identifier',
+        ];
+        /** @var string[] $attributeToImport */
+        $attributeToImport = [];
+
+        // Get all attributes to import
+        foreach ($attributesMapped as $attribute) {
+            /** @var bool $attributeUsed */
+            if ($connection->tableColumnExists($tmpTable, $attribute)) {
+                $data[$attribute] = $attribute;
+                $attributeToImport[] = $attribute;
+            }
+            // Get the scopable attributes
+            foreach ($stores as $suffix => $storeData) {
+                if ($connection->tableColumnExists($tmpTable, $attribute . '-' . $suffix)) {
+                    $data[$attribute . '-' . $suffix] = $attribute . '-' . $suffix;
+                    $attributeToImport[]              = $attribute . '-' . $suffix;
+                }
+            }
+        }
+        /** @var \Magento\Framework\DB\Select $select */
+        $select = $connection->select()->from($tmpTable, $data);
+
+        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+        $query = $connection->query($select);
+
+        /** @var array $row */
+        while (($row = $query->fetch())) {
+            foreach ($attributeToImport as $attribute) {
+                if (!isset($row[$attribute])) {
+                    continue;
+                }
+
+                if (!$row[$attribute]) {
+                    continue;
+                }
+
+                // Unset the filepath if it was used to work with later verifications
+                unset($filePath);
+
+                /** @var array $media */
+                $file = $this->akeneoClient->getProductMediaFileApi()->get($row[$attribute]);
+                /** @var string $name */
+                $name = $this->entitiesHelper->formatMediaName(basename($file['code']));
+                /** @var string $filePath */
+                $filePath = $this->configHelper->getMediaFullPath($name, $this->configHelper->getFilesMediaDirectory());
+
+                // Don't import the file if it was already imported
+                if (!$this->configHelper->mediaFileExists($filePath)) {
+                    /** @var ResponseInterface $binary */
+                    $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$attribute]);
+                    $this->configHelper->saveMediaFile($filePath, $binary);
+                }
+
+                // Change the Akeneo file path to Magento file path
+                $connection->update($tmpTable, [$attribute => $filePath], ['identifier = ?' => $row['sku']]);
+            }
         }
     }
 
@@ -2179,10 +2320,13 @@ class Product extends Import
                 $media = $this->akeneoClient->getProductMediaFileApi()->get($row[$image]);
                 /** @var string $name */
                 $name = $this->entitiesHelper->formatMediaName(basename($media['code']));
+                /** @var string $filePath */
+                $filePath = $this->configHelper->getMediaFullPath($name);
 
                 if (!$this->configHelper->mediaFileExists($name)) {
+                    /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
-                    $this->configHelper->saveMediaFile($name, $binary);
+                    $this->configHelper->saveMediaFile($filePath, $binary);
                 }
 
                 /** @var string $file */

@@ -6,6 +6,7 @@ use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Encryption\Encryptor;
 use Magento\Directory\Helper\Data as DirectoryHelper;
+use Magento\Framework\Exception\FileSystemException;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\Data\WebsiteInterface;
 use Magento\Store\Model\ScopeInterface;
@@ -69,6 +70,8 @@ class Config extends AbstractHelper
     const PRODUCT_MEDIA_ENABLED = 'akeneo_connector/product/media_enabled';
     const PRODUCT_MEDIA_IMAGES = 'akeneo_connector/product/media_images';
     const PRODUCT_MEDIA_GALLERY = 'akeneo_connector/product/media_gallery';
+    const PRODUCT_FILE_ENABLED = 'akeneo_connector/product/file_enabled';
+    const PRODUCT_FILE_ATTRIBUTE = 'akeneo_connector/product/file_attribute';
     const PRODUCT_METRICS = 'akeneo_connector/product/metrics';
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     const PRODUCT_ACTIVATION = 'akeneo_connector/product/activation';
@@ -130,6 +133,12 @@ class Config extends AbstractHelper
      * @var WriteInterface $mediaDirectory
      */
     protected $mediaDirectory;
+    /**
+     * This variable contains reference records media directory
+     *
+     * @var string $recordMediaFile
+     */
+    protected $filesMediaFile = 'akeneo_connector/media_files';
 
     /**
      * Config constructor
@@ -673,6 +682,47 @@ class Config extends AbstractHelper
     }
 
     /**
+     * Retrieve is asset import is enabled
+     *
+     * @return bool
+     */
+    public function isFileImportEnabled()
+    {
+        return $this->scopeConfig->isSetFlag(self::PRODUCT_FILE_ENABLED);
+    }
+
+    /**
+     * Retrieve asset attribute columns
+     *
+     * @return array
+     */
+    public function getFileImportColumns()
+    {
+        /** @var array $assets */
+        $fileAttributes = [];
+        /** @var string $config */
+        $config = $this->scopeConfig->getValue(self::PRODUCT_FILE_ATTRIBUTE);
+        if (!$config) {
+            return $fileAttributes;
+        }
+
+        /** @var array $media */
+        $attributes = $this->serializer->unserialize($config);
+        if (!$attributes) {
+            return $fileAttributes;
+        }
+
+        foreach ($attributes as $attribute) {
+            if (!isset($attribute['file_attribute'])) {
+                continue;
+            }
+            $fileAttributes[] = $attribute['file_attribute'];
+        }
+
+        return $fileAttributes;
+    }
+
+    /**
      * Retrieve media attribute column
      *
      * @return array
@@ -755,31 +805,53 @@ class Config extends AbstractHelper
     /**
      * Check if media file exists
      *
-     * @param string $filename
+     * @param string $filePath
      *
      * @return bool
      */
-    public function mediaFileExists($filename)
+    public function mediaFileExists($filePath)
     {
-        return $this->mediaDirectory->isFile($this->mediaConfig->getMediaPath($this->getMediaFilePath($filename)));
+        return $this->mediaDirectory->isFile($filePath);
     }
 
     /**
-     * Retrieve media directory path
+     * Get media full path
+     *
+     * @param string      $fileName
+     * @param null|string $subDirectory
+     *
+     * @return string
+     * @throws FileSystemException
+     */
+    public function getMediaFullPath($fileName, $subDirectory = null)
+    {
+        if ($subDirectory) {
+            return $subDirectory . $this->getMediaFilePath($fileName);
+        }
+
+        return $this->mediaConfig->getMediaPath($this->getMediaFilePath($fileName));
+    }
+
+    /**
+     * Download media by fullpath
      *
      * @param string $filename
      * @param string $content
      *
      * @return void
      */
-    public function saveMediaFile($filename, $content)
+    public function saveMediaFile($filePath, $content)
     {
-        if (!$this->mediaFileExists($filename)) {
-            $this->mediaDirectory->writeFile(
-                $this->mediaConfig->getMediaPath($this->getMediaFilePath($filename)),
-                $content
-            );
-        }
+        $this->mediaDirectory->writeFile($filePath, $content);
+    }
+
+    /**
+     * Get Files Media Directory
+     *
+     * @return string
+     */
+    public function getFilesMediaDirectory() {
+        return $this->filesMediaFile;
     }
 
     /**
