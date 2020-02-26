@@ -59,6 +59,8 @@ Par exemple :<br/>
 "Differ","Différent de"
 "Disabled","Désactivé"
 "Duplicates sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1","Doublon de sku detecté. Assurez-vous que le code d'un modèle de produit n'est pas utilisé pour un produit simple. Doublons : %1"
+"Default Product Status","Statut par défaut des produits"
+"Default status for product creation<br/>If a product is updated, status won't be modified unless it is disabled in Akeneo","Statut par défaut lors de la création des produits<br/>Si un produit est mis à jour, son statut ne sera modifié qu'en cas de désactivation côté Akeneo"
 "Enabled","Activé"
 "Enter the code of the select or multiselect attribute used to associate products to your websites, leave blank to ignore","Entrer le code de l'attribut select utilisé pour associer les produits aux websites. Laisser vide pour ignorer"
 "Enter all PIM attributes containing product images. All images specified will be imported to the product image gallery.","Ajoutez tous les attributs PIM contenant des images produit. Toutes les images spécifiées setont importées dans la gallerie produit."

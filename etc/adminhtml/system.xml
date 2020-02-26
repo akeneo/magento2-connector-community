@@ -248,6 +248,13 @@ For example :<br/>
                     <label>Website Attribute</label>
                     <comment>Enter the code of the select or multiselect attribute used to associate products to your websites, leave blank to ignore</comment>
                 </field>
+                <field id="activation" translate="label comment" type="select" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Default Product Status</label>
+                    <source_model>Akeneo\Connector\Model\Source\Activation</source_model>
+                    <comment>
+                        <![CDATA[Default status for product creation<br/>If a product is updated, status won't be modified unless it is disabled in Akeneo]]>
+                    </comment>
+                </field>
                 <field id="attribute_mapping" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Attribute Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Attribute</frontend_model>
