@@ -2022,7 +2022,7 @@ class Product extends Import
         /** @var string $tableName */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var array $gallery */
-        $gallery = $this->configHelper->getMediaImportGalleryColumns();
+        $gallery = $this->configHelper->getMediaImportGalleryColumns(true);
 
         if (empty($gallery)) {
             $this->setStatus(false);
@@ -2042,11 +2042,11 @@ class Product extends Import
             'sku'             => 'identifier',
         ];
         foreach ($gallery as $image) {
-            if (!$connection->tableColumnExists($tmpTable, $image)) {
-                $this->setMessage(__('Warning: %1 attribute does not exist', $image));
+            if (!$connection->tableColumnExists($tmpTable, $image['attribute'])) {
+                $this->setMessage(__('Warning: %1 attribute does not exist', $image['attribute']));
                 continue;
             }
-            $data[$image] = $image;
+            $data[$image['attribute']] = $image['attribute'];
         }
 
         /** @var \Magento\Framework\DB\Select $select */
@@ -2059,6 +2059,8 @@ class Product extends Import
         $galleryAttribute = $this->configHelper->getAttribute(BaseProductModel::ENTITY, 'media_gallery');
         /** @var string $galleryTable */
         $galleryTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery');
+        /** @var string $galleryValueTable */
+        $galleryValueTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery_value');
         /** @var string $galleryEntityTable */
         $galleryEntityTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery_value_to_entity');
         /** @var string $productImageTable */
@@ -2069,21 +2071,21 @@ class Product extends Import
             /** @var array $files */
             $files = [];
             foreach ($gallery as $image) {
-                if (!isset($row[$image])) {
+                if (!isset($row[$image['attribute']])) {
                     continue;
                 }
 
-                if (!$row[$image]) {
+                if (!$row[$image['attribute']]) {
                     continue;
                 }
 
                 /** @var array $media */
-                $media = $this->akeneoClient->getProductMediaFileApi()->get($row[$image]);
+                $media = $this->akeneoClient->getProductMediaFileApi()->get($row[$image['attribute']]);
                 /** @var string $name */
                 $name = $this->entitiesHelper->formatMediaName(basename($media['code']));
 
                 if (!$this->configHelper->mediaFileExists($name)) {
-                    $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
+                    $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image['attribute']]);
                     $this->configHelper->saveMediaFile($name, $binary);
                 }
 
@@ -2120,11 +2122,28 @@ class Product extends Import
                 ];
                 $connection->insertOnDuplicate($galleryEntityTable, $data, array_keys($data));
 
+                if ($image['position']) {
+                    $recordId = $connection->fetchOne(
+                        $connection->select()
+                            ->from($galleryValueTable, ['record_id'])
+                            ->where('`value_id` = ?', $valueId)
+                            ->where('`entity_id` = ?', $row[$columnIdentifier])
+                    );
+
+                    $data['position'] = $image['position'];
+
+                    if ($recordId) {
+                        $connection->update('catalog_product_entity_media_gallery_value', $data, '`record_id` = ' . $recordId);
+                    } else {
+                        $connection->insert('catalog_product_entity_media_gallery_value', $data);
+                    }
+                }
+
                 /** @var array $columns */
                 $columns = $this->configHelper->getMediaImportImagesColumns();
 
                 foreach ($columns as $column) {
-                    if ($column['column'] !== $image) {
+                    if ($column['column'] !== $image['attribute']) {
                         continue;
                     }
                     /** @var array $data */
