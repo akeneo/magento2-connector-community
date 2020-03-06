@@ -16,13 +16,13 @@
     <type name="Akeneo\Connector\Job\ImportRepository">
         <arguments>
             <argument name="data" xsi:type="array">
-                <item name="category" xsi:type="string">\Akeneo\Connector\Job\Category</item>
-                <item name="family" xsi:type="string">\Akeneo\Connector\Job\Family</item>
-                <item name="attribute" xsi:type="string">\Akeneo\Connector\Job\Attribute</item>
-                <item name="option" xsi:type="string">\Akeneo\Connector\Job\Option</item>
-                <item name="product_model" xsi:type="string">\Akeneo\Connector\Job\ProductModel</item>
-                <item name="family_variant" xsi:type="string">\Akeneo\Connector\Job\FamilyVariant</item>
-                <item name="product" xsi:type="string">\Akeneo\Connector\Job\Product</item>
+                <item name="category" xsi:type="object">\Akeneo\Connector\Job\Category</item>
+                <item name="family" xsi:type="object">\Akeneo\Connector\Job\Family</item>
+                <item name="attribute" xsi:type="object">\Akeneo\Connector\Job\Attribute</item>
+                <item name="option" xsi:type="object">\Akeneo\Connector\Job\Option</item>
+                <item name="product_model" xsi:type="object">\Akeneo\Connector\Job\ProductModel</item>
+                <item name="family_variant" xsi:type="object">\Akeneo\Connector\Job\FamilyVariant</item>
+                <item name="product" xsi:type="object">\Akeneo\Connector\Job\Product</item>
             </argument>
         </arguments>
     </type>
