@@ -75,14 +75,7 @@ class ImportRepository implements ImportRepositoryInterface
      */
     private function initCollection($data)
     {
-        foreach ($data as $id => $class) {
-            if (!class_exists($class)) {
-                continue;
-            }
-
-            /** @var Import $import */
-            $import = $this->entityFactory->create($class);
-
+        foreach ($data as $id => $import) {
             $import->setData('id', $id);
             $this->add($import);
         }
