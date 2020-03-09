@@ -80,7 +80,7 @@ Par exemple :<br/>
 "Import API","Import API"
 "Import ID : %1","Import ID : %1"
 "Import File Attributes","Importer les attributs fichiers"
-"Import Media Files","Importer les images"
+"Import Image Attributes","Importer les images"
 "Import only product updated after the given date. Leave at least one blank for no filter.","N'importer que des produits mis à jour après la date donnée. Laisser au moins un champ vide pour ne pas filtrer."
 "Import only product updated after the given date. Leave blank for no filter.","N'importer que des produits mis à jour après la date donnée. Laisser le champ vide pour ne pas filtrer."
 "Import only product updated before the given date. Leave at least one blank for no filter.","N'importer que des produits mis à jour avant la date donnée. Laisser au moins un champ vide pour ne pas filtrer."

@@ -316,7 +316,7 @@ For example :<br/>
                     </comment>
                 </field>
                 <field id="media_enabled" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Import Media Files</label>
+                    <label>Import Image Attributes</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="media_gallery" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">

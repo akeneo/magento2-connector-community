@@ -336,7 +336,7 @@
                     </item>
                     <item name="11" xsi:type="array">
                         <item name="method" xsi:type="string">importFiles</item>
-                        <item name="comment" xsi:type="string">Import files</item>
+                        <item name="comment" xsi:type="string">Import file attributes</item>
                     </item>
                     <item name="12" xsi:type="array">
                         <item name="method" xsi:type="string">setValues</item>
@@ -368,7 +368,7 @@
                     </item>
                     <item name="19" xsi:type="array">
                         <item name="method" xsi:type="string">importMedia</item>
-                        <item name="comment" xsi:type="string">Import media files</item>
+                        <item name="comment" xsi:type="string">Import image attributes</item>
                     </item>
                     <item name="20" xsi:type="array">
                         <item name="method" xsi:type="string">dropTable</item>
