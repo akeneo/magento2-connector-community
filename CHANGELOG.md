@@ -70,3 +70,7 @@
 ### Version 100.4.0 :
 * Add automatic mapping for existing attributes, attribute options and products in Magento (https://help.akeneo.com/magento2-connector/v100/articles/existing-magento.html)
 * Add entities check in connector entities table before import
+
+### Version 100.4.2 :
+* Add support for file attributes import (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#import-file-attributes)
+* Add feature to apply default status to new products (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#default-product-status)
