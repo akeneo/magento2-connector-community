@@ -990,8 +990,8 @@ class Product extends Import
 
             //in case of multiselect
             /** @var string $conditionJoin */
-            $conditionJoin = "IF ( locate(',', `" . $column . "`) > 0 , " . "`p`.`" . $column . "` like " . new Expr(
-                    "CONCAT('%', `c1`.`code`, '%')"
+            $conditionJoin = "IF ( locate(',', `" . $column . "`) > 0 , " . new Expr(
+                    "FIND_IN_SET(`c1`.`code`,`p`.`" . $column ."`) > 0"
                 ) . ", `p`.`" . $column . "` = `c1`.`code` )";
 
             /** @var Select $select */
