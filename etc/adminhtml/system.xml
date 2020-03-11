@@ -335,13 +335,13 @@ For example :<br/>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="akeneo_master" translate="label" type="select" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Content staging behaviour - Akeneo is master</label>
+                    <label>Is Akeneo master for content staging</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>
-                        <![CDATA[This parameter is only useful on M2 Entreprise Edition.<br />
-                        Magento 2 Content Staging is used to create scheduled versions of products.<br /><br />
-                        <strong>Yes</strong> - Akeneo will override all product data no matter what has been scheduled. Product will still have scheduled versions but if an attribute, which is in Akeneo, has been modified in the scheduled version, the value will be override.<br />
-                        <strong>No</strong> - Akeneo will update only the "default" version of scheduled products. Ex: 2 versions A and B of a product X are scehduled. So the content staging workflow will be X -> A -> X -> B -> X. Only X versions will be updated.]]></comment>
+                        <![CDATA[This parameter is only used on Magento 2 Enterprise Edition.<br /><br />
+                        <strong>Yes</strong> - Akeneo will override all product versions no matter what changes has been scheduled.<br />
+                        <strong>No</strong> - Akeneo will only update the "base" version of the scheduled products.]]>
+                    </comment>
                 </field>
             </group>
         </section>
