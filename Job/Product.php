@@ -944,6 +944,9 @@ class Product extends Import
      */
     public function updateOption()
     {
+        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/cho_akeneo2.log');
+        $logger = new \Zend\Log\Logger();
+        $logger->addWriter($writer);
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
@@ -970,7 +973,7 @@ class Product extends Import
             $columnParts = explode('-', $column, 2);
             /** @var string $columnPrefix */
             $columnPrefix = reset($columnParts);
-            $columnPrefix = sprintf('%s_', $columnPrefix);
+            $columnPrefix = sprintf('%s-', $columnPrefix);
             /** @var int $prefixLength */
             $prefixLength = strlen($columnPrefix) + 1;
             /** @var string $entitiesTable */
