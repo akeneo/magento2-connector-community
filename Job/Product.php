@@ -944,9 +944,6 @@ class Product extends Import
      */
     public function updateOption()
     {
-        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/cho_akeneo2.log');
-        $logger = new \Zend\Log\Logger();
-        $logger->addWriter($writer);
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
