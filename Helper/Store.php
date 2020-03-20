@@ -7,6 +7,7 @@ use Magento\Store\Api\Data\WebsiteInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Magento\Store\Model\ResourceModel\Website as WebsiteResource;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 
 /**
  * Class Store
@@ -44,6 +45,12 @@ class Store
      * @var WebsiteResource $websiteResource
      */
     protected $websiteResource;
+    /**
+     * Description $scopeConfig field
+     *
+     * @var ScopeConfigInterface $scopeConfig
+     */
+    protected $scopeConfig;
 
     /**
      * Store constructor
@@ -52,17 +59,20 @@ class Store
      * @param Serializer            $serializer
      * @param StoreManagerInterface $storeManager
      * @param WebsiteResource       $websiteResource
+     * @param ScopeConfigInterface  $scopeConfig
      */
     public function __construct(
         ConfigHelper $configHelper,
         Serializer $serializer,
         StoreManagerInterface $storeManager,
-        WebsiteResource $websiteResource
+        WebsiteResource $websiteResource,
+        ScopeConfigInterface $scopeConfig
     ) {
         $this->configHelper    = $configHelper;
         $this->serializer      = $serializer;
         $this->storeManager    = $storeManager;
         $this->websiteResource = $websiteResource;
+        $this->scopeConfig     = $scopeConfig;
     }
 
     /**
@@ -114,7 +124,11 @@ class Store
                 /** @var string $storeCode */
                 $storeCode = $store->getCode();
                 /** @var string $storeLang */
-                $storeLang = $this->scopeConfig->getValue(\Magento\Directory\Helper\Data::XML_PATH_DEFAULT_LOCALE, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId);
+                $storeLang = $this->scopeConfig->getValue(
+                    \Magento\Directory\Helper\Data::XML_PATH_DEFAULT_LOCALE,
+                    \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                    $storeId
+                );
                 /** @var bool $isDefault */
                 $isDefault = false;
                 if (in_array($storeId, $websiteDefaultStores)) {
