@@ -17,6 +17,7 @@ use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Import\FamilyVariant as FamilyVariantHelper;
 use Zend_Db_Expr as Expr;
 use Akeneo\Connector\Helper\Output as OutputHelper;
+use Akeneo\Connector\Job\Import;
 
 /**
  * Class FamilyVariant

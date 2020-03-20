@@ -21,6 +21,7 @@ use Magento\Framework\File\Uploader;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
 use Magento\Catalog\Helper\Product as ProductHelper;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 
 /**
  * Class Config
@@ -32,7 +33,7 @@ use Magento\Catalog\Helper\Product as ProductHelper;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Config extends AbstractHelper
+class Config
 {
     /** Config keys */
     const AKENEO_API_BASE_URL = 'akeneo_connector/akeneo_api/base_url';
@@ -139,11 +140,16 @@ class Config extends AbstractHelper
      * @var string $recordMediaFile
      */
     protected $filesMediaFile = 'akeneo_connector/media_files';
+    /**
+     * Description $scopeConfig field
+     *
+     * @var ScopeConfigInterface $scopeConfig
+     */
+    protected $scopeConfig;
 
     /**
      * Config constructor
      *
-     * @param Context                       $context
      * @param Encryptor                     $encryptor
      * @param Serializer                    $serializer
      * @param EavConfig                     $eavConfig
@@ -151,19 +157,18 @@ class Config extends AbstractHelper
      * @param CatalogInventoryConfiguration $catalogInventoryConfiguration
      * @param Filesystem                    $filesystem
      * @param MediaConfig                   $mediaConfig
+     * @param ScopeConfigInterface          $scopeConfig
      */
     public function __construct(
-        Context $context,
         Encryptor $encryptor,
         Serializer $serializer,
         EavConfig $eavConfig,
         StoreManagerInterface $storeManager,
         CatalogInventoryConfiguration $catalogInventoryConfiguration,
         Filesystem $filesystem,
-        MediaConfig $mediaConfig
+        MediaConfig $mediaConfig,
+        ScopeConfigInterface $scopeConfig
     ) {
-        parent::__construct($context);
-
         $this->encryptor                     = $encryptor;
         $this->serializer                    = $serializer;
         $this->eavConfig                     = $eavConfig;
@@ -171,6 +176,7 @@ class Config extends AbstractHelper
         $this->mediaConfig                   = $mediaConfig;
         $this->catalogInventoryConfiguration = $catalogInventoryConfiguration;
         $this->mediaDirectory                = $filesystem->getDirectoryWrite(DirectoryList::MEDIA);
+        $this->scopeConfig                   = $scopeConfig;
     }
 
     /**
@@ -850,7 +856,8 @@ class Config extends AbstractHelper
      *
      * @return string
      */
-    public function getFilesMediaDirectory() {
+    public function getFilesMediaDirectory()
+    {
         return $this->filesMediaFile;
     }
 
@@ -936,7 +943,10 @@ class Config extends AbstractHelper
     {
         /** @var int $advancedPmUpdateLength */
         $advancedPmUpdateLength = $this->scopeConfig->getValue(self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH);
-        if ((filter_var($advancedPmUpdateLength, FILTER_VALIDATE_INT)) === false || ($advancedPmUpdateLength < self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_MINIMUM)) {
+        if ((filter_var(
+                $advancedPmUpdateLength,
+                FILTER_VALIDATE_INT
+            )) === false || ($advancedPmUpdateLength < self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_MINIMUM)) {
             $advancedPmUpdateLength = self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_DEFAULT_VALUE;
         }
 
@@ -957,7 +967,7 @@ class Config extends AbstractHelper
         $loweredMatches = [];
         /** @var string[] $match */
         foreach ($matches as $match) {
-            $match           = array_map('strtolower', $match);
+            $match            = array_map('strtolower', $match);
             $loweredMatches[] = $match;
         }
 
@@ -968,6 +978,7 @@ class Config extends AbstractHelper
      * Returns default attribute-set id for given entity
      *
      * @param string $entity
+     *
      * @return int
      * @throws \Magento\Framework\Exception\LocalizedException
      */

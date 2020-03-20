@@ -4,11 +4,11 @@ namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Serializer as JsonSerializer;
+use Akeneo\Connector\Helper\Import\Entities;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Framework\App\DeploymentConfig;
-use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
@@ -54,7 +54,6 @@ class Product extends Entities
     /**
      * Product constructor
      *
-     * @param Context                 $context
      * @param ResourceConnection      $connection
      * @param DeploymentConfig        $deploymentConfig
      * @param BaseProductModel        $product
@@ -63,7 +62,6 @@ class Product extends Entities
      * @param JsonSerializer          $serializer
      */
     public function __construct(
-        Context $context,
         ResourceConnection $connection,
         DeploymentConfig $deploymentConfig,
         BaseProductModel $product,
@@ -73,7 +71,7 @@ class Product extends Entities
     ) {
         $this->serializer              = $serializer;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
-        parent::__construct($context, $connection, $deploymentConfig, $product, $configHelper);
+        parent::__construct($connection, $deploymentConfig, $product, $configHelper);
     }
 
     /**
@@ -153,7 +151,7 @@ class Product extends Entities
      *
      * @return array
      */
-    private function formatValues(array $values)
+    public function formatValues(array $values)
     {
         /** @var array $columns */
         $columns = [];
@@ -217,7 +215,7 @@ class Product extends Entities
      *
      * @return array
      */
-    private function formatAssociations(array $values)
+    public function formatAssociations(array $values)
     {
         /** @var array $associations */
         $associations = [];
@@ -257,7 +255,7 @@ class Product extends Entities
      *
      * @return string
      */
-    private function getKey($attribute, array $attributeValue)
+    public function getKey($attribute, array $attributeValue)
     {
         /** @var string $key */
         $key = strtolower($attribute);

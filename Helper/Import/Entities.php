@@ -2,8 +2,6 @@
 
 namespace Akeneo\Connector\Helper\Import;
 
-use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Ddl\Table;
 use Magento\Framework\DB\Select;
@@ -26,7 +24,7 @@ use Magento\Catalog\Model\Product as BaseProductModel;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Entities extends AbstractHelper
+class Entities
 {
     /**
      * @var string TABLE_PREFIX
@@ -68,7 +66,7 @@ class Entities extends AbstractHelper
     /**
      * @var DeploymentConfig $deploymentConfig
      */
-    private $deploymentConfig;
+    protected $deploymentConfig;
     /**
      * @var string
      */
@@ -98,14 +96,11 @@ class Entities extends AbstractHelper
      * @param BaseProductModel   $product
      */
     public function __construct(
-        Context $context,
         ResourceConnection $connection,
         DeploymentConfig $deploymentConfig,
         BaseProductModel $product,
         ConfigHelper $configHelper
     ) {
-        parent::__construct($context);
-
         $this->connection       = $connection->getConnection();
         $this->deploymentConfig = $deploymentConfig;
         $this->configHelper     = $configHelper;
@@ -161,7 +156,7 @@ class Entities extends AbstractHelper
      *
      * @return string
      */
-    private function getTablePrefix()
+    public function getTablePrefix()
     {
         if (null === $this->tablePrefix) {
             $this->tablePrefix = (string)$this->deploymentConfig->get(
@@ -197,7 +192,7 @@ class Entities extends AbstractHelper
      * @return $this
      * @throws \Zend_Db_Exception
      */
-    private function createTmpTable($fields, $tableSuffix)
+    public function createTmpTable($fields, $tableSuffix)
     {
         /* Delete table if exists */
         $this->dropTable($tableSuffix);
@@ -338,7 +333,7 @@ class Entities extends AbstractHelper
      *
      * @return string
      */
-    private function formatColumn($column)
+    public function formatColumn($column)
     {
         return trim(str_replace(PHP_EOL, '', preg_replace('/\s+/', ' ', trim($column))), '""');
     }

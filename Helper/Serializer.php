@@ -2,8 +2,6 @@
 
 namespace Akeneo\Connector\Helper;
 
-use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Serialize\Serializer\Serialize as Serialize;
 
 /**
@@ -16,7 +14,7 @@ use Magento\Framework\Serialize\Serializer\Serialize as Serialize;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Serializer extends AbstractHelper
+class Serializer
 {
     /**
      * This variable contains a Serialize
@@ -28,14 +26,11 @@ class Serializer extends AbstractHelper
     /**
      * Config constructor
      *
-     * @param Context                       $context
      * @param Serialize                     $serialize
      */
     public function __construct(
-        Context $context,
         Serialize $serialize
     ) {
-        parent::__construct($context);
         $this->serialize = $serialize;
     }
 

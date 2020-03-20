@@ -25,8 +25,12 @@ class Family implements ArrayInterface
      * @var Authenticator $akeneoAuthenticator
      */
     protected $akeneoAuthenticator;
-    /** @var \Psr\Log\LoggerInterface $logger */
-    private $logger;
+    /**
+     * Description $logger field
+     *
+     * @var \Psr\Log\LoggerInterface $logger
+     */
+    protected $logger;
     /**
      * List of options
      *

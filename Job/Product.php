@@ -34,6 +34,7 @@ use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Import\Product as ProductImportHelper;
 use Akeneo\Connector\Job\Option as JobOption;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
+use Akeneo\Connector\Job\Import;
 use Psr\Http\Message\ResponseInterface;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Pdo;

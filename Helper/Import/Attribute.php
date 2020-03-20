@@ -7,8 +7,6 @@ use Magento\Eav\Model\Entity\Attribute\Backend\ArrayBackend;
 use Magento\Eav\Model\Entity\Attribute\Backend\Datetime;
 use Magento\Eav\Model\Entity\Attribute\Source\Boolean;
 use Magento\Eav\Model\Entity\Attribute\Source\Table;
-use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\App\Helper\Context;
 use Magento\Framework\DataObject;
 use Magento\Weee\Model\Attribute\Backend\Weee\Tax;
 use Akeneo\Connector\Helper\Config;
@@ -24,7 +22,7 @@ use Akeneo\Connector\Helper\Serializer;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Attribute extends AbstractHelper
+class Attribute
 {
     /**
      * Description $serializer field
@@ -36,15 +34,11 @@ class Attribute extends AbstractHelper
     /**
      * Attribute constructor
      *
-     * @param Context $context
      * @param Serializer $serializer
      */
     public function __construct(
-        Context $context,
         Serializer $serializer
     ) {
-        parent::__construct($context);
-
         $this->serializer = $serializer;
     }
 

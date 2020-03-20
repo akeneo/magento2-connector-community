@@ -39,25 +39,25 @@ abstract class Import extends DataObject implements ImportInterface
      *
      * @var string $identifier
      */
-    private $identifier;
+    protected $identifier;
     /**
      * This variable contains a boolean
      *
      * @var bool $status
      */
-    private $status;
+    protected $status;
     /**
      * This variable contains an int value
      *
      * @var int $step
      */
-    private $step;
+    protected $step;
     /**
      * This variable contains an array
      *
      * @var array $steps
      */
-    private $steps;
+    protected $steps;
     /**
      * This variable contains an OutputHelper
      *
@@ -87,25 +87,25 @@ abstract class Import extends DataObject implements ImportInterface
      *
      * @var string|Phrase $comment
      */
-    private $comment;
+    protected $comment;
     /**
      * This variable contains a string or Phrase value
      *
      * @var string|Phrase $message
      */
-    private $message;
+    protected $message;
     /**
      * This variable contains a bool value
      *
      * @var bool $continue
      */
-    private $continue;
+    protected $continue;
     /**
      * This variable contains a bool value
      *
      * @var bool $setFromAdmin
      */
-    private $setFromAdmin;
+    protected $setFromAdmin;
 
     /**
      * Import constructor.
@@ -137,7 +137,7 @@ abstract class Import extends DataObject implements ImportInterface
      *
      * @return void
      */
-    private function initSteps()
+    public function initSteps()
     {
         /** @var array $steps */
         $steps = [];
@@ -401,7 +401,7 @@ abstract class Import extends DataObject implements ImportInterface
      *
      * @return void
      */
-    private function initStatus()
+    public function initStatus()
     {
         $this->setStatus(true);
         $this->setContinue(true);
