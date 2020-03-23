@@ -73,6 +73,7 @@ class Config extends AbstractHelper
     const PRODUCT_FILE_ENABLED = 'akeneo_connector/product/file_enabled';
     const PRODUCT_FILE_ATTRIBUTE = 'akeneo_connector/product/file_attribute';
     const PRODUCT_METRICS = 'akeneo_connector/product/metrics';
+    const PRODUCT_AKENEO_MASTER = 'akeneo_connector/product/akeneo_master';
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     const PRODUCT_ACTIVATION = 'akeneo_connector/product/activation';
     /**
@@ -655,6 +656,16 @@ class Config extends AbstractHelper
     public function isUrlGenerationEnabled()
     {
         return $this->scopeConfig->isSetFlag(self::PRODUCT_URL_GENERATION_ENABLED);
+    }
+
+    /**
+     * Description isAkeneoMaster function
+     *
+     * @return bool
+     */
+    public function isAkeneoMaster()
+    {
+        return $this->scopeConfig->isSetFlag(self::PRODUCT_AKENEO_MASTER);
     }
 
     /**
