@@ -8,6 +8,8 @@ use Magento\Store\Model\StoreManagerInterface;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Magento\Store\Model\ResourceModel\Website as WebsiteResource;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Directory\Helper\Data as DirectoryHelper;
+use Magento\Store\Model\ScopeInterface;
 
 /**
  * Class Store
@@ -125,8 +127,8 @@ class Store
                 $storeCode = $store->getCode();
                 /** @var string $storeLang */
                 $storeLang = $this->scopeConfig->getValue(
-                    \Magento\Directory\Helper\Data::XML_PATH_DEFAULT_LOCALE,
-                    \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                    DirectoryHelper::XML_PATH_DEFAULT_LOCALE,
+                    ScopeInterface::SCOPE_STORE,
                     $storeId
                 );
                 /** @var bool $isDefault */
