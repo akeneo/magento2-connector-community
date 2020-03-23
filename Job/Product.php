@@ -1038,7 +1038,7 @@ class Product extends JobImport
             $columnParts = explode('-', $column, 2);
             /** @var string $columnPrefix */
             $columnPrefix = reset($columnParts);
-            $columnPrefix = sprintf('%s_', $columnPrefix);
+            $columnPrefix = sprintf('%s-', $columnPrefix);
             /** @var int $prefixLength */
             $prefixLength = strlen($columnPrefix) + 1;
             /** @var string $entitiesTable */
@@ -1058,8 +1058,8 @@ class Product extends JobImport
 
             //in case of multiselect
             /** @var string $conditionJoin */
-            $conditionJoin = "IF ( locate(',', `" . $column . "`) > 0 , " . "`p`.`" . $column . "` like " . new Expr(
-                    "CONCAT('%', `c1`.`code`, '%')"
+            $conditionJoin = "IF ( locate(',', `" . $column . "`) > 0 , " . new Expr(
+                    "FIND_IN_SET(`c1`.`code`,`p`.`" . $column ."`) > 0"
                 ) . ", `p`.`" . $column . "` = `c1`.`code` )";
 
             /** @var Select $select */

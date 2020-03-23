@@ -98,6 +98,17 @@ class Option extends Entities
         )->where('e.store_id = ?', 0);
         /** @var string $query */
         $query = $connection->query($select);
+        /* Use new error-free separator */
+        $entityCodeColumnName = ($prefix ? 'CONCAT(t.`' . $prefix . '`, "-", t.`' . $pimKey . '`)' : 't.`' . $pimKey . '`');
+
+        /* Legacy: update columns still using former "_" separator */
+        /** @var string $oldEntityCodeColumnName */
+        $oldEntityCodeColumnName = ($prefix ? 'CONCAT(t.`' . $prefix . '`, "_", t.`' . $pimKey . '`)' : 't.`' . $pimKey . '`');
+
+        /** @var string $update */
+        $update = 'UPDATE `' . $akeneoConnectorTable . '` AS `e`, `' . $tableName . '` AS `t` SET e.code = ' . $entityCodeColumnName . ' WHERE e.code = ' . $oldEntityCodeColumnName . ' AND e.`import` = "' . $import . '"';
+        $connection->query($update);
+
         /** @var mixed $row */
         while ($row = $query->fetch()) {
             // Create a row in Akeneo table for options present in Magento and Akeneo that were never imported before
@@ -105,7 +116,7 @@ class Option extends Entities
                 /** @var string[] $values */
                 $values = [
                     'import'    => 'option',
-                    'code'      => $row['attribute'] . '_' . $row['code'],
+                    'code'      => $row['attribute'] . '-' . $row['code'],
                     'entity_id' => $row['option_id'],
                 ];
                 $connection->insertOnDuplicate($akeneoConnectorTable, $values);
@@ -119,7 +130,7 @@ class Option extends Entities
             UPDATE `' . $tableName . '` t
             SET `_entity_id` = (
                 SELECT `entity_id` FROM `' . $akeneoConnectorTable . '` c
-                WHERE ' . ($prefix ? 'CONCAT(t.`' . $prefix . '`, "_", t.`' . $pimKey . '`)' : 't.`' . $pimKey . '`') . ' = c.`code`
+                WHERE ' . ($prefix ? 'CONCAT(t.`' . $prefix . '`, "-", t.`' . $pimKey . '`)' : 't.`' . $pimKey . '`') . ' = c.`code`
                     AND c.`import` = "' . $import . '"
             )
         '
@@ -145,7 +156,7 @@ class Option extends Entities
             $tableName,
             [
                 'import'    => new Expr("'" . $import . "'"),
-                'code'      => $prefix ? new Expr('CONCAT(`' . $prefix . '`, "_", `' . $pimKey . '`)') : $pimKey,
+                'code'      => $prefix ? new Expr('CONCAT(`' . $prefix . '`, "-", `' . $pimKey . '`)') : $pimKey,
                 'entity_id' => '_entity_id',
             ]
         )->where('_is_new = ?', 1);
