@@ -2,8 +2,6 @@
 
 namespace Akeneo\Connector\Helper;
 
-use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 
 /**
@@ -16,7 +14,7 @@ use Magento\Framework\Stdlib\DateTime\DateTime;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Output extends AbstractHelper
+class Output
 {
 
     /**
@@ -30,20 +28,16 @@ class Output extends AbstractHelper
      *
      * @var DateTime $datetime
      */
-    private $datetime;
+    protected $datetime;
 
     /**
      * Output constructor.
      *
-     * @param Context $context
      * @param DateTime $datetime
      */
     public function __construct(
-        Context $context,
         DateTime $datetime
     ) {
-        parent::__construct($context);
-
         $this->datetime = $datetime;
     }
 

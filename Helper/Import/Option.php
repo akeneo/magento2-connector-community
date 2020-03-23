@@ -3,9 +3,9 @@
 namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Helper\Import\Entities;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Framework\App\DeploymentConfig;
-use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Select;
 use Zend_Db_Expr as Expr;
@@ -25,20 +25,18 @@ class Option extends Entities
     /**
      * Option constructor
      *
-     * @param Context            $context
      * @param ResourceConnection $connection
      * @param DeploymentConfig   $deploymentConfig
      * @param BaseProductModel   $product
      * @param ConfigHelper       $configHelper
      */
     public function __construct(
-        Context $context,
         ResourceConnection $connection,
         DeploymentConfig $deploymentConfig,
         BaseProductModel $product,
         ConfigHelper $configHelper
     ) {
-        parent::__construct($context, $connection, $deploymentConfig, $product, $configHelper);
+        parent::__construct($connection, $deploymentConfig, $product, $configHelper);
     }
 
     /**

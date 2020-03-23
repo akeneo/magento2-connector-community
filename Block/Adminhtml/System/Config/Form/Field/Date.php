@@ -2,6 +2,10 @@
 
 namespace Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field;
 
+use Magento\Config\Block\System\Config\Form\Field;
+use Magento\Framework\Data\Form\Element\AbstractElement;
+use Magento\Framework\Stdlib\DateTime;
+
 /**
  * Class Date
  *
@@ -12,13 +16,13 @@ namespace Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field;
  * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-
-class Date extends \Magento\Config\Block\System\Config\Form\Field
+class Date extends Field
 {
-    public function render(\Magento\Framework\Data\Form\Element\AbstractElement $element)
+    public function render(AbstractElement $element)
     {
-        $element->setDateFormat(\Magento\Framework\Stdlib\DateTime::DATE_INTERNAL_FORMAT);
+        $element->setDateFormat(DateTime::DATE_INTERNAL_FORMAT);
         $element->setTimeFormat(null);
+
         return parent::render($element);
     }
 }

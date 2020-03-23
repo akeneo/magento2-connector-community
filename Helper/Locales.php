@@ -2,9 +2,7 @@
 
 namespace Akeneo\Connector\Helper;
 
-use Magento\Framework\App\Helper\Context;
 use Akeneo\Connector\Helper\Authenticator as Authenticator;
-use Akeneo\Connector\Helper\Data as Helper;
 
 /**
  * Class Locales
@@ -16,27 +14,23 @@ use Akeneo\Connector\Helper\Data as Helper;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Locales extends Helper
+class Locales
 {
     /**
      * This variable contains a Authenticator
      *
-     * @var \Akeneo\Connector\Helper\Authenticator $authenticator
+     * @var Authenticator $authenticator
      */
     protected $authenticator;
 
     /**
      * Locales constructor
      *
-     * @param Context       $context
      * @param Authenticator $authenticator
      */
     public function __construct(
-        Context $context,
         Authenticator $authenticator
     ) {
-        parent::__construct($context);
-
         $this->authenticator = $authenticator;
     }
 
