@@ -1222,8 +1222,19 @@ class Product extends JobImport
                 }
             }
         }
-        /** @var \Magento\Framework\DB\Select $select */
+
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($table);
+        if ($rowIdExists) {
+            $data[$columnIdentifier] = 'p.row_id';
+        }
+
+        /** @var Select $select */
         $select = $connection->select()->from($tmpTable, $data);
+
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStaging($select, []);
+        }
 
         /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
         $query = $connection->query($select);
@@ -1946,8 +1957,23 @@ class Product extends JobImport
             }
         }
 
+        // WIP: Manage association import with content staging
+
+        /** @var array $values */
+        $values = ['product_id' => '_entity_id'];
+
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productsTable);
+        if ($rowIdExists) {
+            $values['product_id'] = 'p.row_id';
+        }
+
         /** @var \Magento\Framework\DB\Select $productIds */
-        $productIds = $connection->select()->from($tmpTable, ['product_id' => '_entity_id']);
+        $productIds = $connection->select()->from($tmpTable, $values);
+
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStaging($productIds, []);
+        }
 
         /**
          * @var int      $typeId
@@ -2296,8 +2322,18 @@ class Product extends JobImport
             $data[$image] = $image;
         }
 
-        /** @var \Magento\Framework\DB\Select $select */
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($table);
+        if ($rowIdExists) {
+            $data[$columnIdentifier] = 'p.row_id';
+        }
+
+        /** @var Select $select */
         $select = $connection->select()->from($tmpTable, $data);
+
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStaging($select, []);
+        }
 
         /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
         $query = $connection->query($select);
