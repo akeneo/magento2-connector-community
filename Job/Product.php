@@ -1952,13 +1952,10 @@ class Product extends JobImport
             /** @var string $associationName */
             foreach ($associationNames as $associationName) {
                 if (!empty($associationName) && $connection->tableColumnExists($tmpTable, $associationName)) {
-                    $related[$linkType][] = sprintf('`p`.`%s`', $associationName);
+                    $related[$linkType][] = sprintf('`d`.`%s`', $associationName);
                 }
             }
         }
-
-        // WIP: Manage association import with content staging
-
         /** @var array $values */
         $values = ['product_id' => '_entity_id'];
 
@@ -1980,18 +1977,31 @@ class Product extends JobImport
          * @var string[] $columns
          */
         foreach ($related as $typeId => $columns) {
+            /** @var mixed[] $columsToSelect */
+            $columsToSelect = [
+                'product_id'        => 'd._entity_id',
+                'linked_product_id' => 'c.entity_id',
+                'link_type_id'      => new Expr($typeId),
+            ];
+            if ($rowIdExists) {
+                $columsToSelect = [
+                    'product_id'        => 'p.row_id',
+                    'linked_product_id' => 'c.entity_id',
+                    'link_type_id'      => new Expr($typeId),
+                ];
+            }
             /** @var string $concat */
             $concat = sprintf('CONCAT_WS(",", %s)', implode(', ', $columns));
             /** @var \Magento\Framework\DB\Select $select */
             $select = $connection->select()->from(['c' => $entitiesTable], [])->joinInner(
-                ['p' => $tmpTable],
-                sprintf('FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"', $concat, $this->getCode()),
-                [
-                    'product_id'        => 'p._entity_id',
-                    'linked_product_id' => 'c.entity_id',
-                    'link_type_id'      => new Expr($typeId),
-                ]
-            )->joinInner(['e' => $productsTable], sprintf('c.entity_id = e.%s', $columnIdentifier), []);
+                ['d' => $tmpTable],
+                sprintf('FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"', $concat, $this->getCode()),$columsToSelect);
+
+            if ($rowIdExists) {
+                $this->entities->addJoinForContentStaging($select, []);
+            } else {
+                $select->joinInner(['e' => $productsTable], sprintf('c.entity_id = e.%s', $columnIdentifier), []);
+            }
 
             /* Remove old link */
             $connection->delete(
