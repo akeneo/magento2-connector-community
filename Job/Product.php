@@ -554,6 +554,20 @@ class Product extends JobImport
             ]
         ); // Disabled
 
+        if (!$connection->tableColumnExists($tmpTable, 'is_returnable')) {
+            $connection->addColumn(
+                $tmpTable,
+                'is_returnable',
+                [
+                    'type'     => 'integer',
+                    'length'   => 11,
+                    'default'  => 2,
+                    'COMMENT'  => ' ',
+                    'nullable' => false,
+                ]
+            );
+        }
+
         if (!$connection->tableColumnExists($tmpTable, 'url_key') && $this->configHelper->isUrlGenerationEnabled()) {
             $connection->addColumn(
                 $tmpTable,
