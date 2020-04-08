@@ -533,8 +533,7 @@ class Attribute extends Import
                 $this->getEntityTypeId(),
                 $row['_entity_id'],
                 $data,
-                null,
-                0
+                null
             );
 
             /* Add Attribute to group and family */
