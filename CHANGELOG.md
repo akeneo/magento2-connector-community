@@ -74,3 +74,6 @@
 ### Version 100.4.2 :
 * Add support for file attributes import (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#import-file-attributes)
 * Add feature to apply default status to new products (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#default-product-status)
+
+### Version 100.4.3 :
+* Fix attribute position inside attribute groups being set to 0 during attribute import job
