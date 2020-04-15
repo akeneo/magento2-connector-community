@@ -57,7 +57,9 @@ class ProductModel extends Import
      */
     protected $eavConfig;
     /**
-     * @var AttributeMetrics
+     * Description $attributeMetrics field
+     *
+     * @var AttributeMetrics $attributeMetrics
      */
     protected $attributeMetrics;
 
@@ -85,9 +87,9 @@ class ProductModel extends Import
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
 
-        $this->entitiesHelper  = $entitiesHelper;
-        $this->configHelper    = $configHelper;
-        $this->eavConfig       = $eavConfig;
+        $this->entitiesHelper   = $entitiesHelper;
+        $this->configHelper     = $configHelper;
+        $this->eavConfig        = $eavConfig;
         $this->attributeMetrics = $attributeMetrics;
     }
 
@@ -136,8 +138,6 @@ class ProductModel extends Import
          * @var array $productModel
          */
         foreach ($productModels as $index => $productModel) {
-
-
             foreach ($attributeMetrics as $attributeMetric) {
                 if (!isset($productModel['values'][$attributeMetric])) {
                     continue;
@@ -146,7 +146,9 @@ class ProductModel extends Import
                 foreach ($productModel['values'][$attributeMetric] as $key => $metric) {
                     /** @var string|float $amount */
                     $amount = $metric['data']['amount'];
-                    $amount = floatval($amount);
+                    if ($amount != null) {
+                        $amount = floatval($amount);
+                    }
 
                     $productModel['values'][$attributeMetric][$key]['data']['amount'] = $amount;
                 }
@@ -177,7 +179,6 @@ class ProductModel extends Import
                     $productModel['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
                 }
             }
-
 
             $this->entitiesHelper->insertDataFromApi($productModel, $this->getCode());
         }
