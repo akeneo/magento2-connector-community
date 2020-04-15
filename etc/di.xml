@@ -307,12 +307,12 @@
                         <item name="comment" xsi:type="string">Add required data</item>
                     </item>
                     <item name="4" xsi:type="array">
-                        <item name="method" xsi:type="string">createMetricsOptions</item>
-                        <item name="comment" xsi:type="string">Create Options for Variant Metrics Attributes</item>
-                    </item>
-                    <item name="5" xsi:type="array">
                         <item name="method" xsi:type="string">createConfigurable</item>
                         <item name="comment" xsi:type="string">Create configurables</item>
+                    </item>
+                    <item name="5" xsi:type="array">
+                        <item name="method" xsi:type="string">createMetricsOptions</item>
+                        <item name="comment" xsi:type="string">Create Options for Variant Metrics Attributes</item>
                     </item>
                     <item name="6" xsi:type="array">
                         <item name="method" xsi:type="string">checkEntities</item>
