@@ -74,3 +74,16 @@
 ### Version 100.4.2 :
 * Add support for file attributes import (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#import-file-attributes)
 * Add feature to apply default status to new products (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#default-product-status)
+
+### Version 100.4.3 :
+* Fix attribute position inside attribute groups being set to 0 during attribute import job
+
+### Version 100.4.4 :
+* Global classes reformatting including: change private scope of variables and functions, remove AbstractHelper usage, fix usage of Akeneo\Connector\Job\Import class and change job types to object
+
+**Warning :** *After updating connector to this version, make sure to recompile your code, flush Magento 2 cache and check your custom developments*
+
+* Add support for Magento 2 Enterprise Content Staging feature (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#is-akeneo-master-for-content-staging)
+* Fix Magento 2 Enterprise is_returnable default value for products
+* Fix multiselect attribute options assignation causing multiple options with similar code to be selected
+* Fix attribute option code separator in akeneo_connector_entities table
