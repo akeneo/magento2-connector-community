@@ -363,7 +363,9 @@ class Product extends JobImport
                     foreach ($product['values'][$attributeMetric] as $key => $metric) {
                         /** @var string|float $amount */
                         $amount = $metric['data']['amount'];
-                        $amount = floatval($amount);
+                        if ($amount != NULL) {
+                            $amount = floatval($amount);
+                        }
 
                         $product['values'][$attributeMetric][$key]['data']['amount'] = $amount;
                     }

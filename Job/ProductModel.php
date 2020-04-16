@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
@@ -56,17 +57,24 @@ class ProductModel extends Import
      * @var Config $eavConfig
      */
     protected $eavConfig;
+    /**
+     * Description $attributeMetrics field
+     *
+     * @var AttributeMetrics $attributeMetrics
+     */
+    protected $attributeMetrics;
 
     /**
      * ProductModel constructor
      *
-     * @param OutputHelper                        $outputHelper
-     * @param ManagerInterface                    $eventManager
-     * @param Authenticator                       $authenticator
+     * @param OutputHelper                            $outputHelper
+     * @param ManagerInterface                        $eventManager
+     * @param Authenticator                           $authenticator
      * @param \Akeneo\Connector\Helper\Import\Product $entitiesHelper
-     * @param ConfigHelper                        $configHelper
-     * @param Config                              $eavConfig
-     * @param array                               $data
+     * @param ConfigHelper                            $configHelper
+     * @param Config                                  $eavConfig
+     * @param AttributeMetrics                        $attributeMetrics
+     * @param array                                   $data
      */
     public function __construct(
         OutputHelper $outputHelper,
@@ -75,13 +83,15 @@ class ProductModel extends Import
         \Akeneo\Connector\Helper\Import\Product $entitiesHelper,
         ConfigHelper $configHelper,
         Config $eavConfig,
+        AttributeMetrics $attributeMetrics,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
 
-        $this->entitiesHelper  = $entitiesHelper;
-        $this->configHelper    = $configHelper;
-        $this->eavConfig       = $eavConfig;
+        $this->entitiesHelper   = $entitiesHelper;
+        $this->configHelper     = $configHelper;
+        $this->eavConfig        = $eavConfig;
+        $this->attributeMetrics = $attributeMetrics;
     }
 
     /**
@@ -116,17 +126,89 @@ class ProductModel extends Import
         $paginationSize = $this->configHelper->getPanigationSize();
         /** @var ResourceCursorInterface $productModels */
         $productModels = $this->akeneoClient->getProductModelApi()->all($paginationSize);
+
+        /** @var string[] $attributeMetrics */
+        $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
+        /** @var mixed[] $metricsConcatSettings */
+        $metricsConcatSettings = $this->configHelper->getMetricsColumns(null, true);
+        /** @var string[] $metricSymbols */
+        $metricSymbols = $this->getMetricsSymbols();
+
         /**
          * @var int   $index
          * @var array $productModel
          */
         foreach ($productModels as $index => $productModel) {
+            foreach ($attributeMetrics as $attributeMetric) {
+                if (!isset($productModel['values'][$attributeMetric])) {
+                    continue;
+                }
+
+                foreach ($productModel['values'][$attributeMetric] as $key => $metric) {
+                    /** @var string|float $amount */
+                    $amount = $metric['data']['amount'];
+                    if ($amount != null) {
+                        $amount = floatval($amount);
+                    }
+
+                    $productModel['values'][$attributeMetric][$key]['data']['amount'] = $amount;
+                }
+            }
+
+            /**
+             * @var mixed[] $metricsConcatSetting
+             */
+            foreach ($metricsConcatSettings as $metricsConcatSetting) {
+                if (!isset($productModel['values'][$metricsConcatSetting])) {
+                    continue;
+                }
+
+                /**
+                 * @var int     $key
+                 * @var mixed[] $metric
+                 */
+                foreach ($productModel['values'][$metricsConcatSetting] as $key => $metric) {
+                    /** @var string $unit */
+                    $unit = $metric['data']['unit'];
+                    /** @var string|false $symbol */
+                    $symbol = array_key_exists($unit, $metricSymbols);
+
+                    if (!$symbol) {
+                        continue;
+                    }
+
+                    $productModel['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
+                }
+            }
+
             $this->entitiesHelper->insertDataFromApi($productModel, $this->getCode());
         }
         $index++;
         $this->setMessage(
             __('%1 line(s) found', $index)
         );
+    }
+
+    /**
+     * Generate array of metrics with unit in key and symbol for value
+     *
+     * @return string[]
+     */
+    public function getMetricsSymbols()
+    {
+        /** @var mixed[] $measures */
+        $measures = $this->akeneoClient->getMeasureFamilyApi()->all();
+        /** @var string[] $metricsSymbols */
+        $metricsSymbols = [];
+        /** @var mixed[] $measure */
+        foreach ($measures as $measure) {
+            /** @var mixed[] $unit */
+            foreach ($measure['units'] as $unit) {
+                $metricsSymbols[$unit['code']] = $unit['symbol'];
+            }
+        }
+
+        return $metricsSymbols;
     }
 
     /**
