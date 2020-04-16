@@ -3,9 +3,9 @@
 namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Helper\Import\Entities;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Framework\App\DeploymentConfig;
-use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Select;
 use Zend_Db_Expr as Expr;
@@ -25,20 +25,18 @@ class Option extends Entities
     /**
      * Option constructor
      *
-     * @param Context            $context
      * @param ResourceConnection $connection
      * @param DeploymentConfig   $deploymentConfig
      * @param BaseProductModel   $product
      * @param ConfigHelper       $configHelper
      */
     public function __construct(
-        Context $context,
         ResourceConnection $connection,
         DeploymentConfig $deploymentConfig,
         BaseProductModel $product,
         ConfigHelper $configHelper
     ) {
-        parent::__construct($context, $connection, $deploymentConfig, $product, $configHelper);
+        parent::__construct($connection, $deploymentConfig, $product, $configHelper);
     }
 
     /**
@@ -98,6 +96,17 @@ class Option extends Entities
         )->where('e.store_id = ?', 0);
         /** @var string $query */
         $query = $connection->query($select);
+        /* Use new error-free separator */
+        $entityCodeColumnName = ($prefix ? 'CONCAT(t.`' . $prefix . '`, "-", t.`' . $pimKey . '`)' : 't.`' . $pimKey . '`');
+
+        /* Legacy: update columns still using former "_" separator */
+        /** @var string $oldEntityCodeColumnName */
+        $oldEntityCodeColumnName = ($prefix ? 'CONCAT(t.`' . $prefix . '`, "_", t.`' . $pimKey . '`)' : 't.`' . $pimKey . '`');
+
+        /** @var string $update */
+        $update = 'UPDATE `' . $akeneoConnectorTable . '` AS `e`, `' . $tableName . '` AS `t` SET e.code = ' . $entityCodeColumnName . ' WHERE e.code = ' . $oldEntityCodeColumnName . ' AND e.`import` = "' . $import . '"';
+        $connection->query($update);
+
         /** @var mixed $row */
         while ($row = $query->fetch()) {
             // Create a row in Akeneo table for options present in Magento and Akeneo that were never imported before
@@ -105,7 +114,7 @@ class Option extends Entities
                 /** @var string[] $values */
                 $values = [
                     'import'    => 'option',
-                    'code'      => $row['attribute'] . '_' . $row['code'],
+                    'code'      => $row['attribute'] . '-' . $row['code'],
                     'entity_id' => $row['option_id'],
                 ];
                 $connection->insertOnDuplicate($akeneoConnectorTable, $values);
@@ -119,7 +128,7 @@ class Option extends Entities
             UPDATE `' . $tableName . '` t
             SET `_entity_id` = (
                 SELECT `entity_id` FROM `' . $akeneoConnectorTable . '` c
-                WHERE ' . ($prefix ? 'CONCAT(t.`' . $prefix . '`, "_", t.`' . $pimKey . '`)' : 't.`' . $pimKey . '`') . ' = c.`code`
+                WHERE ' . ($prefix ? 'CONCAT(t.`' . $prefix . '`, "-", t.`' . $pimKey . '`)' : 't.`' . $pimKey . '`') . ' = c.`code`
                     AND c.`import` = "' . $import . '"
             )
         '
@@ -145,7 +154,7 @@ class Option extends Entities
             $tableName,
             [
                 'import'    => new Expr("'" . $import . "'"),
-                'code'      => $prefix ? new Expr('CONCAT(`' . $prefix . '`, "_", `' . $pimKey . '`)') : $pimKey,
+                'code'      => $prefix ? new Expr('CONCAT(`' . $prefix . '`, "-", `' . $pimKey . '`)') : $pimKey,
                 'entity_id' => '_entity_id',
             ]
         )->where('_is_new = ?', 1);

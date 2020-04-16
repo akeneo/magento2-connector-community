@@ -10,6 +10,7 @@ use Akeneo\Connector\Helper\Serializer as Serializer;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry;
+use Magento\Framework\App\Config\Value;
 
 /**
  * Class Json
@@ -21,7 +22,7 @@ use Magento\Framework\Registry;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Json extends \Magento\Framework\App\Config\Value
+class Json extends Value
 {
 
     /**
@@ -29,7 +30,7 @@ class Json extends \Magento\Framework\App\Config\Value
      *
      * @var Serializer $serializer
      */
-    private $serializer;
+    protected $serializer;
 
     /**
      * Json constructor.

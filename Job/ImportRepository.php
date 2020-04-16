@@ -28,13 +28,13 @@ class ImportRepository implements ImportRepositoryInterface
      *
      * @var EntityFactoryInterface $entityFactory
      */
-    private $entityFactory;
+    protected $entityFactory;
     /**
      * This variable contains a Collection
      *
      * @var Collection $collection
      */
-    private $collection;
+    protected $collection;
     /**
      * This variable contains a ConfigHelper
      *
@@ -73,16 +73,10 @@ class ImportRepository implements ImportRepositoryInterface
      * @return void
      * @throws \Exception
      */
-    private function initCollection($data)
+    public function initCollection($data)
     {
-        foreach ($data as $id => $class) {
-            if (!class_exists($class)) {
-                continue;
-            }
-
-            /** @var Import $import */
-            $import = $this->entityFactory->create($class);
-
+        /** @var Import $import */
+        foreach ($data as $id => $import) {
             $import->setData('id', $id);
             $this->add($import);
         }

@@ -2,15 +2,16 @@
 
 namespace Akeneo\Connector\Helper\Import;
 
+use Composer\EventDispatcher\EventDispatcher;
 use Magento\Catalog\Model\Product\Attribute\Backend\Price;
 use Magento\Eav\Model\Entity\Attribute\Backend\ArrayBackend;
 use Magento\Eav\Model\Entity\Attribute\Backend\Datetime;
 use Magento\Eav\Model\Entity\Attribute\Source\Boolean;
 use Magento\Eav\Model\Entity\Attribute\Source\Table;
-use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\App\Helper\Context;
 use Magento\Framework\DataObject;
+use Magento\Framework\Event\ManagerInterface as EventManager;
 use Magento\Weee\Model\Attribute\Backend\Weee\Tax;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Akeneo\Connector\Helper\Config;
 use Akeneo\Connector\Helper\Serializer;
 
@@ -24,7 +25,7 @@ use Akeneo\Connector\Helper\Serializer;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Attribute extends AbstractHelper
+class Attribute
 {
     /**
      * Description $serializer field
@@ -32,20 +33,34 @@ class Attribute extends AbstractHelper
      * @var Serializer $serializer
      */
     protected $serializer;
+    /**
+     * Description $eventManager field
+     *
+     * @var EventManager $eventManager
+     */
+    protected $eventManager;
+    /**
+     * Description $scopeConfig field
+     *
+     * @var ScopeConfigInterface $scopeConfig
+     */
+    protected $scopeConfig;
 
     /**
      * Attribute constructor
      *
-     * @param Context $context
-     * @param Serializer $serializer
+     * @param Serializer           $serializer
+     * @param EventManager         $eventManager
+     * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
-        Context $context,
-        Serializer $serializer
+        Serializer $serializer,
+        EventManager $eventManager,
+        ScopeConfigInterface $scopeConfig
     ) {
-        parent::__construct($context);
-
-        $this->serializer = $serializer;
+        $this->serializer   = $serializer;
+        $this->eventManager = $eventManager;
+        $this->scopeConfig  = $scopeConfig;
     }
 
     /**
@@ -184,7 +199,7 @@ class Attribute extends AbstractHelper
         $response = new DataObject();
         $response->setTypes($types);
 
-        $this->_eventManager->dispatch(
+        $this->eventManager->dispatch(
             'akeneo_connector_attribute_get_configuration_add_before',
             ['response' => $response]
         );
@@ -216,7 +231,7 @@ class Attribute extends AbstractHelper
         $response = new DataObject();
         $response->setTypes($types);
 
-        $this->_eventManager->dispatch(
+        $this->eventManager->dispatch(
             'akeneo_connector_attribute_get_available_types_add_after',
             ['response' => $response]
         );
@@ -237,51 +252,51 @@ class Attribute extends AbstractHelper
         $columns = [
             'backend_type'   => [
                 'type'      => [
-                    'type' => 'text',
-                    'length' => 255,
-                    'default' => '',
-                    'COMMENT' => ' ',
-                    'nullable' => false
+                    'type'     => 'text',
+                    'length'   => 255,
+                    'default'  => '',
+                    'COMMENT'  => ' ',
+                    'nullable' => false,
                 ],
                 'only_init' => true,
             ],
             'frontend_input' => [
                 'type'      => [
-                    'type' => 'text',
-                    'length' => 255,
-                    'default' => '',
-                    'COMMENT' => ' ',
-                    'nullable' => false
+                    'type'     => 'text',
+                    'length'   => 255,
+                    'default'  => '',
+                    'COMMENT'  => ' ',
+                    'nullable' => false,
                 ],
                 'only_init' => true,
             ],
             'backend_model'  => [
                 'type'      => [
-                    'type' => 'text',
-                    'length' => 255,
-                    'default' => '',
-                    'COMMENT' => ' ',
-                    'nullable' => false
+                    'type'     => 'text',
+                    'length'   => 255,
+                    'default'  => '',
+                    'COMMENT'  => ' ',
+                    'nullable' => false,
                 ],
                 'only_init' => true,
             ],
             'source_model'   => [
                 'type'      => [
-                    'type' => 'text',
-                    'length' => 255,
-                    'default' => '',
-                    'COMMENT' => ' ',
-                    'nullable' => false
+                    'type'     => 'text',
+                    'length'   => 255,
+                    'default'  => '',
+                    'COMMENT'  => ' ',
+                    'nullable' => false,
                 ],
                 'only_init' => true,
             ],
             'frontend_model' => [
                 'type'      => [
-                    'type' => 'text',
-                    'length' => 255,
-                    'default' => '',
-                    'COMMENT' => ' ',
-                    'nullable' => false
+                    'type'     => 'text',
+                    'length'   => 255,
+                    'default'  => '',
+                    'COMMENT'  => ' ',
+                    'nullable' => false,
                 ],
                 'only_init' => false,
             ],
@@ -291,7 +306,7 @@ class Attribute extends AbstractHelper
         $response = new DataObject();
         $response->setColumns($columns);
 
-        $this->_eventManager->dispatch(
+        $this->eventManager->dispatch(
             'akeneo_connector_attribute_get_specific_columns_add_after',
             ['response' => $response]
         );

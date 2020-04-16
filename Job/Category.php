@@ -9,6 +9,7 @@ use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Import\Entities;
 use Akeneo\Connector\Helper\Store as StoreHelper;
+use Akeneo\Connector\Job\Import;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;

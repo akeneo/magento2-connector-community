@@ -29,19 +29,19 @@ class Run extends Action
      *
      * @var OutputHelper $outputHelper
      */
-    private $outputHelper;
+    protected $outputHelper;
     /**
      * This variable contains an ImportRepositoryInterface
      *
      * @var ImportRepositoryInterface $importRepository
      */
-    private $importRepository;
+    protected $importRepository;
     /**
      * This variable contains a ArrayToJsonResponseConverter
      *
      * @var ArrayToJsonResponseConverter $arrayToJsonResponseConverter
      */
-    private $arrayToJsonResponseConverter;
+    protected $arrayToJsonResponseConverter;
 
     /**
      * Run constructor.

@@ -12,6 +12,7 @@ use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Import\Entities as EntitiesHelper;
 use Akeneo\Connector\Helper\Output as OutputHelper;
+use Akeneo\Connector\Job\Import;
 
 /**
  * Class ProductModel

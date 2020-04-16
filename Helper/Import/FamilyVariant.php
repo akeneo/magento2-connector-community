@@ -2,6 +2,8 @@
 
 namespace Akeneo\Connector\Helper\Import;
 
+use Akeneo\Connector\Helper\Import\Entities;
+
 /**
  * Class FamilyVariant
  *
