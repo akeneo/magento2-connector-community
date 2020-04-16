@@ -2127,6 +2127,7 @@ class Product extends JobImport
                         'entity_id' => '_entity_id',
                         'url_key'   => 'url_key-' . $local,
                         'store_id'  => new Expr($store['store_id']),
+                        'visibility' => '_visibility',
                     ]
                 );
 
@@ -2142,7 +2143,7 @@ class Product extends JobImport
                     /** @var string $urlPath */
                     $urlPath = $this->productUrlPathGenerator->getUrlPath($product);
 
-                    if (!$urlPath) {
+                    if (!$urlPath || $row['visibility'] < 2) {
                         continue;
                     }
 
