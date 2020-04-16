@@ -23,7 +23,7 @@ class ArrayToJsonResponseConverter
      *
      * @var ResultJsonFactory $resultJsonFactory
      */
-    private $resultJsonFactory;
+    protected $resultJsonFactory;
 
     /**
      * ArrayToJsonResponseConverter constructor.

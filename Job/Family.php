@@ -18,6 +18,7 @@ use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Zend_Db_Expr as Expr;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
+use Akeneo\Connector\Job\Import;
 
 /**
  * Class Family

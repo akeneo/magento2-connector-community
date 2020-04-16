@@ -43,7 +43,7 @@ class AkeneoConnectorImportCommand extends Command
      *
      * @var ImportRepositoryInterface $importRepository
      */
-    private $importRepository;
+    protected $importRepository;
 
     /**
      * AkeneoConnectorImportCommand constructor.

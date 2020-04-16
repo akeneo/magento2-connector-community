@@ -4,8 +4,6 @@ namespace Akeneo\Connector\Helper;
 
 use Akeneo\Pim\ApiClient\Search\SearchBuilder;
 use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\App\Helper\Context;
-use Akeneo\Connector\Helper\Data as Helper;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Helper\Locales as LocalesHelper;
@@ -24,7 +22,7 @@ use Akeneo\Connector\Model\Source\Filters\Update;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class ProductFilters extends Helper
+class ProductFilters
 {
     /**
      * This variable contains a ConfigHelper
@@ -58,17 +56,13 @@ class ProductFilters extends Helper
      * @param Store         $storeHelper
      * @param Locales       $localesHelper
      * @param SearchBuilder $searchBuilder
-     * @param Context       $context
      */
     public function __construct(
         ConfigHelper $configHelper,
         StoreHelper $storeHelper,
         LocalesHelper $localesHelper,
-        SearchBuilder $searchBuilder,
-        Context $context
+        SearchBuilder $searchBuilder
     ) {
-        parent::__construct($context);
-
         $this->configHelper  = $configHelper;
         $this->storeHelper   = $storeHelper;
         $this->localesHelper = $localesHelper;

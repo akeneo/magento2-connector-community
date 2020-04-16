@@ -32,7 +32,7 @@ class Import extends Template
      *
      * @var ImportRepositoryInterface $importRepository
      */
-    private $importRepository;
+    protected $importRepository;
 
     /**
      * Import constructor.

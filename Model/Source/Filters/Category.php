@@ -31,7 +31,7 @@ class Category implements ArrayInterface
      *
      * @var \Psr\Log\LoggerInterface $logger
      */
-    private $logger;
+    protected $logger;
 
     /**
      * This variable contains Categories options
