@@ -709,6 +709,100 @@ class Category extends Import
     }
 
     /**
+     * @throws \Zend_Db_Statement_Exception
+     */
+    public function setPermissions()
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tableName */
+        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        /** @var array $stores */
+        $stores = $this->storeHelper->getStores('lang');
+
+        /**
+         * @var string $local
+         * @var array $affected
+         */
+        foreach ($stores as $local => $affected) {
+
+            /**
+             * @var array $affected
+             * @var array $store
+             */
+            foreach ($affected as $store) {
+                if (!$store['store_id']) {
+                    continue;
+                }
+
+                /** @var \Zend_Db_Statement_Interface $query */
+                $query = $connection->query(
+                    $connection->select()
+                        ->from(
+                            $tmpTable,
+                            [
+                                'entity_id' => '_entity_id',
+                                'parent_id' => 'parent_id',
+                            ]
+                        )
+                );
+
+                /** @var array $row */
+                while (($row = $query->fetch())) {
+                    $this->addOrUpdatePermission($connection, $row['entity_id'], 0);
+                    $this->addOrUpdatePermission($connection, $row['entity_id'], 1);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param $connection
+     * @param $categoryId
+     * @param $groupId
+     */
+    private function addOrUpdatePermission($connection, $categoryId, $groupId)
+    {
+        /** @var string|null $rewriteId */
+        $permissionId = $connection->fetchOne(
+            $connection->select()
+                ->from($this->entitiesHelper->getTable('magento_catalogpermissions'), ['permission_id'])
+                ->where('category_id = ?', $categoryId)
+                ->where('customer_group_id = ?', $groupId)
+        );
+
+        if ($permissionId) {
+            $data = [
+                'grant_catalog_category_view'  => -1,
+                'grant_catalog_product_price'  => -1,
+                'grant_checkout_items'         => -1
+            ];
+
+            $connection->update(
+                $this->entitiesHelper->getTable('magento_catalogpermissions'),
+                $data,
+                ['permission_id = ?' => $permissionId]
+            );
+        } else {
+            /** @var array $data */
+            $data = [
+                'category_id'                   => $categoryId,
+                'website_id'                    => null,
+                'customer_group_id'             => $groupId,
+                'grant_catalog_category_view'   => -1,
+                'grant_catalog_product_price'   => -1,
+                'grant_checkout_items'          => -1,
+            ];
+            return;
+            $connection->insertOnDuplicate(
+                $this->entitiesHelper->getTable('magento_catalogpermissions'),
+                $data,
+                array_keys($data)
+            );
+        }
+    }
+
+    /**
      * Drop temporary table
      *
      * @return void
