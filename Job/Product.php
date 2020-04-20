@@ -24,6 +24,7 @@ use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ProductLink\Link as ProductLink;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
+use Magento\Customer\Api\Data\GroupInterface;
 use Magento\Eav\Model\Config as EavConfig;
 use Magento\Eav\Model\ResourceModel\Entity\Attribute as EavAttribute;
 use Magento\Framework\App\Cache\Type\Block;
@@ -36,6 +37,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\PageCache\Model\Cache\Type;
 use Magento\Staging\Model\VersionManager;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\SharedCatalog\Api\ProductItemManagementInterface;
 use Psr\Http\Message\ResponseInterface;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Pdo;
@@ -230,6 +232,11 @@ class Product extends JobImport
     protected $storeManager;
 
     /**
+     * @var \Magento\SharedCatalog\Api\ProductItemManagementInterface
+     */
+    private $sharedCatalogProductItemManagement;
+
+    /**
      * Product constructor.
      *
      * @param OutputHelper            $outputHelper
@@ -250,6 +257,7 @@ class Product extends JobImport
      * @param Option                  $jobOption
      * @param AttributeMetrics        $attributeMetrics
      * @param StoreManagerInterface   $storeManager
+     * @param ProductItemManagementInterface $sharedCatalogProductItemManagement
      * @param array                   $data
      */
     public function __construct(
@@ -271,6 +279,7 @@ class Product extends JobImport
         JobOption $jobOption,
         AttributeMetrics $attributeMetrics,
         StoreManagerInterface $storeManager,
+        ProductItemManagementInterface $sharedCatalogProductItemManagement,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
@@ -290,6 +299,7 @@ class Product extends JobImport
         $this->attributeMetrics        = $attributeMetrics;
         $this->storeManager            = $storeManager;
         $this->entities                = $entities;
+        $this->sharedCatalogProductItemManagement = $sharedCatalogProductItemManagement;
     }
 
     /**
@@ -2519,6 +2529,37 @@ class Product extends JobImport
                 ]
             );
         }
+    }
+
+    /**
+     * Add to shared catalog
+     *
+     * @return void
+     */
+    public function addToSharedCatalog()
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        /** @var Select $select */
+        $select = $connection->select()->from($tmpTable, ['sku' => 'identifier']);
+        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+        $query = $connection->query($select);
+
+        $defaultGroup = 1;
+        $skus = array();
+        while (($row = $query->fetch())) {
+            $skus[] = $row['identifier'];
+            if (count($skus)>50) {
+                $this->sharedCatalogProductItemManagement->addItems(GroupInterface::NOT_LOGGED_IN_ID, $skus);
+                $this->sharedCatalogProductItemManagement->addItems($defaultGroup, $skus);
+                $skus = array();
+            }
+        }
+        $this->sharedCatalogProductItemManagement->addItems(GroupInterface::NOT_LOGGED_IN_ID, $skus);
+        $this->sharedCatalogProductItemManagement->addItems($defaultGroup, $skus);
+
     }
 
     /**
