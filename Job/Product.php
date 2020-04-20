@@ -1910,15 +1910,70 @@ class Product extends JobImport
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var int $websiteId */
         $websiteId = $this->configHelper->getDefaultScopeId();
+
+
+        if (!$connection->tableColumnExists($tmpTable, 'qty')) {
+            $connection->addColumn(
+                $tmpTable,
+                'qty',
+                [
+                    'type'     => 'integer',
+                    'length'   => 12,
+                    'default'  => '0',
+                    'COMMENT'  => ' ',
+                    'nullable' => false,
+                ]
+            );
+
+            $connection->addColumn(
+                $tmpTable,
+                'is_in_stock',
+                [
+                    'type'     => 'smallint',
+                    'length'   => 5,
+                    'default'  => '0',
+                    'COMMENT'  => ' ',
+                    'nullable' => false,
+                ]
+            );
+        }
+
+        $configurableSelect = $connection->select()->from($tmpTable, ['product_id' => '_entity_id']);
+        $query = $connection->query($configurableSelect);
+
+        /** @var array $row */
+        while ($row = $query->fetch()) {
+            $qtySql = "SELECT qty from `cataloginventory_stock_item` where stock_id = 1 AND product_id=" . $row['product_id'];
+            $qty = $connection->fetchOne($qtySql) > 1 ? $connection->fetchOne($qtySql) : 0;
+            $inStock = $qty > 1 ? 1 : 0;
+
+            $connection->update(
+                $tmpTable,
+                [
+                    'qty'         => new Expr($qty),
+                    'is_in_stock' => new Expr($inStock)
+                ],
+                [
+                    '_entity_id = ?' => $row['product_id']
+                ]
+            );
+        }
+
         /** @var array $values */
         $values = [
             'product_id'                => '_entity_id',
             'stock_id'                  => new Expr(1),
-            'qty'                       => new Expr(0),
-            'is_in_stock'               => new Expr(0),
+            'qty'                       => new Expr('qty'),
+            'is_in_stock'               => new Expr('is_in_stock'),
             'low_stock_date'            => new Expr('NULL'),
             'stock_status_changed_auto' => new Expr(0),
             'website_id'                => new Expr($websiteId),
+            'use_config_min_sale_qty'   => new Expr("IF(uc > 1, 0, 1)"),
+            'use_config_qty_increments' => new Expr("IF(uc > 1, 0, 1)"),
+            'use_config_enable_qty_inc' => new Expr("IF(uc > 1, 0, 1)"),
+            'enable_qty_increments'     => new Expr("IF(uc > 1, 1, 0)"),
+            'min_sale_qty'              => new Expr("IF(uc > 1, uc, 0)"),
+            'qty_increments'            => new Expr("IF(uc > 1, uc, 0)")
         ];
 
         /** @var Select $select */
@@ -1929,7 +1984,7 @@ class Product extends JobImport
                 $select,
                 $this->entitiesHelper->getTable('cataloginventory_stock_item'),
                 array_keys($values),
-                AdapterInterface::INSERT_IGNORE
+                AdapterInterface::INSERT_ON_DUPLICATE
             )
         );
     }
