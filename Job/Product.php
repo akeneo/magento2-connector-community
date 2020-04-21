@@ -2543,7 +2543,7 @@ class Product extends JobImport
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var Select $select */
-        $select = $connection->select()->from($tmpTable, ['sku' => 'identifier']);
+        $select = $connection->select()->from($tmpTable, ['identifier']);
         /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
         $query = $connection->query($select);
 
