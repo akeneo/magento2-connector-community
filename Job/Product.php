@@ -1722,21 +1722,20 @@ class Product extends JobImport
                     $query = $connection->query($select);
                     /** @var array $row */
                     while (($row = $query->fetch())) {
+                        /** @var Select $deleteSelect */
+                        $deleteSelect = $connection->select()->from(
+                            $this->entitiesHelper->getTable('catalog_product_website')
+                        )->where('product_id = ?', $row['entity_id']);
+
+                        $connection->query(
+                            $connection->deleteFromSelect(
+                                $deleteSelect,
+                                $this->entitiesHelper->getTable('catalog_product_website')
+                            )
+                        );
                         /** @var string[] $associatedWebsites */
                         $associatedWebsites = $row['associated_website'];
                         if ($associatedWebsites != null) {
-                            /** @var Select $deleteSelect */
-                            $deleteSelect = $connection->select()->from(
-                                $this->entitiesHelper->getTable('catalog_product_website')
-                            )->where('product_id = ?', $row['entity_id']);
-
-                            $connection->query(
-                                $connection->deleteFromSelect(
-                                    $deleteSelect,
-                                    $this->entitiesHelper->getTable('catalog_product_website')
-                                )
-                            );
-
                             $associatedWebsites = explode(',', $associatedWebsites);
                             /** @var string $associatedWebsite */
                             foreach ($associatedWebsites as $associatedWebsite) {
