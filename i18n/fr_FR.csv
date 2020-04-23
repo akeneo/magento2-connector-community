@@ -87,7 +87,7 @@ Par exemple :<br/>
 "Import only product updated before the given date. Leave blank for no filter.","N'importer que des produits mis à jour avant la date donnée. Laisser le champ vide pour ne pas filtrer."
 "Import only product updated since last X days. Leave blank for no filter.","Importer uniquement les produits actualisés les X  derniers jours. Laisser vide pour ne pas appliquer de filtre."
 "Import","Import"
-"Is Akeneo master for content staging","Akeneo est-il maître sur les données planifiées"
+"Does Akeneo data override content staging","Les données Akeneo surchargent-elles les données planifiées"
 "Map Magento image type for products. Associate the image type option to a PIM attribute specified in the Akeneo Attribute for Image Gallery field. After import, all specified options will be filled by their image if provided.","Mapper les types d'images Magento pour les produits. Associer les option de type d'image à un attribut PIM spécifié dans le champ Attributs Akeneo pour la gallerie image. Après l'import, toutes les options spécifiés seront remplies par leurs images si elle a été renseignée."
 "Newly imported categories will be activated","Les nouvelles catégories importées seront activées"
 "Newly imported categories will be in anchor mode","Les nouvelles catégories importées seront en mode ancres"

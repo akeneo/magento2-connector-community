@@ -363,7 +363,9 @@ class Product extends JobImport
                     foreach ($product['values'][$attributeMetric] as $key => $metric) {
                         /** @var string|float $amount */
                         $amount = $metric['data']['amount'];
-                        $amount = floatval($amount);
+                        if ($amount != NULL) {
+                            $amount = floatval($amount);
+                        }
 
                         $product['values'][$attributeMetric][$key]['data']['amount'] = $amount;
                     }
@@ -1720,21 +1722,20 @@ class Product extends JobImport
                     $query = $connection->query($select);
                     /** @var array $row */
                     while (($row = $query->fetch())) {
+                        /** @var Select $deleteSelect */
+                        $deleteSelect = $connection->select()->from(
+                            $this->entitiesHelper->getTable('catalog_product_website')
+                        )->where('product_id = ?', $row['entity_id']);
+
+                        $connection->query(
+                            $connection->deleteFromSelect(
+                                $deleteSelect,
+                                $this->entitiesHelper->getTable('catalog_product_website')
+                            )
+                        );
                         /** @var string[] $associatedWebsites */
                         $associatedWebsites = $row['associated_website'];
                         if ($associatedWebsites != null) {
-                            /** @var Select $deleteSelect */
-                            $deleteSelect = $connection->select()->from(
-                                $this->entitiesHelper->getTable('catalog_product_website')
-                            )->where('product_id = ?', $row['entity_id']);
-
-                            $connection->query(
-                                $connection->deleteFromSelect(
-                                    $deleteSelect,
-                                    $this->entitiesHelper->getTable('catalog_product_website')
-                                )
-                            );
-
                             $associatedWebsites = explode(',', $associatedWebsites);
                             /** @var string $associatedWebsite */
                             foreach ($associatedWebsites as $associatedWebsite) {
@@ -2127,6 +2128,7 @@ class Product extends JobImport
                         'entity_id' => '_entity_id',
                         'url_key'   => 'url_key-' . $local,
                         'store_id'  => new Expr($store['store_id']),
+                        'visibility' => '_visibility',
                     ]
                 );
 
@@ -2142,7 +2144,7 @@ class Product extends JobImport
                     /** @var string $urlPath */
                     $urlPath = $this->productUrlPathGenerator->getUrlPath($product);
 
-                    if (!$urlPath) {
+                    if (!$urlPath || $row['visibility'] < 2) {
                         continue;
                     }
 

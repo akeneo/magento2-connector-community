@@ -87,3 +87,10 @@
 * Fix Magento 2 Enterprise is_returnable default value for products
 * Fix multiselect attribute options assignation causing multiple options with similar code to be selected
 * Fix attribute option code separator in akeneo_connector_entities table
+
+### Version 100.4.5 :
+* Remove URL key generation for non visible products
+* Fix metric option creation when a value is set on a product model specific attribute
+* Fix metric value set to "0" when empty on Akeneo
+* Fix website association not deleted when website attribute value is empty for a product
+* Optimize deletion of akeneo_connector_product_model columns during product model import job
