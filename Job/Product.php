@@ -2140,7 +2140,7 @@ class Product extends JobImport
                     $product->setData($row);
 
                     if (isset($store['website_id'])) {
-                        /** @var \Magento\Framework\DB\Select $select */
+                        /** @var \Magento\Framework\DB\Select $selectIsInWebsite */
                         $selectIsInWebsite = $connection->select()->from(
                             $this->entitiesHelper->getTable('catalog_product_website'),
                             [
@@ -2150,7 +2150,7 @@ class Product extends JobImport
                             'product_id = ?',
                             $product->getEntityId()
                         );
-                        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+                        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $queryIsInWebsite */
                         $queryIsInWebsite = $connection->query($selectIsInWebsite);
                         /** @var string[] $isInWebsite */
                         $isInWebsite = $queryIsInWebsite->fetchAll();
