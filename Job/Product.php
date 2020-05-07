@@ -1368,32 +1368,64 @@ class Product extends JobImport
         /** @var string $identifierColumn */
         $identifierColumn = $this->entitiesHelper->getColumnIdentifier('catalog_product_entity_int');
         /** @var string[] $columnsForStatus */
+
+        /** JETPULP : Allow to activate/desactivate products from PIM
         $columnsForStatus = ['entity_id' => 'a._entity_id', '_is_new' => 'a._is_new'];
         $select           = $connection->select()->from(['a' => $tmpTable], $columnsForStatus)->joinInner(
-            ['b' => $this->entitiesHelper->getTable('catalog_product_entity_int')],
-            'a._entity_id = b.' . $identifierColumn
+        ['b' => $this->entitiesHelper->getTable('catalog_product_entity_int')],
+        'a._entity_id = b.' . $identifierColumn
         )->where('a._is_new = ?', 0)->where('a._status = ?', 1)->where('b.attribute_id = ?', $statusAttributeId);
         $oldStatus        = $connection->query($select);
         while (($row = $oldStatus->fetch())) {
-            $valuesToInsert = [
-                '_status' => $row['value'],
-            ];
-            $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['entity_id']]);
+        $valuesToInsert = [
+        '_status' => $row['value'],
+        ];
+        $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['entity_id']]);
         }
 
         $connection->update(
-            $tmpTable,
-            ['_status' => $this->configHelper->getProductActivation()],
-            ['_is_new = ?' => 1, '_status = ?' => 1]
+        $tmpTable,
+        ['_status' => $this->configHelper->getProductActivation()],
+        ['_is_new = ?' => 1, '_status = ?' => 1]
         );
+         */
+
+        /** JETPULP : Allow to modify tax class in magento */
+
+        // Set products tax classId
+        /** @var string $taxClassIdAttributeId */
+        $taxClassIdAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'tax_class_id');
+        /** @var string $identifierColumn */
+        $identifierColumn = $this->entitiesHelper->getColumnIdentifier('catalog_product_entity_int');
+        /** @var string[] $columnsForStatus */
+        $columnsForTaxClassId = ['entity_id' => 'a._entity_id', '_is_new' => 'a._is_new'];
+        $select           = $connection->select()->from(['a' => $tmpTable], $columnsForTaxClassId)
+            ->joinInner(['b' => $this->entitiesHelper->getTable('catalog_product_entity')],
+                'a._entity_id = b.entity_id' )
+            ->joinInner(['c' => $this->entitiesHelper->getTable('catalog_product_entity_int')],
+                'b.row_id = c.' . $identifierColumn
+            )->where('a._is_new = ?', 0)->where('c.attribute_id = ?', $taxClassIdAttributeId);
+        $oldTaxClassId        = $connection->query($select);
+        while (($row = $oldTaxClassId->fetch())) {
+            $valuesToInsert = [
+                '_tax_class_id' => $row['value'],
+            ];
+            $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['entity_id']]);
+        }
 
         /** @var mixed[] $taxClasses */
         $taxClasses = $this->configHelper->getProductTaxClasses();
         if (count($taxClasses)) {
             foreach ($taxClasses as $storeId => $taxClassId) {
-                $values[$storeId]['tax_class_id'] = new Expr($taxClassId);
+                //$values[$storeId]['tax_class_id'] = new Expr($taxClassId);
+                $connection->update(
+                    $tmpTable,
+                    ['_tax_class_id' => $taxClassId],
+                    ['_tax_class_id = ?' => 0, ]
+                );
             }
         }
+        /** END JETPULP  tax class */
 
         /** @var string $column */
         foreach ($columns as $column) {
@@ -1571,9 +1603,9 @@ class Product extends JobImport
                 /** @var bool $hasOptions */
                 $hasOptions = (bool)$connection->fetchOne(
                     $connection->select()
-                               ->from($eavAttrOptionTable, [new Expr(1)])
-                               ->where('attribute_id = ?', $id)
-                               ->limit(1)
+                        ->from($eavAttrOptionTable, [new Expr(1)])
+                        ->where('attribute_id = ?', $id)
+                        ->limit(1)
                 );
 
                 if (!$hasOptions) {
@@ -1595,10 +1627,10 @@ class Product extends JobImport
                 /** @var string $superAttributeId */
                 $superAttributeId = $connection->fetchOne(
                     $connection->select()
-                               ->from($productSuperAttrTable)
-                               ->where('attribute_id = ?', $id)
-                               ->where('product_id = ?', $row[$pKeyColumn])
-                               ->limit(1)
+                        ->from($productSuperAttrTable)
+                        ->where('attribute_id = ?', $id)
+                        ->where('product_id = ?', $row[$pKeyColumn])
+                        ->limit(1)
                 );
 
                 /**
@@ -1621,9 +1653,9 @@ class Product extends JobImport
                     /** @var int $childId */
                     $childId = (int)$connection->fetchOne(
                         $connection->select()
-                                   ->from($productEntityTable, ['entity_id'])
-                                   ->where('sku = ?', $child)
-                                   ->limit(1)
+                            ->from($productEntityTable, ['entity_id'])
+                            ->where('sku = ?', $child)
+                            ->limit(1)
                     );
 
                     if (!$childId) {
