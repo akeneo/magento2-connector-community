@@ -2,13 +2,14 @@
 
 namespace Akeneo\Connector\Helper;
 
-use Magento\Framework\App\Helper\Context;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\Data\WebsiteInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Magento\Framework\App\Helper\AbstractHelper;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Magento\Store\Model\ResourceModel\Website as WebsiteResource;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Directory\Helper\Data as DirectoryHelper;
+use Magento\Store\Model\ScopeInterface;
 
 /**
  * Class Store
@@ -20,7 +21,7 @@ use Magento\Store\Model\ResourceModel\Website as WebsiteResource;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Store extends AbstractHelper
+class Store
 {
     /**
      * This variable contains a ConfigHelper
@@ -46,29 +47,34 @@ class Store extends AbstractHelper
      * @var WebsiteResource $websiteResource
      */
     protected $websiteResource;
+    /**
+     * Description $scopeConfig field
+     *
+     * @var ScopeConfigInterface $scopeConfig
+     */
+    protected $scopeConfig;
 
     /**
      * Store constructor
      *
-     * @param Context               $context
      * @param ConfigHelper          $configHelper
      * @param Serializer            $serializer
      * @param StoreManagerInterface $storeManager
      * @param WebsiteResource       $websiteResource
+     * @param ScopeConfigInterface  $scopeConfig
      */
     public function __construct(
-        Context $context,
         ConfigHelper $configHelper,
         Serializer $serializer,
         StoreManagerInterface $storeManager,
-        WebsiteResource $websiteResource
+        WebsiteResource $websiteResource,
+        ScopeConfigInterface $scopeConfig
     ) {
-        parent::__construct($context);
-
         $this->configHelper    = $configHelper;
         $this->serializer      = $serializer;
         $this->storeManager    = $storeManager;
         $this->websiteResource = $websiteResource;
+        $this->scopeConfig     = $scopeConfig;
     }
 
     /**
@@ -120,7 +126,11 @@ class Store extends AbstractHelper
                 /** @var string $storeCode */
                 $storeCode = $store->getCode();
                 /** @var string $storeLang */
-                $storeLang = $this->scopeConfig->getValue(\Magento\Directory\Helper\Data::XML_PATH_DEFAULT_LOCALE, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId);
+                $storeLang = $this->scopeConfig->getValue(
+                    DirectoryHelper::XML_PATH_DEFAULT_LOCALE,
+                    ScopeInterface::SCOPE_STORE,
+                    $storeId
+                );
                 /** @var bool $isDefault */
                 $isDefault = false;
                 if (in_array($storeId, $websiteDefaultStores)) {

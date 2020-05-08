@@ -4,14 +4,15 @@ namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Serializer as JsonSerializer;
+use Akeneo\Connector\Helper\Import\Entities;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Framework\App\DeploymentConfig;
-use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Zend_Db_Expr as Expr;
 
 /**
@@ -50,30 +51,38 @@ class Product extends Entities
      * @var ProductUrlPathGenerator $productUrlPathGenerator
      */
     protected $productUrlPathGenerator;
+    /**
+     * Description $scopeConfig field
+     *
+     * @var ScopeConfigInterface $scopeConfig
+     */
+    protected $scopeConfig;
 
     /**
      * Product constructor
      *
-     * @param Context                 $context
      * @param ResourceConnection      $connection
      * @param DeploymentConfig        $deploymentConfig
      * @param BaseProductModel        $product
      * @param ProductUrlPathGenerator $productUrlPathGenerator
      * @param ConfigHelper            $configHelper
      * @param JsonSerializer          $serializer
+     * @param ScopeConfigInterface    $scopeConfig
      */
     public function __construct(
-        Context $context,
         ResourceConnection $connection,
         DeploymentConfig $deploymentConfig,
         BaseProductModel $product,
         ProductUrlPathGenerator $productUrlPathGenerator,
         ConfigHelper $configHelper,
-        JsonSerializer $serializer
+        JsonSerializer $serializer,
+        ScopeConfigInterface $scopeConfig
     ) {
+        parent::__construct($connection, $deploymentConfig, $product, $configHelper);
+
         $this->serializer              = $serializer;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
-        parent::__construct($context, $connection, $deploymentConfig, $product, $configHelper);
+        $this->scopeConfig             = $scopeConfig;
     }
 
     /**
@@ -128,7 +137,7 @@ class Product extends Entities
             }
             unset($columns[$key]);
             /**
-             * @var string|int $local
+             * @var string|int   $local
              * @var string|array $data
              */
             foreach ($value as $local => $data) {
@@ -153,7 +162,7 @@ class Product extends Entities
      *
      * @return array
      */
-    private function formatValues(array $values)
+    public function formatValues(array $values)
     {
         /** @var array $columns */
         $columns = [];
@@ -189,7 +198,10 @@ class Product extends Entities
                     continue;
                 }
                 // Attribute is a multiselect
-                if (isset($attributeValue['data'][0]) && (!is_array($attributeValue['data'][0]) || !array_key_exists('amount', $attributeValue['data'][0]))) {
+                if (isset($attributeValue['data'][0]) && (!is_array($attributeValue['data'][0]) || !array_key_exists(
+                            'amount',
+                            $attributeValue['data'][0]
+                        ))) {
                     $columns[$key] = join(',', $attributeValue['data']);
 
                     continue;
@@ -197,7 +209,10 @@ class Product extends Entities
                 // Attribute is a price
                 /** @var array $price */
                 foreach ($attributeValue['data'] as $price) {
-                    if (!is_array($price) || !array_key_exists('currency', $price) || !array_key_exists('amount', $price)) {
+                    if (!is_array($price) || !array_key_exists('currency', $price) || !array_key_exists(
+                            'amount',
+                            $price
+                        )) {
                         continue;
                     }
                     /** @var string $priceKey */
@@ -217,14 +232,14 @@ class Product extends Entities
      *
      * @return array
      */
-    private function formatAssociations(array $values)
+    public function formatAssociations(array $values)
     {
         /** @var array $associations */
         $associations = [];
 
         /**
          * @var string $group
-         * @var array $types
+         * @var array  $types
          */
         foreach ($values as $group => $types) {
             /**
@@ -257,7 +272,7 @@ class Product extends Entities
      *
      * @return string
      */
-    private function getKey($attribute, array $attributeValue)
+    public function getKey($attribute, array $attributeValue)
     {
         /** @var string $key */
         $key = strtolower($attribute);
@@ -345,14 +360,14 @@ class Product extends Entities
             't.identifier = e.sku'
         );
         /** @var string $query */
-        $query  = $connection->query($select);
+        $query = $connection->query($select);
         /** @var mixed $row */
         while ($row = $query->fetch()) {
             // Create a row in Akeneo table for products present in Magento and Akeneo that were never imported before
             if (!in_array($row['entity_id'], $existingEntities)) {
                 $values = [
-                    'import' => 'product',
-                    'code' => $row['sku'],
+                    'import'    => 'product',
+                    'code'      => $row['sku'],
                     'entity_id' => $row['entity_id'],
                 ];
                 $connection->insertOnDuplicate($akeneoConnectorTable, $values);
@@ -360,14 +375,16 @@ class Product extends Entities
         }
 
         /* Update entity_id column from akeneo_connector_entities table */
-        $connection->query('
+        $connection->query(
+            '
             UPDATE `' . $tableName . '` t
             SET `_entity_id` = (
                 SELECT `entity_id` FROM `' . $akeneoConnectorTable . '` c
                 WHERE ' . ($prefix ? 'CONCAT(t.`' . $prefix . '`, "_", t.`' . $pimKey . '`)' : 't.`' . $pimKey . '`') . ' = c.`code`
                     AND c.`import` = "' . $import . '"
             )
-        ');
+        '
+        );
 
         /* Set entity_id for new entities */
         /** @var string $query */
@@ -379,18 +396,17 @@ class Product extends Entities
         /** @var array $values */
         $values = [
             '_entity_id' => new Expr('@id := @id + 1'),
-            '_is_new' => new Expr('1'),
+            '_is_new'    => new Expr('1'),
         ];
         $connection->update($tableName, $values, '_entity_id IS NULL');
 
         /* Update akeneo_connector_entities table with code and new entity_id */
         /** @var Select $select */
-        $select = $connection->select()
-            ->from(
+        $select = $connection->select()->from(
                 $tableName,
                 [
-                    'import' => new Expr("'" . $import . "'"),
-                    'code' => $prefix ? new Expr('CONCAT(`' . $prefix . '`, "_", `' . $pimKey . '`)') : $pimKey,
+                    'import'    => new Expr("'" . $import . "'"),
+                    'code'      => $prefix ? new Expr('CONCAT(`' . $prefix . '`, "_", `' . $pimKey . '`)') : $pimKey,
                     'entity_id' => '_entity_id',
                 ]
             )->where('_is_new = ?', 1);
@@ -407,14 +423,14 @@ class Product extends Entities
         if ($count) {
             /** @var string $maxCode */
             $maxCode = $connection->fetchOne(
-                $connection->select()
-                    ->from($akeneoConnectorTable, new Expr('MAX(`entity_id`)'))
-                    ->where('import = ?', $import)
+                $connection->select()->from($akeneoConnectorTable, new Expr('MAX(`entity_id`)'))->where(
+                        'import = ?',
+                        $import
+                    )
             );
             /** @var string $maxEntity */
             $maxEntity = $connection->fetchOne(
-                $connection->select()
-                    ->from($entityTable, new Expr('MAX(`' . $entityKey . '`)'))
+                $connection->select()->from($entityTable, new Expr('MAX(`' . $entityKey . '`)'))
             );
 
             $connection->query(
@@ -428,7 +444,7 @@ class Product extends Entities
     /**
      * Verify product url during url rewrite returns the correct request path
      *
-     * @param string $requestPath
+     * @param string                        $requestPath
      * @param Magento\Catalog\Model\Product $product
      *
      * @return string

@@ -6,6 +6,7 @@ use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Encryption\Encryptor;
 use Magento\Directory\Helper\Data as DirectoryHelper;
+use Magento\Framework\Exception\FileSystemException;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\Data\WebsiteInterface;
 use Magento\Store\Model\ScopeInterface;
@@ -20,6 +21,7 @@ use Magento\Framework\File\Uploader;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
 use Magento\Catalog\Helper\Product as ProductHelper;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 
 /**
  * Class Config
@@ -31,7 +33,7 @@ use Magento\Catalog\Helper\Product as ProductHelper;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Config extends AbstractHelper
+class Config
 {
     /** Config keys */
     const AKENEO_API_BASE_URL = 'akeneo_connector/akeneo_api/base_url';
@@ -69,8 +71,12 @@ class Config extends AbstractHelper
     const PRODUCT_MEDIA_ENABLED = 'akeneo_connector/product/media_enabled';
     const PRODUCT_MEDIA_IMAGES = 'akeneo_connector/product/media_images';
     const PRODUCT_MEDIA_GALLERY = 'akeneo_connector/product/media_gallery';
+    const PRODUCT_FILE_ENABLED = 'akeneo_connector/product/file_enabled';
+    const PRODUCT_FILE_ATTRIBUTE = 'akeneo_connector/product/file_attribute';
     const PRODUCT_METRICS = 'akeneo_connector/product/metrics';
+    const PRODUCT_AKENEO_MASTER = 'akeneo_connector/product/akeneo_master';
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
+    const PRODUCT_ACTIVATION = 'akeneo_connector/product/activation';
     /**
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
      */
@@ -129,11 +135,22 @@ class Config extends AbstractHelper
      * @var WriteInterface $mediaDirectory
      */
     protected $mediaDirectory;
+    /**
+     * This variable contains reference records media directory
+     *
+     * @var string $recordMediaFile
+     */
+    protected $filesMediaFile = 'akeneo_connector/media_files';
+    /**
+     * Description $scopeConfig field
+     *
+     * @var ScopeConfigInterface $scopeConfig
+     */
+    protected $scopeConfig;
 
     /**
      * Config constructor
      *
-     * @param Context                       $context
      * @param Encryptor                     $encryptor
      * @param Serializer                    $serializer
      * @param EavConfig                     $eavConfig
@@ -141,19 +158,18 @@ class Config extends AbstractHelper
      * @param CatalogInventoryConfiguration $catalogInventoryConfiguration
      * @param Filesystem                    $filesystem
      * @param MediaConfig                   $mediaConfig
+     * @param ScopeConfigInterface          $scopeConfig
      */
     public function __construct(
-        Context $context,
         Encryptor $encryptor,
         Serializer $serializer,
         EavConfig $eavConfig,
         StoreManagerInterface $storeManager,
         CatalogInventoryConfiguration $catalogInventoryConfiguration,
         Filesystem $filesystem,
-        MediaConfig $mediaConfig
+        MediaConfig $mediaConfig,
+        ScopeConfigInterface $scopeConfig
     ) {
-        parent::__construct($context);
-
         $this->encryptor                     = $encryptor;
         $this->serializer                    = $serializer;
         $this->eavConfig                     = $eavConfig;
@@ -161,6 +177,7 @@ class Config extends AbstractHelper
         $this->mediaConfig                   = $mediaConfig;
         $this->catalogInventoryConfiguration = $catalogInventoryConfiguration;
         $this->mediaDirectory                = $filesystem->getDirectoryWrite(DirectoryList::MEDIA);
+        $this->scopeConfig                   = $scopeConfig;
     }
 
     /**
@@ -549,6 +566,16 @@ class Config extends AbstractHelper
     }
 
     /**
+     * Retrieve the status of newly imported products
+     *
+     * @return string
+     */
+    public function getProductActivation()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCT_ACTIVATION);
+    }
+
+    /**
      * Retrieve stores default tax class
      *
      * @return array
@@ -638,6 +665,16 @@ class Config extends AbstractHelper
     }
 
     /**
+     * Description isAkeneoMaster function
+     *
+     * @return bool
+     */
+    public function isAkeneoMaster()
+    {
+        return $this->scopeConfig->isSetFlag(self::PRODUCT_AKENEO_MASTER);
+    }
+
+    /**
      * Retrieve media attribute column
      *
      * @return array
@@ -659,6 +696,47 @@ class Config extends AbstractHelper
         }
 
         return $media;
+    }
+
+    /**
+     * Retrieve is asset import is enabled
+     *
+     * @return bool
+     */
+    public function isFileImportEnabled()
+    {
+        return $this->scopeConfig->isSetFlag(self::PRODUCT_FILE_ENABLED);
+    }
+
+    /**
+     * Retrieve asset attribute columns
+     *
+     * @return array
+     */
+    public function getFileImportColumns()
+    {
+        /** @var array $assets */
+        $fileAttributes = [];
+        /** @var string $config */
+        $config = $this->scopeConfig->getValue(self::PRODUCT_FILE_ATTRIBUTE);
+        if (!$config) {
+            return $fileAttributes;
+        }
+
+        /** @var array $media */
+        $attributes = $this->serializer->unserialize($config);
+        if (!$attributes) {
+            return $fileAttributes;
+        }
+
+        foreach ($attributes as $attribute) {
+            if (!isset($attribute['file_attribute'])) {
+                continue;
+            }
+            $fileAttributes[] = $attribute['file_attribute'];
+        }
+
+        return $fileAttributes;
     }
 
     /**
@@ -752,31 +830,54 @@ class Config extends AbstractHelper
     /**
      * Check if media file exists
      *
-     * @param string $filename
+     * @param string $filePath
      *
      * @return bool
      */
-    public function mediaFileExists($filename)
+    public function mediaFileExists($filePath)
     {
-        return $this->mediaDirectory->isFile($this->mediaConfig->getMediaPath($this->getMediaFilePath($filename)));
+        return $this->mediaDirectory->isFile($filePath);
     }
 
     /**
-     * Retrieve media directory path
+     * Get media full path
+     *
+     * @param string      $fileName
+     * @param null|string $subDirectory
+     *
+     * @return string
+     * @throws FileSystemException
+     */
+    public function getMediaFullPath($fileName, $subDirectory = null)
+    {
+        if ($subDirectory) {
+            return $subDirectory . $this->getMediaFilePath($fileName);
+        }
+
+        return $this->mediaConfig->getMediaPath($this->getMediaFilePath($fileName));
+    }
+
+    /**
+     * Download media by fullpath
      *
      * @param string $filename
      * @param string $content
      *
      * @return void
      */
-    public function saveMediaFile($filename, $content)
+    public function saveMediaFile($filePath, $content)
     {
-        if (!$this->mediaFileExists($filename)) {
-            $this->mediaDirectory->writeFile(
-                $this->mediaConfig->getMediaPath($this->getMediaFilePath($filename)),
-                $content
-            );
-        }
+        $this->mediaDirectory->writeFile($filePath, $content);
+    }
+
+    /**
+     * Get Files Media Directory
+     *
+     * @return string
+     */
+    public function getFilesMediaDirectory()
+    {
+        return $this->filesMediaFile;
     }
 
     /**
@@ -861,7 +962,10 @@ class Config extends AbstractHelper
     {
         /** @var int $advancedPmUpdateLength */
         $advancedPmUpdateLength = $this->scopeConfig->getValue(self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH);
-        if ((filter_var($advancedPmUpdateLength, FILTER_VALIDATE_INT)) === false || ($advancedPmUpdateLength < self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_MINIMUM)) {
+        if ((filter_var(
+                $advancedPmUpdateLength,
+                FILTER_VALIDATE_INT
+            )) === false || ($advancedPmUpdateLength < self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_MINIMUM)) {
             $advancedPmUpdateLength = self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_DEFAULT_VALUE;
         }
 
@@ -882,7 +986,7 @@ class Config extends AbstractHelper
         $loweredMatches = [];
         /** @var string[] $match */
         foreach ($matches as $match) {
-            $match           = array_map('strtolower', $match);
+            $match            = array_map('strtolower', $match);
             $loweredMatches[] = $match;
         }
 
@@ -893,6 +997,7 @@ class Config extends AbstractHelper
      * Returns default attribute-set id for given entity
      *
      * @param string $entity
+     *
      * @return int
      * @throws \Magento\Framework\Exception\LocalizedException
      */

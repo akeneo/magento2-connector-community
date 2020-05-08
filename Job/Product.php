@@ -2,37 +2,41 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
+use Akeneo\Connector\Helper\Authenticator;
+use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Helper\Import\Entities;
+use Akeneo\Connector\Helper\Import\Product as ProductImportHelper;
+use Akeneo\Connector\Helper\Output as OutputHelper;
+use Akeneo\Connector\Helper\ProductFilters;
+use Akeneo\Connector\Helper\Serializer as JsonSerializer;
+use Akeneo\Connector\Helper\Store as StoreHelper;
+use Akeneo\Connector\Job\Option as JobOption;
+use Akeneo\Connector\Job\Import as JobImport;
+use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
-use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
-use Magento\Catalog\Model\Product\Link;
-use Magento\Catalog\Model\ProductLink\Link as ProductLink;
-use Magento\Catalog\Model\Product\Visibility;
-use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Category as CategoryModel;
+use Magento\Catalog\Model\Product as BaseProductModel;
+use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
+use Magento\Catalog\Model\Product\Link;
+use Magento\Catalog\Model\Product\Visibility;
+use Magento\Catalog\Model\ProductLink\Link as ProductLink;
+use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
+use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Eav\Model\Config as EavConfig;
+use Magento\Eav\Model\ResourceModel\Entity\Attribute as EavAttribute;
 use Magento\Framework\App\Cache\Type\Block;
+use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\PageCache\Model\Cache\Type;
-use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
-use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Staging\Model\VersionManager;
 use Magento\Store\Model\StoreManagerInterface;
-use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
-use Akeneo\Connector\Helper\Authenticator;
-use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Connector\Helper\Output as OutputHelper;
-use Akeneo\Connector\Helper\Store as StoreHelper;
-use Akeneo\Connector\Helper\ProductFilters;
-use Akeneo\Connector\Helper\Serializer as JsonSerializer;
-use Akeneo\Connector\Helper\Import\Product as ProductImportHelper;
-use Akeneo\Connector\Job\Option as JobOption;
-use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
+use Psr\Http\Message\ResponseInterface;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Pdo;
 
@@ -46,7 +50,7 @@ use Zend_Db_Statement_Pdo;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Product extends Import
+class Product extends JobImport
 {
     /**
      * @var string PIM_PRODUCT_STATUS_DISABLED
@@ -66,6 +70,12 @@ class Product extends Import
      * @var string $code
      */
     protected $code = 'product';
+    /**
+     * This variable contains entities
+     *
+     * @var Entities $entities
+     */
+    protected $entities;
     /**
      * This variable contains a string value
      *
@@ -147,6 +157,12 @@ class Product extends Import
      */
     protected $eavConfig;
     /**
+     * This variable contains an EavAttribute
+     *
+     * @var  EavConfig $eavConfig
+     */
+    protected $eavAttribute;
+    /**
      * This variable contains a ProductFilters
      *
      * @var ProductFilters $productFilters
@@ -222,6 +238,7 @@ class Product extends Import
      * @param ProductImportHelper     $entitiesHelper
      * @param ConfigHelper            $configHelper
      * @param EavConfig               $eavConfig
+     * @param EavAttribute            $eavAttribute
      * @param ProductFilters          $productFilters
      * @param ScopeConfigInterface    $scopeConfig
      * @param JsonSerializer          $serializer
@@ -229,6 +246,8 @@ class Product extends Import
      * @param ProductUrlPathGenerator $productUrlPathGenerator
      * @param TypeListInterface       $cacheTypeList
      * @param StoreHelper             $storeHelper
+     * @param Entities                $entities
+     * @param Option                  $jobOption
      * @param AttributeMetrics        $attributeMetrics
      * @param StoreManagerInterface   $storeManager
      * @param array                   $data
@@ -240,6 +259,7 @@ class Product extends Import
         ProductImportHelper $entitiesHelper,
         ConfigHelper $configHelper,
         EavConfig $eavConfig,
+        EavAttribute $eavAttribute,
         ProductFilters $productFilters,
         ScopeConfigInterface $scopeConfig,
         JsonSerializer $serializer,
@@ -247,6 +267,7 @@ class Product extends Import
         ProductUrlPathGenerator $productUrlPathGenerator,
         TypeListInterface $cacheTypeList,
         StoreHelper $storeHelper,
+        Entities $entities,
         JobOption $jobOption,
         AttributeMetrics $attributeMetrics,
         StoreManagerInterface $storeManager,
@@ -257,6 +278,7 @@ class Product extends Import
         $this->entitiesHelper          = $entitiesHelper;
         $this->configHelper            = $configHelper;
         $this->eavConfig               = $eavConfig;
+        $this->eavAttribute            = $eavAttribute;
         $this->productFilters          = $productFilters;
         $this->scopeConfig             = $scopeConfig;
         $this->serializer              = $serializer;
@@ -267,6 +289,7 @@ class Product extends Import
         $this->productUrlPathGenerator = $productUrlPathGenerator;
         $this->attributeMetrics        = $attributeMetrics;
         $this->storeManager            = $storeManager;
+        $this->entities                = $entities;
     }
 
     /**
@@ -322,7 +345,7 @@ class Product extends Import
         $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
         /** @var mixed[] $filter */
         foreach ($filters as $filter) {
-            /** @var Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface $products */
+            /** @var ResourceCursorInterface $products */
             $products = $this->akeneoClient->getProductApi()->all($paginationSize, $filter);
             /**
              * @var int     $index
@@ -340,13 +363,15 @@ class Product extends Import
                     foreach ($product['values'][$attributeMetric] as $key => $metric) {
                         /** @var string|float $amount */
                         $amount = $metric['data']['amount'];
-                        $amount = floatval($amount);
+                        if ($amount != NULL) {
+                            $amount = floatval($amount);
+                        }
 
                         $product['values'][$attributeMetric][$key]['data']['amount'] = $amount;
                     }
                 }
 
-                 /**
+                /**
                  * @var mixed[] $metricsConcatSetting
                  */
                 foreach ($metricsConcatSettings as $metricsConcatSetting) {
@@ -381,6 +406,41 @@ class Product extends Import
                 }
 
                 $index++;
+            }
+        }
+
+        // Remove declared file attributes columns if file import is disabled
+        if (!$this->configHelper->isFileImportEnabled()) {
+            /** @var array $attributesToImport */
+            $attributesToImport = $this->configHelper->getFileImportColumns();
+
+            if (!empty($attributesToImport)) {
+                $attributesToImport = array_unique($attributesToImport);
+
+                /** @var array $stores */
+                $stores = array_merge(
+                    $this->storeHelper->getStores(['lang']), // en_US
+                    $this->storeHelper->getStores(['channel_code']), // channel
+                    $this->storeHelper->getStores(['lang', 'channel_code']) // en_US-channel
+                );
+
+                /** @var AdapterInterface $connection */
+                $connection = $this->entitiesHelper->getConnection();
+                /** @var string $tmpTable */
+                $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+                /** @var array $data */
+                foreach ($attributesToImport as $attribute) {
+                    if ($connection->tableColumnExists($tmpTable, $attribute)) {
+                        $connection->dropColumn($tmpTable, $attribute);
+                    }
+
+                    // Remove scopable colums
+                    foreach ($stores as $suffix => $storeData) {
+                        if ($connection->tableColumnExists($tmpTable, $attribute . '-' . $suffix)) {
+                            $connection->dropColumn($tmpTable, $attribute . '-' . $suffix);
+                        }
+                    }
+                }
             }
         }
 
@@ -496,6 +556,20 @@ class Product extends Import
             ]
         ); // Disabled
 
+        if (!$connection->tableColumnExists($tmpTable, 'is_returnable')) {
+            $connection->addColumn(
+                $tmpTable,
+                'is_returnable',
+                [
+                    'type'     => 'integer',
+                    'length'   => 11,
+                    'default'  => 2,
+                    'COMMENT'  => ' ',
+                    'nullable' => false,
+                ]
+            );
+        }
+
         if (!$connection->tableColumnExists($tmpTable, 'url_key') && $this->configHelper->isUrlGenerationEnabled()) {
             $connection->addColumn(
                 $tmpTable,
@@ -570,7 +644,7 @@ class Product extends Import
 
             /**
              * @var string $local
-             * @var array $affected
+             * @var array  $affected
              */
             foreach ($stores as $local => $affected) {
                 $this->entitiesHelper->copyColumn(
@@ -602,7 +676,7 @@ class Product extends Import
 
         foreach ($metricsVariantSettings as $metricsVariantSetting) {
             $metricsVariantSetting = strtolower($metricsVariantSetting);
-            $columnExist = $connection->tableColumnExists($tmpTable, $metricsVariantSetting);
+            $columnExist           = $connection->tableColumnExists($tmpTable, $metricsVariantSetting);
 
             if (!$columnExist) {
                 continue;
@@ -824,11 +898,11 @@ class Product extends Import
         }
 
         /** @var Select $configurable */
-        $configurable = $connection->select()
-            ->from(['e' => $tmpTable], $data)
-            ->joinInner(['v' => $productModelTable], 'e.' . $groupColumn . ' = v.code', [])
-            ->where('e.' . $groupColumn . ' <> ""')
-            ->group('e.' . $groupColumn);
+        $configurable = $connection->select()->from(['e' => $tmpTable], $data)->joinInner(
+            ['v' => $productModelTable],
+            'e.' . $groupColumn . ' = v.code',
+            []
+        )->where('e.' . $groupColumn . ' <> ""')->group('e.' . $groupColumn);
 
         /** @var string $query */
         $query = $connection->insertFromSelect($configurable, $tmpTable, array_keys($data));
@@ -874,12 +948,18 @@ class Product extends Import
 
         /** @var array $duplicates */
         $duplicates = $connection->fetchCol(
-            $connection->select()->from($tmpTable, ['identifier'])->group('identifier')->having('COUNT(identifier) > ?', 1)
+            $connection->select()->from($tmpTable, ['identifier'])->group('identifier')->having(
+                'COUNT(identifier) > ?',
+                1
+            )
         );
 
         if (!empty($duplicates)) {
             $this->setMessage(
-                __('Duplicates sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1', join(', ', $duplicates))
+                __(
+                    'Duplicates sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1',
+                    join(', ', $duplicates)
+                )
             );
             $this->stop(true);
 
@@ -916,7 +996,11 @@ class Product extends Import
         /** @var string $entitiesTable */
         $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         /** @var Select $families */
-        $families = $connection->select()->from(false, ['_attribute_set_id' => 'c.entity_id'])->joinLeft(['c' => $entitiesTable], 'p.family = c.code AND c.import = "family"', []);
+        $families = $connection->select()->from(false, ['_attribute_set_id' => 'c.entity_id'])->joinLeft(
+            ['c' => $entitiesTable],
+            'p.family = c.code AND c.import = "family"',
+            []
+        );
 
         $connection->query($connection->updateFromSelect($families, ['p' => $tmpTable]));
 
@@ -970,7 +1054,7 @@ class Product extends Import
             $columnParts = explode('-', $column, 2);
             /** @var string $columnPrefix */
             $columnPrefix = reset($columnParts);
-            $columnPrefix = sprintf('%s_', $columnPrefix);
+            $columnPrefix = sprintf('%s-', $columnPrefix);
             /** @var int $prefixLength */
             $prefixLength = strlen($columnPrefix) + 1;
             /** @var string $entitiesTable */
@@ -990,8 +1074,8 @@ class Product extends Import
 
             //in case of multiselect
             /** @var string $conditionJoin */
-            $conditionJoin = "IF ( locate(',', `" . $column . "`) > 0 , " . "`p`.`" . $column . "` like " . new Expr(
-                    "CONCAT('%', `c1`.`code`, '%')"
+            $conditionJoin = "IF ( locate(',', `" . $column . "`) > 0 , " . new Expr(
+                    "FIND_IN_SET(`c1`.`code`,`p`.`" . $column ."`) > 0"
                 ) . ", `p`.`" . $column . "` = `c1`.`code` )";
 
             /** @var Select $select */
@@ -1046,8 +1130,7 @@ class Product extends Import
 
         /** @var string $table */
         $table = $this->entitiesHelper->getTable('catalog_product_entity');
-        /** @var string $columnIdentifier */
-        $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($table);
+
         /** @var array $values */
         $values = [
             'entity_id'        => '_entity_id',
@@ -1059,12 +1142,16 @@ class Product extends Import
             'updated_at'       => new Expr('now()'),
         ];
 
-        if ($columnIdentifier == 'row_id') {
-            $values['row_id'] = '_entity_id';
-        }
-
         /** @var Select $parents */
         $parents = $connection->select()->from($tmpTable, $values);
+
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($table);
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStaging($parents, ['p.row_id']);
+            $values['row_id'] = 'IFNULL (p.row_id, _entity_id)'; // on product creation, row_id is null
+        }
+
         /** @var string $query */
         $query = $connection->insertFromSelect(
             $parents,
@@ -1077,12 +1164,128 @@ class Product extends Import
         $values = ['created_at' => new Expr('now()')];
         $connection->update($table, $values, 'created_at IS NULL');
 
-        if ($columnIdentifier == 'row_id') {
+        if ($rowIdExists) {
             $values = [
                 'created_in' => new Expr(1),
                 'updated_in' => new Expr(VersionManager::MAX_VERSION),
             ];
             $connection->update($table, $values, 'created_in = 0 AND updated_in = 0');
+        }
+    }
+
+    /**
+     * Import the files
+     *
+     * @return void
+     */
+    public function importFiles()
+    {
+        if (!$this->configHelper->isFileImportEnabled()) {
+            $this->setStatus(false);
+            $this->setMessage(__('File import is not enabled'));
+
+            return;
+        }
+
+        /** @var array $stores */
+        $stores = array_merge(
+            $this->storeHelper->getStores(['lang']), // en_US
+            $this->storeHelper->getStores(['channel_code']), // channel
+            $this->storeHelper->getStores(['lang', 'channel_code']) // en_US-channel
+        );
+
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        /** @var array $attributesMapped */
+        $attributesMapped = $this->configHelper->getFileImportColumns();
+
+        if (empty($attributesMapped)) {
+            $this->setStatus(false);
+            $this->setMessage(__('Akeneo Files Attributes is empty'));
+
+            return;
+        }
+
+        $attributesMapped = array_unique($attributesMapped);
+
+        /** @var string $table */
+        $table = $this->entitiesHelper->getTable('catalog_product_entity');
+        /** @var string $columnIdentifier */
+        $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($table);
+
+        /** @var array $data */
+        $data = [
+            $columnIdentifier => '_entity_id',
+            'sku'             => 'identifier',
+        ];
+        /** @var string[] $attributeToImport */
+        $attributeToImport = [];
+
+        // Get all attributes to import
+        foreach ($attributesMapped as $attribute) {
+            /** @var bool $attributeUsed */
+            if ($connection->tableColumnExists($tmpTable, $attribute)) {
+                $data[$attribute] = $attribute;
+                $attributeToImport[] = $attribute;
+            }
+            // Get the scopable attributes
+            foreach ($stores as $suffix => $storeData) {
+                if ($connection->tableColumnExists($tmpTable, $attribute . '-' . $suffix)) {
+                    $data[$attribute . '-' . $suffix] = $attribute . '-' . $suffix;
+                    $attributeToImport[]              = $attribute . '-' . $suffix;
+                }
+            }
+        }
+
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($table);
+        if ($rowIdExists) {
+            $data[$columnIdentifier] = 'p.row_id';
+        }
+
+        /** @var Select $select */
+        $select = $connection->select()->from($tmpTable, $data);
+
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStaging($select, []);
+        }
+
+        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+        $query = $connection->query($select);
+
+        /** @var array $row */
+        while (($row = $query->fetch())) {
+            foreach ($attributeToImport as $attribute) {
+                if (!isset($row[$attribute])) {
+                    continue;
+                }
+
+                if (!$row[$attribute]) {
+                    continue;
+                }
+
+                // Unset the filepath if it was used to work with later verifications
+                unset($filePath);
+
+                /** @var array $media */
+                $file = $this->akeneoClient->getProductMediaFileApi()->get($row[$attribute]);
+                /** @var string $name */
+                $name = $this->entitiesHelper->formatMediaName(basename($file['code']));
+                /** @var string $filePath */
+                $filePath = $this->configHelper->getMediaFullPath($name, $this->configHelper->getFilesMediaDirectory());
+
+                // Don't import the file if it was already imported
+                if (!$this->configHelper->mediaFileExists($filePath)) {
+                    /** @var ResponseInterface $binary */
+                    $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$attribute]);
+                    $this->configHelper->saveMediaFile($filePath, $binary);
+                }
+
+                // Change the Akeneo file path to Magento file path
+                $connection->update($tmpTable, [$attribute => $filePath], ['identifier = ?' => $row['sku']]);
+            }
         }
     }
 
@@ -1147,6 +1350,31 @@ class Product extends Import
         if ($connection->tableColumnExists($tmpTable, 'enabled')) {
             $values[0]['status'] = '_status';
         }
+
+        // Set products status
+        /** @var string $statusAttributeId */
+        $statusAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'status');
+        /** @var string $identifierColumn */
+        $identifierColumn = $this->entitiesHelper->getColumnIdentifier('catalog_product_entity_int');
+        /** @var string[] $columnsForStatus */
+        $columnsForStatus = ['entity_id' => 'a._entity_id', '_is_new' => 'a._is_new'];
+        $select           = $connection->select()->from(['a' => $tmpTable], $columnsForStatus)->joinInner(
+            ['b' => $this->entitiesHelper->getTable('catalog_product_entity_int')],
+            'a._entity_id = b.' . $identifierColumn
+        )->where('a._is_new = ?', 0)->where('a._status = ?', 1)->where('b.attribute_id = ?', $statusAttributeId);
+        $oldStatus        = $connection->query($select);
+        while (($row = $oldStatus->fetch())) {
+            $valuesToInsert = [
+                '_status' => $row['value'],
+            ];
+            $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['entity_id']]);
+        }
+
+        $connection->update(
+            $tmpTable,
+            ['_status' => $this->configHelper->getProductActivation()],
+            ['_is_new = ?' => 1, '_status = ?' => 1]
+        );
 
         /** @var mixed[] $taxClasses */
         $taxClasses = $this->configHelper->getProductTaxClasses();
@@ -1253,6 +1481,19 @@ class Product extends Import
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
 
+        /** @var string $productEntityTable */
+        $productEntityTable = $this->entitiesHelper->getTable('catalog_product_entity');
+        /** @var string $eavAttrOptionTable */
+        $eavAttrOptionTable = $this->entitiesHelper->getTable('eav_attribute_option');
+        /** @var string $productSuperAttrTable */
+        $productSuperAttrTable = $this->entitiesHelper->getTable('catalog_product_super_attribute');
+        /** @var string $productSuperAttrLabelTable */
+        $productSuperAttrLabelTable = $this->entitiesHelper->getTable('catalog_product_super_attribute_label');
+        /** @var string $productRelationTable */
+        $productRelationTable = $this->entitiesHelper->getTable('catalog_product_relation');
+        /** @var string $productSuperLinkTable */
+        $productSuperLinkTable = $this->entitiesHelper->getTable('catalog_product_super_link');
+
         /** @var string|null $groupColumn */
         $groupColumn = null;
         if ($connection->tableColumnExists($tmpTable, 'parent')) {
@@ -1269,9 +1510,22 @@ class Product extends Import
         }
 
         /** @var Select $configurableSelect */
-        $configurableSelect = $connection->select()->from($tmpTable, ['_entity_id', '_axis', '_children'])->where('_type_id = ?', 'configurable')->where('_axis IS NOT NULL')->where(
+        $configurableSelect = $connection->select()->from($tmpTable, ['_entity_id', '_axis', '_children'])->where(
+            '_type_id = ?',
+            'configurable'
+        )->where('_axis IS NOT NULL')->where(
             '_children IS NOT NULL'
         );
+
+        /** @var string $pKeyColumn */
+        $pKeyColumn = '_entity_id';
+
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productEntityTable);
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStaging($configurableSelect, ['p.row_id']);
+            $pKeyColumn = 'row_id';
+        }
 
         /** @var int $stepSize */
         $stepSize = self::CONFIGURABLE_INSERTION_MAX_SIZE;
@@ -1305,7 +1559,10 @@ class Product extends Import
 
                 /** @var bool $hasOptions */
                 $hasOptions = (bool)$connection->fetchOne(
-                    $connection->select()->from($this->entitiesHelper->getTable('eav_attribute_option'), [new Expr(1)])->where('attribute_id = ?', $id)->limit(1)
+                    $connection->select()
+                               ->from($eavAttrOptionTable, [new Expr(1)])
+                               ->where('attribute_id = ?', $id)
+                               ->limit(1)
                 );
 
                 if (!$hasOptions) {
@@ -1314,21 +1571,23 @@ class Product extends Import
 
                 /** @var array $values */
                 $values = [
-                    'product_id'   => $row['_entity_id'],
+                    'product_id'   => $row[$pKeyColumn],
                     'attribute_id' => $id,
                     'position'     => $position++,
                 ];
                 $connection->insertOnDuplicate(
-                    $this->entitiesHelper->getTable('catalog_product_super_attribute'),
+                    $productSuperAttrTable,
                     $values,
                     []
                 );
 
                 /** @var string $superAttributeId */
                 $superAttributeId = $connection->fetchOne(
-                    $connection->select()->from($this->entitiesHelper->getTable('catalog_product_super_attribute'))->where('attribute_id = ?', $id)->where('product_id = ?', $row['_entity_id'])->limit(
-                        1
-                    )
+                    $connection->select()
+                               ->from($productSuperAttrTable)
+                               ->where('attribute_id = ?', $id)
+                               ->where('product_id = ?', $row[$pKeyColumn])
+                               ->limit(1)
                 );
 
                 /**
@@ -1350,7 +1609,10 @@ class Product extends Import
                 foreach ($children as $child) {
                     /** @var int $childId */
                     $childId = (int)$connection->fetchOne(
-                        $connection->select()->from($this->entitiesHelper->getTable('catalog_product_entity'), ['entity_id'])->where('sku = ?', $child)->limit(1)
+                        $connection->select()
+                                   ->from($productEntityTable, ['entity_id'])
+                                   ->where('sku = ?', $child)
+                                   ->limit(1)
                     );
 
                     if (!$childId) {
@@ -1358,34 +1620,20 @@ class Product extends Import
                     }
 
                     $valuesRelations[] = [
-                        'parent_id' => $row['_entity_id'],
+                        'parent_id' => $row[$pKeyColumn],
                         'child_id'  => $childId,
                     ];
 
                     $valuesSuperLink[] = [
                         'product_id' => $childId,
-                        'parent_id'  => $row['_entity_id'],
+                        'parent_id'  => $row[$pKeyColumn],
                     ];
                 }
 
                 if (count($valuesSuperLink) > $stepSize) {
-                    $connection->insertOnDuplicate(
-                        $this->entitiesHelper->getTable('catalog_product_super_attribute_label'),
-                        $valuesLabels,
-                        []
-                    );
-
-                    $connection->insertOnDuplicate(
-                        $this->entitiesHelper->getTable('catalog_product_relation'),
-                        $valuesRelations,
-                        []
-                    );
-
-                    $connection->insertOnDuplicate(
-                        $this->entitiesHelper->getTable('catalog_product_super_link'),
-                        $valuesSuperLink,
-                        []
-                    );
+                    $connection->insertOnDuplicate($productSuperAttrLabelTable, $valuesLabels, []);
+                    $connection->insertOnDuplicate($productRelationTable, $valuesRelations, []);
+                    $connection->insertOnDuplicate($productSuperLinkTable, $valuesSuperLink, []);
 
                     $valuesLabels    = [];
                     $valuesRelations = [];
@@ -1395,23 +1643,9 @@ class Product extends Import
         }
 
         if (count($valuesSuperLink) > 0) {
-            $connection->insertOnDuplicate(
-                $this->entitiesHelper->getTable('catalog_product_super_attribute_label'),
-                $valuesLabels,
-                []
-            );
-
-            $connection->insertOnDuplicate(
-                $this->entitiesHelper->getTable('catalog_product_relation'),
-                $valuesRelations,
-                []
-            );
-
-            $connection->insertOnDuplicate(
-                $this->entitiesHelper->getTable('catalog_product_super_link'),
-                $valuesSuperLink,
-                []
-            );
+            $connection->insertOnDuplicate($productSuperAttrLabelTable, $valuesLabels, []);
+            $connection->insertOnDuplicate($productRelationTable, $valuesRelations, []);
+            $connection->insertOnDuplicate($productSuperLinkTable, $valuesSuperLink, []);
         }
     }
 
@@ -1435,7 +1669,7 @@ class Product extends Import
                 /** @var string[] $options */
                 $options = $attribute->getSource()->getAllOptions();
                 /** @var array $websites */
-                $websites      = $this->storeHelper->getStores('website_code');
+                $websites = $this->storeHelper->getStores('website_code');
                 /** @var string[] $optionMapping */
                 $optionMapping = [];
                 /** @var array $apiAttribute */
@@ -1457,7 +1691,7 @@ class Product extends Import
                                  */
                                 foreach ($websites as $websiteCode => $affected) {
                                     if ($optionApiAttribute['code'] == $websiteCode) {
-                                        if (isset($affected[0]['website_id'])){
+                                        if (isset($affected[0]['website_id'])) {
                                             $websiteMatch  = true;
                                             $optionMapping += [$option['value'] => $affected[0]['website_id']];
                                         }
@@ -1488,21 +1722,20 @@ class Product extends Import
                     $query = $connection->query($select);
                     /** @var array $row */
                     while (($row = $query->fetch())) {
+                        /** @var Select $deleteSelect */
+                        $deleteSelect = $connection->select()->from(
+                            $this->entitiesHelper->getTable('catalog_product_website')
+                        )->where('product_id = ?', $row['entity_id']);
+
+                        $connection->query(
+                            $connection->deleteFromSelect(
+                                $deleteSelect,
+                                $this->entitiesHelper->getTable('catalog_product_website')
+                            )
+                        );
                         /** @var string[] $associatedWebsites */
                         $associatedWebsites = $row['associated_website'];
                         if ($associatedWebsites != null) {
-                            /** @var Select $deleteSelect */
-                            $deleteSelect = $connection->select()->from(
-                                $this->entitiesHelper->getTable('catalog_product_website')
-                            )->where('product_id = ?', $row['entity_id']);
-
-                            $connection->query(
-                                $connection->deleteFromSelect(
-                                    $deleteSelect,
-                                    $this->entitiesHelper->getTable('catalog_product_website')
-                                )
-                            );
-
                             $associatedWebsites = explode(',', $associatedWebsites);
                             /** @var string $associatedWebsite */
                             foreach ($associatedWebsites as $associatedWebsite) {
@@ -1537,16 +1770,29 @@ class Product extends Import
 
                                 if ($websiteSet === false) {
                                     $optionLabel = $attribute->getSource()->getOptionText($associatedWebsite);
-                                    $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.', $row['identifier'], $optionLabel));
+                                    $this->setAdditionalMessage(
+                                        __(
+                                            'Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.',
+                                            $row['identifier'],
+                                            $optionLabel
+                                        )
+                                    );
                                 }
                             }
                         } else {
-                            $this->setAdditionalMessage( __('Warning: The product with Akeneo id %1 has no associated website in the custom attribute.', $row['identifier']));
+                            $this->setAdditionalMessage(
+                                __(
+                                    'Warning: The product with Akeneo id %1 has no associated website in the custom attribute.',
+                                    $row['identifier']
+                                )
+                            );
                         }
                     }
                 }
             } else {
-                $this->setAdditionalMessage(__('Warning: The website attribute code given does not match any Magento attribute.'));
+                $this->setAdditionalMessage(
+                    __('Warning: The website attribute code given does not match any Magento attribute.')
+                );
             }
         } else {
             /** @var array $websites */
@@ -1601,18 +1847,21 @@ class Product extends Import
         }
 
         /** @var Select $select */
-        $select = $connection->select()->from(['c' => $this->entitiesHelper->getTable('akeneo_connector_entities')], [])->joinInner(
-            ['p' => $tmpTable],
-            'FIND_IN_SET(`c`.`code`, `p`.`categories`) AND `c`.`import` = "category"',
-            [
-                'category_id' => 'c.entity_id',
-                'product_id'  => 'p._entity_id',
-            ]
-        )->joinInner(
-            ['e' => $this->entitiesHelper->getTable('catalog_category_entity')],
-            'c.entity_id = e.entity_id',
-            []
-        );
+        $select = $connection->select()
+            ->from(['c' => $this->entitiesHelper->getTable('akeneo_connector_entities')], [])
+            ->joinInner(
+                ['p' => $tmpTable],
+                'FIND_IN_SET(`c`.`code`, `p`.`categories`) AND `c`.`import` = "category"',
+                [
+                    'category_id' => 'c.entity_id',
+                    'product_id'  => 'p._entity_id',
+                ]
+            )
+            ->joinInner(
+                ['e' => $this->entitiesHelper->getTable('catalog_category_entity')],
+                'c.entity_id = e.entity_id',
+                []
+            );
 
         $connection->query(
             $connection->insertFromSelect(
@@ -1624,7 +1873,10 @@ class Product extends Import
         );
 
         /** @var Select $selectToDelete */
-        $selectToDelete = $connection->select()->from(['c' => $this->entitiesHelper->getTable('akeneo_connector_entities')], [])->joinInner(
+        $selectToDelete = $connection->select()->from(
+            ['c' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
+            []
+        )->joinInner(
             ['p' => $tmpTable],
             '!FIND_IN_SET(`c`.`code`, `p`.`categories`) AND `c`.`import` = "category"',
             [
@@ -1715,36 +1967,65 @@ class Product extends Import
             /** @var string $associationName */
             foreach ($associationNames as $associationName) {
                 if (!empty($associationName) && $connection->tableColumnExists($tmpTable, $associationName)) {
-                    $related[$linkType][] = sprintf('`p`.`%s`', $associationName);
+                    $related[$linkType][] = sprintf('`d`.`%s`', $associationName);
                 }
             }
         }
+        /** @var array $values */
+        $values = ['product_id' => '_entity_id'];
+
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productsTable);
+        if ($rowIdExists) {
+            $values['product_id'] = 'p.row_id';
+        }
 
         /** @var \Magento\Framework\DB\Select $productIds */
-        $productIds = $connection->select()->from($tmpTable, ['product_id' => '_entity_id']);
+        $productIds = $connection->select()->from($tmpTable, $values);
+
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStaging($productIds, []);
+        }
 
         /**
          * @var int      $typeId
          * @var string[] $columns
          */
         foreach ($related as $typeId => $columns) {
+            /** @var mixed[] $columsToSelect */
+            $columsToSelect = [
+                'product_id'        => 'd._entity_id',
+                'linked_product_id' => 'c.entity_id',
+                'link_type_id'      => new Expr($typeId),
+            ];
+            if ($rowIdExists) {
+                $columsToSelect = [
+                    'product_id'        => 'p.row_id',
+                    'linked_product_id' => 'c.entity_id',
+                    'link_type_id'      => new Expr($typeId),
+                ];
+            }
             /** @var string $concat */
             $concat = sprintf('CONCAT_WS(",", %s)', implode(', ', $columns));
             /** @var \Magento\Framework\DB\Select $select */
             $select = $connection->select()->from(['c' => $entitiesTable], [])->joinInner(
-                ['p' => $tmpTable],
-                sprintf('FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"', $concat, $this->getCode()),
-                [
-                    'product_id'        => 'p._entity_id',
-                    'linked_product_id' => 'c.entity_id',
-                    'link_type_id'      => new Expr($typeId),
-                ]
-            )->joinInner(['e' => $productsTable], sprintf('c.entity_id = e.%s', $columnIdentifier), []);
+                ['d' => $tmpTable],
+                sprintf('FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"', $concat, $this->getCode()),$columsToSelect);
+
+            if ($rowIdExists) {
+                $this->entities->addJoinForContentStaging($select, []);
+            } else {
+                $select->joinInner(['e' => $productsTable], sprintf('c.entity_id = e.%s', $columnIdentifier), []);
+            }
 
             /* Remove old link */
             $connection->delete(
                 $linkTable,
-                ['(product_id, linked_product_id, link_type_id) NOT IN (?)' => $select, 'link_type_id = ?' => $typeId, 'product_id IN (?)' => $productIds]
+                [
+                    '(product_id, linked_product_id, link_type_id) NOT IN (?)' => $select,
+                    'link_type_id = ?'                                         => $typeId,
+                    'product_id IN (?)'                                        => $productIds,
+                ]
             );
 
             /* Insert new link */
@@ -1759,11 +2040,16 @@ class Product extends Import
 
             /* Insert position */
             $attributeId = $connection->fetchOne(
-                $connection->select()->from($linkAttributeTable, ['product_link_attribute_id'])->where('product_link_attribute_code = ?', ProductLink::KEY_POSITION)->where('link_type_id = ?', $typeId)
+                $connection->select()->from($linkAttributeTable, ['product_link_attribute_id'])->where(
+                    'product_link_attribute_code = ?',
+                    ProductLink::KEY_POSITION
+                )->where('link_type_id = ?', $typeId)
             );
 
             if ($attributeId) {
-                $select = $connection->select()->from($linkTable, [new Expr($attributeId), 'link_id', 'link_id'])->where('link_type_id = ?', $typeId);
+                $select = $connection->select()
+                    ->from($linkTable, [new Expr($attributeId), 'link_id', 'link_id'])
+                    ->where('link_type_id = ?', $typeId);
 
                 $connection->query(
                     $connection->insertFromSelect(
@@ -1842,6 +2128,7 @@ class Product extends Import
                         'entity_id' => '_entity_id',
                         'url_key'   => 'url_key-' . $local,
                         'store_id'  => new Expr($store['store_id']),
+                        'visibility' => '_visibility',
                     ]
                 );
 
@@ -1857,7 +2144,7 @@ class Product extends Import
                     /** @var string $urlPath */
                     $urlPath = $this->productUrlPathGenerator->getUrlPath($product);
 
-                    if (!$urlPath) {
+                    if (!$urlPath || $row['visibility'] < 2) {
                         continue;
                     }
 
@@ -1899,7 +2186,8 @@ class Product extends Import
                             );
                             $paths[$requestPath] = [
                                 'request_path' => $requestPath,
-                                'target_path'  => 'catalog/product/view/id/' . $product->getEntityId() . '/category/' . $category->getId(),
+                                'target_path'  => 'catalog/product/view/id/' . $product->getEntityId(
+                                    ) . '/category/' . $category->getId(),
                                 'metadata'     => '{"category_id":"' . $category->getId() . '"}',
                                 'category_id'  => $category->getId(),
                             ];
@@ -1916,7 +2204,8 @@ class Product extends Import
                                 }
                                 $paths[$requestPath] = [
                                     'request_path' => $requestPath,
-                                    'target_path'  => 'catalog/product/view/id/' . $product->getEntityId() . '/category/' . $parent->getId(),
+                                    'target_path'  => 'catalog/product/view/id/' . $product->getEntityId(
+                                        ) . '/category/' . $parent->getId(),
                                     'metadata'     => '{"category_id":"' . $parent->getId() . '"}',
                                     'category_id'  => $parent->getId(),
                                 ];
@@ -1937,10 +2226,16 @@ class Product extends Import
 
                         /** @var string|null $rewriteId */
                         $rewriteId = $connection->fetchOne(
-                            $connection->select()->from($this->entitiesHelper->getTable('url_rewrite'), ['url_rewrite_id'])->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)->where(
+                            $connection->select()->from(
+                                $this->entitiesHelper->getTable('url_rewrite'),
+                                ['url_rewrite_id']
+                            )->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)->where(
                                 'target_path = ?',
                                 $targetPath
-                            )->where('entity_id = ?', $product->getEntityId())->where('store_id = ?', $product->getStoreId())
+                            )->where('entity_id = ?', $product->getEntityId())->where(
+                                'store_id = ?',
+                                $product->getStoreId()
+                            )
                         );
 
                         if ($rewriteId) {
@@ -1971,12 +2266,16 @@ class Product extends Import
                             if ($isCategoryUsedInProductUrl && $path['category_id']) {
                                 /** @var int $rewriteId */
                                 $rewriteId = $connection->fetchOne(
-                                    $connection->select()
-                                        ->from($this->entitiesHelper->getTable('url_rewrite'), ['url_rewrite_id'])
-                                        ->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)
-                                        ->where('target_path = ?', $targetPath)
-                                        ->where('entity_id = ?', $product->getEntityId())
-                                        ->where('store_id = ?', $product->getStoreId())
+                                    $connection->select()->from(
+                                        $this->entitiesHelper->getTable('url_rewrite'),
+                                        ['url_rewrite_id']
+                                    )->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)->where(
+                                        'target_path = ?',
+                                        $targetPath
+                                    )->where('entity_id = ?', $product->getEntityId())->where(
+                                        'store_id = ?',
+                                        $product->getStoreId()
+                                    )
                                 );
                             }
                         }
@@ -2049,8 +2348,18 @@ class Product extends Import
             $data[$image['attribute']] = $image['attribute'];
         }
 
-        /** @var \Magento\Framework\DB\Select $select */
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($table);
+        if ($rowIdExists) {
+            $data[$columnIdentifier] = 'p.row_id';
+        }
+
+        /** @var Select $select */
         $select = $connection->select()->from($tmpTable, $data);
+
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStaging($select, []);
+        }
 
         /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
         $query = $connection->query($select);
@@ -2083,10 +2392,13 @@ class Product extends Import
                 $media = $this->akeneoClient->getProductMediaFileApi()->get($row[$image['attribute']]);
                 /** @var string $name */
                 $name = $this->entitiesHelper->formatMediaName(basename($media['code']));
+                /** @var string $filePath */
+                $filePath = $this->configHelper->getMediaFullPath($name);
 
                 if (!$this->configHelper->mediaFileExists($name)) {
+                    /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image['attribute']]);
-                    $this->configHelper->saveMediaFile($name, $binary);
+                    $this->configHelper->saveMediaFile($filePath, $binary);
                 }
 
                 /** @var string $file */

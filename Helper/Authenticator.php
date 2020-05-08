@@ -3,8 +3,6 @@
 namespace Akeneo\Connector\Helper;
 
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
-use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\App\Helper\Context;
 use Akeneo\Pim\ApiClient\AkeneoPimClientBuilder;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Http\Adapter\Guzzle6\Client;
@@ -21,7 +19,7 @@ use Http\Message\MessageFactory\GuzzleMessageFactory;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Authenticator extends AbstractHelper
+class Authenticator
 {
     /**
      * This variable contains a ConfigHelper
@@ -33,15 +31,11 @@ class Authenticator extends AbstractHelper
     /**
      * Authenticator constructor
      *
-     * @param Context $context
      * @param ConfigHelper $configHelper
      */
     public function __construct(
-        Context $context,
         ConfigHelper $configHelper
     ) {
-        parent::__construct($context);
-
         $this->configHelper = $configHelper;
     }
 

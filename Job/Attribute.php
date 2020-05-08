@@ -18,6 +18,7 @@ use Akeneo\Connector\Helper\Import\Attribute as AttributeHelper;
 use Akeneo\Connector\Helper\Import\Entities as EntitiesHelper;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
+use Akeneo\Connector\Job\Import;
 use \Zend_Db_Expr as Expr;
 
 /**
@@ -533,8 +534,7 @@ class Attribute extends Import
                 $this->getEntityTypeId(),
                 $row['_entity_id'],
                 $data,
-                null,
-                0
+                null
             );
 
             /* Add Attribute to group and family */

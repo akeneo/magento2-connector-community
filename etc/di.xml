@@ -16,13 +16,13 @@
     <type name="Akeneo\Connector\Job\ImportRepository">
         <arguments>
             <argument name="data" xsi:type="array">
-                <item name="category" xsi:type="string">\Akeneo\Connector\Job\Category</item>
-                <item name="family" xsi:type="string">\Akeneo\Connector\Job\Family</item>
-                <item name="attribute" xsi:type="string">\Akeneo\Connector\Job\Attribute</item>
-                <item name="option" xsi:type="string">\Akeneo\Connector\Job\Option</item>
-                <item name="product_model" xsi:type="string">\Akeneo\Connector\Job\ProductModel</item>
-                <item name="family_variant" xsi:type="string">\Akeneo\Connector\Job\FamilyVariant</item>
-                <item name="product" xsi:type="string">\Akeneo\Connector\Job\Product</item>
+                <item name="category" xsi:type="object">\Akeneo\Connector\Job\Category</item>
+                <item name="family" xsi:type="object">\Akeneo\Connector\Job\Family</item>
+                <item name="attribute" xsi:type="object">\Akeneo\Connector\Job\Attribute</item>
+                <item name="option" xsi:type="object">\Akeneo\Connector\Job\Option</item>
+                <item name="product_model" xsi:type="object">\Akeneo\Connector\Job\ProductModel</item>
+                <item name="family_variant" xsi:type="object">\Akeneo\Connector\Job\FamilyVariant</item>
+                <item name="product" xsi:type="object">\Akeneo\Connector\Job\Product</item>
             </argument>
         </arguments>
     </type>
@@ -307,12 +307,12 @@
                         <item name="comment" xsi:type="string">Add required data</item>
                     </item>
                     <item name="4" xsi:type="array">
-                        <item name="method" xsi:type="string">createMetricsOptions</item>
-                        <item name="comment" xsi:type="string">Create Options for Variant Metrics Attributes</item>
-                    </item>
-                    <item name="5" xsi:type="array">
                         <item name="method" xsi:type="string">createConfigurable</item>
                         <item name="comment" xsi:type="string">Create configurables</item>
+                    </item>
+                    <item name="5" xsi:type="array">
+                        <item name="method" xsi:type="string">createMetricsOptions</item>
+                        <item name="comment" xsi:type="string">Create Options for Variant Metrics Attributes</item>
                     </item>
                     <item name="6" xsi:type="array">
                         <item name="method" xsi:type="string">checkEntities</item>
@@ -335,42 +335,46 @@
                         <item name="comment" xsi:type="string">Create or update product entities</item>
                     </item>
                     <item name="11" xsi:type="array">
+                        <item name="method" xsi:type="string">importFiles</item>
+                        <item name="comment" xsi:type="string">Import file attributes</item>
+                    </item>
+                    <item name="12" xsi:type="array">
                         <item name="method" xsi:type="string">setValues</item>
                         <item name="comment" xsi:type="string">Set values to attributes</item>
                     </item>
-                    <item name="12" xsi:type="array">
+                    <item name="13" xsi:type="array">
                         <item name="method" xsi:type="string">linkConfigurable</item>
                         <item name="comment" xsi:type="string">Link configurable with children</item>
                     </item>
-                    <item name="13" xsi:type="array">
+                    <item name="14" xsi:type="array">
                         <item name="method" xsi:type="string">setWebsites</item>
                         <item name="comment" xsi:type="string">Set products to websites</item>
                     </item>
-                    <item name="14" xsi:type="array">
+                    <item name="15" xsi:type="array">
                         <item name="method" xsi:type="string">setCategories</item>
                         <item name="comment" xsi:type="string">Set products to categories</item>
                     </item>
-                    <item name="15" xsi:type="array">
+                    <item name="16" xsi:type="array">
                         <item name="method" xsi:type="string">initStock</item>
                         <item name="comment" xsi:type="string">Init stock</item>
                     </item>
-                    <item name="16" xsi:type="array">
+                    <item name="17" xsi:type="array">
                         <item name="method" xsi:type="string">setRelated</item>
                         <item name="comment" xsi:type="string">Update related, up-sell and cross-sell products</item>
                     </item>
-                    <item name="17" xsi:type="array">
+                    <item name="18" xsi:type="array">
                         <item name="method" xsi:type="string">setUrlRewrite</item>
                         <item name="comment" xsi:type="string">Set Url Rewrite</item>
                     </item>
-                    <item name="18" xsi:type="array">
-                        <item name="method" xsi:type="string">importMedia</item>
-                        <item name="comment" xsi:type="string">Import media files</item>
-                    </item>
                     <item name="19" xsi:type="array">
+                        <item name="method" xsi:type="string">importMedia</item>
+                        <item name="comment" xsi:type="string">Import image attributes</item>
+                    </item>
+                    <item name="20" xsi:type="array">
                         <item name="method" xsi:type="string">dropTable</item>
                         <item name="comment" xsi:type="string">Drop temporary table</item>
                     </item>
-                    <item name="20" xsi:type="array">
+                    <item name="21" xsi:type="array">
                         <item name="method" xsi:type="string">cleanCache</item>
                         <item name="comment" xsi:type="string">Clean cache</item>
                     </item>

@@ -63,7 +63,7 @@ class Locales implements ArrayInterface
      *
      * @return ResourceCursorInterface|array
      */
-    private function getLocales()
+    public function getLocales()
     {
         try {
             /** @var AkeneoPimClientInterface $akeneoClient */

@@ -94,7 +94,7 @@ class Test extends Field
      *
      * @return \Magento\Framework\Phrase
      */
-    private function getLabel()
+    public function getLabel()
     {
         return  __('Test');
     }
