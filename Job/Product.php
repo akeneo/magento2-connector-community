@@ -14,6 +14,7 @@ use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Job\Option as JobOption;
 use Akeneo\Connector\Job\Import as JobImport;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
+use Akeneo\Connector\Model\Source\Filters\Mode;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Catalog\Model\Category as CategoryModel;
@@ -77,11 +78,18 @@ class Product extends JobImport
      */
     protected $entities;
     /**
+     * This variable contains a string
+     *
+     * @var string $step
+     */
+    protected $family = null;
+    /**
      * This variable contains a string value
      *
      * @var string $name
      */
     protected $name = 'Product';
+    
     /**
      * Akeneo default association types, reformatted as column names
      *
@@ -306,8 +314,30 @@ class Product extends JobImport
             return;
         }
 
+        // Stop the import if the family is not imported
+        if ($this->getFamily()) {
+            /** @var AdapterInterface $connection */
+            $connection = $this->entitiesHelper->getConnection();
+            /** @var string $connectorEntitiesTable */
+            $connectorEntitiesTable = $this->entities->getTable($this->entities::TABLE_NAME);
+            /** @var bool $isFamilyImported */
+            $isFamilyImported = (bool)$connection->fetchOne(
+                $connection->select()
+                    ->from($connectorEntitiesTable, ['code'])
+                    ->where('code = ?', $this->getFamily())
+                    ->limit(1)
+            );
+
+            if (!$isFamilyImported) {
+                $this->setMessage(__('The family %1 is not imported yet, please run Family import.', $this->getFamily()));
+                $this->stop(true);
+
+                return;
+            }
+        }
+
         /** @var mixed[] $filters */
-        $filters = $this->getFilters();
+        $filters = $this->getFilters($this->getFamily());
         $filters = reset($filters);
         /** @var PageInterface $products */
         $products = $this->akeneoClient->getProductApi()->listPerPage(1, false, $filters);
@@ -315,13 +345,17 @@ class Product extends JobImport
         $products = $products->getItems();
         $product  = reset($products);
         if (empty($products)) {
-            $this->setMessage(__('No results from Akeneo'));
+            $this->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()));
             $this->stop(true);
 
             return;
         }
 
         $this->entitiesHelper->createTmpTableFromApi($product, $this->getCode());
+
+        /** @var string $message */
+        $message = __('Family imported in this batch: %1', $this->getFamily());
+        $this->setMessage($message);
     }
 
     /**
@@ -336,7 +370,7 @@ class Product extends JobImport
         /** @var int $index */
         $index = 0;
         /** @var mixed[] $filters */
-        $filters = $this->getFilters();
+        $filters = $this->getFilters($this->getFamily());
         /** @var mixed[] $metricsConcatSettings */
         $metricsConcatSettings = $this->configHelper->getMetricsColumns(null, true);
         /** @var string[] $metricSymbols */
@@ -2501,19 +2535,97 @@ class Product extends JobImport
      *
      * @return mixed[]
      */
-    protected function getFilters()
+    protected function getFilters($family = null)
     {
-        if (empty($this->filters)) {
-            /** @var mixed[] $filters */
-            $filters = $this->productFilters->getFilters();
-            if (array_key_exists('error', $filters)) {
-                $this->setMessage($filters['error']);
-                $this->stop(true);
-            }
-
-            $this->filters = $filters;
+        /** @var mixed[] $filters */
+        $filters = $this->productFilters->getFilters($family);
+        if (array_key_exists('error', $filters)) {
+            $this->setMessage($filters['error']);
+            $this->stop(true);
         }
 
+        $this->filters = $filters;
+
         return $this->filters;
+    }
+
+    /**
+     * Get the families to imported based on the config
+     *
+     * @return array
+     */
+    public function getFamiliesToImport()
+    {
+        if (!$this->akeneoClient) {
+            $this->akeneoClient = $this->getAkeneoClient();
+        }
+        /** @var string[] $families */
+        $families = [];
+        /** @var string[] $apiFamilies */
+        $apiFamilies = $this->akeneoClient->getFamilyApi()->all();
+        /** @var mixed[] $family */
+        foreach ($apiFamilies as $family) {
+            if (!isset($family['code'])) {
+                continue;
+            }
+            $families[] = $family['code'];
+        }
+        /** @var string $mode */
+        $mode = $this->configHelper->getFilterMode();
+        if ($mode == Mode::ADVANCED) {
+            /** @var string[] $filters */
+            $filters = $this->configHelper->getAdvancedFilters();
+            if (isset($advancedFilters['search']['family'])) {
+                foreach ($advancedFilters['search']['family'] as $key => $familyFilter) {
+                    if (isset($familyFilter['operator']) && $familyFilter['operator'] == 'NOT IN') {
+                        foreach ($familyFilter['value'] as $familyToRemove) {
+                            if (($familyKey = array_search($familyFilter, $families)) !== false) {
+                                unset($families[$familyKey]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if ($mode == Mode::STANDARD) {
+            /** @var mixed $filter */
+            $familiesFilter = $this->configHelper->getFamiliesFilter();
+            if ($familiesFilter) {
+                $familiesFilter = explode(',', $familiesFilter);
+                foreach ($familiesFilter as $familyFilter) {
+                    if (($key = array_search($familyFilter, $families)) !== false) {
+                        unset($families[$key]);
+                    }
+                }
+            }
+        }
+
+        $families = array_values($families);
+
+        return $families;
+    }
+
+    /**
+     * Set current family
+     *
+     * @param string $family
+     *
+     * @return Import
+     */
+    public function setFamily($family)
+    {
+        $this->family = $family;
+
+        return $this;
+    }
+
+    /**
+     * Get current family
+     *
+     * @return string
+     */
+    public function getFamily()
+    {
+        return $this->family;
     }
 }
