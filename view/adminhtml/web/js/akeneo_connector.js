@@ -14,18 +14,26 @@ define(['jquery'], function ($) {
             type: null,
             step: 0,
             runUrl: null,
+            runProductUrl: null,
             console: null,
-            identifier: null
+            identifier: null,
+            currentFamily: null,
+            familyCount: 0,
+            families: null
         },
 
-        init: function (url, console) {
+        init: function (url, urlProduct, console) {
             this.options.runUrl = url;
+            this.options.runProductUrl = urlProduct;
             this.console = $(console);
         },
 
         type: function (type, object) {
             this.options.type = type;
             this.step('type', $(object));
+            this.options.currentFamily = null;
+            this.options.familyCount = null;
+            this.options.families = null;
         },
 
         step: function (type, object) {
@@ -50,8 +58,32 @@ define(['jquery'], function ($) {
             object.addClass('active');
         },
 
-        run: function () {
+        runProduct: function () {
             var akeneoConnector = this;
+            $.ajax({
+                url: akeneoConnector.options.runProductUrl,
+                type: 'post',
+                context: this,
+                data: {
+                    'identifier': akeneoConnector.options.identifier
+                },
+                success: function (response) {
+                    akeneoConnector.options.families = response;
+                    akeneoConnector.run(akeneoConnector);
+                }
+            });
+        },
+
+        run: function (context = null) {
+            var akeneoConnector = this;
+
+            if (context != null) {
+                var akeneoConnector = context;
+            }
+
+            if (akeneoConnector.options.currentFamily == null && akeneoConnector.options.families != null && akeneoConnector.options.families.length > 1) {
+                akeneoConnector.options.currentFamily = akeneoConnector.options.families[0];
+            }
 
             akeneoConnector.disabledImport(true);
 
@@ -63,7 +95,8 @@ define(['jquery'], function ($) {
                     data: {
                         'code': akeneoConnector.options.type,
                         'step': akeneoConnector.options.step,
-                        'identifier': akeneoConnector.options.identifier
+                        'identifier': akeneoConnector.options.identifier,
+                        'family': akeneoConnector.options.currentFamily
                     },
                     success: function (response) {
                         akeneoConnector.removeWaiting();
@@ -88,6 +121,17 @@ define(['jquery'], function ($) {
                             akeneoConnector.listElement(response.next, 'waiting');
                             akeneoConnector.options.step = akeneoConnector.options.step + 1;
                             akeneoConnector.run();
+                        }
+
+                        if (!response.continue && akeneoConnector.options.type == "product") {
+                            akeneoConnector.options.identifier = null;
+                            akeneoConnector.options.step = 0;
+                            akeneoConnector.options.familyCount++;
+
+                            if (akeneoConnector.options.families != null && akeneoConnector.options.families.hasOwnProperty(akeneoConnector.options.familyCount)) {
+                                akeneoConnector.options.currentFamily = akeneoConnector.options.families[akeneoConnector.options.familyCount];
+                                akeneoConnector.run();
+                            }
                         }
 
                         akeneoConnector.console.scrollTop(100000);

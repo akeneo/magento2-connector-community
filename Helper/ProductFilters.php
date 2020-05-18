@@ -72,9 +72,11 @@ class ProductFilters
     /**
      * Get the filters for the product API query
      *
+     * @param string|null $productFamily
+     *
      * @return mixed[]|string[]
      */
-    public function getFilters()
+    public function getFilters($productFamily = null)
     {
         /** @var mixed[] $mappedChannels */
         $mappedChannels = $this->configHelper->getMappedChannels();
@@ -91,12 +93,38 @@ class ProductFilters
         $filters = [];
         /** @var mixed[] $search */
         $search = [];
-
+        /** @var  $productFilterAdded */
+        $productFilterAdded = false;
         /** @var string $mode */
         $mode = $this->configHelper->getFilterMode();
         if ($mode == Mode::ADVANCED) {
             /** @var mixed[] $advancedFilters */
             $advancedFilters = $this->getAdvancedFilters();
+            // If product import gave a family, add it to the filter
+            if ($productFamily) {
+                if (isset($advancedFilters['search']['family'])) {
+                    /**
+                     * @var int      $key
+                     * @var string[] $familyFilter
+                     */
+                    foreach ($advancedFilters['search']['family'] as $key => $familyFilter) {
+                        if (isset($familyFilter['operator']) && $familyFilter['operator'] == 'IN') {
+                            $advancedFilters['search']['family'][$key]['value'][] = $productFamily;
+                            $productFilterAdded = true;
+
+                            break;
+                        }
+                    }
+                }
+
+                if (!$productFilterAdded) {
+                    /** @var string[] $familyFilter */
+                    $familyFilter = ['operator' => 'IN', 'value' => [$productFamily]];
+                    $advancedFilters['search']['family'][] = $familyFilter;
+                    $productFilterAdded = true;
+                }
+            }
+
             if (!empty($advancedFilters['scope'])) {
                 if (!in_array($advancedFilters['scope'], $mappedChannels)) {
                     /** @var string[] $error */
@@ -119,6 +147,13 @@ class ProductFilters
             $this->addFamiliesFilter();
             $this->addUpdatedFilter();
             $search = $this->searchBuilder->getFilters();
+        }
+
+        // If import product gave a family, add this family to the search
+        if ($productFamily && !$productFilterAdded) {
+            $familyFilter = ['operator' => 'IN', 'value' => [$productFamily]];
+            $search['family'][] = $familyFilter;
+            $productFilterAdded = true;
         }
 
         /** @var string $channel */

@@ -10,20 +10,19 @@ use Akeneo\Connector\Api\ImportRepositoryInterface;
 use Akeneo\Connector\Converter\ArrayToJsonResponseConverter;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Job\Import;
+use Akeneo\Connector\Job\Product as JobProduct;
 
 /**
- * Class Run
+ * Class RunProduct
  *
- * @category  Class
  * @package   Akeneo\Connector\Controller\Adminhtml\Import
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2020 Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Run extends Action
+class RunProduct extends Action
 {
-
     /**
      * This variable contains an OutputHelper
      *
@@ -42,26 +41,35 @@ class Run extends Action
      * @var ArrayToJsonResponseConverter $arrayToJsonResponseConverter
      */
     protected $arrayToJsonResponseConverter;
+    /**
+     * This variable contains a JobProduct
+     *
+     * @var JobProduct $jobProduct
+     */
+    protected $jobProduct;
 
     /**
      * Run constructor.
      *
-     * @param Context $context
-     * @param ImportRepositoryInterface $importRepository
-     * @param OutputHelper $output
+     * @param Context                      $context
+     * @param ImportRepositoryInterface    $importRepository
+     * @param OutputHelper                 $output
      * @param ArrayToJsonResponseConverter $arrayToJsonResponseConverter
+     * @param JobProduct                   $jobProduct
      */
     public function __construct(
         Context $context,
         ImportRepositoryInterface $importRepository,
         OutputHelper $output,
-        ArrayToJsonResponseConverter $arrayToJsonResponseConverter
+        ArrayToJsonResponseConverter $arrayToJsonResponseConverter,
+        JobProduct $jobProduct
     ) {
         parent::__construct($context);
 
         $this->outputHelper                 = $output;
         $this->importRepository             = $importRepository;
         $this->arrayToJsonResponseConverter = $arrayToJsonResponseConverter;
+        $this->jobProduct                   = $jobProduct;
     }
 
     /**
@@ -71,35 +79,9 @@ class Run extends Action
      */
     public function execute()
     {
-        /** @var RequestInterface $request */
-        $request = $this->getRequest();
-        /** @var int $step */
-        $step = (int)$request->getParam('step');
-        /** @var string $code */
-        $code = $request->getParam('code');
-        /** @var string $identifier */
-        $identifier = $request->getParam('identifier');
-        /** @var string $family */
-        $family = $request->getParam('family');
-        /** @var Import $import */
-        $import = $this->importRepository->getByCode($code);
-
-        if (!$import) {
-            /** @var array $response */
-            $response = $this->outputHelper->getNoImportFoundResponse();
-
-            return $this->arrayToJsonResponseConverter->convert($response);
-        }
-
-        $import->setIdentifier($identifier)->setStep($step)->setSetFromAdmin(true);
-
-        if ($family) {
-            $import->setFamily($family);
-        }
-        /** @var array $response */
-        $response = $import->execute();
-
-        return $this->arrayToJsonResponseConverter->convert($response);
+        /** @var string[] $families */
+        $families = $this->jobProduct->getFamiliesToImport();
+        return $this->arrayToJsonResponseConverter->convert($families);
     }
 
     /**
