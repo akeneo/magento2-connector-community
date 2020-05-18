@@ -145,17 +145,17 @@ class ProductModel extends Import
         $filters = $this->getFilters();
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPanigationSize();
+        /** @var string[] $attributeMetrics */
+        $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
+        /** @var mixed[] $metricsConcatSettings */
+        $metricsConcatSettings = $this->configHelper->getMetricsColumns(null, true);
+        /** @var string[] $metricSymbols */
+        $metricSymbols = $this->getMetricsSymbols();
+
         /** @var mixed[] $filter */
         foreach ($filters as $filter) {
             /** @var ResourceCursorInterface $productModels */
             $productModels = $this->akeneoClient->getProductModelApi()->all($paginationSize, $filter);
-
-            /** @var string[] $attributeMetrics */
-            $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
-            /** @var mixed[] $metricsConcatSettings */
-            $metricsConcatSettings = $this->configHelper->getMetricsColumns(null, true);
-            /** @var string[] $metricSymbols */
-            $metricSymbols = $this->getMetricsSymbols();
 
             /**
              * @var int   $index
