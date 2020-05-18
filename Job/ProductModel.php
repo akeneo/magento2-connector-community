@@ -143,69 +143,71 @@ class ProductModel extends Import
     {
         /** @var mixed[] $filters */
         $filters = $this->getFilters();
-        $filters = reset($filters);
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPanigationSize();
-        /** @var ResourceCursorInterface $productModels */
-        $productModels = $this->akeneoClient->getProductModelApi()->all($paginationSize, $filters);
+        /** @var mixed[] $filter */
+        foreach ($filters as $filter) {
+            /** @var ResourceCursorInterface $productModels */
+            $productModels = $this->akeneoClient->getProductModelApi()->all($paginationSize, $filter);
 
-        /** @var string[] $attributeMetrics */
-        $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
-        /** @var mixed[] $metricsConcatSettings */
-        $metricsConcatSettings = $this->configHelper->getMetricsColumns(null, true);
-        /** @var string[] $metricSymbols */
-        $metricSymbols = $this->getMetricsSymbols();
-
-        /**
-         * @var int   $index
-         * @var array $productModel
-         */
-        foreach ($productModels as $index => $productModel) {
-            foreach ($attributeMetrics as $attributeMetric) {
-                if (!isset($productModel['values'][$attributeMetric])) {
-                    continue;
-                }
-
-                foreach ($productModel['values'][$attributeMetric] as $key => $metric) {
-                    /** @var string|float $amount */
-                    $amount = $metric['data']['amount'];
-                    if ($amount != null) {
-                        $amount = floatval($amount);
-                    }
-
-                    $productModel['values'][$attributeMetric][$key]['data']['amount'] = $amount;
-                }
-            }
+            /** @var string[] $attributeMetrics */
+            $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
+            /** @var mixed[] $metricsConcatSettings */
+            $metricsConcatSettings = $this->configHelper->getMetricsColumns(null, true);
+            /** @var string[] $metricSymbols */
+            $metricSymbols = $this->getMetricsSymbols();
 
             /**
-             * @var mixed[] $metricsConcatSetting
+             * @var int   $index
+             * @var array $productModel
              */
-            foreach ($metricsConcatSettings as $metricsConcatSetting) {
-                if (!isset($productModel['values'][$metricsConcatSetting])) {
-                    continue;
-                }
-
-                /**
-                 * @var int     $key
-                 * @var mixed[] $metric
-                 */
-                foreach ($productModel['values'][$metricsConcatSetting] as $key => $metric) {
-                    /** @var string $unit */
-                    $unit = $metric['data']['unit'];
-                    /** @var string|false $symbol */
-                    $symbol = array_key_exists($unit, $metricSymbols);
-
-                    if (!$symbol) {
+            foreach ($productModels as $index => $productModel) {
+                foreach ($attributeMetrics as $attributeMetric) {
+                    if (!isset($productModel['values'][$attributeMetric])) {
                         continue;
                     }
 
-                    $productModel['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
-                }
-            }
+                    foreach ($productModel['values'][$attributeMetric] as $key => $metric) {
+                        /** @var string|float $amount */
+                        $amount = $metric['data']['amount'];
+                        if ($amount != null) {
+                            $amount = floatval($amount);
+                        }
 
-            $this->entitiesHelper->insertDataFromApi($productModel, $this->getCode());
+                        $productModel['values'][$attributeMetric][$key]['data']['amount'] = $amount;
+                    }
+                }
+
+                /**
+                 * @var mixed[] $metricsConcatSetting
+                 */
+                foreach ($metricsConcatSettings as $metricsConcatSetting) {
+                    if (!isset($productModel['values'][$metricsConcatSetting])) {
+                        continue;
+                    }
+
+                    /**
+                     * @var int     $key
+                     * @var mixed[] $metric
+                     */
+                    foreach ($productModel['values'][$metricsConcatSetting] as $key => $metric) {
+                        /** @var string $unit */
+                        $unit = $metric['data']['unit'];
+                        /** @var string|false $symbol */
+                        $symbol = array_key_exists($unit, $metricSymbols);
+
+                        if (!$symbol) {
+                            continue;
+                        }
+
+                        $productModel['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
+                    }
+                }
+
+                $this->entitiesHelper->insertDataFromApi($productModel, $this->getCode());
+            }
+            $index++;
         }
-        $index++;
         $this->setMessage(
             __('%1 line(s) found', $index)
         );

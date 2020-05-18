@@ -187,14 +187,11 @@ class ProductFilters
 
         /** @var mixed[] $filters */
         $filters = [];
-        /** @var mixed[] $search */
-        $search = [];
 
         /** @var string $channel */
         foreach ($mappedChannels as $channel) {
             /** @var string[] $filter */
             $filter = [
-                'search' => $search,
                 'scope'  => $channel,
             ];
 
