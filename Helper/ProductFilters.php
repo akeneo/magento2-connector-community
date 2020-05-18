@@ -201,6 +201,55 @@ class ProductFilters
         return $filters;
     }
 
+
+    /**
+     * Get the filters for the product model API query
+     *
+     * @return mixed[]|string[]
+     */
+    public function getModelFilters()
+    {
+        /** @var mixed[] $mappedChannels */
+        $mappedChannels = $this->configHelper->getMappedChannels();
+        if (empty($mappedChannels)) {
+            /** @var string[] $error */
+            $error = [
+                'error' => __('No website/channel mapped. Please check your configurations.'),
+            ];
+
+            return $error;
+        }
+
+        /** @var mixed[] $filters */
+        $filters = [];
+
+        /** @var string $channel */
+        foreach ($mappedChannels as $channel) {
+            /** @var string[] $filter */
+            $filter = [
+                'scope'  => $channel,
+            ];
+
+            /** @var string[] $locales */
+            $locales = $this->storeHelper->getChannelStoreLangs($channel);
+            if (!empty($locales)) {
+                /** @var string $locales */
+                $akeneoLocales = $this->localesHelper->getAkeneoLocales();
+                if (!empty($akeneoLocales)) {
+                    $locales = array_intersect($locales, $akeneoLocales);
+                }
+
+                /** @var string $locales */
+                $locales           = implode(',', $locales);
+                $filter['locales'] = $locales;
+            }
+
+            $filters[] = $filter;
+        }
+
+        return $filters;
+    }
+
     /**
      * Retrieve advanced filters config
      *
