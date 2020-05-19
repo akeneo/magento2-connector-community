@@ -2086,10 +2086,7 @@ class Product extends JobImport
         /** @var string $tableName */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var array $stores */
-        $stores = array_merge(
-            $this->storeHelper->getStores(['lang']), // en_US
-            $this->storeHelper->getStores(['lang', 'channel_code']) // en_US-channel
-        );
+        $stores = $this->storeHelper->getStores(['lang']);
         /** @var bool $isUrlKeyMapped */
         $isUrlKeyMapped = $this->configHelper->isUrlKeyMapped();
 
