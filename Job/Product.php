@@ -1907,26 +1907,30 @@ class Product extends JobImport
         );
 
         /** @var Select $selectToDelete */
-        $selectToDelete = $connection->select()->from(
-            ['c' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
-            []
-        )->joinInner(
-            ['p' => $tmpTable],
-            '!FIND_IN_SET(`c`.`code`, `p`.`categories`) AND `c`.`import` = "category"',
-            [
-                'category_id' => 'c.entity_id',
-                'product_id'  => 'p._entity_id',
-            ]
-        )->joinInner(
-            ['e' => $this->entitiesHelper->getTable('catalog_category_entity')],
-            'c.entity_id = e.entity_id',
-            []
-        );
+        $selectToDelete = $connection->select()
+            ->from($this->entitiesHelper->getTable('catalog_category_product'), [])
+            ->joinInner(
+                ['c' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
+                $this->entitiesHelper->getTable('catalog_category_product') . '.category_id = c.entity_id',
+                []
+            )
+            ->joinInner(
+                ['p' => $tmpTable],
+                $this->entitiesHelper->getTable('catalog_category_product').'.product_id = `p`.`_entity_id`',
+                [
+                    'category_id' => 'c.entity_id',
+                    'product_id'  => 'p._entity_id',
+                ]
+            )
+            ->joinInner(
+                ['e' => $this->entitiesHelper->getTable('catalog_category_entity')],
+                'c.entity_id = e.entity_id',
+                []
+            )
+            ->where('!FIND_IN_SET(`c`.`code`, `p`.`categories`) AND `c`.`import` = "category"');
 
-        $connection->delete(
-            $this->entitiesHelper->getTable('catalog_category_product'),
-            '(category_id, product_id) IN (' . $selectToDelete->assemble() . ')'
-        );
+        $delete = $connection->deleteFromSelect($selectToDelete, $this->entitiesHelper->getTable('catalog_category_product'));
+        $connection->query($delete);
     }
 
     /**
