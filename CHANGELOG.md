@@ -94,3 +94,7 @@
 * Fix metric value set to "0" when empty on Akeneo
 * Fix website association not deleted when website attribute value is empty for a product
 * Optimize deletion of akeneo_connector_product_model columns during product model import job
+
+### Version 100.4.6 :
+* Add product import job batching family after family (https://help.akeneo.com/magento2-connector/v100/articles/overview.html#product-import-process)
+* Optimize product model column number in temporary table by adding filter for API request on mapped channels and available locales
