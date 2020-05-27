@@ -164,6 +164,14 @@ class AkeneoConnectorImportCommand extends Command
         $productFamiliesToImport = [];
         if ($code == self::IMPORT_CODE_PRODUCT) {
             $productFamiliesToImport = $import->getFamiliesToImport();
+
+            if (!count($productFamiliesToImport)) {
+                $message = __('No family to import');
+                $this->displayError($message, $output);
+
+                return false;
+            }
+
             foreach ($productFamiliesToImport as $family) {
                 $this->runImport($import, $output, $family);
                 $import->setIdentifier(null);

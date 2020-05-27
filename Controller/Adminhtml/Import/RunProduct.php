@@ -81,6 +81,11 @@ class RunProduct extends Action
     {
         /** @var string[] $families */
         $families = $this->jobProduct->getFamiliesToImport();
+
+        if (!count($families)) {
+            $families['message'] = __('No family to import');
+        }
+
         return $this->arrayToJsonResponseConverter->convert($families);
     }
 
