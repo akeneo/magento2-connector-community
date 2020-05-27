@@ -68,8 +68,13 @@ define(['jquery'], function ($) {
                     'identifier': akeneoConnector.options.identifier
                 },
                 success: function (response) {
-                    akeneoConnector.options.families = response;
-                    akeneoConnector.run(akeneoConnector);
+                    if (response.message) {
+                        akeneoConnector.disabledImport(true);
+                        akeneoConnector.listElement(response.message, 'error');
+                    } else {
+                        akeneoConnector.options.families = response;
+                        akeneoConnector.run(akeneoConnector);
+                    }
                 }
             });
         },
@@ -81,7 +86,7 @@ define(['jquery'], function ($) {
                 var akeneoConnector = context;
             }
 
-            if (akeneoConnector.options.currentFamily == null && akeneoConnector.options.families != null && akeneoConnector.options.families.length > 1) {
+            if (akeneoConnector.options.currentFamily == null && akeneoConnector.options.families != null && akeneoConnector.options.families.length >= 1) {
                 akeneoConnector.options.currentFamily = akeneoConnector.options.families[0];
             }
 
