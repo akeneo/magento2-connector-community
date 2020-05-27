@@ -33,6 +33,12 @@ class AkeneoConnectorImportCommand extends Command
      */
     const IMPORT_CODE = 'code';
     /**
+     * This constant contains a string
+     *
+     * @var string IMPORT_CODE_PRODUCT
+     */
+    const IMPORT_CODE_PRODUCT = 'product';
+    /**
      * This variable contains a State
      *
      * @var State $appState
@@ -98,7 +104,6 @@ class AkeneoConnectorImportCommand extends Command
         }
     }
 
-
     /**
      * Check if multiple entities have been specified
      * in the command line
@@ -154,8 +159,48 @@ class AkeneoConnectorImportCommand extends Command
             return false;
         }
 
+        // If product import, run the import once per family
+        /** @var array $productFamiliesToImport */
+        $productFamiliesToImport = [];
+        if ($code == self::IMPORT_CODE_PRODUCT) {
+            $productFamiliesToImport = $import->getFamiliesToImport();
+
+            if (!count($productFamiliesToImport)) {
+                $message = __('No family to import');
+                $this->displayError($message, $output);
+
+                return false;
+            }
+
+            foreach ($productFamiliesToImport as $family) {
+                $this->runImport($import, $output, $family);
+                $import->setIdentifier(null);
+            }
+
+            return true;
+        }
+
+        // Run the import normaly
+        $this->runImport($import, $output);
+
+        return true;
+    }
+
+    /**
+     * Run the import
+     *
+     * @param Import     $import
+     * @param OutputInterface     $output
+     * @param null|string $family
+     *
+     * @return void
+     */
+    protected function runImport(Import $import, OutputInterface $output, $family = null) {
         try {
             $import->setStep(0);
+            if ($family) {
+                $import->setFamily($family);
+            }
 
             while ($import->canExecute()) {
                 /** @var string $comment */

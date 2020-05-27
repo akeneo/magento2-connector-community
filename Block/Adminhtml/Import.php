@@ -84,9 +84,12 @@ class Import extends Template
     {
         /** @var string $runUrl */
         $runUrl = $this->_getRunUrl();
+        /** @var string $runProductUrl */
+        $runProductUrl = $this->_getRunProductUrl();
 
         $this->assign(
             [
+                'runProductUrl' => $this->_escaper->escapeHtml($runProductUrl),
                 'runUrl' => $this->_escaper->escapeHtml($runUrl),
             ]
         );
@@ -102,5 +105,15 @@ class Import extends Template
     public function _getRunUrl()
     {
         return $this->urlModel->getUrl('akeneo_connector/import/run');
+    }
+
+    /**
+     * Retrieve run URL
+     *
+     * @return string
+     */
+    public function _getRunProductUrl()
+    {
+        return $this->urlModel->getUrl('akeneo_connector/import/runProduct');
     }
 }

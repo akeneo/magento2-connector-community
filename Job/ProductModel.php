@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Helper\ProductFilters;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
@@ -40,6 +41,12 @@ class ProductModel extends Import
      */
     protected $name = 'Product Model';
     /**
+     * This variable contains product filters
+     *
+     * @var mixed[] $filters
+     */
+    protected $filters;
+    /**
      * This variable contains an EntitiesHelper
      *
      * @var EntitiesHelper $entitiesHelper
@@ -63,6 +70,12 @@ class ProductModel extends Import
      * @var AttributeMetrics $attributeMetrics
      */
     protected $attributeMetrics;
+    /**
+     * This variable contains a ProductFilters
+     *
+     * @var ProductFilters $productFilters
+     */
+    protected $productFilters;
 
     /**
      * ProductModel constructor
@@ -73,6 +86,7 @@ class ProductModel extends Import
      * @param \Akeneo\Connector\Helper\Import\Product $entitiesHelper
      * @param ConfigHelper                            $configHelper
      * @param Config                                  $eavConfig
+     * @param ProductFilters                          $productFilters
      * @param AttributeMetrics                        $attributeMetrics
      * @param array                                   $data
      */
@@ -83,6 +97,7 @@ class ProductModel extends Import
         \Akeneo\Connector\Helper\Import\Product $entitiesHelper,
         ConfigHelper $configHelper,
         Config $eavConfig,
+        ProductFilters $productFilters,
         AttributeMetrics $attributeMetrics,
         array $data = []
     ) {
@@ -91,6 +106,7 @@ class ProductModel extends Import
         $this->entitiesHelper   = $entitiesHelper;
         $this->configHelper     = $configHelper;
         $this->eavConfig        = $eavConfig;
+        $this->productFilters   = $productFilters;
         $this->attributeMetrics = $attributeMetrics;
     }
 
@@ -101,8 +117,11 @@ class ProductModel extends Import
      */
     public function createTable()
     {
+        /** @var mixed[] $filters */
+        $filters = $this->getFilters();
+        $filters = reset($filters);
         /** @var PageInterface $productModels */
-        $productModels = $this->akeneoClient->getProductModelApi()->listPerPage(1);
+        $productModels = $this->akeneoClient->getProductModelApi()->listPerPage(1, false, $filters);
         /** @var array $productModel */
         $productModel = $productModels->getItems();
         if (empty($productModel)) {
@@ -122,11 +141,10 @@ class ProductModel extends Import
      */
     public function insertData()
     {
+        /** @var mixed[] $filters */
+        $filters = $this->getFilters();
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPanigationSize();
-        /** @var ResourceCursorInterface $productModels */
-        $productModels = $this->akeneoClient->getProductModelApi()->all($paginationSize);
-
         /** @var string[] $attributeMetrics */
         $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
         /** @var mixed[] $metricsConcatSettings */
@@ -134,56 +152,62 @@ class ProductModel extends Import
         /** @var string[] $metricSymbols */
         $metricSymbols = $this->getMetricsSymbols();
 
-        /**
-         * @var int   $index
-         * @var array $productModel
-         */
-        foreach ($productModels as $index => $productModel) {
-            foreach ($attributeMetrics as $attributeMetric) {
-                if (!isset($productModel['values'][$attributeMetric])) {
-                    continue;
-                }
-
-                foreach ($productModel['values'][$attributeMetric] as $key => $metric) {
-                    /** @var string|float $amount */
-                    $amount = $metric['data']['amount'];
-                    if ($amount != null) {
-                        $amount = floatval($amount);
-                    }
-
-                    $productModel['values'][$attributeMetric][$key]['data']['amount'] = $amount;
-                }
-            }
+        /** @var mixed[] $filter */
+        foreach ($filters as $filter) {
+            /** @var ResourceCursorInterface $productModels */
+            $productModels = $this->akeneoClient->getProductModelApi()->all($paginationSize, $filter);
 
             /**
-             * @var mixed[] $metricsConcatSetting
+             * @var int   $index
+             * @var array $productModel
              */
-            foreach ($metricsConcatSettings as $metricsConcatSetting) {
-                if (!isset($productModel['values'][$metricsConcatSetting])) {
-                    continue;
-                }
-
-                /**
-                 * @var int     $key
-                 * @var mixed[] $metric
-                 */
-                foreach ($productModel['values'][$metricsConcatSetting] as $key => $metric) {
-                    /** @var string $unit */
-                    $unit = $metric['data']['unit'];
-                    /** @var string|false $symbol */
-                    $symbol = array_key_exists($unit, $metricSymbols);
-
-                    if (!$symbol) {
+            foreach ($productModels as $index => $productModel) {
+                foreach ($attributeMetrics as $attributeMetric) {
+                    if (!isset($productModel['values'][$attributeMetric])) {
                         continue;
                     }
 
-                    $productModel['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
-                }
-            }
+                    foreach ($productModel['values'][$attributeMetric] as $key => $metric) {
+                        /** @var string|float $amount */
+                        $amount = $metric['data']['amount'];
+                        if ($amount != null) {
+                            $amount = floatval($amount);
+                        }
 
-            $this->entitiesHelper->insertDataFromApi($productModel, $this->getCode());
+                        $productModel['values'][$attributeMetric][$key]['data']['amount'] = $amount;
+                    }
+                }
+
+                /**
+                 * @var mixed[] $metricsConcatSetting
+                 */
+                foreach ($metricsConcatSettings as $metricsConcatSetting) {
+                    if (!isset($productModel['values'][$metricsConcatSetting])) {
+                        continue;
+                    }
+
+                    /**
+                     * @var int     $key
+                     * @var mixed[] $metric
+                     */
+                    foreach ($productModel['values'][$metricsConcatSetting] as $key => $metric) {
+                        /** @var string $unit */
+                        $unit = $metric['data']['unit'];
+                        /** @var string|false $symbol */
+                        $symbol = array_key_exists($unit, $metricSymbols);
+
+                        if (!$symbol) {
+                            continue;
+                        }
+
+                        $productModel['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
+                    }
+                }
+
+                $this->entitiesHelper->insertDataFromApi($productModel, $this->getCode());
+            }
+            $index++;
         }
-        $index++;
         $this->setMessage(
             __('%1 line(s) found', $index)
         );
@@ -408,5 +432,24 @@ class ProductModel extends Import
             ->getEntityTypeId();
 
         return $productEntityTypeId;
+    }
+
+    /**
+     * Retrieve product filters
+     *
+     * @return mixed[]
+     */
+    protected function getFilters()
+    {
+        /** @var mixed[] $filters */
+        $filters = $this->productFilters->getModelFilters();
+        if (array_key_exists('error', $filters)) {
+            $this->setMessage($filters['error']);
+            $this->stop(true);
+        }
+
+        $this->filters = $filters;
+
+        return $this->filters;
     }
 }
