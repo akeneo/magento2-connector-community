@@ -2124,8 +2124,6 @@ class Product extends JobImport
             $this->storeHelper->getStores(['lang']), // en_US
             $this->storeHelper->getStores(['lang', 'channel_code']) // en_US-channel
         );
-        /** @var bool $isUrlKeyMapped */
-        $isUrlKeyMapped = $this->configHelper->isUrlKeyMapped();
 
         /**
          * @var string $local
@@ -2174,6 +2172,27 @@ class Product extends JobImport
                     /** @var BaseProductModel $product */
                     $product = $this->product;
                     $product->setData($row);
+
+                    if (isset($store['website_id'])) {
+                        /** @var \Magento\Framework\DB\Select $selectIsInWebsite */
+                        $selectIsInWebsite = $connection->select()->from(
+                            $this->entitiesHelper->getTable('catalog_product_website'),
+                            [
+                                'product_id' => 'product_id',
+                            ]
+                        )->where('website_id = ?', $store['website_id'])->where(
+                            'product_id = ?',
+                            $product->getEntityId()
+                        );
+                        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $queryIsInWebsite */
+                        $queryIsInWebsite = $connection->query($selectIsInWebsite);
+                        /** @var string[] $isInWebsite */
+                        $isInWebsite = $queryIsInWebsite->fetchAll();
+
+                        if (empty($isInWebsite)) {
+                            continue;
+                        }
+                    }
 
                     /** @var string $urlPath */
                     $urlPath = $this->productUrlPathGenerator->getUrlPath($product);
