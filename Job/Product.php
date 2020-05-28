@@ -1390,18 +1390,37 @@ class Product extends JobImport
         $statusAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'status');
         /** @var string $identifierColumn */
         $identifierColumn = $this->entitiesHelper->getColumnIdentifier('catalog_product_entity_int');
+        /** @var string $productTable */
+        $productTable = $this->entitiesHelper->getTable('catalog_product_entity');
+        /** @var string[] $pKeyColumn */
+        $pKeyColumn = 'a._entity_id';
         /** @var string[] $columnsForStatus */
-        $columnsForStatus = ['entity_id' => 'a._entity_id', '_is_new' => 'a._is_new'];
-        $select           = $connection->select()->from(['a' => $tmpTable], $columnsForStatus)->joinInner(
+        $columnsForStatus = ['entity_id' => $pKeyColumn, '_entity_id', '_is_new' => 'a._is_new'];
+
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productTable);
+        if ($rowIdExists) {
+            $pKeyColumn = 'p.row_id';
+            $columnsForStatus['entity_id'] = $pKeyColumn;
+        }
+
+        $select = $connection->select()->from(['a' => $tmpTable], $columnsForStatus);
+
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStaging($select, []);
+        }
+
+        $select->joinInner(
             ['b' => $this->entitiesHelper->getTable('catalog_product_entity_int')],
-            'a._entity_id = b.' . $identifierColumn
+            $pKeyColumn . ' = b.' . $identifierColumn
         )->where('a._is_new = ?', 0)->where('a._status = ?', 1)->where('b.attribute_id = ?', $statusAttributeId);
-        $oldStatus        = $connection->query($select);
+
+        $oldStatus = $connection->query($select);
         while (($row = $oldStatus->fetch())) {
             $valuesToInsert = [
                 '_status' => $row['value'],
             ];
-            $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['entity_id']]);
+            $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
         }
 
         $connection->update(
