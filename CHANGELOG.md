@@ -98,3 +98,8 @@
 ### Version 100.4.6 :
 * Add product import job batching family after family (https://help.akeneo.com/magento2-connector/v100/articles/overview.html#product-import-process)
 * Optimize product model column number in temporary table by adding filter for API request on mapped channels and available locales
+
+### Version 100.4.7 :
+* Fix product default status behavior conflict with Magento 2 Enterprise content staging feature
+* Optimize category association deletion request during product import
+* Skip product URL rewrite generation for non associated websites

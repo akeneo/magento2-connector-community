@@ -1390,18 +1390,37 @@ class Product extends JobImport
         $statusAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'status');
         /** @var string $identifierColumn */
         $identifierColumn = $this->entitiesHelper->getColumnIdentifier('catalog_product_entity_int');
+        /** @var string $productTable */
+        $productTable = $this->entitiesHelper->getTable('catalog_product_entity');
+        /** @var string[] $pKeyColumn */
+        $pKeyColumn = 'a._entity_id';
         /** @var string[] $columnsForStatus */
-        $columnsForStatus = ['entity_id' => 'a._entity_id', '_is_new' => 'a._is_new'];
-        $select           = $connection->select()->from(['a' => $tmpTable], $columnsForStatus)->joinInner(
+        $columnsForStatus = ['entity_id' => $pKeyColumn, '_entity_id', '_is_new' => 'a._is_new'];
+
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productTable);
+        if ($rowIdExists) {
+            $pKeyColumn = 'p.row_id';
+            $columnsForStatus['entity_id'] = $pKeyColumn;
+        }
+
+        $select = $connection->select()->from(['a' => $tmpTable], $columnsForStatus);
+
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStaging($select, []);
+        }
+
+        $select->joinInner(
             ['b' => $this->entitiesHelper->getTable('catalog_product_entity_int')],
-            'a._entity_id = b.' . $identifierColumn
+            $pKeyColumn . ' = b.' . $identifierColumn
         )->where('a._is_new = ?', 0)->where('a._status = ?', 1)->where('b.attribute_id = ?', $statusAttributeId);
-        $oldStatus        = $connection->query($select);
+
+        $oldStatus = $connection->query($select);
         while (($row = $oldStatus->fetch())) {
             $valuesToInsert = [
                 '_status' => $row['value'],
             ];
-            $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['entity_id']]);
+            $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
         }
 
         $connection->update(
@@ -1907,26 +1926,30 @@ class Product extends JobImport
         );
 
         /** @var Select $selectToDelete */
-        $selectToDelete = $connection->select()->from(
-            ['c' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
-            []
-        )->joinInner(
-            ['p' => $tmpTable],
-            '!FIND_IN_SET(`c`.`code`, `p`.`categories`) AND `c`.`import` = "category"',
-            [
-                'category_id' => 'c.entity_id',
-                'product_id'  => 'p._entity_id',
-            ]
-        )->joinInner(
-            ['e' => $this->entitiesHelper->getTable('catalog_category_entity')],
-            'c.entity_id = e.entity_id',
-            []
-        );
+        $selectToDelete = $connection->select()
+            ->from($this->entitiesHelper->getTable('catalog_category_product'), [])
+            ->joinInner(
+                ['c' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
+                $this->entitiesHelper->getTable('catalog_category_product') . '.category_id = c.entity_id',
+                []
+            )
+            ->joinInner(
+                ['p' => $tmpTable],
+                $this->entitiesHelper->getTable('catalog_category_product').'.product_id = `p`.`_entity_id`',
+                [
+                    'category_id' => 'c.entity_id',
+                    'product_id'  => 'p._entity_id',
+                ]
+            )
+            ->joinInner(
+                ['e' => $this->entitiesHelper->getTable('catalog_category_entity')],
+                'c.entity_id = e.entity_id',
+                []
+            )
+            ->where('!FIND_IN_SET(`c`.`code`, `p`.`categories`) AND `c`.`import` = "category"');
 
-        $connection->delete(
-            $this->entitiesHelper->getTable('catalog_category_product'),
-            '(category_id, product_id) IN (' . $selectToDelete->assemble() . ')'
-        );
+        $delete = $connection->deleteFromSelect($selectToDelete, $this->entitiesHelper->getTable('catalog_category_product'));
+        $connection->query($delete);
     }
 
     /**
@@ -2124,8 +2147,6 @@ class Product extends JobImport
             $this->storeHelper->getStores(['lang']), // en_US
             $this->storeHelper->getStores(['lang', 'channel_code']) // en_US-channel
         );
-        /** @var bool $isUrlKeyMapped */
-        $isUrlKeyMapped = $this->configHelper->isUrlKeyMapped();
 
         /**
          * @var string $local
@@ -2174,6 +2195,27 @@ class Product extends JobImport
                     /** @var BaseProductModel $product */
                     $product = $this->product;
                     $product->setData($row);
+
+                    if (isset($store['website_id'])) {
+                        /** @var \Magento\Framework\DB\Select $selectIsInWebsite */
+                        $selectIsInWebsite = $connection->select()->from(
+                            $this->entitiesHelper->getTable('catalog_product_website'),
+                            [
+                                'product_id' => 'product_id',
+                            ]
+                        )->where('website_id = ?', $store['website_id'])->where(
+                            'product_id = ?',
+                            $product->getEntityId()
+                        );
+                        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $queryIsInWebsite */
+                        $queryIsInWebsite = $connection->query($selectIsInWebsite);
+                        /** @var string[] $isInWebsite */
+                        $isInWebsite = $queryIsInWebsite->fetchAll();
+
+                        if (empty($isInWebsite)) {
+                            continue;
+                        }
+                    }
 
                     /** @var string $urlPath */
                     $urlPath = $this->productUrlPathGenerator->getUrlPath($product);
