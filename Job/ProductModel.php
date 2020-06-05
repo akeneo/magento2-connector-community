@@ -144,7 +144,7 @@ class ProductModel extends Import
         /** @var mixed[] $filters */
         $filters = $this->getFilters();
         /** @var string|int $paginationSize */
-        $paginationSize = $this->configHelper->getPanigationSize();
+        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var string[] $attributeMetrics */
         $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
         /** @var mixed[] $metricsConcatSettings */

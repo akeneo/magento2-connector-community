@@ -149,7 +149,7 @@ class Category extends Import
     public function insertData()
     {
         /** @var string|int $paginationSize */
-        $paginationSize = $this->configHelper->getPanigationSize();
+        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var ResourceCursorInterface $categories */
         $categories = $this->akeneoClient->getCategoryApi()->all($paginationSize);
         /** @var string $warning */

@@ -211,7 +211,7 @@ class Option extends Import
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var string|int $paginationSize */
-        $paginationSize = $this->configHelper->getPanigationSize();
+        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var PageInterface $attributes */
         $attributes = $this->getAllAttributes();
         /** @var int $lines */

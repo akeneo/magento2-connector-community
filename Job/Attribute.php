@@ -177,7 +177,7 @@ class Attribute extends Import
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var string|int $paginationSize */
-        $paginationSize = $this->configHelper->getPanigationSize();
+        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var ResourceCursorInterface $attributes */
         $attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize);
         /** @var [] $metricsSetting */
