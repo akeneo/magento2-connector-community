@@ -366,7 +366,7 @@ class Product extends JobImport
     public function insertData()
     {
         /** @var string|int $paginationSize */
-        $paginationSize = $this->configHelper->getPanigationSize();
+        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var int $index */
         $index = 0;
         /** @var mixed[] $filters */

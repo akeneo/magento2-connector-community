@@ -528,10 +528,10 @@ class Config
      *
      * @return string|int
      */
-    public function getPanigationSize()
+    public function getPaginationSize()
     {
         /** @var string|int $paginationSize */
-        $paginationSize = $this->scopeConfig->getValue(self::AKENEO_API_PAGINATION_SIZE);
+        $paginationSize = (int)$this->scopeConfig->getValue(self::AKENEO_API_PAGINATION_SIZE);
         if (!$paginationSize) {
             $paginationSize = self::PAGINATION_SIZE_DEFAULT_VALUE;
         }

@@ -147,7 +147,7 @@ class Family extends Import
     public function insertData()
     {
         /** @var string|int $paginationSize */
-        $paginationSize = $this->configHelper->getPanigationSize();
+        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var ResourceCursorInterface $families */
         $families = $this->akeneoClient->getFamilyApi()->all($paginationSize);
         /** @var string $warning */
