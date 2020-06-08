@@ -1401,6 +1401,7 @@ class Product extends JobImport
         $identifierColumn = $this->entitiesHelper->getColumnIdentifier('catalog_product_entity_int');
         /** @var string[] $columnsForStatus */
         $columnsForTaxClassId = ['entity_id' => 'a._entity_id', '_is_new' => 'a._is_new'];
+
         $select           = $connection->select()->from(['a' => $tmpTable], $columnsForTaxClassId)
             ->joinInner(['b' => $this->entitiesHelper->getTable('catalog_product_entity')],
                 'a._entity_id = b.entity_id' )
@@ -1408,10 +1409,34 @@ class Product extends JobImport
                 'b.row_id = c.' . $identifierColumn
             )->where('a._is_new = ?', 0)->where('c.attribute_id = ?', $taxClassIdAttributeId);
         $oldTaxClassId        = $connection->query($select);
+
         while (($row = $oldTaxClassId->fetch())) {
+
+            $rateSelect = $connection->select()
+                ->from($tmpTable,['classe_de_taxe'])
+                ->where('_entity_id = ?', $row['entity_id'])
+            ;
+
+            $rate = $connection->query($rateSelect)->fetch();
+
+            $taxClassIdSelect = $connection->select()
+                ->from(['tc' => 'tax_calculation'], ['product_tax_class_id'])
+                ->joinInner(['tcr' => $this->entitiesHelper->getTable('tax_calculation_rate')],
+                    'tc.tax_calculation_rate_id = tcr.tax_calculation_rate_id' )
+                ->where('tcr.rate = ?', (float) $rate['classe_de_taxe'])
+                ->where('tcr.tax_country_id LIKE \'FR\' ')
+            ;
+
+            $taxClassId = $connection->query($taxClassIdSelect)->fetch();
+
+            if (!isset($taxClassId['product_tax_class_id'])) {
+                continue; //GUY490
+            }
+
             $valuesToInsert = [
-                '_tax_class_id' => $row['value'],
+                '_tax_class_id' => $taxClassId['product_tax_class_id'],
             ];
+
             $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['entity_id']]);
         }
 
