@@ -145,6 +145,8 @@ class ProductModel extends Import
         $filters = $this->getFilters();
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
+        /** @var int $index */
+        $index = 0;
         /** @var string[] $attributeMetrics */
         $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
         /** @var mixed[] $metricsConcatSettings */
@@ -161,7 +163,7 @@ class ProductModel extends Import
              * @var int   $index
              * @var array $productModel
              */
-            foreach ($productModels as $index => $productModel) {
+            foreach ($productModels as $productModel) {
                 foreach ($attributeMetrics as $attributeMetric) {
                     if (!isset($productModel['values'][$attributeMetric])) {
                         continue;
@@ -203,11 +205,18 @@ class ProductModel extends Import
                         $productModel['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
                     }
                 }
-
                 $this->entitiesHelper->insertDataFromApi($productModel, $this->getCode());
+                $index++;
             }
-            $index++;
         }
+
+        if (empty($index)) {
+            $this->setMessage('No Product data to insert in temp table');
+            $this->stop(true);
+
+            return;
+        }
+
         $this->setMessage(
             __('%1 line(s) found', $index)
         );
