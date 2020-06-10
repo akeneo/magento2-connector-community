@@ -54,7 +54,7 @@ class ProductFilters
      *
      * @var SearchBuilder $searchBuilder
      */
-    private $searchBuilder;
+    protected $searchBuilder;
 
     /**
      * ProductFilters constructor
