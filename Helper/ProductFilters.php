@@ -3,6 +3,7 @@
 namespace Akeneo\Connector\Helper;
 
 use Akeneo\Pim\ApiClient\Search\SearchBuilder;
+use Akeneo\Pim\ApiClient\Search\SearchBuilderFactory;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
@@ -43,30 +44,36 @@ class ProductFilters
      */
     protected $localesHelper;
     /**
+     * This variable contains a SearchBuilderFactory
+     *
+     * @var SearchBuilderFactory $searchBuilderFactory
+     */
+    protected $searchBuilderFactory;
+    /**
      * This variable contains a SearchBuilder
      *
      * @var SearchBuilder $searchBuilder
      */
-    protected $searchBuilder;
+    private $searchBuilder;
 
     /**
      * ProductFilters constructor
      *
-     * @param ConfigHelper  $configHelper
-     * @param Store         $storeHelper
-     * @param Locales       $localesHelper
-     * @param SearchBuilder $searchBuilder
+     * @param ConfigHelper         $configHelper
+     * @param Store                $storeHelper
+     * @param Locales              $localesHelper
+     * @param SearchBuilderFactory $searchBuilderFactory
      */
     public function __construct(
         ConfigHelper $configHelper,
         StoreHelper $storeHelper,
         LocalesHelper $localesHelper,
-        SearchBuilder $searchBuilder
+        SearchBuilderFactory $searchBuilderFactory
     ) {
-        $this->configHelper  = $configHelper;
-        $this->storeHelper   = $storeHelper;
-        $this->localesHelper = $localesHelper;
-        $this->searchBuilder = $searchBuilder;
+        $this->configHelper         = $configHelper;
+        $this->storeHelper          = $storeHelper;
+        $this->localesHelper        = $localesHelper;
+        $this->searchBuilderFactory = $searchBuilderFactory;
     }
 
     /**
@@ -142,6 +149,7 @@ class ProductFilters
         }
 
         if ($mode == Mode::STANDARD) {
+            $this->searchBuilder = $this->searchBuilderFactory->create();
             $this->addCompletenessFilter();
             $this->addStatusFilter();
             $this->addFamiliesFilter();
