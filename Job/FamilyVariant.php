@@ -149,7 +149,7 @@ class FamilyVariant extends Import
     public function insertData()
     {
         /** @var string|int $paginationSize */
-        $paginationSize = $this->configHelper->getPanigationSize();
+        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var PageInterface $families */
         $families = $this->akeneoClient->getFamilyApi()->all($paginationSize);
         /** @var int $count */
