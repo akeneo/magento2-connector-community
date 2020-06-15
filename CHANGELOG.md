@@ -103,3 +103,8 @@
 * Fix product default status behavior conflict with Magento 2 Enterprise content staging feature
 * Optimize category association deletion request during product import
 * Skip product URL rewrite generation for non associated websites
+
+### Version 100.4.8 :
+* Fix strict type for Akeneo PHP client pagination variable
+* Fix product count during product model job
+* Optimize product association deletion request
