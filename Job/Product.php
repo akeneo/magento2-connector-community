@@ -2079,9 +2079,8 @@ class Product extends JobImport
             $connection->delete(
                 $linkTable,
                 [
-                    '(product_id, linked_product_id, link_type_id) NOT IN (?)' => $select,
-                    'link_type_id = ?'                                         => $typeId,
-                    'product_id IN (?)'                                        => $productIds,
+                    'link_type_id = ?' => $typeId,
+                    'product_id IN (?)' => $productIds
                 ]
             );
 
