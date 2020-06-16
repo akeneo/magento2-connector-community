@@ -31,12 +31,6 @@ class Family implements ArrayInterface
      * @var \Psr\Log\LoggerInterface $logger
      */
     protected $logger;
-    /**
-     * List of options
-     *
-     * @var string[] $options
-     */
-    protected $options = [];
 
     /**
      * Family constructor
@@ -49,7 +43,6 @@ class Family implements ArrayInterface
     ) {
         $this->akeneoAuthenticator = $akeneoAuthenticator;
         $this->logger              = $logger;
-        $this->init();
     }
 
     /**
@@ -57,8 +50,11 @@ class Family implements ArrayInterface
      *
      * @return void
      */
-    public function init()
+    public function getFamilies()
     {
+        /** @var array $families */
+        $families = [];
+
         try {
             /** @var AkeneoPimClientInterface $client */
             $client = $this->akeneoAuthenticator->getAkeneoApiClient();
@@ -68,14 +64,16 @@ class Family implements ArrayInterface
             }
 
             /** @var ResourceCursorInterface $families */
-            $families = $client->getFamilyApi()->all();
+            $akeneoFamilies = $client->getFamilyApi()->all();
             /** @var mixed[] $family */
-            foreach ($families as $family) {
+            foreach ($akeneoFamilies as $family) {
                 if (!isset($family['code'])) {
                     continue;
                 }
-                $this->options[$family['code']] = $family['code'];
+                $families[$family['code']] = $family['code'];
             }
+
+            return $families;
         } catch (\Exception $exception) {
             $this->logger->warning($exception->getMessage());
         }
@@ -88,13 +86,15 @@ class Family implements ArrayInterface
      */
     public function toOptionArray()
     {
+        /** @var array $families */
+        $families = $this->getFamilies();
         /** @var array $optionArray */
         $optionArray = [];
         /**
          * @var int    $optionValue
          * @var string $optionLabel
          */
-        foreach ($this->options as $optionValue => $optionLabel) {
+        foreach ($families as $optionValue => $optionLabel) {
             $optionArray[] = [
                 'value' => $optionValue,
                 'label' => $optionLabel,
