@@ -350,13 +350,20 @@ class Option extends Import
             }
             /** @var array $store */
             foreach ($data as $store) {
+                /** @var string $value */
+                $value = 'labels-' . $local;
+
+                if ($this->configHelper->setOptionCodeAsAdminLabel() && $store['store_id'] == 0) {
+                    $value = 'code';
+                }
+                
                 /** @var Select $options */
                 $options = $connection->select()->from(
                         ['a' => $tmpTable],
                         [
                             'option_id' => '_entity_id',
                             'store_id'  => new Expr($store['store_id']),
-                            'value'     => 'labels-'.$local,
+                            'value'     => $value,
                         ]
                     )->joinInner(
                         ['b' => $this->entitiesHelper->getTable('akeneo_connector_entities')],

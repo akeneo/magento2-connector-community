@@ -37,6 +37,9 @@
                 <include_in_menu>1</include_in_menu>
                 <is_anchor>1</is_anchor>
             </category>
+            <attribute>
+                <option_code_as_admin_label>O</option_code_as_admin_label>
+            </attribute>
         </akeneo_connector>
     </default>
 </config>

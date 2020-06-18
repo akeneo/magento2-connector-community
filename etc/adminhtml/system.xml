@@ -241,6 +241,11 @@ For example :<br/>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>Match specific Akeneo type with Magento input field</comment>
                 </field>
+                <field id="option_code_as_admin_label" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Set attribute option code as Admin label for attribute options</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Set this configuration to "Yes" in order to set the Akeneo option code as the attribute option Admin label in Magento. If this configuration is set to "No", the Admin label of the option will be imported from the Magento 2 locale configuration for the Admin scope.</comment>
+                </field>
             </group>
             <group id="product" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Products</label>

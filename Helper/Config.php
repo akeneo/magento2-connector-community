@@ -76,6 +76,7 @@ class Config
     const PRODUCT_METRICS = 'akeneo_connector/product/metrics';
     const PRODUCT_AKENEO_MASTER = 'akeneo_connector/product/akeneo_master';
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
+    const ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL = 'akeneo_connector/attribute/option_code_as_admin_label';
     const PRODUCT_ACTIVATION = 'akeneo_connector/product/activation';
     /**
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
@@ -996,5 +997,16 @@ class Config
     public function getDefaultAttributeSetId($entity)
     {
         return $this->eavConfig->getEntityType($entity)->getDefaultAttributeSetId();
+    }
+
+
+    /**
+     * Description setOptionCodeAsAdminLabel function
+     *
+     * @return bool
+     */
+    public function setOptionCodeAsAdminLabel()
+    {
+        return $this->scopeConfig->isSetFlag(self::ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL);
     }
 }
