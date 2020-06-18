@@ -156,3 +156,4 @@ Par exemple :<br/>
 "Used As Variant","Utiliser comme Variante"
 "Concat Metric Unit","Ajouter l'unité métrique à la valeur"
 "No family to import","Aucune famille à importer"
+"Info: No value found in the current batch for the attribute %1","Information: Aucune valeur trouvée pour l'attribut %1 dans l'import actuel"
