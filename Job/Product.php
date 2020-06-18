@@ -2417,7 +2417,7 @@ class Product extends JobImport
         ];
         foreach ($gallery as $image) {
             if (!$connection->tableColumnExists($tmpTable, $image)) {
-                $this->setMessage(__('Warning: %1 attribute does not exist', $image));
+                $this->setMessage(__('Info: No value found in the current batch for the attribute %1', $image));
                 continue;
             }
             $data[$image] = $image;
