@@ -338,12 +338,18 @@ class Product extends JobImport
 
         /** @var mixed[] $filters */
         $filters = $this->getFilters($this->getFamily());
-        $filters = reset($filters);
-        /** @var PageInterface $products */
-        $products = $this->akeneoClient->getProductApi()->listPerPage(1, false, $filters);
-        /** @var mixed[] $products */
-        $products = $products->getItems();
-        $product  = reset($products);
+
+        foreach ($filters as $filter) {
+            /** @var PageInterface $products */
+            $products = $this->akeneoClient->getProductApi()->listPerPage(1, false, $filter);
+            /** @var mixed[] $products */
+            $products = $products->getItems();
+
+            if (!empty($products)) {
+                break;
+            }
+        }
+
         if (empty($products)) {
             $this->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()));
             $this->stop(true);
@@ -351,6 +357,7 @@ class Product extends JobImport
             return;
         }
 
+        $product = reset($products);
         $this->entitiesHelper->createTmpTableFromApi($product, $this->getCode());
 
         /** @var string $message */
