@@ -108,3 +108,9 @@
 * Fix strict type for Akeneo PHP client pagination variable
 * Fix product count during product model job
 * Optimize product association deletion request
+
+### Version 100.4.9 :
+* Fix product filters not being reseted after each family during command line execution
+* Fix create table function causing some products and product models not being imported in multi-website environment
+* Fix misleading warning label during image import
+* Fix Akeneo API connection being initialized in construct on the admin configuration page of the connector
