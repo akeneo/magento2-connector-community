@@ -119,18 +119,26 @@ class ProductModel extends Import
     {
         /** @var mixed[] $filters */
         $filters = $this->getFilters();
-        $filters = reset($filters);
-        /** @var PageInterface $productModels */
-        $productModels = $this->akeneoClient->getProductModelApi()->listPerPage(1, false, $filters);
-        /** @var array $productModel */
-        $productModel = $productModels->getItems();
-        if (empty($productModel)) {
+        
+        foreach ($filters as $filter) {
+            /** @var PageInterface $productModels */
+            $productModels = $this->akeneoClient->getProductModelApi()->listPerPage(1, false, $filter);
+            /** @var array $productModel */
+            $productModels = $productModels->getItems();
+
+            if (!empty($productModels)) {
+                break;
+            }
+        }
+
+        if (empty($productModels)) {
             $this->setMessage(__('No results from Akeneo'));
             $this->stop(1);
 
             return;
         }
-        $productModel = reset($productModel);
+
+        $productModel = reset($productModels);
         $this->entitiesHelper->createTmpTableFromApi($productModel, $this->getCode());
     }
 
