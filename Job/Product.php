@@ -338,12 +338,18 @@ class Product extends JobImport
 
         /** @var mixed[] $filters */
         $filters = $this->getFilters($this->getFamily());
-        $filters = reset($filters);
-        /** @var PageInterface $products */
-        $products = $this->akeneoClient->getProductApi()->listPerPage(1, false, $filters);
-        /** @var mixed[] $products */
-        $products = $products->getItems();
-        $product  = reset($products);
+
+        foreach ($filters as $filter) {
+            /** @var PageInterface $products */
+            $products = $this->akeneoClient->getProductApi()->listPerPage(1, false, $filter);
+            /** @var mixed[] $products */
+            $products = $products->getItems();
+
+            if (!empty($products)) {
+                break;
+            }
+        }
+
         if (empty($products)) {
             $this->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()));
             $this->stop(true);
@@ -351,6 +357,7 @@ class Product extends JobImport
             return;
         }
 
+        $product = reset($products);
         $this->entitiesHelper->createTmpTableFromApi($product, $this->getCode());
 
         /** @var string $message */
@@ -2417,7 +2424,7 @@ class Product extends JobImport
         ];
         foreach ($gallery as $image) {
             if (!$connection->tableColumnExists($tmpTable, $image)) {
-                $this->setMessage(__('Warning: %1 attribute does not exist', $image));
+                $this->setMessage(__('Info: No value found in the current batch for the attribute %1', $image));
                 continue;
             }
             $data[$image] = $image;

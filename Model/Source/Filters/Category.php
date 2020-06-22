@@ -34,13 +34,6 @@ class Category implements ArrayInterface
     protected $logger;
 
     /**
-     * This variable contains Categories options
-     *
-     * @var string[] $options
-     */
-    protected $options = [];
-
-    /**
      * Category constructor
      *
      * @param Authenticator            $akeneoAuthenticator
@@ -52,7 +45,6 @@ class Category implements ArrayInterface
     ) {
         $this->akeneoAuthenticator = $akeneoAuthenticator;
         $this->logger              = $logger;
-        $this->init();
     }
 
     /**
@@ -60,8 +52,11 @@ class Category implements ArrayInterface
      *
      * @return void
      */
-    public function init()
+    public function getCategories()
     {
+        /** @var array $categories */
+        $categories = [];
+
         try {
             /** @var AkeneoPimClientInterface $client */
             $client = $this->akeneoAuthenticator->getAkeneoApiClient();
@@ -69,14 +64,16 @@ class Category implements ArrayInterface
                 return;
             }
             /** @var ResourceCursorInterface $categories */
-            $categories = $client->getCategoryApi()->all();
+            $akeneoCategories = $client->getCategoryApi()->all();
             /** @var mixed[] $category */
-            foreach ($categories as $category) {
+            foreach ($akeneoCategories as $category) {
                 if (!isset($category['code']) || isset($category['parent'])) {
                     continue;
                 }
-                $this->options[$category['code']] = $category['code'];
+                $categories[$category['code']] = $category['code'];
             }
+
+            return $categories;
         } catch (\Exception $exception) {
             $this->logger->warning($exception->getMessage());
         }
@@ -89,6 +86,8 @@ class Category implements ArrayInterface
      */
     public function toOptionArray()
     {
+        /** @var array $categories */
+        $categories = $this->getCategories();
         /** @var array $optionArray */
         $optionArray = [];
 
@@ -96,7 +95,7 @@ class Category implements ArrayInterface
          * @var int    $optionValue
          * @var string $optionLabel
          */
-        foreach ($this->options as $optionValue => $optionLabel) {
+        foreach ($categories as $optionValue => $optionLabel) {
             $optionArray[] = [
                 'value' => $optionValue,
                 'label' => $optionLabel,
