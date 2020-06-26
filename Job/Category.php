@@ -2,21 +2,20 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Helper\Authenticator;
+use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Helper\Import\Entities;
+use Akeneo\Connector\Helper\Output as OutputHelper;
+use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
-use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Connector\Helper\Output as OutputHelper;
-use Akeneo\Connector\Helper\Authenticator;
-use Akeneo\Connector\Helper\Import\Entities;
-use Akeneo\Connector\Helper\Store as StoreHelper;
-use Akeneo\Connector\Job\Import;
-use Magento\Framework\App\Cache\TypeListInterface;
-use Magento\Framework\Event\ManagerInterface;
-use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Catalog\Model\Category as CategoryModel;
-use Magento\Staging\Model\VersionManager;
 use Magento\CatalogUrlRewrite\Model\CategoryUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\CategoryUrlRewriteGenerator;
+use Magento\Framework\App\Cache\TypeListInterface;
+use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\Event\ManagerInterface;
+use Magento\Staging\Model\VersionManager;
 use Zend_Db_Expr as Expr;
 
 /**
@@ -297,6 +296,14 @@ class Category extends Import
                     'nullable' => false
                 ]);
 
+                $connection->addColumn($tmpTable, 'url_path-' . $local, [
+                    'type' => 'text',
+                    'length' => 255,
+                    'default' => '',
+                    'COMMENT' => ' ',
+                    'nullable' => false
+                ]);
+
                 $select = $connection->select()->from(
                     $tmpTable,
                     ['entity_id' => '_entity_id', 'name' => 'labels-' . $local, 'parent_id' => 'parent_id']
@@ -325,11 +332,27 @@ class Category extends Import
 
                     $keys[$row['parent_id']][] = $finalKey;
 
-                    $connection->update(
-                        $tmpTable,
-                        ['url_key-' . $local => $finalKey],
-                        ['_entity_id = ?' => $row['entity_id']]
-                    );
+                    /** @var bool $isRoot */
+                    $isRoot = $row['parent_id'] <= CategoryModel::TREE_ROOT_ID;
+                    /** @var string $urlPathCol */
+                    $urlPathCol = $connection->quoteIdentifier('url_path-' . $local);
+
+                    /** @var Select $subSelect */
+                    $subSelect = $connection
+                        ->select()
+                        ->from(
+                            false,
+                            [
+                                'url_path-' . $local => $isRoot ? null :
+                                    "CONCAT(t." . $urlPathCol . ", IF(t." . $urlPathCol . " = '','','/'), '" . $finalKey . "')",
+                                'url_key-' . $local  => "'$finalKey'",
+                            ]
+                        )
+                        ->joinInner(['t' => $tmpTable], 'main.parent_id = t._entity_id', [])
+                        ->where('main._entity_id = ?', $row['entity_id']);
+                    /** @var string $update */
+                    $update = $connection->updateFromSelect($subSelect, ['main' => $tmpTable]);
+                    $connection->query($update);
                 }
             }
         }
@@ -513,6 +536,7 @@ class Category extends Import
                 $values = [
                     'name'    => 'labels-' . $local,
                     'url_key' => 'url_key-' . $local,
+                    'url_path' => 'url_path-' . $local,
                 ];
                 $this->entitiesHelper->setValues(
                     $this->getCode(),
