@@ -704,11 +704,23 @@ class Category extends Import
                         );
 
                     if ($rewriteId) {
-                        $connection->update(
-                            $this->entitiesHelper->getTable('url_rewrite'),
-                            ['request_path' => $requestPath],
-                            ['url_rewrite_id = ?' => $rewriteId]
-                        );
+                        try {
+                            $connection->update(
+                                $this->entitiesHelper->getTable('url_rewrite'),
+                                ['request_path' => $requestPath],
+                                ['url_rewrite_id = ?' => $rewriteId]
+                            );
+                        } catch (\Exception $e) {
+                            $this->setAdditionalMessage(
+                                __(
+                                    sprintf(
+                                        'Tried to update url_rewrite_id %s : request path (%s) already exists for the store_id.',
+                                        $rewriteId,
+                                        $requestPath
+                                    )
+                                )
+                            );
+                        }
                     } else {
                         /** @var array $data */
                         $data = [
