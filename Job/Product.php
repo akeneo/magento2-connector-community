@@ -2634,12 +2634,12 @@ class Product extends JobImport
         $mode = $this->configHelper->getFilterMode();
         if ($mode == Mode::ADVANCED) {
             /** @var string[] $filters */
-            $filters = $this->configHelper->getAdvancedFilters();
+            $advancedFilters = $this->configHelper->getAdvancedFilters();
             if (isset($advancedFilters['search']['family'])) {
                 foreach ($advancedFilters['search']['family'] as $key => $familyFilter) {
                     if (isset($familyFilter['operator']) && $familyFilter['operator'] == 'NOT IN') {
                         foreach ($familyFilter['value'] as $familyToRemove) {
-                            if (($familyKey = array_search($familyFilter, $families)) !== false) {
+                            if (($familyKey = array_search($familyToRemove, $families)) !== false) {
                                 unset($families[$familyKey]);
                             }
                         }
