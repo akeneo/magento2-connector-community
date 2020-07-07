@@ -60,7 +60,7 @@ class Family implements ArrayInterface
             $client = $this->akeneoAuthenticator->getAkeneoApiClient();
 
             if (empty($client)) {
-                return;
+                return $families;
             }
 
             /** @var ResourceCursorInterface $families */
@@ -72,11 +72,11 @@ class Family implements ArrayInterface
                 }
                 $families[$family['code']] = $family['code'];
             }
-
-            return $families;
         } catch (\Exception $exception) {
             $this->logger->warning($exception->getMessage());
         }
+
+        return $families;
     }
 
     /**

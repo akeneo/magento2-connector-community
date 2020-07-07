@@ -61,7 +61,7 @@ class Category implements ArrayInterface
             /** @var AkeneoPimClientInterface $client */
             $client = $this->akeneoAuthenticator->getAkeneoApiClient();
             if (empty($client)) {
-                return;
+                return $categories;
             }
             /** @var ResourceCursorInterface $categories */
             $akeneoCategories = $client->getCategoryApi()->all();
@@ -72,11 +72,11 @@ class Category implements ArrayInterface
                 }
                 $categories[$category['code']] = $category['code'];
             }
-
-            return $categories;
         } catch (\Exception $exception) {
             $this->logger->warning($exception->getMessage());
         }
+        
+        return $categories;
     }
 
     /**

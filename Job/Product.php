@@ -11,8 +11,8 @@ use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\ProductFilters;
 use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Store as StoreHelper;
-use Akeneo\Connector\Job\Option as JobOption;
 use Akeneo\Connector\Job\Import as JobImport;
+use Akeneo\Connector\Job\Option as JobOption;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
 use Akeneo\Connector\Model\Source\Filters\Mode;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
@@ -2321,11 +2321,23 @@ class Product extends JobImport
                         );
 
                         if ($rewriteId) {
-                            $connection->update(
-                                $this->entitiesHelper->getTable('url_rewrite'),
-                                ['request_path' => $requestPath, 'metadata' => $metadata],
-                                ['url_rewrite_id = ?' => $rewriteId]
-                            );
+                            try {
+                                $connection->update(
+                                    $this->entitiesHelper->getTable('url_rewrite'),
+                                    ['request_path' => $requestPath, 'metadata' => $metadata],
+                                    ['url_rewrite_id = ?' => $rewriteId]
+                                );
+                            } catch (\Exception $e) {
+                                $this->setAdditionalMessage(
+                                    __(
+                                        sprintf(
+                                            'Tried to update url_rewrite_id %s : request path (%s) already exists for the store_id.',
+                                            $rewriteId,
+                                            $requestPath
+                                        )
+                                    )
+                                );
+                            }
                         } else {
                             /** @var array $data */
                             $data = [
@@ -2622,12 +2634,12 @@ class Product extends JobImport
         $mode = $this->configHelper->getFilterMode();
         if ($mode == Mode::ADVANCED) {
             /** @var string[] $filters */
-            $filters = $this->configHelper->getAdvancedFilters();
+            $advancedFilters = $this->configHelper->getAdvancedFilters();
             if (isset($advancedFilters['search']['family'])) {
                 foreach ($advancedFilters['search']['family'] as $key => $familyFilter) {
                     if (isset($familyFilter['operator']) && $familyFilter['operator'] == 'NOT IN') {
                         foreach ($familyFilter['value'] as $familyToRemove) {
-                            if (($familyKey = array_search($familyFilter, $families)) !== false) {
+                            if (($familyKey = array_search($familyToRemove, $families)) !== false) {
                                 unset($families[$familyKey]);
                             }
                         }
