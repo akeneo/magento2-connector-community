@@ -114,3 +114,9 @@
 * Fix create table function causing some products and product models not being imported in multi-website environment
 * Fix misleading warning label during image import
 * Fix Akeneo API connection being initialized in construct on the admin configuration page of the connector
+
+### Version 100.4.10 :
+* Add configuration check for empty mapping
+* Fix category url_path generation
+* Fix category and family source model return when API credentials are not configured
+* Fix advanced filter issue with family filter variable
