@@ -730,7 +730,7 @@ class Config
         }
 
         foreach ($attributes as $attribute) {
-            if (!isset($attribute['file_attribute'])) {
+            if (!isset($attribute['file_attribute']) || $attribute['file_attribute'] === '') {
                 continue;
             }
             $fileAttributes[] = $attribute['file_attribute'];
@@ -761,7 +761,7 @@ class Config
         }
 
         foreach ($media as $image) {
-            if (!isset($image['attribute'])) {
+            if (!isset($image['attribute']) || $image['attribute'] === '') {
                 continue;
             }
             $images[] = $image['attribute'];
