@@ -60,7 +60,7 @@ class Family implements ArrayInterface
             $client = $this->akeneoAuthenticator->getAkeneoApiClient();
 
             if (empty($client)) {
-                return;
+                return $families;
             }
 
             /** @var ResourceCursorInterface $families */
