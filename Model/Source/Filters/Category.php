@@ -72,11 +72,11 @@ class Category implements ArrayInterface
                 }
                 $categories[$category['code']] = $category['code'];
             }
-
-            return $categories;
         } catch (\Exception $exception) {
             $this->logger->warning($exception->getMessage());
         }
+        
+        return $categories;
     }
 
     /**
