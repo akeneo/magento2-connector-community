@@ -862,7 +862,7 @@ class Product extends JobImport
             }
 
             /** @var string $name */
-            $name = $attribute['attribute'];
+            $name = strtolower($attribute['attribute']);
             /** @var string $value */
             $value = $attribute['value'];
             /** @var string $type */
@@ -1724,6 +1724,7 @@ class Product extends JobImport
         /** @var string $websiteAttribute */
         $websiteAttribute = $this->configHelper->getWebsiteAttribute();
         if ($websiteAttribute != null) {
+            $websiteAttribute = strtolower($this->configHelper->getWebsiteAttribute());
             $attribute = $this->eavConfig->getAttribute('catalog_product', $websiteAttribute);
             if ($attribute->getAttributeId() != null) {
                 /** @var string[] $options */
