@@ -120,3 +120,7 @@
 * Fix category url_path generation
 * Fix category and family source model return when API credentials are not configured
 * Fix advanced filter issue with family filter variable
+
+### Version 100.4.11 :
+* Fix website mapping attribute code comparison to lowercase
+* Fix configurable mapping attribute code comparison to lowercase
