@@ -1724,7 +1724,7 @@ class Product extends JobImport
         /** @var string $websiteAttribute */
         $websiteAttribute = $this->configHelper->getWebsiteAttribute();
         if ($websiteAttribute != null) {
-            $websiteAttribute = strtolower($this->configHelper->getWebsiteAttribute());
+            $websiteAttribute = strtolower($websiteAttribute);
             $attribute = $this->eavConfig->getAttribute('catalog_product', $websiteAttribute);
             if ($attribute->getAttributeId() != null) {
                 /** @var string[] $options */
