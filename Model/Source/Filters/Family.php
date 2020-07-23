@@ -90,6 +90,12 @@ class Family implements ArrayInterface
         $families = $this->getFamilies();
         /** @var array $optionArray */
         $optionArray = [];
+        
+        /** Check if family is empty */
+        if(empty($families)){
+            return $optionArray;
+        }
+
         /**
          * @var int    $optionValue
          * @var string $optionLabel

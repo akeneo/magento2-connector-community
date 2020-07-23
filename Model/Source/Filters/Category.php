@@ -75,7 +75,7 @@ class Category implements ArrayInterface
         } catch (\Exception $exception) {
             $this->logger->warning($exception->getMessage());
         }
-        
+
         return $categories;
     }
 
@@ -90,6 +90,11 @@ class Category implements ArrayInterface
         $categories = $this->getCategories();
         /** @var array $optionArray */
         $optionArray = [];
+
+        /** Check if categories is empty */
+        if(empty($categories)){
+            return $optionArray;
+        }
 
         /**
          * @var int    $optionValue
