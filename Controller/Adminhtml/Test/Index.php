@@ -3,6 +3,7 @@
 namespace Akeneo\Connector\Controller\Adminhtml\Test;
 
 use Akeneo\Connector\Helper\Authenticator;
+use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Magento\Backend\App\Action;
 use Magento\Framework\Controller\ResultInterface;
 use Exception;
@@ -23,25 +24,33 @@ class Index extends Action
      * Authorization level of a basic admin session
      */
     const ADMIN_RESOURCE = 'Magento_Backend::system';
-
     /**
      * @var Authenticator $authenticator
      */
     protected $authenticator;
+    /**
+     * This variable contains a ConfigHelper
+     *
+     * @var ConfigHelper $configHelper
+     */
+    protected $configHelper;
 
     /**
      * Index constructor
      *
      * @param Action\Context $context
-     * @param Authenticator $authenticator
+     * @param Authenticator  $authenticator
+     * @param ConfigHelper   $configHelper
      */
     public function __construct(
         Action\Context $context,
-        Authenticator $authenticator
+        Authenticator $authenticator,
+        ConfigHelper $configHelper
     ) {
         parent::__construct($context);
 
         $this->authenticator = $authenticator;
+        $this->configHelper  = $configHelper;
     }
 
     /**
@@ -58,7 +67,9 @@ class Index extends Action
             if (!$client) {
                 $this->messageManager->addErrorMessage(__('Akeneo API connection error'));
             } else {
-                $client->getChannelApi()->all();
+                /** @var string|int $paginationSize */
+                $paginationSize = $this->configHelper->getPaginationSize();
+                $client->getChannelApi()->all($paginationSize);
                 $this->messageManager->addSuccessMessage(__('The connection is working fine'));
             }
         } catch (Exception $ext) {

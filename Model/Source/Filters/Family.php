@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Model\Source\Filters;
 
+use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Framework\Option\ArrayInterface;
@@ -31,18 +32,27 @@ class Family implements ArrayInterface
      * @var \Psr\Log\LoggerInterface $logger
      */
     protected $logger;
+    /**
+     * This variable contains a ConfigHelper
+     *
+     * @var ConfigHelper $configHelper
+     */
+    protected $configHelper;
 
     /**
      * Family constructor
      *
      * @param Authenticator $akeneoAuthenticator
+     * @param ConfigHelper  $configHelper
      */
     public function __construct(
         Authenticator $akeneoAuthenticator,
-        \Psr\Log\LoggerInterface $logger
+        \Psr\Log\LoggerInterface $logger,
+        ConfigHelper $configHelper
     ) {
         $this->akeneoAuthenticator = $akeneoAuthenticator;
         $this->logger              = $logger;
+        $this->configHelper        = $configHelper;
     }
 
     /**
@@ -63,8 +73,10 @@ class Family implements ArrayInterface
                 return $families;
             }
 
+            /** @var string|int $paginationSize */
+            $paginationSize = $this->configHelper->getPaginationSize();
             /** @var ResourceCursorInterface $families */
-            $akeneoFamilies = $client->getFamilyApi()->all();
+            $akeneoFamilies = $client->getFamilyApi()->all($paginationSize);
             /** @var mixed[] $family */
             foreach ($akeneoFamilies as $family) {
                 if (!isset($family['code'])) {

@@ -502,8 +502,10 @@ class Product extends JobImport
      */
     public function getMetricsSymbols()
     {
+        /** @var string|int $paginationSize */
+        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var mixed[] $measures */
-        $measures = $this->akeneoClient->getMeasureFamilyApi()->all();
+        $measures = $this->akeneoClient->getMeasureFamilyApi()->all($paginationSize);
         /** @var string[] $metricsSymbols */
         $metricsSymbols = [];
         /** @var mixed[] $measure */
@@ -2620,10 +2622,12 @@ class Product extends JobImport
         if (!$this->akeneoClient) {
             $this->akeneoClient = $this->getAkeneoClient();
         }
+        /** @var string|int $paginationSize */
+        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var string[] $families */
         $families = [];
         /** @var string[] $apiFamilies */
-        $apiFamilies = $this->akeneoClient->getFamilyApi()->all();
+        $apiFamilies = $this->akeneoClient->getFamilyApi()->all($paginationSize);
         /** @var mixed[] $family */
         foreach ($apiFamilies as $family) {
             if (!isset($family['code'])) {

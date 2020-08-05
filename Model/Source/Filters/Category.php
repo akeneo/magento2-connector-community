@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Model\Source\Filters;
 
+use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Framework\Option\ArrayInterface;
@@ -25,26 +26,34 @@ class Category implements ArrayInterface
      * @var Authenticator $akeneoAuthenticator
      */
     protected $akeneoAuthenticator;
-
     /**
      *
      *
      * @var \Psr\Log\LoggerInterface $logger
      */
     protected $logger;
+    /**
+     * This variable contains a ConfigHelper
+     *
+     * @var ConfigHelper $configHelper
+     */
+    protected $configHelper;
 
     /**
      * Category constructor
      *
      * @param Authenticator            $akeneoAuthenticator
      * @param \Psr\Log\LoggerInterface $logger
+     * @param ConfigHelper             $configHelper
      */
     public function __construct(
         Authenticator $akeneoAuthenticator,
-        \Psr\Log\LoggerInterface $logger
+        \Psr\Log\LoggerInterface $logger,
+        ConfigHelper $configHelper
     ) {
         $this->akeneoAuthenticator = $akeneoAuthenticator;
         $this->logger              = $logger;
+        $this->configHelper        = $configHelper;
     }
 
     /**
@@ -63,8 +72,10 @@ class Category implements ArrayInterface
             if (empty($client)) {
                 return $categories;
             }
+            /** @var string|int $paginationSize */
+            $paginationSize = $this->configHelper->getPaginationSize();
             /** @var ResourceCursorInterface $categories */
-            $akeneoCategories = $client->getCategoryApi()->all();
+            $akeneoCategories = $client->getCategoryApi()->all($paginationSize);
             /** @var mixed[] $category */
             foreach ($akeneoCategories as $category) {
                 if (!isset($category['code']) || isset($category['parent'])) {
@@ -75,7 +86,7 @@ class Category implements ArrayInterface
         } catch (\Exception $exception) {
             $this->logger->warning($exception->getMessage());
         }
-        
+
         return $categories;
     }
 

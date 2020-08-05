@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Model\Source\Filters;
 
+use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Framework\Option\ArrayInterface;
@@ -25,16 +26,25 @@ class Channel implements ArrayInterface
      * @var Authenticator $akeneoAuthenticator
      */
     protected $akeneoAuthenticator;
+    /**
+     * This variable contains a ConfigHelper
+     *
+     * @var ConfigHelper $configHelper
+     */
+    protected $configHelper;
 
     /**
      * Family constructor
      *
      * @param Authenticator $akeneoAuthenticator
+     * @param ConfigHelper  $configHelper
      */
     public function __construct(
-        Authenticator $akeneoAuthenticator
+        Authenticator $akeneoAuthenticator,
+        ConfigHelper $configHelper
     ) {
         $this->akeneoAuthenticator = $akeneoAuthenticator;
+        $this->configHelper        = $configHelper;
     }
 
     /**
@@ -72,9 +82,10 @@ class Channel implements ArrayInterface
             if (!$akeneoClient) {
                 return [];
             }
+            /** @var string|int $paginationSize */
+            $paginationSize = $this->configHelper->getPaginationSize();
 
-            return $akeneoClient->getChannelApi()->all();
-
+            return $akeneoClient->getChannelApi()->all($paginationSize);
         } catch (\Exception $exception) {
             return [];
         }
