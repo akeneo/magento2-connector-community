@@ -134,6 +134,7 @@ Par exemple :<br/>
 "Test API credentials","Test de connexion à l'API"
 "The Akeneo user should have permissions to list","L'utilisateur Akeneo doit avoir les permissions pour lister"
 "The attribute %1 was skipped because its type is not the same between Akeneo and Magento. Please delete it in Magento and try a new import","L'attribut %1 a été ignoré parce que son type est différent entre Akeneo et Magento. Merci de le supprimer dans Magento et de réessayer"
+The attribute %1 was not imported because it starts with a number. Update it in Akeneo and retry.","L'attribut %1 n'a pas été importé parce qu'il commence par un chiffre. Modifiez-le dans Akeneo et réessayez."
 "The connection is working fine","La connexion est opérationnelle"
 "Updated","Mis à jour"
 "Updated after","Mis à jour après"
