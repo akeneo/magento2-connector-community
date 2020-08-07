@@ -234,6 +234,21 @@ class Config
     }
 
     /**
+     * Check if all API credentials are correctly set
+     *
+     * @return bool
+     */
+    public function checkAkeneoApiCredentials()
+    {
+        if (!$this->getAkeneoApiBaseUrl() || !$this->getAkeneoApiClientId() || !$this->getAkeneoApiClientSecret(
+            ) || !$this->getAkeneoApiPassword() || !$this->getAkeneoApiUsername()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Retrieve the filter mode used
      *
      * @return string
