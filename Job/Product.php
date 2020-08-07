@@ -1178,8 +1178,6 @@ class Product extends JobImport
             'attribute_set_id' => '_attribute_set_id',
             'type_id'          => '_type_id',
             'sku'              => 'identifier',
-            'has_options'      => new Expr(0),
-            'required_options' => new Expr(0),
             'updated_at'       => new Expr('now()'),
         ];
 
