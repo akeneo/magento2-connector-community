@@ -28,7 +28,7 @@ class Category implements ArrayInterface
      */
     protected $akeneoAuthenticator;
     /**
-     *
+     * Description $logger field
      *
      * @var Logger $logger
      */
@@ -60,7 +60,7 @@ class Category implements ArrayInterface
     /**
      * Initialize options
      *
-     * @return void
+     * @return ResourceCursorInterface|array
      */
     public function getCategories()
     {

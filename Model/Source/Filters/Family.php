@@ -60,7 +60,7 @@ class Family implements ArrayInterface
     /**
      * Initialize options
      *
-     * @return void
+     * @return ResourceCursorInterface|array
      */
     public function getFamilies()
     {
