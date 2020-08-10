@@ -68,7 +68,7 @@
                             <argument name="getter" xsi:type="string">getStatus</argument>
                             <argument name="index" xsi:type="string">status</argument>
                             <argument name="renderer" xsi:type="string">Akeneo\Connector\Block\Adminhtml\Grid\Column\Renderer\Status</argument>
-                            <argument name="options" model="Akeneo\Connector\Model\Source\Status" xsi:type="options"/>
+                            <argument name="options" model="Akeneo\Connector\Model\Source\Status" xsi:type="options"></argument>
                             <argument name="type" xsi:type="string">options</argument>
                         </arguments>
                     </block>
