@@ -6,6 +6,7 @@ use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Framework\Option\ArrayInterface;
+use Psr\Log\LoggerInterface as Logger;
 use Akeneo\Connector\Helper\Authenticator;
 
 /**
@@ -29,7 +30,7 @@ class Family implements ArrayInterface
     /**
      * Description $logger field
      *
-     * @var \Psr\Log\LoggerInterface $logger
+     * @var Logger $logger
      */
     protected $logger;
     /**
@@ -43,11 +44,12 @@ class Family implements ArrayInterface
      * Family constructor
      *
      * @param Authenticator $akeneoAuthenticator
+     * @param Logger        $logger
      * @param ConfigHelper  $configHelper
      */
     public function __construct(
         Authenticator $akeneoAuthenticator,
-        \Psr\Log\LoggerInterface $logger,
+        Logger $logger,
         ConfigHelper $configHelper
     ) {
         $this->akeneoAuthenticator = $akeneoAuthenticator;
