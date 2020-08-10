@@ -2619,6 +2619,9 @@ class Product extends JobImport
     {
         if (!$this->akeneoClient) {
             $this->akeneoClient = $this->getAkeneoClient();
+            if (!$this->akeneoClient) {
+                return [];
+            }
         }
         /** @var string[] $families */
         $families = [];
