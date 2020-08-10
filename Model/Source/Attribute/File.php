@@ -3,6 +3,7 @@
 namespace Akeneo\Connector\Model\Source\Attribute;
 
 use Akeneo\Connector\Helper\Authenticator;
+use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Eav\Model\Entity\Attribute\Source\AbstractSource;
@@ -30,16 +31,25 @@ class File extends AbstractSource
      * @var AkeneoPimClientInterface $akeneoClient
      */
     protected $akeneoClient;
+    /**
+     * This variable contains a ConfigHelper
+     *
+     * @var ConfigHelper $configHelper
+     */
+    protected $configHelper;
 
     /**
      * File constructor
      *
      * @param Authenticator $akeneoAuthenticator
+     * @param ConfigHelper  $configHelper
      */
     public function __construct(
-        Authenticator $akeneoAuthenticator
+        Authenticator $akeneoAuthenticator,
+        ConfigHelper $configHelper
     ) {
         $this->akeneoAuthenticator = $akeneoAuthenticator;
+        $this->configHelper        = $configHelper;
     }
 
     /**
@@ -80,8 +90,10 @@ class File extends AbstractSource
             if (!$akeneoClient) {
                 return [];
             }
+            /** @var string|int $paginationSize */
+            $paginationSize = $this->configHelper->getPaginationSize();
 
-            return $akeneoClient->getAttributeApi()->all();
+            return $akeneoClient->getAttributeApi()->all($paginationSize);
         } catch (\Exception $exception) {
             return [];
         }

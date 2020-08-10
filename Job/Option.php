@@ -444,7 +444,9 @@ class Option extends Import
             if (!$this->akeneoClient) {
                 $this->akeneoClient = $this->getAkeneoClient();
             }
-            $this->attributes = $this->akeneoClient->getAttributeApi()->all();
+            /** @var string|int $paginationSize */
+            $paginationSize = $this->configHelper->getPaginationSize();
+            $this->attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize);
         }
 
         return $this->attributes;

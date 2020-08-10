@@ -2,9 +2,11 @@
 
 namespace Akeneo\Connector\Model\Source\Filters;
 
+use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Framework\Option\ArrayInterface;
+use Psr\Log\LoggerInterface as Logger;
 use Akeneo\Connector\Helper\Authenticator;
 
 /**
@@ -28,27 +30,37 @@ class Family implements ArrayInterface
     /**
      * Description $logger field
      *
-     * @var \Psr\Log\LoggerInterface $logger
+     * @var Logger $logger
      */
     protected $logger;
+    /**
+     * This variable contains a ConfigHelper
+     *
+     * @var ConfigHelper $configHelper
+     */
+    protected $configHelper;
 
     /**
      * Family constructor
      *
      * @param Authenticator $akeneoAuthenticator
+     * @param Logger        $logger
+     * @param ConfigHelper  $configHelper
      */
     public function __construct(
         Authenticator $akeneoAuthenticator,
-        \Psr\Log\LoggerInterface $logger
+        Logger $logger,
+        ConfigHelper $configHelper
     ) {
         $this->akeneoAuthenticator = $akeneoAuthenticator;
         $this->logger              = $logger;
+        $this->configHelper        = $configHelper;
     }
 
     /**
      * Initialize options
      *
-     * @return void
+     * @return ResourceCursorInterface|array
      */
     public function getFamilies()
     {
@@ -63,8 +75,10 @@ class Family implements ArrayInterface
                 return $families;
             }
 
+            /** @var string|int $paginationSize */
+            $paginationSize = $this->configHelper->getPaginationSize();
             /** @var ResourceCursorInterface $families */
-            $akeneoFamilies = $client->getFamilyApi()->all();
+            $akeneoFamilies = $client->getFamilyApi()->all($paginationSize);
             /** @var mixed[] $family */
             foreach ($akeneoFamilies as $family) {
                 if (!isset($family['code'])) {

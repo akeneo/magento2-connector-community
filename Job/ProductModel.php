@@ -237,8 +237,10 @@ class ProductModel extends Import
      */
     public function getMetricsSymbols()
     {
+        /** @var string|int $paginationSize */
+        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var mixed[] $measures */
-        $measures = $this->akeneoClient->getMeasureFamilyApi()->all();
+        $measures = $this->akeneoClient->getMeasureFamilyApi()->all($paginationSize);
         /** @var string[] $metricsSymbols */
         $metricsSymbols = [];
         /** @var mixed[] $measure */
