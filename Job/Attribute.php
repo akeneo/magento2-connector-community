@@ -188,6 +188,11 @@ class Attribute extends Import
          * @var array $attribute
          */
         foreach ($attributes as $index => $attribute) {
+            // If the attribute starts with a number, skip
+            if (ctype_digit(substr($attribute['code'], 0, 1))) {
+                $this->setAdditionalMessage(__('The attribute %1 was not imported because it starts with a number. Update it in Akeneo and retry.', $attribute['code']));
+                continue;
+            }
             /** @var string $attributeCode */
             $attributeCode     = $attribute['code'];
             $attribute['code'] = strtolower($attributeCode);
