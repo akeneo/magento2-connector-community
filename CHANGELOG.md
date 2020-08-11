@@ -124,3 +124,10 @@
 ### Version 100.4.11 :
 * Fix website mapping attribute code comparison to lowercase
 * Fix configurable mapping attribute code comparison to lowercase
+
+### Version 100.4.12 :
+* Add credentials check before command line import jobs
+* Add pagination to API calls in the admin configuration page
+* Add security to prevent import of attributes starting with numbers (https://help.akeneo.com/magento2-connector/v100/articles/what-data.html#attributes)
+* Add column filtering for job status in the admin connector log grid
+* Fix custom options deletion after each product import

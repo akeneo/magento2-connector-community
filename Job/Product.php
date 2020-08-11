@@ -502,8 +502,10 @@ class Product extends JobImport
      */
     public function getMetricsSymbols()
     {
+        /** @var string|int $paginationSize */
+        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var mixed[] $measures */
-        $measures = $this->akeneoClient->getMeasureFamilyApi()->all();
+        $measures = $this->akeneoClient->getMeasureFamilyApi()->all($paginationSize);
         /** @var string[] $metricsSymbols */
         $metricsSymbols = [];
         /** @var mixed[] $measure */
@@ -1178,8 +1180,6 @@ class Product extends JobImport
             'attribute_set_id' => '_attribute_set_id',
             'type_id'          => '_type_id',
             'sku'              => 'identifier',
-            'has_options'      => new Expr(0),
-            'required_options' => new Expr(0),
             'updated_at'       => new Expr('now()'),
         ];
 
@@ -2619,11 +2619,16 @@ class Product extends JobImport
     {
         if (!$this->akeneoClient) {
             $this->akeneoClient = $this->getAkeneoClient();
+            if (!$this->akeneoClient) {
+                return [];
+            }
         }
+        /** @var string|int $paginationSize */
+        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var string[] $families */
         $families = [];
         /** @var string[] $apiFamilies */
-        $apiFamilies = $this->akeneoClient->getFamilyApi()->all();
+        $apiFamilies = $this->akeneoClient->getFamilyApi()->all($paginationSize);
         /** @var mixed[] $family */
         foreach ($apiFamilies as $family) {
             if (!isset($family['code'])) {
