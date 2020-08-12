@@ -59,12 +59,12 @@ class AkeneoConnectorImportCommand extends Command
     protected $configHelper;
 
     /**
-     * AkeneoConnectorImportCommand constructor.
+     * AkeneoConnectorImportCommand constructor
      *
      * @param ImportRepositoryInterface $importRepository
      * @param State                     $appState
-     * @param null                      $name
      * @param ConfigHelper              $configHelper
+     * @param null                      $name
      */
     public function __construct(
         ImportRepositoryInterface $importRepository,
