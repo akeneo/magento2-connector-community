@@ -197,6 +197,12 @@ class Product extends Entities
 
                     continue;
                 }
+                // Attribute is a twig template field (custom attribute type from https://marketplace.akeneo.com/extension/text-template-bundle)
+                if (isset($attributeValue['data']['template']) && isset($attributeValue['data']['rendered'])) {
+                    $columns[$key] = $attributeValue['data']['rendered'];
+
+                    continue;
+                }
                 // Attribute is a multiselect
                 if (isset($attributeValue['data'][0]) && (!is_array($attributeValue['data'][0]) || !array_key_exists(
                             'amount',
