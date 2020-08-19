@@ -134,3 +134,6 @@
 
 ### Version 100.4.13 :
 * Fix command constructor inverted comments causing compilation issue
+
+### Version 100.4.14 :
+* Fix product model temporary table data insertion when using multiple channels
