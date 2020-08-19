@@ -213,6 +213,10 @@ class ProductModel extends Import
                         $productModel['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
                     }
                 }
+                // Set identifier to work with data insertion
+                if (isset($productModel['code'])) {
+                    $productModel['identifier'] = $productModel['code'];
+                }
                 $this->entitiesHelper->insertDataFromApi($productModel, $this->getCode());
                 $index++;
             }
