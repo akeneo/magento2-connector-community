@@ -137,3 +137,6 @@
 
 ### Version 100.4.14 :
 * Fix product model temporary table data insertion when using multiple channels
+
+### Version 100.4.15 :
+* Fix image import with uppercase attribute codes
