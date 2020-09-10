@@ -2436,11 +2436,11 @@ class Product extends JobImport
             'sku'             => 'identifier',
         ];
         foreach ($gallery as $image) {
-            if (!$connection->tableColumnExists($tmpTable, $image)) {
+            if (!$connection->tableColumnExists($tmpTable, strtolower($image))) {
                 $this->setMessage(__('Info: No value found in the current batch for the attribute %1', $image));
                 continue;
             }
-            $data[$image] = $image;
+            $data[$image] = strtolower($image);
         }
 
         /** @var bool $rowIdExists */
