@@ -39,7 +39,7 @@ class Log extends AbstractModel implements LogInterface, IdentityInterface
      */
     protected function _construct()
     {
-        $this->_init('Akeneo\Connector\Model\ResourceModel\Log');
+        $this->_init(\Akeneo\Connector\Model\ResourceModel\Log::class);
     }
 
     /**
