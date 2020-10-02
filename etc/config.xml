@@ -18,6 +18,7 @@
                 <client_id>1_demo_client_id</client_id>
                 <client_secret>demo_secret</client_secret>
                 <pagination_size>100</pagination_size>
+                <edition>flexibility</edition>
             </akeneo_api>
             <products_filters>
                 <mode>standard</mode>
