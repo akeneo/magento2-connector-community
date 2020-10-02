@@ -664,4 +664,31 @@ abstract class Import extends DataObject implements ImportInterface
 
         return $akeneoClient;
     }
+
+
+    /**
+     * Display messages from import
+     *
+     * @param $messages
+     *
+     * @return void
+     */
+    public function displayMessages ($messages) {
+        /** @var string[] $importMessages */
+        foreach ($messages as $importMessages) {
+            if (!empty($importMessages)) {
+                /** @var string[] $message */
+                foreach ($importMessages as $message) {
+                    if (isset($message['message'], $message['status'])) {
+                        if ($message['status'] == false) {
+                            $this->setMessage($message['message']);
+                            $this->setStatus(false);
+                        } else {
+                            $this->setAdditionalMessage($message['message']);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

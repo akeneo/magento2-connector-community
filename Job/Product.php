@@ -5,10 +5,12 @@ namespace Akeneo\Connector\Job;
 use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Helper\FamilyVariant;
 use Akeneo\Connector\Helper\Import\Entities;
 use Akeneo\Connector\Helper\Import\Product as ProductImportHelper;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\ProductFilters;
+use Akeneo\Connector\Helper\ProductModel;
 use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Job\Import as JobImport;
@@ -33,12 +35,14 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\PageCache\Model\Cache\Type;
 use Magento\Staging\Model\VersionManager;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Zend_Db_Expr as Expr;
+use Zend_Db_Statement_Exception;
 use Zend_Db_Statement_Pdo;
 
 /**
@@ -159,6 +163,18 @@ class Product extends JobImport
      */
     protected $configHelper;
     /**
+     * This variable contains a ProductModel
+     *
+     * @var ProductModel $productModelHelper
+     */
+    protected $productModelHelper;
+    /**
+     * This variable contains a FamilyVariant
+     *
+     * @var FamilyVariant $familyVariantHelper
+     */
+    protected $familyVariantHelper;
+    /**
      * This variable contains an EavConfig
      *
      * @var  EavConfig $eavConfig
@@ -245,6 +261,8 @@ class Product extends JobImport
      * @param Authenticator           $authenticator
      * @param ProductImportHelper     $entitiesHelper
      * @param ConfigHelper            $configHelper
+     * @param ProductModel            $productModel
+     * @param FamilyVariant           $familyVariant
      * @param EavConfig               $eavConfig
      * @param EavAttribute            $eavAttribute
      * @param ProductFilters          $productFilters
@@ -266,6 +284,8 @@ class Product extends JobImport
         Authenticator $authenticator,
         ProductImportHelper $entitiesHelper,
         ConfigHelper $configHelper,
+        ProductModel $productModel,
+        FamilyVariant $familyVariant,
         EavConfig $eavConfig,
         EavAttribute $eavAttribute,
         ProductFilters $productFilters,
@@ -285,6 +305,8 @@ class Product extends JobImport
 
         $this->entitiesHelper          = $entitiesHelper;
         $this->configHelper            = $configHelper;
+        $this->productModelHelper      = $productModel;
+        $this->familyVariantHelper     = $familyVariant;
         $this->eavConfig               = $eavConfig;
         $this->eavAttribute            = $eavAttribute;
         $this->productFilters          = $productFilters;
@@ -351,18 +373,39 @@ class Product extends JobImport
         }
 
         if (empty($products)) {
-            $this->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()));
-            $this->stop(true);
+            /** @var mixed[] $modelFilters */
+            $modelFilters = $this->getProductModelFilters($this->getFamily());
+            foreach ($modelFilters as $filter) {
+                /** @var PageInterface $productModels */
+                $productModels = $this->akeneoClient->getProductModelApi()->listPerPage(1, false, $filter);
+                /** @var array $productModel */
+                $productModels = $productModels->getItems();
+
+                if (!empty($productModels)) {
+                    break;
+                }
+            }
+
+            if (empty($productModels)) {
+                $this->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()));
+                $this->stop(true);
+
+                return;
+            }
+            $this->entitiesHelper->createTmpTableFromApi([], $this->getCode());
+            $this->setMessage(
+                __('No product found for family: %1 but product model found, process with import', $this->getFamily())
+            );
 
             return;
+        } else {
+            $product = reset($products);
+            $this->entitiesHelper->createTmpTableFromApi($product, $this->getCode());
+
+            /** @var string $message */
+            $message = __('Family imported in this batch: %1', $this->getFamily());
+            $this->setMessage($message);
         }
-
-        $product = reset($products);
-        $this->entitiesHelper->createTmpTableFromApi($product, $this->getCode());
-
-        /** @var string $message */
-        $message = __('Family imported in this batch: %1', $this->getFamily());
-        $this->setMessage($message);
     }
 
     /**
@@ -384,6 +427,13 @@ class Product extends JobImport
         $metricSymbols = $this->getMetricsSymbols();
         /** @var string[] $attributeMetrics */
         $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+
+        if (!$connection->isTableExists($this->entitiesHelper->getTableName('product_model')) && !$connection->isTableExists($this->entitiesHelper->getTableName('product'))) {
+            return;
+        }
+        
         /** @var mixed[] $filter */
         foreach ($filters as $filter) {
             /** @var ResourceCursorInterface $products */
@@ -465,8 +515,6 @@ class Product extends JobImport
                     $this->storeHelper->getStores(['lang', 'channel_code']) // en_US-channel
                 );
 
-                /** @var AdapterInterface $connection */
-                $connection = $this->entitiesHelper->getConnection();
                 /** @var string $tmpTable */
                 $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
                 /** @var array $data */
@@ -493,6 +541,75 @@ class Product extends JobImport
         }
 
         $this->setMessage(__('%1 line(s) found', $index));
+    }
+
+    /**
+     * Import product model
+     *
+     * @return void
+     * @throws FileSystemException
+     */
+    public function productModelImport()
+    {
+        /** @var string[] $messages */
+        $messages = [];
+        /** @var mixed[] $filters */
+        $filters = $this->getProductModelFilters($this->getFamily());
+        /** @var mixed[] $step */
+        $step = $this->productModelHelper->createTable($this->akeneoClient, $filters);
+        $messages[] = $step;
+        if (array_keys(array_column($step, 'status'), false)) {
+            $this->displayMessages($messages);
+
+            return;
+        }
+
+        /** @var mixed[] $stepInsertData */
+        $step = $this->productModelHelper->insertData($this->akeneoClient, $filters);
+        $messages[] = $step;
+        if (array_keys(array_column($step, 'status'), false)) {
+            $this->displayMessages($messages);
+
+            return;
+        }
+
+        $this->displayMessages($messages);
+    }
+
+    /**
+     * Import Family Variant : update temporrary product model table with the correct axis
+     *
+     * @return void
+     */
+    public function familyVariantImport()
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        if ($connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
+            /** @var string[] $messages */
+            $messages = [];
+
+            /** @var mixed[] $step */
+            $step       = $this->familyVariantHelper->createTable($this->akeneoClient, $this->getFamily());
+            $messages[] = $step;
+            if (array_keys(array_column($step, 'status'), false)) {
+                $this->displayMessages($messages);
+
+                return;
+            }
+            /** @var mixed[] $step */
+            $step       = $this->familyVariantHelper->insertData($this->akeneoClient, $this->getFamily());
+            $messages[] = $step;
+            if (array_keys(array_column($step, 'status'), false)) {
+                $this->displayMessages($messages);
+
+                return;
+            }
+            $this->familyVariantHelper->updateAxis();
+            $this->familyVariantHelper->updateProductModel();
+            $this->familyVariantHelper->dropTable();
+            $this->displayMessages($messages);
+        }
     }
 
     /**
@@ -768,6 +885,18 @@ class Product extends JobImport
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
 
+        $connection->addColumn($tmpTable, '_children', 'text');
+        $connection->addColumn(
+            $tmpTable,
+            '_axis',
+            [
+                'type'    => 'text',
+                'length'  => 255,
+                'default' => '',
+                'COMMENT' => ' ',
+            ]
+        );
+
         /** @var string|null $groupColumn */
         $groupColumn = null;
         if ($connection->tableColumnExists($tmpTable, 'parent')) {
@@ -783,20 +912,8 @@ class Product extends JobImport
             return;
         }
 
-        $connection->addColumn($tmpTable, '_children', 'text');
-        $connection->addColumn(
-            $tmpTable,
-            '_axis',
-            [
-                'type'    => 'text',
-                'length'  => 255,
-                'default' => '',
-                'COMMENT' => ' ',
-            ]
-        );
-
         /** @var string $productModelTable */
-        $productModelTable = $this->entitiesHelper->getTable('akeneo_connector_product_model');
+        $productModelTable = $this->entitiesHelper->getTable($this->entitiesHelper->getTableName('product_model'));
 
         if ($connection->tableColumnExists($productModelTable, 'parent')) {
             $select = $connection->select()->from(false, [$groupColumn => 'v.parent'])->joinInner(
@@ -1710,6 +1827,95 @@ class Product extends JobImport
     }
 
     /**
+     * Link simple products to already existant product models
+     *
+     * @return void
+     * @throws Zend_Db_Statement_Exception
+     */
+    public function linkSimple()
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        /** @var string $entityTable */
+        $entityTable = $this->entitiesHelper->getTable('catalog_product_entity');
+        /** @var string $productRelationTable */
+        $productRelationTable = $this->entitiesHelper->getTable('catalog_product_relation');
+        /** @var string $productSuperLinkTable */
+        $productSuperLinkTable = $this->entitiesHelper->getTable('catalog_product_super_link');
+
+        /** @var \Magento\Framework\DB\Select $select */
+        $select = $connection->select()->from($tmpTable, ['_entity_id', 'parent'])->where('parent IS NOT NULL');
+
+        /** @var string $pKeyColumn */
+        $pKeyColumn = 'entity_id';
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($entityTable);
+        if ($rowIdExists) {
+            $pKeyColumn = 'row_id';
+        }
+
+        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+        $query = $connection->query($select);
+
+        /** @var array $row */
+        while (($row = $query->fetch())) {
+            if (!isset($row['parent']) || !isset($row['_entity_id'])) {
+                continue;
+            }
+
+            /** @var string $productModelEntityId */
+            $productModelEntityId = $connection->fetchOne(
+                $connection->select()->from($entityTable, $pKeyColumn)->where('sku = ?', $row['parent'])->limit(1)
+            );
+
+            // A product model already has been imported, check that everything is in order
+            if ($productModelEntityId != false) {
+                /** @var string[] $valuesRelations */
+                $valuesRelations = [];
+                /** @var string[] $valuesSuperLink */
+                $valuesSuperLink = [];
+                // Check for relations and add them if they don't exist
+                /** @var bool $hasRelation */
+                $hasRelation = (bool)$connection->fetchOne(
+                    $connection->select()->from($productRelationTable, [new Expr(1)])->where(
+                        'parent_id = ?',
+                        $productModelEntityId
+                    )->where('child_id = ?', $row['_entity_id'])->limit(1)
+                );
+
+                if (!$hasRelation) {
+                    $valuesRelations[] = [
+                        'parent_id' => $productModelEntityId,
+                        'child_id'  => $row['_entity_id'],
+                    ];
+
+                    $connection->insertOnDuplicate($productRelationTable, $valuesRelations, []);
+                }
+
+                // Do the same for super links
+                /** @var bool $hasSuperLink */
+                $hasSuperLink = (bool)$connection->fetchOne(
+                    $connection->select()->from($productSuperLinkTable, [new Expr(1)])->where(
+                        'parent_id = ?',
+                        $productModelEntityId
+                    )->where('product_id = ?', $row['_entity_id'])->limit(1)
+                );
+
+                if (!$hasSuperLink) {
+                    $valuesSuperLink[] = [
+                        'product_id' => $row['_entity_id'],
+                        'parent_id'  => $productModelEntityId,
+                    ];
+
+                    $connection->insertOnDuplicate($productSuperLinkTable, $valuesSuperLink, []);
+                }
+            }
+        }
+    }
+
+    /**
      * Set website
      *
      * @return void
@@ -2568,6 +2774,7 @@ class Product extends JobImport
     public function dropTable()
     {
         $this->entitiesHelper->dropTable($this->getCode());
+        $this->productModelHelper->dropTable();
     }
 
     /**
@@ -2608,6 +2815,37 @@ class Product extends JobImport
         $this->filters = $filters;
 
         return $this->filters;
+    }
+
+    /**
+     * Retrieve product model filters
+     *
+     * @return mixed[]
+     */
+    protected function getProductModelFilters($family = null)
+    {
+        /** @var mixed[] $filters */
+        $filters = $this->getFilters($family);
+
+        /**
+         * @var string $key
+         * @var string[Ø] $filter
+         */
+        foreach ($filters as $key => $filter) {
+            if (isset($filter['search'])) {
+                if (isset($filter['search']['enabled'])) {
+                    unset($filters[$key]['search']['enabled']);
+                }
+                if (isset($filter['search']['group'])) {
+                    unset($filters[$key]['search']['group']);
+                }
+                if (isset($filter['search']['parent'])) {
+                    unset($filters[$key]['search']['parent']);
+                }
+            }
+        }
+
+        return $filters;
     }
 
     /**

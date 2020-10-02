@@ -117,6 +117,12 @@ class UpgradeSchema implements UpgradeSchemaInterface
 
         }
 
+        if (version_compare($context->getVersion(), '1.0.2', '<')) {
+            if ($setup->getConnection()->isTableExists($setup->getTable('akeneo_connector_product_model'))) {
+                $setup->getConnection()->dropTable($setup->getTable('akeneo_connector_product_model'));
+            }
+        }
+
         $installer->endSetup();
     }
 }

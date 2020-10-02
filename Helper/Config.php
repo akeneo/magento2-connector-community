@@ -64,8 +64,6 @@ class Config
     const PRODUCT_ATTRIBUTE_MAPPING = 'akeneo_connector/product/attribute_mapping';
     const PRODUCT_WEBSITE_ATTRIBUTE = 'akeneo_connector/product/website_attribute';
     const PRODUCT_CONFIGURABLE_ATTRIBUTES = 'akeneo_connector/product/configurable_attributes';
-    const PRODUCT_PRODUCT_MODEL_BATCH_SIZE = 'akeneo_connector/product/product_model_batch_size';
-    const PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH = 'akeneo_connector/product/product_model_update_length';
     const PRODUCT_TAX_CLASS = 'akeneo_connector/product/tax_class';
     const PRODUCT_URL_GENERATION_ENABLED = 'akeneo_connector/product/url_generation_enabled';
     const PRODUCT_MEDIA_ENABLED = 'akeneo_connector/product/media_enabled';
@@ -81,14 +79,6 @@ class Config
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
      */
     const PAGINATION_SIZE_DEFAULT_VALUE = 10;
-    /**
-     * @var int PRODUCT_PRODUCT_MODEL_BATCH_SIZE_DEFAULT_VALUE
-     */
-    const PRODUCT_PRODUCT_MODEL_BATCH_SIZE_DEFAULT_VALUE = 500;
-    /**
-     * @var int PRODUCT_PRODUCT_MODEL_LENGTH_DEFAULT_VALUE
-     */
-    const PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_DEFAULT_VALUE = 5000;
     /**
      * @var int PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_MINIMUM
      */
@@ -942,41 +932,6 @@ class Config
         }
 
         return false;
-    }
-
-    /**
-     * Retrieve product_model batch size
-     *
-     * @return int
-     */
-    public function getAdvancedPmBatchSize()
-    {
-        /** @var int $advancedPmBatchSize */
-        $advancedPmBatchSize = $this->scopeConfig->getValue(self::PRODUCT_PRODUCT_MODEL_BATCH_SIZE);
-        if (filter_var($advancedPmBatchSize, FILTER_VALIDATE_INT) === false) {
-            $advancedPmBatchSize = self::PRODUCT_PRODUCT_MODEL_BATCH_SIZE_DEFAULT_VALUE;
-        }
-
-        return $advancedPmBatchSize;
-    }
-
-    /**
-     * Retrieve product_model update length
-     *
-     * @return int
-     */
-    public function getAdvancedPmUpdateLength()
-    {
-        /** @var int $advancedPmUpdateLength */
-        $advancedPmUpdateLength = $this->scopeConfig->getValue(self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH);
-        if ((filter_var(
-                $advancedPmUpdateLength,
-                FILTER_VALIDATE_INT
-            )) === false || ($advancedPmUpdateLength < self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_MINIMUM)) {
-            $advancedPmUpdateLength = self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_DEFAULT_VALUE;
-        }
-
-        return $advancedPmUpdateLength;
     }
 
     /**

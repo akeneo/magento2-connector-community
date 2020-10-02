@@ -249,24 +249,4 @@ class InstallSchema implements InstallSchemaInterface
             ->setComment('Akeneo Connector Import Log Step');
 
         $installer->getConnection()->createTable($table);
-
-        /** @var Table $table */
-        $table = $installer->getConnection()
-            ->newTable($installer->getTable('akeneo_connector_product_model'))
-            ->addColumn(                'code',
-                Table::TYPE_TEXT,
-                255,
-                ['nullable' => false, 'primary' => true],
-                'Akeneo code'
-            )
-            ->addColumn(
-                'axis',
-                Table::TYPE_TEXT,
-                255,
-                ['nullable' => false],
-                'Product axis')
-            ->setComment('Akeneo Connector Product Model');
-
-        $installer->getConnection()->createTable($table);
-    }
 }

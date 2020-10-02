@@ -297,24 +297,6 @@ For example :<br/>
                         ]]>
                     </comment>
                 </field>
-                <field id="product_model_batch_size" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Product Model Batch Size</label>
-                    <comment>
-                        <![CDATA[The number of product models handled per database update.</br>
-                        You can lower this value to prevent MYSQL errors from database limitations.<br />
-                        If set to 1, product models will be imported one by one.<br />
-                        If set to 0, "Product Model Update Length" value below will be used instead.<br />
-                        <u>Default value: 500</u>]]>
-                    </comment>
-                </field>
-                <field id="product_model_update_length" translate="label comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Product Model Update Length</label>
-                    <comment>
-                        <![CDATA[If the above "Product Model Batch Size" value is set to 0, the database command to insert product models will be sliced into separate statements no bigger than the given value.</br>
-                        This is an approximate value, and must be superior to 1000 characters.</br>
-                        <u>Default value: 5000</u>]]>
-                    </comment>
-                </field>
                 <field id="media_enabled" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Import Image Attributes</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
