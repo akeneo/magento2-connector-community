@@ -904,6 +904,11 @@ class Product extends JobImport
             ]
         );
 
+        // No product models were imported during this import, skip
+        if (!$connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
+            return;
+        }
+
         /** @var string|null $groupColumn */
         $groupColumn = null;
         if ($connection->tableColumnExists($tmpTable, 'parent')) {
