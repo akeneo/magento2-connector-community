@@ -249,4 +249,5 @@ class InstallSchema implements InstallSchemaInterface
             ->setComment('Akeneo Connector Import Log Step');
 
         $installer->getConnection()->createTable($table);
+    }
 }
