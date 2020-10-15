@@ -335,8 +335,7 @@ class ProductModel
 
         return $metricsSymbols;
     }
-
-
+    
     /**
      * Add columns to product table
      *
