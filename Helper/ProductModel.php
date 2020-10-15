@@ -119,6 +119,13 @@ class ProductModel
     {
         /** @var string[] $messages */
         $messages = [];
+        
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        if ($connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
+            return $messages;
+        }
+        
         foreach ($filters as $filter) {
             /** @var PageInterface $productModels */
             $productModels = $akeneoClient->getProductModelApi()->listPerPage(1, false, $filter);
@@ -327,5 +334,45 @@ class ProductModel
         }
 
         return $metricsSymbols;
+    }
+
+
+    /**
+     * Add columns to product table
+     *
+     * @return void
+     */
+    public function addColumns($code)
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var array $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($code);
+        /** @var array $except */
+        $except = ['code', 'axis', 'type', '_entity_id', '_is_new'];
+        /** @var array $variantTable */
+        $variantTable = $this->entitiesHelper->getTableName('product_model');
+        /** @var array $columnsTmp */
+        $columnsTmp = array_keys($connection->describeTable($tmpTable));
+        /** @var array $columns */
+        $columns = array_keys($connection->describeTable($variantTable));
+        /** @var array $columnsToAdd */
+        $columnsToAdd = array_diff($columns, $columnsTmp);
+
+        /** @var string $column */
+        foreach ($columnsToAdd as $column) {
+            if (in_array($column, $except)) {
+                continue;
+            }
+            $connection->addColumn($tmpTable, $this->_columnName($column), 'text');
+        }
+        if (!$connection->tableColumnExists($tmpTable, 'axis')) {
+            $connection->addColumn($tmpTable, 'axis', [
+                'type' => 'text',
+                'length' => 255,
+                'default' => '',
+                'COMMENT' => ' ',
+            ]);
+        }
     }
 }

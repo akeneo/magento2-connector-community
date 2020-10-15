@@ -392,13 +392,17 @@ class Product extends JobImport
 
                 return;
             }
-            $this->entitiesHelper->createTmpTableFromApi([], $this->getCode());
+            $productModel = reset($productModels);
+            $this->entitiesHelper->createTmpTableFromApi($productModel, $this->getCode());
+            $this->entitiesHelper->createTmpTableFromApi($productModel, 'product_model');
             $this->setMessage(
                 __('No product found for family: %1 but product model found, process with import', $this->getFamily())
             );
 
             return;
         } else {
+            // Make sure to delete product model table
+            $this->entitiesHelper->dropTable('product_model');
             $product = reset($products);
             $this->entitiesHelper->createTmpTableFromApi($product, $this->getCode());
 
@@ -430,7 +434,8 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
 
-        if (!$connection->isTableExists($this->entitiesHelper->getTableName('product_model')) && !$connection->isTableExists($this->entitiesHelper->getTableName('product'))) {
+        if ($connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
+
             return;
         }
         
@@ -572,6 +577,8 @@ class Product extends JobImport
 
             return;
         }
+        // Add missing columns from product models in product tmp table
+        $this->productModelHelper->addColumns($this->getCode());
 
         $this->displayMessages($messages);
     }
@@ -948,6 +955,30 @@ class Product extends JobImport
             $data['categories'] = 'e.categories';
         }
 
+        /** @var int $isSimpleProduct */
+        $isSimpleProduct = $connection->fetchOne($connection->select()->from($tmpTable, ['COUNT(*)']));
+
+        // Update column fetch if no simple product are in temporary table
+        if (!$isSimpleProduct) {
+            /** @var array $columnsModel */
+            $columnsModel = array_keys($connection->describeTable($productModelTable));
+            foreach ($columnsModel  as $columnModel) {
+                if (!isset($data[$columnModel])) {
+                    $data[$columnModel] = 'v.' . $columnModel;
+                }
+            }
+
+            // Update columns value from product model table
+            $data['identifier'] = 'v.code';
+            $data['family'] = 'v.family';
+            $data['categories'] = 'v.categories';
+            $data['url_key'] = 'v.code';
+
+            // Remove unavailable data on product models only import
+            unset($data['_status']);
+            unset($data['_children']);
+        }
+
         /** @var string[] $associationNames */
         foreach ($this->associationTypes as $associationNames) {
             if (empty($associationNames)) {
@@ -1063,6 +1094,14 @@ class Product extends JobImport
             'e.' . $groupColumn . ' = v.code',
             []
         )->where('e.' . $groupColumn . ' <> ""')->group('e.' . $groupColumn);
+
+        // Change configurable insert request if there are no simple products
+        if (!$isSimpleProduct) {
+            $configurable = $connection->select()
+                ->from(['v' => $productModelTable], $data)
+                ->joinLeft(['e' => $tmpTable],'v.code = ' . 'e.' . $groupColumn, [])
+                ->where('v.parent IS NULL');
+        }
 
         /** @var string $query */
         $query = $connection->insertFromSelect($configurable, $tmpTable, array_keys($data));
@@ -2841,6 +2880,9 @@ class Product extends JobImport
                 }
                 if (isset($filter['search']['parent'])) {
                     unset($filters[$key]['search']['parent']);
+                }
+                if (isset($filter['search']['completeness'])) {
+                    unset($filters[$key]['search']['completeness']);
                 }
             }
         }
