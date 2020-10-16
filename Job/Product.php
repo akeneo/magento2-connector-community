@@ -938,50 +938,27 @@ class Product extends JobImport
                 $connection->updateFromSelect($select, ['e' => $tmpTable])
             );
         }
-
+        
         /** @var array $data */
         $data = [
-            'identifier'         => 'e.' . $groupColumn,
-            '_children'          => new Expr('GROUP_CONCAT(e.identifier SEPARATOR ",")'),
+            'identifier'         => 'v.code',
             '_type_id'           => new Expr('"configurable"'),
             '_options_container' => new Expr('"container1"'),
-            '_status'            => 'e._status',
             '_axis'              => 'v.axis',
+            'family'             => 'v.family',
+            'categories'         => 'v.categories'
         ];
+
         if ($this->configHelper->isUrlGenerationEnabled()) {
-            $data['url_key'] = 'e.' . $groupColumn;
-        }
-
-        if ($connection->tableColumnExists($tmpTable, 'family')) {
-            $data['family'] = 'e.family';
-        }
-
-        if ($connection->tableColumnExists($tmpTable, 'categories')) {
-            $data['categories'] = 'e.categories';
-        }
-
-        /** @var int $isSimpleProduct */
-        $isSimpleProduct = $connection->fetchOne($connection->select()->from($tmpTable, ['COUNT(*)']));
-
-        // Update column fetch if no simple product are in temporary table
-        if (!$isSimpleProduct) {
-            /** @var array $columnsModel */
-            $columnsModel = array_keys($connection->describeTable($productModelTable));
-            foreach ($columnsModel  as $columnModel) {
-                if (!isset($data[$columnModel])) {
-                    $data[$columnModel] = 'v.' . $columnModel;
-                }
-            }
-
-            // Update columns value from product model table
-            $data['identifier'] = 'v.code';
-            $data['family'] = 'v.family';
-            $data['categories'] = 'v.categories';
             $data['url_key'] = 'v.code';
+        }
 
-            // Remove unavailable data on product models only import
-            unset($data['_status']);
-            unset($data['_children']);
+        /** @var array $columnsModel */
+        $columnsModel = array_keys($connection->describeTable($productModelTable));
+        foreach ($columnsModel  as $columnModel) {
+            if (!isset($data[$columnModel])) {
+                $data[$columnModel] = 'v.' . $columnModel;
+            }
         }
 
         /** @var string[] $associationNames */
@@ -1054,14 +1031,6 @@ class Product extends JobImport
                     $data[$column] = new Expr($value);
                 }
 
-                if ($type === TypeField::TYPE_DEFAULT) {
-                    if (!$connection->tableColumnExists($productModelTable, $column)) {
-                        $this->setMessage(__('Warning: column %1 not found in product model', $column));
-                        continue;
-                    }
-                    $data[$column] = 'v.' . $column;
-                }
-
                 if ($type === TypeField::TYPE_SIMPLE) {
                     $data[$column] = 'e.' . $column;
                 }
@@ -1095,22 +1064,39 @@ class Product extends JobImport
 
         /** @var Select $configurable */
         $configurable = $connection->select()
-            ->from(['e' => $tmpTable], $data)
-            ->joinInner(['v' => $productModelTable], 'e.' . $groupColumn . ' = v.code', [])
-            ->group('e.' . $groupColumn);
-
-        // Change configurable insert request if there are no simple products
-        if (!$isSimpleProduct) {
-            $configurable = $connection->select()
-                ->from(['v' => $productModelTable], $data)
-                ->joinLeft(['e' => $tmpTable],'v.code = ' . 'e.' . $groupColumn, [])
-                ->where('v.parent IS NULL');
-        }
+            ->from(['v' => $productModelTable], $data)
+            ->joinLeft(['e' => $tmpTable],'v.code = ' . 'e.' . $groupColumn, [])
+            ->where('v.parent IS NULL')
+            ->group('v.code');
 
         /** @var string $query */
         $query = $connection->insertFromSelect($configurable, $tmpTable, array_keys($data));
 
         $connection->query($query);
+
+        // Update _children column if possible
+        /** @var Select $childList */
+        $childList = $connection->select()
+            ->from(['v' => $productModelTable] , ['v.identifier', '_children' => new Expr('GROUP_CONCAT(e.identifier SEPARATOR ",")')])
+            ->joinInner(['e' => $tmpTable],'v.code = ' . 'e.' . $groupColumn, [])
+            ->group('v.identifier');
+
+        /** @var string $queryChilds */
+        $queryChilds = $connection->query($childList);
+        /** @var array $row */
+        while (($row = $queryChilds->fetch())) {
+            /** @var array $values */
+            $values = [
+                'identifier' => $row['identifier'],
+                '_children' => $row['_children'],
+            ];
+
+            $connection->insertOnDuplicate(
+                $tmpTable,
+                $values,
+                []
+            );
+        }
     }
 
     /**

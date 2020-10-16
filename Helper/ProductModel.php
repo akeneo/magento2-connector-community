@@ -348,7 +348,7 @@ class ProductModel
         /** @var array $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($code);
         /** @var array $except */
-        $except = ['code', 'axis', 'type', '_entity_id', '_is_new'];
+        $except = ['axis', 'type', '_entity_id', '_is_new'];
         /** @var array $variantTable */
         $variantTable = $this->entitiesHelper->getTableName('product_model');
         /** @var array $columnsTmp */
