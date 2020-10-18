@@ -16,22 +16,22 @@
                 <resource id="Magento_Backend::stores">
                     <resource id="Magento_Backend::stores_settings">
                         <resource id="Magento_Config::config">
-                            <resource id="Akeneo_Connector::config_akeneo_connector" title="Akeneo Connector Section" />
+                            <resource id="Akeneo_Connector::config_akeneo_connector" title="Akeneo Connector Section" translate="title" />
                         </resource>
                     </resource>
                 </resource>
                 <resource id="Magento_Backend::system">
-                    <resource id="Akeneo_Connector::akeneo_connector" title="Akeneo Connector Api" sortOrder="100">
-                        <resource id="Akeneo_Connector::import" title="Import API" sortOrder="10">
-                            <resource id="Akeneo_Connector::import_category" title="Categories" sortOrder="10" />
-                            <resource id="Akeneo_Connector::import_family" title="Families" sortOrder="20" />
-                            <resource id="Akeneo_Connector::import_attribute" title="Attributes" sortOrder="30" />
-                            <resource id="Akeneo_Connector::import_option" title="Options" sortOrder="40" />
-                            <resource id="Akeneo_Connector::import_product_model" title="Variants" sortOrder="50" />
-                            <resource id="Akeneo_Connector::import_family_variant" title="Family Variant" sortOrder="60" />
-                            <resource id="Akeneo_Connector::import_product" title="Products" sortOrder="70" />
+                    <resource id="Akeneo_Connector::akeneo_connector" title="Akeneo Connector Api" sortOrder="100" translate="title">
+                        <resource id="Akeneo_Connector::import" title="Import API" sortOrder="10" translate="title">
+                            <resource id="Akeneo_Connector::import_category" title="Categories" sortOrder="10" translate="title" />
+                            <resource id="Akeneo_Connector::import_family" title="Families" sortOrder="20"  translate="title" />
+                            <resource id="Akeneo_Connector::import_attribute" title="Attributes" sortOrder="30" translate="title" />
+                            <resource id="Akeneo_Connector::import_option" title="Options" sortOrder="40" translate="title" />
+                            <resource id="Akeneo_Connector::import_product_model" title="Variants" sortOrder="50" translate="title" />
+                            <resource id="Akeneo_Connector::import_family_variant" title="Family Variant" sortOrder="60" translate="title" />
+                            <resource id="Akeneo_Connector::import_product" title="Products" sortOrder="70" translate="title" />
                         </resource>
-                        <resource id="Akeneo_Connector::akeneo_connector_log" title="Log" sortOrder="20" />
+                        <resource id="Akeneo_Connector::akeneo_connector_log" title="Log" sortOrder="20" translate="title" />
                     </resource>
                 </resource>
             </resource>
