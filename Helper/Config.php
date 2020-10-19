@@ -899,7 +899,7 @@ class Config
     }
 
     /**
-     * Retrieve is asset import is enabled
+     * Retrieve is file import is enabled
      *
      * @return bool
      */
@@ -909,13 +909,13 @@ class Config
     }
 
     /**
-     * Retrieve asset attribute columns
+     * Retrieve file attribute columns
      *
      * @return array
      */
     public function getFileImportColumns()
     {
-        /** @var array $assets */
+        /** @var array $fileAttributes */
         $fileAttributes = [];
         /** @var string $config */
         $config = $this->scopeConfig->getValue(self::PRODUCT_FILE_ATTRIBUTE);
