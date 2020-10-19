@@ -281,15 +281,11 @@ For example :<br/>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>
                         <![CDATA[
-                        <strong>Attribute:</strong> Declare each product model attributes that has to be imported in the configurable product.
-                        <br /><br />
                         <strong>Type:</strong>
                         <br />
-                        - <u>Product Model value</u>: Declare each PIM common attributes you want to be imported in the Magento configurable products. Leave the value field empty.
+                        - <u>Mapping</u>: Declare each PIM common attributes you want to be mapped with another Magento attribute. Fill the value field with the corresponding Magento attribute. Example: Attribute = name_product_model and Value = name
                         <br />
                         - <u>First Variation value</u>: Declare each PIM variation specific attributes you want to be imported in the Magento configurable products. The value of the first variation associated to the product model will be inserted in the corresponding Magento configurable product attribute. Leave the value field empty.
-                        <br />
-                        - <u>Mapping</u>: Declare each PIM common attributes you want to be mapped with another Magento attribute. Fill the value field with the corresponding Magento attribute. Example: Attribute = name_product_model and Value = name
                         <br />
                         - <u>SQL Statement</u>: Use a SQL statement in the value field for custom value assignation from Akeneo Connector temporary tables. Example: Attribute = url_key and Value = LOWER(url_key)
                         <br />

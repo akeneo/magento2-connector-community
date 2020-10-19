@@ -123,6 +123,35 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
         }
 
+        if (version_compare($context->getVersion(), '1.0.3', '<')) {
+            /** @var string|array $configurable */
+            $configurable = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES);
+
+            if ($configurable) {
+                $configurable = $this->serializer->unserialize($configurable);
+
+                if (!is_array($configurable)) {
+                    $configurable = [];
+                }
+
+                /** @var array $attribute */
+                foreach ($configurable as $key => $attribute) {
+                    if (!isset($attribute['attribute'], $configurable[$key]['type'])) {
+                        continue;
+                    }
+
+                    if ($configurable[$key]['type'] == TypeField::TYPE_DEFAULT) {
+                        unset($configurable[$key]);
+                    }
+                }
+
+                $this->resourceConfig->saveConfig(
+                    ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES,
+                    json_encode($configurable)
+                );
+            }
+        }
+
         $installer->endSetup();
     }
 }
