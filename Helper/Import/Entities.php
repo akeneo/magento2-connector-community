@@ -3,6 +3,7 @@
 namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Exception;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Framework\App\DeploymentConfig;
@@ -392,6 +393,7 @@ class Entities
      * @param string $prefix
      *
      * @return \Akeneo\Connector\Helper\Import\Entities
+     * @throws Exception
      */
     public function matchEntity($pimKey, $entityTable, $entityKey, $import, $prefix = null)
     {
@@ -419,6 +421,12 @@ class Entities
                     AND c.`import` = "' . $import . '"
             )
         ');
+
+        /** @var string $mysqlVersion */
+        $mysqlVersion = $this->getMysqlVersion();
+        if (substr($mysqlVersion, 0, 1) == '8') {
+            $connection->query('SET @@SESSION.information_schema_stats_expiry = 0;');
+        }
 
         /* Set entity_id for new entities */
         /** @var string $query */
@@ -864,5 +872,27 @@ class Entities
         } catch (Zend_Db_Select_Exception $e) {
             $this->_logger->error($e->getMessage());
         }
+    }
+
+    /**
+     * Description getMysqlVersion function
+     *
+     * @return string
+     * @throws Exception
+     */
+    public function getMysqlVersion(): string
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->getConnection();
+        /** @var string $mysqlVersionQuery */
+        $mysqlVersionQuery = $connection->query('SELECT VERSION() AS version');
+        /** @var mixed $mysqlVersion */
+        $mysqlVersion = $mysqlVersionQuery->fetch();
+
+        if (!$mysqlVersion['version']) {
+            throw new Exception("Mysql version not recognized");
+        }
+
+        return $mysqlVersion['version'];
     }
 }
