@@ -158,3 +158,4 @@ The attribute %1 was not imported because it starts with a number. Update it in 
 "Concat Metric Unit","Metrische Einheit zum Wert hinzufügen"
 "No family to import","Keine Familie zu importieren"
 "Info: No value found in the current batch for the attribute %1","Info: Im aktuellen Stapel wurde kein Wert für das Attribut gefunden %1"
+"Documentation link","Dokumentationslink"
