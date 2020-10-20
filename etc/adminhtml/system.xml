@@ -22,6 +22,10 @@
                     <label>Extension Version</label>
                     <backend_model>Akeneo\Connector\Model\Config\Version</backend_model>
                 </field>
+                <field id="documentation_link" translate="label" type="label" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Documentation link</label>
+                    <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\DocumentationLink</frontend_model>
+                </field>
             </group>
             <group id="akeneo_api" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Akeneo API Configuration</label>
