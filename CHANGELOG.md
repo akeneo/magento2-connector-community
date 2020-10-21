@@ -140,3 +140,7 @@
 
 ### Version 100.4.15 :
 * Fix image import with uppercase attribute codes
+
+### Version 100.4.16 :
+* Fix file import with uppercase attribute codes
+* Fix auto_increment generation compliance with MYSQL 8
