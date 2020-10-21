@@ -1734,9 +1734,7 @@ class Product extends JobImport
         }
 
         /** @var Select $configurableSelect */
-        $configurableSelect = $connection->select()->from($tmpTable, ['_entity_id', '_axis', '_children'])->where('_type_id = ?', 'configurable')->where('_axis IS NOT NULL')->where(
-            '_children IS NOT NULL'
-        );
+        $configurableSelect = $connection->select()->from($tmpTable, ['_entity_id', '_axis', '_children'])->where('_type_id = ?', 'configurable')->where('_axis IS NOT NULL');
 
         /** @var string $pKeyColumn */
         $pKeyColumn = '_entity_id';
@@ -1750,8 +1748,6 @@ class Product extends JobImport
 
         /** @var int $stepSize */
         $stepSize = self::CONFIGURABLE_INSERTION_MAX_SIZE;
-        /** @var array $valuesLabels */
-        $valuesLabels = [];
         /** @var array $valuesRelations */
         $valuesRelations = []; // catalog_product_relation
         /** @var array $valuesSuperLink */
@@ -1774,7 +1770,7 @@ class Product extends JobImport
 
             /** @var int $id */
             foreach ($attributes as $id) {
-                if (!is_numeric($id) || !isset($row['_entity_id']) || !isset($row['_children'])) {
+                if (!is_numeric($id) || !isset($row['_entity_id'])) {
                     continue;
                 }
 
@@ -1802,6 +1798,8 @@ class Product extends JobImport
                     []
                 );
 
+                /** @var array $valuesLabels */
+                $valuesLabels = [];
                 /** @var string $superAttributeId */
                 $superAttributeId = $connection->fetchOne(
                     $connection->select()
@@ -1822,6 +1820,12 @@ class Product extends JobImport
                         'use_default'                => 0,
                         'value'                      => '',
                     ];
+                }
+                
+                $connection->insertOnDuplicate($productSuperAttrLabelTable, $valuesLabels, []);
+
+                if (!isset($row['_children'])) {
+                    continue;
                 }
 
                 /** @var array $children */
@@ -1852,11 +1856,9 @@ class Product extends JobImport
                 }
 
                 if (count($valuesSuperLink) > $stepSize) {
-                    $connection->insertOnDuplicate($productSuperAttrLabelTable, $valuesLabels, []);
                     $connection->insertOnDuplicate($productRelationTable, $valuesRelations, []);
                     $connection->insertOnDuplicate($productSuperLinkTable, $valuesSuperLink, []);
 
-                    $valuesLabels    = [];
                     $valuesRelations = [];
                     $valuesSuperLink = [];
                 }
@@ -1864,7 +1866,6 @@ class Product extends JobImport
         }
 
         if (count($valuesSuperLink) > 0) {
-            $connection->insertOnDuplicate($productSuperAttrLabelTable, $valuesLabels, []);
             $connection->insertOnDuplicate($productRelationTable, $valuesRelations, []);
             $connection->insertOnDuplicate($productSuperLinkTable, $valuesSuperLink, []);
         }
