@@ -753,10 +753,6 @@ class Product extends JobImport
             $connection->update($tmpTable, ['url_key' => new Expr('LOWER(`identifier`)')]);
         }
 
-        if ($connection->tableColumnExists($tmpTable, 'enabled')) {
-            $connection->update($tmpTable, ['_status' => new Expr('IF(`enabled` <> 1, 2, 1)')]);
-        }
-
         /** @var string|null $groupColumn */
         $groupColumn = null;
         if ($connection->tableColumnExists($tmpTable, 'parent')) {
@@ -786,6 +782,10 @@ class Product extends JobImport
                     '_type_id' => new Expr("IF(`type_id` IN ($types), `type_id`, 'simple')"),
                 ]
             );
+        }
+
+        if ($connection->tableColumnExists($tmpTable, 'enabled')) {
+            $connection->update($tmpTable, ['_status' => new Expr('IF(`enabled` <> 1, 2, 1)')], ['_type_id = ?' => 'simple']);
         }
 
         /** @var string|array $matches */
@@ -1522,9 +1522,7 @@ class Product extends JobImport
             ],
         ];
 
-        if ($connection->tableColumnExists($tmpTable, 'enabled')) {
-            $values[0]['status'] = '_status';
-        }
+        $values[0]['status'] = '_status';
 
         // Set products status
         /** @var string $statusAttributeId */
@@ -1545,8 +1543,9 @@ class Product extends JobImport
             $columnsForStatus['entity_id'] = $pKeyColumn;
         }
 
+        /* Simple status management */
+        /** @var Select $select */
         $select = $connection->select()->from(['a' => $tmpTable], $columnsForStatus);
-
         if ($rowIdExists) {
             $this->entities->addJoinForContentStaging($select, []);
         }
@@ -1554,8 +1553,10 @@ class Product extends JobImport
         $select->joinInner(
             ['b' => $this->entitiesHelper->getTable('catalog_product_entity_int')],
             $pKeyColumn . ' = b.' . $identifierColumn
-        )->where('a._is_new = ?', 0)->where('a._status = ?', 1)->where('b.attribute_id = ?', $statusAttributeId);
+        )->where('a._is_new = ?', 0)->where('a._status = ?', 1)->where('a._type_id = ?', 'simple')->where('b.attribute_id = ?', $statusAttributeId);
 
+        // Update existing simple status
+        /** @var Zend_Db_Statement_Pdo $oldStatus */
         $oldStatus = $connection->query($select);
         while (($row = $oldStatus->fetch())) {
             $valuesToInsert = [
@@ -1564,10 +1565,39 @@ class Product extends JobImport
             $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
         }
 
+        // Update new simple status
         $connection->update(
             $tmpTable,
             ['_status' => $this->configHelper->getProductActivation()],
-            ['_is_new = ?' => 1, '_status = ?' => 1]
+            ['_is_new = ?' => 1, '_status = ?' => 1, '_type_id = ?' => 'simple']
+        );
+
+        /*  Configurable status management */
+        $select = $connection->select()->from(['a' => $tmpTable], $columnsForStatus);
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStaging($select, []);
+        }
+
+        $select->joinInner(
+            ['b' => $this->entitiesHelper->getTable('catalog_product_entity_int')],
+            $pKeyColumn . ' = b.' . $identifierColumn
+        )->where('a._is_new = ?', 0)->where('a._type_id = ?', 'configurable')->where('b.attribute_id = ?', $statusAttributeId);
+
+        // Update existing configurable status
+        /** @var Zend_Db_Statement_Pdo $oldConfigurableStatus */
+        $oldConfigurableStatus = $connection->query($select);
+        while (($row = $oldConfigurableStatus->fetch())) {
+            $valuesToInsert = [
+                '_status' => $row['value'],
+            ];
+            $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
+        }
+
+        // Update new configurable status
+        $connection->update(
+            $tmpTable,
+            ['_status' => $this->configHelper->getProductActivation()],
+            ['_is_new = ?' => 1, '_type_id = ?' => 'configurable']
         );
 
         /** @var mixed[] $taxClasses */
