@@ -49,6 +49,7 @@ class Option extends Entities
      * @param string $prefix
      *
      * @return \Akeneo\Connector\Helper\Import\Entities
+     * @throws \Exception
      */
     public function matchEntity($pimKey, $entityTable, $entityKey, $import, $prefix = null)
     {
@@ -133,6 +134,12 @@ class Option extends Entities
             )
         '
         );
+
+        /** @var string $mysqlVersion */
+        $mysqlVersion = $this->getMysqlVersion();
+        if (substr($mysqlVersion, 0, 1) == '8') {
+            $connection->query('SET @@SESSION.information_schema_stats_expiry = 0;');
+        }
 
         /* Set entity_id for new entities */
         /** @var string $query */

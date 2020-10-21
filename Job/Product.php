@@ -1266,6 +1266,8 @@ class Product extends JobImport
 
         // Get all attributes to import
         foreach ($attributesMapped as $attribute) {
+            $attribute = strtolower($attribute);
+
             /** @var bool $attributeUsed */
             if ($connection->tableColumnExists($tmpTable, $attribute)) {
                 $data[$attribute] = $attribute;
