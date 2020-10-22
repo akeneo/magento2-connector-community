@@ -2546,11 +2546,11 @@ class Product extends JobImport
 
                 /** @var array $columns */
                 $columns = $this->configHelper->getMediaImportImagesColumns();
-
+                /** @var array $mapping */
+                $mapping = $this->configHelper->getWebsiteMapping();
+                $storeManager = $this->storeManager;
                 foreach ($columns as $column) {
-                    if ($column['column'] !== $image) {
-                        continue;
-                    }
+
                     /** @var array $data */
                     $data = [
                         'attribute_id'    => $column['attribute'],
@@ -2559,8 +2559,30 @@ class Product extends JobImport
                         'value'           => $file,
                     ];
                     $connection->insertOnDuplicate($productImageTable, $data, array_keys($data));
-                }
 
+                    foreach ($mapping as $item) {
+                        if ($item['website'] == "admin") {
+                            continue;
+                        }
+                        if ($column['column'] . '-' . $item['channel'] !== $image) {
+                            continue;
+                        }
+                        $stores = $storeManager->getStores($item['website']);
+                        $website = $storeManager->getWebsite($item['website']);
+                        foreach ($stores as $store) {
+                            if ($website->getId() == $store->getStoreGroupId()) {
+                                /** @var array $data */
+                                $data = [
+                                    'attribute_id' => $column['attribute'],
+                                    'store_id' => $store->getId(),
+                                    $columnIdentifier => $row[$columnIdentifier],
+                                    'value' => $file,
+                                ];
+                                $connection->insertOnDuplicate($productImageTable, $data, array_keys($data));
+                            }
+                        }
+                    }
+                }
                 $files[] = $file;
             }
 
