@@ -37,6 +37,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\PageCache\Model\Cache\Type;
 use Magento\Staging\Model\VersionManager;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Catalog\Model\CategoryRepository;
 use Psr\Http\Message\ResponseInterface;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Pdo;
@@ -238,6 +239,13 @@ class Product extends JobImport
     protected $storeManager;
 
     /**
+     * This variable contains an CategoryRepository
+     *
+     * @var CategoryRepository $categoryRepository
+     */
+    protected $categoryRepository;
+
+    /**
      * Product constructor.
      *
      * @param OutputHelper            $outputHelper
@@ -258,6 +266,7 @@ class Product extends JobImport
      * @param Option                  $jobOption
      * @param AttributeMetrics        $attributeMetrics
      * @param StoreManagerInterface   $storeManager
+     * @param CategoryRepository      $categoryRepository
      * @param array                   $data
      */
     public function __construct(
@@ -279,6 +288,7 @@ class Product extends JobImport
         JobOption $jobOption,
         AttributeMetrics $attributeMetrics,
         StoreManagerInterface $storeManager,
+        CategoryRepository $categoryRepository,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
@@ -297,6 +307,7 @@ class Product extends JobImport
         $this->productUrlPathGenerator = $productUrlPathGenerator;
         $this->attributeMetrics        = $attributeMetrics;
         $this->storeManager            = $storeManager;
+        $this->categoryRepository      = $categoryRepository;
         $this->entities                = $entities;
     }
 
@@ -2263,11 +2274,13 @@ class Product extends JobImport
 
                         /** @var CategoryModel $category */
                         foreach ($categories as $category) {
+                            $categoryObj = $this->getCategoryById($category->getEntityId(), $product->getStoreId());
+
                             /** @var string $requestPath */
                             $requestPath         = $this->productUrlPathGenerator->getUrlPathWithSuffix(
                                 $product,
                                 $product->getStoreId(),
-                                $category
+                                $categoryObj
                             );
                             $paths[$requestPath] = [
                                 'request_path' => $requestPath,
@@ -2278,11 +2291,13 @@ class Product extends JobImport
                             ];
                             $parents             = $category->getParentCategories();
                             foreach ($parents as $parent) {
+                                $parentObj = $this->getCategoryById($parent->getEntityId(), $product->getStoreId());
+
                                 /** @var string $requestPath */
                                 $requestPath = $this->productUrlPathGenerator->getUrlPathWithSuffix(
                                     $product,
                                     $product->getStoreId(),
-                                    $parent
+                                    $parentObj
                                 );
                                 if (isset($paths[$requestPath])) {
                                     continue;
@@ -2695,5 +2710,10 @@ class Product extends JobImport
     public function getFamily()
     {
         return $this->family;
+    }
+
+    public function getCategoryById($categoryId, $storeId = null)
+    {
+        return $this->categoryRepository->get($categoryId, $storeId);
     }
 }
