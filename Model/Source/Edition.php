@@ -16,7 +16,8 @@ use Magento\Framework\Option\ArrayInterface;
 class Edition implements ArrayInterface
 {
     /** const keys */
-    const FLEXIBILITY = 'flexibility';
+    const THREE_POINT_TWO = 'three';
+    const FOUR = 'four';
     const SERENITY = 'serenity';
 
     /**
@@ -27,7 +28,8 @@ class Edition implements ArrayInterface
     public function toOptionArray()
     {
         return [
-            self::FLEXIBILITY => __('Community or Flexibility Edition'),
+            self::THREE_POINT_TWO => __('3.2'),
+            self::FOUR => __('4.0 or greater'),
             self::SERENITY    => __('Serenity Edition'),
         ];
     }

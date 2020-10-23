@@ -450,7 +450,7 @@ class Config
     }
 
     /**
-     * Retrieve Akeneo client_secret
+     * Check if the pim is in Serenity edition
      *
      * @return string
      */
@@ -459,6 +459,16 @@ class Config
         $edition = $this->scopeConfig->getValue(self::AKENEO_API_EDITION);
 
         return $edition === Edition::SERENITY ? true : false;
+    }
+
+    /**
+     * Get pim edition
+     *
+     * @return string
+     */
+    public function getEdition()
+    {
+        return  $this->scopeConfig->getValue(self::AKENEO_API_EDITION);
     }
 
     /**
