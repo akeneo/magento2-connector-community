@@ -457,12 +457,15 @@ class Category extends Import
         /** @var string $columnIdentifier */
         $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($table);
 
-        if ($columnIdentifier == 'row_id') {
-            $values['row_id'] = '_entity_id';
-        }
-
         /** @var \Magento\Framework\DB\Select $parents */
         $parents = $connection->select()->from($tmpTable, $values);
+
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($table);
+        if ($rowIdExists) {
+            $this->entitiesHelper->addJoinForContentStaging($parents, ['c.row_id'], $table);
+            $values['row_id'] = 'IFNULL (c.row_id, _entity_id)';
+        }
+
         $connection->query(
             $connection->insertFromSelect(
                 $parents,
