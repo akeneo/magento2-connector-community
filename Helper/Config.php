@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Helper;
 
+use Akeneo\Connector\Model\Source\Edition;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Encryption\Encryptor;
@@ -65,6 +66,12 @@ class Config
      * @var string AKENEO_API_CLIENT_SECRET
      */
     const AKENEO_API_CLIENT_SECRET = 'akeneo_connector/akeneo_api/client_secret';
+    /**
+     * API edition config path
+     *
+     * @var string AKENEO_API_EDITION
+     */
+    const AKENEO_API_EDITION = 'akeneo_connector/akeneo_api/edition';
     /**
      * API pagination size config path
      *
@@ -429,6 +436,28 @@ class Config
         }
 
         return true;
+    }
+
+    /**
+     * Check if the pim is in Serenity edition
+     *
+     * @return string
+     */
+    public function isSerenityEdition()
+    {
+        $edition = $this->scopeConfig->getValue(self::AKENEO_API_EDITION);
+
+        return $edition === Edition::SERENITY ? true : false;
+    }
+
+    /**
+     * Get pim edition
+     *
+     * @return string
+     */
+    public function getEdition()
+    {
+        return  $this->scopeConfig->getValue(self::AKENEO_API_EDITION);
     }
 
     /**
