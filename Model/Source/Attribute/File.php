@@ -4,6 +4,7 @@ namespace Akeneo\Connector\Model\Source\Attribute;
 
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Eav\Model\Entity\Attribute\Source\AbstractSource;
@@ -92,6 +93,19 @@ class File extends AbstractSource
             }
             /** @var string|int $paginationSize */
             $paginationSize = $this->configHelper->getPaginationSize();
+
+            /** @var string $edition */
+            $edition = $this->configHelper->getEdition();
+
+            if($edition == Edition::FOUR || $edition == Edition::SERENITY) {
+                $attributeTypeFilter['search']['type'][] = [
+                    'operator' => 'IN',
+                    'value'    => [
+                        'pim_catalog_file',
+                    ],
+                ];
+                return $akeneoClient->getAttributeApi()->all($paginationSize, $attributeTypeFilter);
+            }
 
             return $akeneoClient->getAttributeApi()->all($paginationSize);
         } catch (\Exception $exception) {
