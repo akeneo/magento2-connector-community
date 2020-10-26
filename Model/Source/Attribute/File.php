@@ -105,7 +105,9 @@ class File extends AbstractSource
             $paginationSize = $this->configHelper->getPaginationSize();
 
             /** @var string[] $attributeTypeFilter */
-            $attributeTypeFilter = $this->attributeFilters->createAttributeTypeFilter(['pim_catalog_file']);
+            $attributeTypeFilter = $this->attributeFilters->createAttributeTypeFilter(
+                [AttributeFilters::ATTRIBUTE_TYPE_CATALOG_FILE]
+            );
 
             return $akeneoClient->getAttributeApi()->all($paginationSize, $attributeTypeFilter);
         } catch (\Exception $exception) {

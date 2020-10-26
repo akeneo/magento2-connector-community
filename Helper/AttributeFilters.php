@@ -17,17 +17,23 @@ use Akeneo\Connector\Model\Source\Edition;
 class AttributeFilters
 {
     /**
+     * Attribute type for catalog file
+     *
+     * @var string ATTRIBUTE_TYPE_CATALOG_FILE
+     */
+    const ATTRIBUTE_TYPE_CATALOG_FILE = 'pim_catalog_file';
+    /**
+     * Attribute type for catalog metric
+     *
+     * @var string ATTRIBUTE_TYPE_CATALOG_METRIC
+     */
+    const ATTRIBUTE_TYPE_CATALOG_METRIC = 'pim_catalog_metric';
+    /**
      * This variable contains a ConfigHelper
      *
      * @var ConfigHelper $configHelper
      */
     protected $configHelper;
-    /**
-     * This variable contains a StoreHelper
-     *
-     * @var StoreHelper $storeHelper
-     */
-    protected $storeHelper;
 
     /**
      * ProductFilters constructor
