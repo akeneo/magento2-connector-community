@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Model\Source\Attribute;
 
+use Akeneo\Connector\Helper\AttributeFilters;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Model\Source\Edition;
@@ -38,18 +39,27 @@ class Metrics extends AbstractSource
      * @var ConfigHelper $configHelper
      */
     protected $configHelper;
+    /**
+     * This variable contains a AttributeFilters
+     *
+     * @var AttributeFilters $attributeFilters
+     */
+    protected $attributeFilters;
 
     /**
      * Metrics constructor
      *
-     * @param Authenticator $akeneoAuthenticator
-     * @param ConfigHelper  $configHelper
+     * @param Authenticator    $akeneoAuthenticator
+     * @param AttributeFilters $attributeFilters
+     * @param ConfigHelper     $configHelper
      */
     public function __construct(
         Authenticator $akeneoAuthenticator,
+        AttributeFilters $attributeFilters,
         ConfigHelper $configHelper
     ) {
         $this->akeneoAuthenticator = $akeneoAuthenticator;
+        $this->attributeFilters    = $attributeFilters;
         $this->configHelper        = $configHelper;
     }
 
@@ -93,21 +103,11 @@ class Metrics extends AbstractSource
             }
             /** @var string|int $paginationSize */
             $paginationSize = $this->configHelper->getPaginationSize();
-            
-            /** @var string $edition */
-            $edition = $this->configHelper->getEdition();
 
-            if($edition == Edition::FOUR || $edition == Edition::SERENITY) {
-                $attributeTypeFilter['search']['type'][] = [
-                    'operator' => 'IN',
-                    'value'    => [
-                        'pim_catalog_metric',
-                    ],
-                ];
-                return $akeneoClient->getAttributeApi()->all($paginationSize, $attributeTypeFilter);
-            }
+            /** @var string[] $attributeTypeFilter */
+            $attributeTypeFilter = $this->attributeFilters->createAttributeTypeFilter(['pim_catalog_metric']);
 
-            return $akeneoClient->getAttributeApi()->all($paginationSize);
+            return $akeneoClient->getAttributeApi()->all($paginationSize, $attributeTypeFilter);
         } catch (\Exception $exception) {
             return [];
         }
