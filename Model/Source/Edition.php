@@ -15,9 +15,23 @@ use Magento\Framework\Option\ArrayInterface;
  */
 class Edition implements ArrayInterface
 {
-    /** const keys */
+    /**
+     * Version 3.2 constant
+     *
+     * @var string THREE_POINT_TWO
+     */
     const THREE_POINT_TWO = 'three';
+    /**
+     * Version 4.0 and up constant
+     *
+     * @var string FOUR
+     */
     const FOUR = 'four';
+    /**
+     * Version Serenity constant
+     *
+     * @var string SERENITY
+     */
     const SERENITY = 'serenity';
 
     /**
