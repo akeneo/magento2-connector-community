@@ -198,7 +198,6 @@ class Attribute extends Import
         $paginationSize = $this->configHelper->getPaginationSize();
         /** @var mixed[] $filters */
         $filters = $this->getFilters();
-        var_dump($filters);
         /** @var ResourceCursorInterface $attributes */
         $attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize, $filters);
         /** @var [] $metricsSetting */
