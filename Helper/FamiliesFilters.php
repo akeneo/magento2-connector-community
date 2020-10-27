@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Akeneo\Connector\Helper;
 
 use Akeneo\Connector\Model\Source\Edition;
-use Akeneo\Connector\Model\Source\Filters\Update;
+use Akeneo\Connector\Model\Source\Filters\FamilyUpdate;
 
 /**
  * Class FamiliesFilters
@@ -76,7 +76,7 @@ class FamiliesFilters
             /** @var string $date */
             $date          = $date . 'T00:00:00Z';
             $updatedFilter['updated'][] = [
-                'operator' => Update::GREATER_THAN,
+                'operator' => FamilyUpdate::GREATER_THAN,
                 'value'    => $date,
             ];
 

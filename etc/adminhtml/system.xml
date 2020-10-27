@@ -373,7 +373,7 @@ For example :<br/>
                 <field id="updated_mode" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0"
                     showInStore="0">
                     <label>Updated mode</label>
-                    <source_model>Akeneo\Connector\Model\Source\Filters\Update</source_model>
+                    <source_model>Akeneo\Connector\Model\Source\Filters\FamilyUpdate</source_model>
                 </field>
                 <field id="updated_greater" translate="label" type="date" sortOrder="90" showInDefault="1" showInWebsite="0"
                     showInStore="0">
