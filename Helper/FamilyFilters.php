@@ -10,7 +10,7 @@ use Akeneo\Pim\ApiClient\Search\SearchBuilder;
 use Akeneo\Pim\ApiClient\Search\SearchBuilderFactory;
 
 /**
- * Class FamiliesFilters
+ * Class FamilyFilters
  *
  * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
@@ -18,7 +18,7 @@ use Akeneo\Pim\ApiClient\Search\SearchBuilderFactory;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class FamiliesFilters
+class FamilyFilters
 {
     /**
      * Description $configHelper field
@@ -40,7 +40,7 @@ class FamiliesFilters
     protected $searchBuilder;
 
     /**
-     * FamiliesFilters constructor
+     * FamilyFilters constructor
      *
      * @param Config               $configHelper
      * @param SearchBuilderFactory $searchBuilderFactory

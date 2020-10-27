@@ -2,7 +2,7 @@
 
 namespace Akeneo\Connector\Job;
 
-use Akeneo\Connector\Helper\FamiliesFilters;
+use Akeneo\Connector\Helper\FamilyFilters;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
@@ -19,7 +19,6 @@ use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Zend_Db_Expr as Expr;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
-use Akeneo\Connector\Job\Import;
 
 /**
  * Class Family
@@ -82,11 +81,11 @@ class Family extends Import
      */
     protected $storeHelper;
     /**
-     * Description $familiesFilters field
+     * Description $familyFilters field
      *
-     * @var FamiliesFilters $familiesFilters
+     * @var FamilyFilters $familyFilters
      */
-    protected $familiesFilters;
+    protected $familyFilters;
 
     /**
      * Family constructor
@@ -112,7 +111,7 @@ class Family extends Import
         SetFactory $attributeSetFactory,
         TypeListInterface $cacheTypeList,
         Config $eavConfig,
-        FamiliesFilters $familiesFilters,
+        FamilyFilters $familyFilters,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
@@ -123,7 +122,7 @@ class Family extends Import
         $this->cacheTypeList       = $cacheTypeList;
         $this->eavConfig           = $eavConfig;
         $this->storeHelper         = $storeHelper;
-        $this->familiesFilters     = $familiesFilters;
+        $this->familyFilters       = $familyFilters;
     }
 
     /**
@@ -134,7 +133,7 @@ class Family extends Import
     public function createTable()
     {
         /** @var string[] $filters */
-        $filters = $this->familiesFilters->getFilters();
+        $filters = $this->familyFilters->getFilters();
         /** @var PageInterface $families */
         $families = $this->akeneoClient->getFamilyApi()->listPerPage(1, false, $filters);
         /** @var array $family */
@@ -158,7 +157,7 @@ class Family extends Import
     public function insertData()
     {
         /** @var string[] $filters */
-        $filters = $this->familiesFilters->getFilters();
+        $filters = $this->familyFilters->getFilters();
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
         /** @var ResourceCursorInterface $families */
