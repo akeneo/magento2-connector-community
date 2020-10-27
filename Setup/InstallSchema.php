@@ -253,7 +253,8 @@ class InstallSchema implements InstallSchemaInterface
         /** @var Table $table */
         $table = $installer->getConnection()
             ->newTable($installer->getTable('akeneo_connector_product_model'))
-            ->addColumn(                'code',
+            ->addColumn(
+                'code',
                 Table::TYPE_TEXT,
                 255,
                 ['nullable' => false, 'primary' => true],
