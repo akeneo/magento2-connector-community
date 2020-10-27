@@ -6,6 +6,8 @@ namespace Akeneo\Connector\Helper;
 
 use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Connector\Model\Source\Filters\FamilyUpdate;
+use Akeneo\Pim\ApiClient\Search\SearchBuilder;
+use Akeneo\Pim\ApiClient\Search\SearchBuilderFactory;
 
 /**
  * Class FamiliesFilters
@@ -24,16 +26,31 @@ class FamiliesFilters
      * @var Config $configHelper
      */
     protected $configHelper;
+    /**
+     * Description $searchBuilderFactory field
+     *
+     * @var SearchBuilderFactory $searchBuilderFactory
+     */
+    protected $searchBuilderFactory;
+    /**
+     * Description $searchBuilder field
+     *
+     * @var SearchBuilder $searchBuilder
+     */
+    protected $searchBuilder;
 
     /**
      * FamiliesFilters constructor
      *
-     * @param Config $configHelper
+     * @param Config               $configHelper
+     * @param SearchBuilderFactory $searchBuilderFactory
      */
     public function __construct(
-        Config $configHelper
+        Config $configHelper,
+        SearchBuilderFactory $searchBuilderFactory
     ) {
-        $this->configHelper = $configHelper;
+        $this->configHelper         = $configHelper;
+        $this->searchBuilderFactory = $searchBuilderFactory;
     }
 
     /**
@@ -45,11 +62,18 @@ class FamiliesFilters
     {
         /** @var string[] $filters */
         $filters = [];
+        /** @var string[] $search */
+        $search = [];
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
 
         if ($edition === Edition::FOUR || $edition === Edition::SERENITY) {
-            $filters['search'] = $this->getUpdatedFilter();
+            $this->searchBuilder = $this->searchBuilderFactory->create();
+            $this->addUpdatedFilter();
+            $search  = $this->searchBuilder->getFilters();
+            $filters = [
+                'search' => $search,
+            ];
         }
 
         return $filters;
@@ -58,31 +82,26 @@ class FamiliesFilters
     /**
      * Description getUpdateFilter function
      *
-     * @return string[]
+     * @return void
      */
-    public function getUpdatedFilter()
+    public function addUpdatedFilter()
     {
-        /** @var string[] $updatedFilter */
-        $updatedFilter = [];
         /** @var string|null $mode */
         $mode = $this->configHelper->getFamiliesUpdatedMode();
 
-        if ($mode === Update::GREATER_THAN) {
+        if ($mode === FamilyUpdate::GREATER_THAN) {
             /** @var string|null $date */
             $date = $this->configHelper->getFamiliesUpdatedGreater();
             if (empty($date)) {
-                return [];
+                return;
             }
             /** @var string $date */
-            $date          = $date . 'T00:00:00Z';
-            $updatedFilter['updated'][] = [
-                'operator' => FamilyUpdate::GREATER_THAN,
-                'value'    => $date,
-            ];
+            $date = $date . 'T00:00:00Z';
 
-            return $updatedFilter;
+            if (!empty($date)) {
+                $this->searchBuilder->addFilter('updated', $mode, $date);
+            }
         }
-
-        return [];
+        return;
     }
 }
