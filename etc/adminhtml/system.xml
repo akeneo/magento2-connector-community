@@ -368,6 +368,27 @@ For example :<br/>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
             </group>
+            <group id="families" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Families</label>
+                <field id="updated_mode" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0"
+                    showInStore="0">
+                    <label>Updated mode</label>
+                    <source_model>Akeneo\Connector\Model\Source\Filters\Update</source_model>
+                </field>
+                <field id="updated_greater" translate="label" type="date" sortOrder="90" showInDefault="1" showInWebsite="0"
+                    showInStore="0">
+                    <label>Updated after</label>
+                    <comment>Import only families updated after the given date. Leave blank for no filter.</comment>
+                    <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
+                    <depends>
+                        <field id="mode">standard</field>
+                        <field id="updated_mode">&gt;</field>
+                    </depends>
+                </field>
+                <depends>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">four,serenity</field>
+                </depends>
+            </group>
         </section>
     </system>
 </config>
