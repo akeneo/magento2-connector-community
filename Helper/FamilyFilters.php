@@ -80,7 +80,7 @@ class FamilyFilters
     }
 
     /**
-     * Description getUpdateFilter function
+     * Description addUpdatedFilter function
      *
      * @return void
      */
