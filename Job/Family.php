@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Helper\FamiliesFilters;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
@@ -80,20 +81,26 @@ class Family extends Import
      * @var StoreHelper $storeHelper
      */
     protected $storeHelper;
+    /**
+     * Description $familiesFilters field
+     *
+     * @var FamiliesFilters $familiesFilters
+     */
+    protected $familiesFilters;
 
     /**
      * Family constructor
      *
-     * @param StoreHelper $storeHelper
-     * @param Entities $entitiesHelper
-     * @param ConfigHelper $configHelper
-     * @param OutputHelper $outputHelper
-     * @param ManagerInterface $eventManager
-     * @param Authenticator $authenticator
-     * @param SetFactory $attributeSetFactory
+     * @param StoreHelper       $storeHelper
+     * @param Entities          $entitiesHelper
+     * @param ConfigHelper      $configHelper
+     * @param OutputHelper      $outputHelper
+     * @param ManagerInterface  $eventManager
+     * @param Authenticator     $authenticator
+     * @param SetFactory        $attributeSetFactory
      * @param TypeListInterface $cacheTypeList
-     * @param Config $eavConfig
-     * @param array $data
+     * @param Config            $eavConfig
+     * @param array             $data
      */
     public function __construct(
         StoreHelper $storeHelper,
@@ -105,6 +112,7 @@ class Family extends Import
         SetFactory $attributeSetFactory,
         TypeListInterface $cacheTypeList,
         Config $eavConfig,
+        FamiliesFilters $familiesFilters,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
@@ -115,6 +123,7 @@ class Family extends Import
         $this->cacheTypeList       = $cacheTypeList;
         $this->eavConfig           = $eavConfig;
         $this->storeHelper         = $storeHelper;
+        $this->familiesFilters     = $familiesFilters;
     }
 
     /**
@@ -124,8 +133,10 @@ class Family extends Import
      */
     public function createTable()
     {
+        /** @var string[] $filters */
+        $filters = $this->familiesFilters->getFilters();
         /** @var PageInterface $families */
-        $families = $this->akeneoClient->getFamilyApi()->listPerPage(1);
+        $families = $this->akeneoClient->getFamilyApi()->listPerPage(1, false, $filters);
         /** @var array $family */
         $family = $families->getItems();
 
@@ -146,19 +157,21 @@ class Family extends Import
      */
     public function insertData()
     {
+        /** @var string[] $filters */
+        $filters = $this->familiesFilters->getFilters();
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
         /** @var ResourceCursorInterface $families */
-        $families = $this->akeneoClient->getFamilyApi()->all($paginationSize);
+        $families = $this->akeneoClient->getFamilyApi()->all($paginationSize, $filters);
         /** @var string $warning */
         $warning = '';
         /**
-         * @var int $index
+         * @var int   $index
          * @var array $family
          */
         foreach ($families as $index => $family) {
             /** @var string[] $lang */
-            $lang = $this->storeHelper->getStores('lang');
+            $lang    = $this->storeHelper->getStores('lang');
             $warning = $this->checkLabelPerLocales($family, $lang, $warning);
 
             $this->entitiesHelper->insertDataFromApi($family, $this->getCode());
@@ -216,7 +229,7 @@ class Family extends Import
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var string $label */
-        $label = 'labels-'.$this->configHelper->getDefaultLocale();
+        $label = 'labels-' . $this->configHelper->getDefaultLocale();
         /** @var string $productEntityTypeId */
         $productEntityTypeId = $this->eavConfig->getEntityType(ProductAttributeInterface::ENTITY_TYPE_CODE)
             ->getEntityTypeId();
@@ -224,7 +237,7 @@ class Family extends Import
         /** @var array $values */
         $attributeToSelect = [
             'attribute_set_name' => new Expr('CONCAT("Pim", " ", `' . $label . '`)'),
-            'family_code'        => 'code'
+            'family_code'        => 'code',
         ];
 
         /** @var Select $families */
@@ -248,7 +261,10 @@ class Family extends Import
                 $connection->delete($tmpTable, ['code = ?' => $familyCode]);
 
                 $this->setAdditionalMessage(
-                    __('Family with code "%1" has the same label than another family in Akeneo and has been skipped from import', $familyCode)
+                    __(
+                        'Family with code "%1" has the same label than another family in Akeneo and has been skipped from import',
+                        $familyCode
+                    )
                 );
 
                 continue;
