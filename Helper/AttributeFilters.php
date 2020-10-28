@@ -120,6 +120,7 @@ class AttributeFilters
         $mode = $this->configHelper->getAttributeUpdatedMode();
 
         if ($mode == AttributeUpdate::GREATER_THAN) {
+            /** @var string $date */
             $date = $this->configHelper->getAttributeUpdatedGreaterFilter();
             if (empty($date)) {
                 return;
