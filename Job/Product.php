@@ -17,6 +17,7 @@ use Akeneo\Connector\Job\Import as JobImport;
 use Akeneo\Connector\Job\Option as JobOption;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
 use Akeneo\Connector\Model\Source\Filters\Mode;
+use Akeneo\Connector\Model\Source\Filters\ModelCompleteness;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Catalog\Model\Category as CategoryModel;
@@ -2815,12 +2816,14 @@ class Product extends JobImport
     /**
      * Retrieve product filters
      *
+     * @param bool $isProductModel
+     *
      * @return mixed[]
      */
-    protected function getFilters($family = null)
+    protected function getFilters($family = null, $isProductModel = false)
     {
         /** @var mixed[] $filters */
-        $filters = $this->productFilters->getFilters($family);
+        $filters = $this->productFilters->getFilters($family, $isProductModel);
         if (array_key_exists('error', $filters)) {
             $this->setMessage($filters['error']);
             $this->stop(true);
@@ -2839,7 +2842,14 @@ class Product extends JobImport
     protected function getProductModelFilters($family = null)
     {
         /** @var mixed[] $filters */
-        $filters = $this->getFilters($family);
+        $filters = $this->getFilters($family, true);
+        /** bool|string[] $modelCompletenessFilter */
+        $modelCompletenessFilter = false;
+        /** @var string $mode */
+        $mode = $this->configHelper->getFilterMode();
+        if ($mode == Mode::STANDARD) {
+            $modelCompletenessFilter = $this->getModelCompletenessFilter();
+        }
 
         /**
          * @var string $key
@@ -2859,10 +2869,38 @@ class Product extends JobImport
                 if (isset($filter['search']['completeness'])) {
                     unset($filters[$key]['search']['completeness']);
                 }
+                if ($modelCompletenessFilter) {
+                    $filters[$key]['search']['completeness'] = $modelCompletenessFilter;
+                }
             }
         }
 
         return $filters;
+    }
+
+
+    /**
+     * Get product models completeness filter
+     *
+     * @return array|bool
+     */
+    protected function getModelCompletenessFilter()
+    {
+        /** @var string $scope */
+        $scope = $this->configHelper->getAdminDefaultChannel();
+        /** @var string $completenessType */
+        $completenessType = $this->configHelper->getModelCompletenessTypeFilter();
+        /** @var mixed $locales */
+        $locales = $this->configHelper->getModelCompletenessLocalesFilter();
+        /** @var string[] $locales */
+        $locales = explode(',', $locales);
+        if ($completenessType == ModelCompleteness::NO_CONDITION) {
+            return false;
+        }
+        /** @var string[] $filter */
+        $filter[] = ['operator' => $completenessType, 'scope' => $scope, 'locales' => $locales];
+
+        return $filter;
     }
 
     /**

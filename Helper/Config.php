@@ -108,6 +108,18 @@ class Config
      */
     const PRODUCTS_FILTERS_COMPLETENESS_LOCALES = 'akeneo_connector/products_filters/completeness_locales';
     /**
+     * Product model filters completeness locales config path
+     *
+     * @var string PRODUCTS_MODEL_FILTERS_COMPLETENESS_LOCALES
+     */
+    const PRODUCTS_MODEL_FILTERS_COMPLETENESS_LOCALES = 'akeneo_connector/products_filters/model_completeness_locales';
+    /**
+     * Product model filters completeness type config path
+     *
+     * @var string PRODUCTS_MODEL_FILTERS_COMPLETENESS_TYPE
+     */
+    const PRODUCTS_MODEL_FILTERS_COMPLETENESS_TYPE = 'akeneo_connector/products_filters/model_completeness_type';
+    /**
      * Product filters status config path
      *
      * @var string PRODUCTS_FILTERS_STATUS
@@ -161,6 +173,12 @@ class Config
      * @var string PRODUCTS_FILTERS_ADVANCED_FILTER
      */
     const PRODUCTS_FILTERS_ADVANCED_FILTER = 'akeneo_connector/products_filters/advanced_filter';
+    /**
+     * Product model advanced filters config path
+     *
+     * @var string PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER
+     */
+    const PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER = 'akeneo_connector/products_filters/model_advanced_filter';
     /**
      * Product category is active config path
      *
@@ -476,6 +494,28 @@ class Config
     }
 
     /**
+     * Retrieve the locales to apply the completeness filter on
+     *
+     * @return string
+     */
+    public function getModelCompletenessLocalesFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_COMPLETENESS_LOCALES);
+    }
+
+    /**
+     * Retrieve the type of filter to apply on the completeness for product model
+     *
+     * @return string
+     * @see \Akeneo\Connector\Model\Source\Filters\ModelCompleteness
+     *
+     */
+    public function getModelCompletenessTypeFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_COMPLETENESS_TYPE);
+    }
+
+    /**
      * Retrieve the status filter
      *
      * @return string
@@ -565,6 +605,18 @@ class Config
     public function getAdvancedFilters()
     {
         $filters = $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_ADVANCED_FILTER);
+
+        return $this->serializer->unserialize($filters);
+    }
+
+    /**
+     * Retrieve the product model advance filters
+     *
+     * @return array
+     */
+    public function getModelAdvancedFilters()
+    {
+        $filters = $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER);
 
         return $this->serializer->unserialize($filters);
     }
