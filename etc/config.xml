@@ -25,6 +25,7 @@
                 <completeness_value>100</completeness_value>
                 <status>1</status>
                 <updated_mode>SINCE LAST N DAYS</updated_mode>
+                <model_completeness_type>no_condition</model_completeness_type>
             </products_filters>
             <product>
                 <url_generation_enabled>1</url_generation_enabled>
