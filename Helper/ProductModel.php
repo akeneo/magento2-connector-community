@@ -230,6 +230,9 @@ class ProductModel
                      * @var mixed[] $metric
                      */
                     foreach ($productModel['values'][$metricsConcatSetting] as $key => $metric) {
+                        if (!isset($metric['data']['unit'])) {
+                            continue;
+                        }
                         /** @var string $unit */
                         $unit = $metric['data']['unit'];
                         /** @var string|false $symbol */
