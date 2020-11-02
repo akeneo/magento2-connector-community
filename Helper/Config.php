@@ -35,64 +35,262 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
  */
 class Config
 {
-    /** Config keys */
+    /**
+     * API URL config path
+     *
+     * @var string AKENEO_API_BASE_URL
+     */
     const AKENEO_API_BASE_URL = 'akeneo_connector/akeneo_api/base_url';
+    /**
+     * API user name config path
+     *
+     * @var string AKENEO_API_USERNAME
+     */
     const AKENEO_API_USERNAME = 'akeneo_connector/akeneo_api/username';
+    /**
+     * API password config path
+     *
+     * @var string AKENEO_API_PASSWORD
+     */
     const AKENEO_API_PASSWORD = 'akeneo_connector/akeneo_api/password';
+    /**
+     * API client id config path
+     *
+     * @var string AKENEO_API_CLIENT_ID
+     */
     const AKENEO_API_CLIENT_ID = 'akeneo_connector/akeneo_api/client_id';
+    /**
+     * API secret key config path
+     *
+     * @var string AKENEO_API_CLIENT_SECRET
+     */
     const AKENEO_API_CLIENT_SECRET = 'akeneo_connector/akeneo_api/client_secret';
+    /**
+     * API pagination size config path
+     *
+     * @var string AKENEO_API_PAGINATION_SIZE
+     */
     const AKENEO_API_PAGINATION_SIZE = 'akeneo_connector/akeneo_api/pagination_size';
+    /**
+     * API admin channel config path
+     *
+     * @var string AKENEO_API_ADMIN_CHANNEL
+     */
     const AKENEO_API_ADMIN_CHANNEL = 'akeneo_connector/akeneo_api/admin_channel';
+    /**
+     * API website mapping with channels config path
+     *
+     * @var string AKENEO_API_WEBSITE_MAPPING
+     */
     const AKENEO_API_WEBSITE_MAPPING = 'akeneo_connector/akeneo_api/website_mapping';
+    /**
+     * Product filters mode config path
+     *
+     * @var string PRODUCTS_FILTERS_MODE
+     */
     const PRODUCTS_FILTERS_MODE = 'akeneo_connector/products_filters/mode';
+    /**
+     * Product filters completeness type config path
+     *
+     * @var string PRODUCTS_FILTERS_COMPLETENESS_TYPE
+     */
     const PRODUCTS_FILTERS_COMPLETENESS_TYPE = 'akeneo_connector/products_filters/completeness_type';
+    /**
+     * Product filters completeness value config path
+     *
+     * @var string PRODUCTS_FILTERS_COMPLETENESS_VALUE
+     */
     const PRODUCTS_FILTERS_COMPLETENESS_VALUE = 'akeneo_connector/products_filters/completeness_value';
+    /**
+     * Product filters completeness locales config path
+     *
+     * @var string PRODUCTS_FILTERS_COMPLETENESS_LOCALES
+     */
     const PRODUCTS_FILTERS_COMPLETENESS_LOCALES = 'akeneo_connector/products_filters/completeness_locales';
+    /**
+     * Product model filters completeness locales config path
+     *
+     * @var string PRODUCTS_MODEL_FILTERS_COMPLETENESS_LOCALES
+     */
+    const PRODUCTS_MODEL_FILTERS_COMPLETENESS_LOCALES = 'akeneo_connector/products_filters/model_completeness_locales';
+    /**
+     * Product model filters completeness type config path
+     *
+     * @var string PRODUCTS_MODEL_FILTERS_COMPLETENESS_TYPE
+     */
+    const PRODUCTS_MODEL_FILTERS_COMPLETENESS_TYPE = 'akeneo_connector/products_filters/model_completeness_type';
+    /**
+     * Product filters status config path
+     *
+     * @var string PRODUCTS_FILTERS_STATUS
+     */
     const PRODUCTS_FILTERS_STATUS = 'akeneo_connector/products_filters/status';
+    /**
+     * Product filters families config path
+     *
+     * @var string PRODUCTS_FILTERS_FAMILIES
+     */
     const PRODUCTS_FILTERS_FAMILIES = 'akeneo_connector/products_filters/families';
+    /**
+     * Product filters updated mode config path
+     *
+     * @var string PRODUCTS_FILTERS_UPDATED_MODE
+     */
     const PRODUCTS_FILTERS_UPDATED_MODE = 'akeneo_connector/products_filters/updated_mode';
+    /**
+     * Product filters updated lower config pathL
+     *
+     * @var string PRODUCTS_FILTERS_UPDATED_LOWER
+     */
     const PRODUCTS_FILTERS_UPDATED_LOWER = 'akeneo_connector/products_filters/updated_lower';
+    /**
+     * Product filters updated greater config path
+     *
+     * @var string PRODUCTS_FILTERS_UPDATED_GREATER
+     */
     const PRODUCTS_FILTERS_UPDATED_GREATER = 'akeneo_connector/products_filters/updated_greater';
+    /**
+     * Product filters updated between config path
+     *
+     * @var string PRODUCTS_FILTERS_UPDATED_BETWEEN_AFTER
+     */
     const PRODUCTS_FILTERS_UPDATED_BETWEEN_AFTER = 'akeneo_connector/products_filters/updated_between_after';
+    /**
+     * Product filters updated between before config path
+     *
+     * @var string PRODUCTS_FILTERS_UPDATED_BETWEEN_BEFORE
+     */
     const PRODUCTS_FILTERS_UPDATED_BETWEEN_BEFORE = 'akeneo_connector/products_filters/updated_between_before';
+    /**
+     * Product filters updated since config path
+     *
+     * @var string PRODUCTS_FILTERS_UPDATED_SINCE
+     */
     const PRODUCTS_FILTERS_UPDATED_SINCE = 'akeneo_connector/products_filters/updated';
+    /**
+     * Product advanced filters config path
+     *
+     * @var string PRODUCTS_FILTERS_ADVANCED_FILTER
+     */
     const PRODUCTS_FILTERS_ADVANCED_FILTER = 'akeneo_connector/products_filters/advanced_filter';
+    /**
+     * Product model advanced filters config path
+     *
+     * @var string PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER
+     */
+    const PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER = 'akeneo_connector/products_filters/model_advanced_filter';
+    /**
+     * Product category is active config path
+     *
+     * @var string PRODUCTS_CATEGORY_IS_ACTIVE
+     */
     const PRODUCTS_CATEGORY_IS_ACTIVE = 'akeneo_connector/category/is_active';
+    /**
+     * Categories are included in menu config path
+     *
+     * @var string PRODUCTS_CATEGORY_INCLUDE_IN_MENU
+     */
     const PRODUCTS_CATEGORY_INCLUDE_IN_MENU = 'akeneo_connector/category/include_in_menu';
+    /**
+     * Categories are anchor config path
+     *
+     * @var string PRODUCTS_CATEGORY_IS_ANCHOR
+     */
     const PRODUCTS_CATEGORY_IS_ANCHOR = 'akeneo_connector/category/is_anchor';
+    /**
+     * Categories to not import config path
+     *
+     * @var string PRODUCTS_CATEGORY_CATEGORIES
+     */
     const PRODUCTS_CATEGORY_CATEGORIES = 'akeneo_connector/category/categories';
+    /**
+     * Attribute mapping config path
+     *
+     * @var string PRODUCT_ATTRIBUTE_MAPPING
+     */
     const PRODUCT_ATTRIBUTE_MAPPING = 'akeneo_connector/product/attribute_mapping';
+    /**
+     * Website attribute config path
+     *
+     * @var string PRODUCT_WEBSITE_ATTRIBUTE
+     */
     const PRODUCT_WEBSITE_ATTRIBUTE = 'akeneo_connector/product/website_attribute';
+    /**
+     * Configurable attribute mapping config path
+     *
+     * @var string PRODUCT_CONFIGURABLE_ATTRIBUTES
+     */
     const PRODUCT_CONFIGURABLE_ATTRIBUTES = 'akeneo_connector/product/configurable_attributes';
-    const PRODUCT_PRODUCT_MODEL_BATCH_SIZE = 'akeneo_connector/product/product_model_batch_size';
-    const PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH = 'akeneo_connector/product/product_model_update_length';
+    /**
+     * Product tax class config path
+     *
+     * @var string PRODUCT_TAX_CLASS
+     */
     const PRODUCT_TAX_CLASS = 'akeneo_connector/product/tax_class';
+    /**
+     * Product url generation flag config path
+     *
+     * @var string PRODUCT_URL_GENERATION_ENABLED
+     */
     const PRODUCT_URL_GENERATION_ENABLED = 'akeneo_connector/product/url_generation_enabled';
+    /**
+     * Media import enabled config path
+     *
+     * @var string PRODUCT_MEDIA_ENABLED
+     */
     const PRODUCT_MEDIA_ENABLED = 'akeneo_connector/product/media_enabled';
+    /**
+     * Media attributes config path
+     *
+     * @var string PRODUCT_MEDIA_IMAGES
+     */
     const PRODUCT_MEDIA_IMAGES = 'akeneo_connector/product/media_images';
+    /**
+     * Media special images mapping config path
+     *
+     * @var string PRODUCT_MEDIA_GALLERY
+     */
     const PRODUCT_MEDIA_GALLERY = 'akeneo_connector/product/media_gallery';
+    /**
+     * File import flag config path
+     *
+     * @var string PRODUCT_FILE_ENABLED
+     */
     const PRODUCT_FILE_ENABLED = 'akeneo_connector/product/file_enabled';
+    /**
+     * File import attribute mapping config path
+     *
+     * @var string PRODUCT_FILE_ATTRIBUTE
+     */
     const PRODUCT_FILE_ATTRIBUTE = 'akeneo_connector/product/file_attribute';
+    /**
+     * Product metrics config path
+     *
+     * @var string PRODUCT_METRICS
+     */
     const PRODUCT_METRICS = 'akeneo_connector/product/metrics';
+    /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_AKENEO_MASTER
+     */
     const PRODUCT_AKENEO_MASTER = 'akeneo_connector/product/akeneo_master';
+    /**
+     * Attribute types mapping config path
+     *
+     * @var string ATTRIBUTE_TYPES
+     */
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
+    /**
+     * Product activation flag config path
+     *
+     * @var string PRODUCT_ACTIVATION
+     */
     const PRODUCT_ACTIVATION = 'akeneo_connector/product/activation';
     /**
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
      */
     const PAGINATION_SIZE_DEFAULT_VALUE = 10;
-    /**
-     * @var int PRODUCT_PRODUCT_MODEL_BATCH_SIZE_DEFAULT_VALUE
-     */
-    const PRODUCT_PRODUCT_MODEL_BATCH_SIZE_DEFAULT_VALUE = 500;
-    /**
-     * @var int PRODUCT_PRODUCT_MODEL_LENGTH_DEFAULT_VALUE
-     */
-    const PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_DEFAULT_VALUE = 5000;
-    /**
-     * @var int PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_MINIMUM
-     */
-    const PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_MINIMUM = 1000;
     /**
      * This variable contains a Encryptor
      *
@@ -159,6 +357,8 @@ class Config
      * @param Filesystem                    $filesystem
      * @param MediaConfig                   $mediaConfig
      * @param ScopeConfigInterface          $scopeConfig
+     *
+     * @throws FileSystemException
      */
     public function __construct(
         Encryptor $encryptor,
@@ -204,6 +404,7 @@ class Config
      * Retrieve Akeneo password
      *
      * @return string
+     * @throws Exception
      */
     public function getAkeneoApiPassword()
     {
@@ -290,6 +491,28 @@ class Config
     public function getCompletenessLocalesFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_COMPLETENESS_LOCALES);
+    }
+
+    /**
+     * Retrieve the locales to apply the completeness filter on
+     *
+     * @return string
+     */
+    public function getModelCompletenessLocalesFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_COMPLETENESS_LOCALES);
+    }
+
+    /**
+     * Retrieve the type of filter to apply on the completeness for product model
+     *
+     * @return string
+     * @see \Akeneo\Connector\Model\Source\Filters\ModelCompleteness
+     *
+     */
+    public function getModelCompletenessTypeFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_COMPLETENESS_TYPE);
     }
 
     /**
@@ -387,6 +610,18 @@ class Config
     }
 
     /**
+     * Retrieve the product model advance filters
+     *
+     * @return array
+     */
+    public function getModelAdvancedFilters()
+    {
+        $filters = $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER);
+
+        return $this->serializer->unserialize($filters);
+    }
+
+    /**
      * Retrieve the status of imported categories
      *
      * @return string
@@ -453,7 +688,7 @@ class Config
      * @param bool $withDefault
      *
      * @return mixed[]
-     * @throws \Exception
+     * @throws Exception
      *
      */
     public function getWebsiteMapping($withDefault = true)
@@ -495,6 +730,7 @@ class Config
      * Get mapped channels
      *
      * @return string[]
+     * @throws Exception
      */
     public function getMappedChannels()
     {
@@ -560,7 +796,7 @@ class Config
      * @param string $entity
      *
      * @return int
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function getEntityTypeId($entity)
     {
@@ -574,6 +810,7 @@ class Config
      * @param string $code
      *
      * @return AbstractAttribute
+     * @throws LocalizedException
      */
     public function getAttribute($entityType, $code)
     {
@@ -642,7 +879,7 @@ class Config
      * Retrieve default website id
      *
      * @return int
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getDefaultWebsiteId()
     {
@@ -714,7 +951,7 @@ class Config
     }
 
     /**
-     * Retrieve is asset import is enabled
+     * Retrieve is file import is enabled
      *
      * @return bool
      */
@@ -724,13 +961,13 @@ class Config
     }
 
     /**
-     * Retrieve asset attribute columns
+     * Retrieve file attribute columns
      *
      * @return array
      */
     public function getFileImportColumns()
     {
-        /** @var array $assets */
+        /** @var array $fileAttributes */
         $fileAttributes = [];
         /** @var string $config */
         $config = $this->scopeConfig->getValue(self::PRODUCT_FILE_ATTRIBUTE);
@@ -942,41 +1179,6 @@ class Config
         }
 
         return false;
-    }
-
-    /**
-     * Retrieve product_model batch size
-     *
-     * @return int
-     */
-    public function getAdvancedPmBatchSize()
-    {
-        /** @var int $advancedPmBatchSize */
-        $advancedPmBatchSize = $this->scopeConfig->getValue(self::PRODUCT_PRODUCT_MODEL_BATCH_SIZE);
-        if (filter_var($advancedPmBatchSize, FILTER_VALIDATE_INT) === false) {
-            $advancedPmBatchSize = self::PRODUCT_PRODUCT_MODEL_BATCH_SIZE_DEFAULT_VALUE;
-        }
-
-        return $advancedPmBatchSize;
-    }
-
-    /**
-     * Retrieve product_model update length
-     *
-     * @return int
-     */
-    public function getAdvancedPmUpdateLength()
-    {
-        /** @var int $advancedPmUpdateLength */
-        $advancedPmUpdateLength = $this->scopeConfig->getValue(self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH);
-        if ((filter_var(
-                $advancedPmUpdateLength,
-                FILTER_VALIDATE_INT
-            )) === false || ($advancedPmUpdateLength < self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_MINIMUM)) {
-            $advancedPmUpdateLength = self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_DEFAULT_VALUE;
-        }
-
-        return $advancedPmUpdateLength;
     }
 
     /**
