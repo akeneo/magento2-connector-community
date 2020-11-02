@@ -144,3 +144,19 @@
 ### Version 100.4.16 :
 * Fix file import with uppercase attribute codes
 * Fix auto_increment generation compliance with MYSQL 8
+
+### Version 101.0.0 :
+* Add product model import family by family: (https://help.akeneo.com/magento2-connector/v100/articles/overview.html)
+    * Remove "Product Model" and "Family Variant" jobs (https://help.akeneo.com/magento2-connector/v100/articles/trigger.html)
+    * Remove deprecated table "akeneo_connector_product_models" (https://help.akeneo.com/magento2-connector/v100/articles/upgrade-connector.html)
+    * Remove deprecated configuration "Product Model Batch Size" and "Product Model Update Length" (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html)
+    * Merge "Product Model" and "Family Variant" job into "Product" job (https://help.akeneo.com/magento2-connector/v100/articles/overview.html#product-import-process)
+    * Add specific "Product Model Completeness Filter" configuration (https://help.akeneo.com/magento2-connector/v100/articles/03-products-filter-configuration.html)
+    * Add specific "Product Model Advanced Filter" configuration (https://help.akeneo.com/magento2-connector/v100/articles/03-products-filter-configuration.html)
+    * Apply "Standard Product Filters" to product models (https://help.akeneo.com/magento2-connector/v100/articles/03-products-filter-configuration.html)
+* Add automatic mapping of product model specific attributes in the "Configurable" configuration of the connector (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#configurable-product-attributes-and-default-values)
+* Remove type "Product Model Value" from "Configurable" configuration (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#configurable-product-attributes-and-default-values)
+
+**Warning :** *After updating Akeneo Connector for Magento 2 to this version, make sure to check to following:*
+* *Remove the previously declared CRON jobs for old "Product Model" and "Family Variant" jobs*
+* *Audit and rework your previous customizations on the "Product Model", "Family Variant" and "Product" jobs, as this new version contains compatibility break changes*
