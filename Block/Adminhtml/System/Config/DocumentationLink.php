@@ -51,7 +51,7 @@ class DocumentationLink extends Field
         /** @var string $html */
         $html = $element->getElementHtml();
 
-        $html .= '<a target="_blank"  href="' . self::DOCUMENTATION_LINK . '">' . self::DOCUMENTATION_LINK . '</a>';
+        $html .= '<a target="_blank" href="' . self::DOCUMENTATION_LINK . '" title="' . __('Akeneo Help Center') . '">' . __('Akeneo Help Center') . '</a>';
 
         return $html;
     }
