@@ -80,10 +80,11 @@ class ProductFilters
      * Get the filters for the product API query
      *
      * @param string|null $productFamily
+     * @param bool        $isProductModel
      *
      * @return mixed[]|string[]
      */
-    public function getFilters($productFamily = null)
+    public function getFilters($productFamily = null, $isProductModel = false)
     {
         /** @var mixed[] $mappedChannels */
         $mappedChannels = $this->configHelper->getMappedChannels();
@@ -106,7 +107,7 @@ class ProductFilters
         $mode = $this->configHelper->getFilterMode();
         if ($mode == Mode::ADVANCED) {
             /** @var mixed[] $advancedFilters */
-            $advancedFilters = $this->getAdvancedFilters();
+            $advancedFilters = $this->getAdvancedFilters($isProductModel);
             // If product import gave a family, add it to the filter
             if ($productFamily) {
                 if (isset($advancedFilters['search']['family'])) {
@@ -260,11 +261,19 @@ class ProductFilters
 
     /**
      * Retrieve advanced filters config
+     * 
+     * @param bool $isProductModel
      *
      * @return mixed[]
      */
-    protected function getAdvancedFilters()
+    protected function getAdvancedFilters($isProductModel = false)
     {
+        if ($isProductModel) {
+            /** @var mixed[] $filters */
+            $filters = $this->configHelper->getModelAdvancedFilters();
+
+            return $filters;
+        }
         /** @var mixed[] $filters */
         $filters = $this->configHelper->getAdvancedFilters();
 

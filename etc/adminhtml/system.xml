@@ -77,14 +77,14 @@
                     <source_model>Akeneo\Connector\Model\Source\Filters\Mode</source_model>
                 </field>
                 <field id="completeness_type" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Completeness type</label>
+                    <label>Product Completeness type</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Completeness</source_model>
                     <depends>
                         <field id="mode">standard</field>
                     </depends>
                 </field>
                 <field id="completeness_locales" translate="label comment" type="multiselect" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Locales</label>
+                    <label>Product Locales</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Locales</source_model>
                     <comment>Select the locales to apply the completeness filter on</comment>
                     <validate>required-entry</validate>
@@ -95,7 +95,7 @@
                     </depends>
                 </field>
                 <field id="completeness_value" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Completeness value</label>
+                    <label>Product Completeness value</label>
                     <comment>Has to be a value between 0 and 100</comment>
                     <validate>required-entry</validate>
                     <depends>
@@ -103,14 +103,31 @@
                         <field id="mode">standard</field>
                     </depends>
                 </field>
-                <field id="status" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="model_completeness_type" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Product Model Completeness type</label>
+                    <source_model>Akeneo\Connector\Model\Source\Filters\ModelCompleteness</source_model>
+                    <depends>
+                        <field id="mode">standard</field>
+                    </depends>
+                </field>
+                <field id="model_completeness_locales" translate="label comment" type="multiselect" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Product Model Locales</label>
+                    <source_model>Akeneo\Connector\Model\Source\Filters\Locales</source_model>
+                    <comment>Select the locales to apply the product model completeness filter on</comment>
+                    <validate>required-entry</validate>
+                    <depends>
+                        <field id="model_completeness_type" negative="1">no_condition</field>
+                        <field id="mode">standard</field>
+                    </depends>
+                </field>
+                <field id="status" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Status</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Status</source_model>
                     <depends>
                         <field id="mode">standard</field>
                     </depends>
                 </field>
-                <field id="updated_mode" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0"
+                <field id="updated_mode" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="0"
                         showInStore="0">
                     <label>Updated mode</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Update</source_model>
@@ -118,7 +135,7 @@
                         <field id="mode">standard</field>
                     </depends>
                 </field>
-                <field id="updated_lower" translate="label" type="date" sortOrder="80" showInDefault="1" showInWebsite="0"
+                <field id="updated_lower" translate="label" type="date" sortOrder="90" showInDefault="1" showInWebsite="0"
                         showInStore="0">
                     <label>Updated before</label>
                     <comment>Import only product updated before the given date. Leave blank for no filter.</comment>
@@ -128,7 +145,7 @@
                         <field id="updated_mode">&lt;</field>
                     </depends>
                 </field>
-                <field id="updated_greater" translate="label" type="date" sortOrder="90" showInDefault="1" showInWebsite="0"
+                <field id="updated_greater" translate="label" type="date" sortOrder="100" showInDefault="1" showInWebsite="0"
                         showInStore="0">
                     <label>Updated after</label>
                     <comment>Import only product updated after the given date. Leave blank for no filter.</comment>
@@ -138,7 +155,7 @@
                         <field id="updated_mode">&gt;</field>
                     </depends>
                 </field>
-                <field id="updated_between_after" translate="label" type="date" sortOrder="100" showInDefault="1" showInWebsite="0"
+                <field id="updated_between_after" translate="label" type="date" sortOrder="110" showInDefault="1" showInWebsite="0"
                         showInStore="0">
                     <label>Updated after</label>
                     <comment>Import only product updated after the given date. Leave at least one blank for no filter.</comment>
@@ -148,7 +165,7 @@
                         <field id="updated_mode">BETWEEN</field>
                     </depends>
                 </field>
-                <field id="updated_between_before" translate="label" type="date" sortOrder="110" showInDefault="1" showInWebsite="0"
+                <field id="updated_between_before" translate="label" type="date" sortOrder="120" showInDefault="1" showInWebsite="0"
                         showInStore="0">
                     <label>Updated before</label>
                     <comment>Import only product updated before the given date. Leave at least one blank for no filter.</comment>
@@ -158,7 +175,7 @@
                         <field id="updated_mode">BETWEEN</field>
                     </depends>
                 </field>
-                <field id="updated" translate="label" type="text" sortOrder="120" showInDefault="1" showInWebsite="0"
+                <field id="updated" translate="label" type="text" sortOrder="130" showInDefault="1" showInWebsite="0"
                         showInStore="0">
                     <label>Updated</label>
                     <comment>
@@ -169,7 +186,7 @@
                         <field id="updated_mode">SINCE LAST N DAYS</field>
                     </depends>
                 </field>
-                <field id="families" translate="label comment" type="multiselect" sortOrder="130" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="families" translate="label comment" type="multiselect" sortOrder="140" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Families</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Family</source_model>
                     <comment>
@@ -180,8 +197,19 @@
                     </depends>
                     <can_be_empty>1</can_be_empty>
                 </field>
-                <field id="advanced_filter" translate="label comment" type="textarea" sortOrder="140" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Advanced Filter</label>
+                <field id="advanced_filter" translate="label comment" type="textarea" sortOrder="150" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Advanced Product Filter</label>
+                    <backend_model>Akeneo\Connector\Model\Backend\Json</backend_model>
+                    <comment>
+                        <![CDATA[Build your query using a json.<br/>
+                        Please, ensure that your JSON format is valid before using advanced filter.<br/>]]>
+                    </comment>
+                    <depends>
+                        <field id="mode">advanced</field>
+                    </depends>
+                </field>
+                <field id="model_advanced_filter" translate="label comment" type="textarea" sortOrder="160" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Advanced Product Model Filter</label>
                     <backend_model>Akeneo\Connector\Model\Backend\Json</backend_model>
                     <comment>
                         <![CDATA[Build your query using a json.<br/>
