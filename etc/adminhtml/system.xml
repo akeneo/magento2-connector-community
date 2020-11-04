@@ -73,14 +73,14 @@
                     <source_model>Akeneo\Connector\Model\Source\Filters\Mode</source_model>
                 </field>
                 <field id="completeness_type" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Completeness type</label>
+                    <label>Product Completeness type</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Completeness</source_model>
                     <depends>
                         <field id="mode">standard</field>
                     </depends>
                 </field>
                 <field id="completeness_locales" translate="label comment" type="multiselect" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Locales</label>
+                    <label>Product Locales</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Locales</source_model>
                     <comment>Select the locales to apply the completeness filter on</comment>
                     <validate>required-entry</validate>
@@ -91,7 +91,7 @@
                     </depends>
                 </field>
                 <field id="completeness_value" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Completeness value</label>
+                    <label>Product Completeness value</label>
                     <comment>Has to be a value between 0 and 100</comment>
                     <validate>required-entry</validate>
                     <depends>
@@ -99,14 +99,31 @@
                         <field id="mode">standard</field>
                     </depends>
                 </field>
-                <field id="status" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="model_completeness_type" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Product Model Completeness type</label>
+                    <source_model>Akeneo\Connector\Model\Source\Filters\ModelCompleteness</source_model>
+                    <depends>
+                        <field id="mode">standard</field>
+                    </depends>
+                </field>
+                <field id="model_completeness_locales" translate="label comment" type="multiselect" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Product Model Locales</label>
+                    <source_model>Akeneo\Connector\Model\Source\Filters\Locales</source_model>
+                    <comment>Select the locales to apply the product model completeness filter on</comment>
+                    <validate>required-entry</validate>
+                    <depends>
+                        <field id="model_completeness_type" negative="1">no_condition</field>
+                        <field id="mode">standard</field>
+                    </depends>
+                </field>
+                <field id="status" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Status</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Status</source_model>
                     <depends>
                         <field id="mode">standard</field>
                     </depends>
                 </field>
-                <field id="updated_mode" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0"
+                <field id="updated_mode" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="0"
                         showInStore="0">
                     <label>Updated mode</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Update</source_model>
@@ -114,7 +131,7 @@
                         <field id="mode">standard</field>
                     </depends>
                 </field>
-                <field id="updated_lower" translate="label" type="date" sortOrder="80" showInDefault="1" showInWebsite="0"
+                <field id="updated_lower" translate="label" type="date" sortOrder="90" showInDefault="1" showInWebsite="0"
                         showInStore="0">
                     <label>Updated before</label>
                     <comment>Import only product updated before the given date. Leave blank for no filter.</comment>
@@ -124,7 +141,7 @@
                         <field id="updated_mode">&lt;</field>
                     </depends>
                 </field>
-                <field id="updated_greater" translate="label" type="date" sortOrder="90" showInDefault="1" showInWebsite="0"
+                <field id="updated_greater" translate="label" type="date" sortOrder="100" showInDefault="1" showInWebsite="0"
                         showInStore="0">
                     <label>Updated after</label>
                     <comment>Import only product updated after the given date. Leave blank for no filter.</comment>
@@ -134,7 +151,7 @@
                         <field id="updated_mode">&gt;</field>
                     </depends>
                 </field>
-                <field id="updated_between_after" translate="label" type="date" sortOrder="100" showInDefault="1" showInWebsite="0"
+                <field id="updated_between_after" translate="label" type="date" sortOrder="110" showInDefault="1" showInWebsite="0"
                         showInStore="0">
                     <label>Updated after</label>
                     <comment>Import only product updated after the given date. Leave at least one blank for no filter.</comment>
@@ -144,7 +161,7 @@
                         <field id="updated_mode">BETWEEN</field>
                     </depends>
                 </field>
-                <field id="updated_between_before" translate="label" type="date" sortOrder="110" showInDefault="1" showInWebsite="0"
+                <field id="updated_between_before" translate="label" type="date" sortOrder="120" showInDefault="1" showInWebsite="0"
                         showInStore="0">
                     <label>Updated before</label>
                     <comment>Import only product updated before the given date. Leave at least one blank for no filter.</comment>
@@ -154,7 +171,7 @@
                         <field id="updated_mode">BETWEEN</field>
                     </depends>
                 </field>
-                <field id="updated" translate="label" type="text" sortOrder="120" showInDefault="1" showInWebsite="0"
+                <field id="updated" translate="label" type="text" sortOrder="130" showInDefault="1" showInWebsite="0"
                         showInStore="0">
                     <label>Updated</label>
                     <comment>
@@ -165,7 +182,7 @@
                         <field id="updated_mode">SINCE LAST N DAYS</field>
                     </depends>
                 </field>
-                <field id="families" translate="label comment" type="multiselect" sortOrder="130" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="families" translate="label comment" type="multiselect" sortOrder="140" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Families</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Family</source_model>
                     <comment>
@@ -176,8 +193,19 @@
                     </depends>
                     <can_be_empty>1</can_be_empty>
                 </field>
-                <field id="advanced_filter" translate="label comment" type="textarea" sortOrder="140" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Advanced Filter</label>
+                <field id="advanced_filter" translate="label comment" type="textarea" sortOrder="150" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Advanced Product Filter</label>
+                    <backend_model>Akeneo\Connector\Model\Backend\Json</backend_model>
+                    <comment>
+                        <![CDATA[Build your query using a json.<br/>
+                        Please, ensure that your JSON format is valid before using advanced filter.<br/>]]>
+                    </comment>
+                    <depends>
+                        <field id="mode">advanced</field>
+                    </depends>
+                </field>
+                <field id="model_advanced_filter" translate="label comment" type="textarea" sortOrder="160" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Advanced Product Model Filter</label>
                     <backend_model>Akeneo\Connector\Model\Backend\Json</backend_model>
                     <comment>
                         <![CDATA[Build your query using a json.<br/>
@@ -281,38 +309,16 @@ For example :<br/>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>
                         <![CDATA[
-                        <strong>Attribute:</strong> Declare each product model attributes that has to be imported in the configurable product.
-                        <br /><br />
                         <strong>Type:</strong>
                         <br />
-                        - <u>Product Model value</u>: Declare each PIM common attributes you want to be imported in the Magento configurable products. Leave the value field empty.
+                        - <u>Mapping</u>: Declare each PIM common attributes you want to be mapped with another Magento attribute. Fill the value field with the corresponding Magento attribute. Example: Attribute = name_product_model and Value = name
                         <br />
                         - <u>First Variation value</u>: Declare each PIM variation specific attributes you want to be imported in the Magento configurable products. The value of the first variation associated to the product model will be inserted in the corresponding Magento configurable product attribute. Leave the value field empty.
-                        <br />
-                        - <u>Mapping</u>: Declare each PIM common attributes you want to be mapped with another Magento attribute. Fill the value field with the corresponding Magento attribute. Example: Attribute = name_product_model and Value = name
                         <br />
                         - <u>SQL Statement</u>: Use a SQL statement in the value field for custom value assignation from Akeneo Connector temporary tables. Example: Attribute = url_key and Value = LOWER(url_key)
                         <br />
                         - <u>Default value</u>: Fill the value field to assign a constant default value for a given attribute. Example: Attribute = enabled and Value = 0
                         ]]>
-                    </comment>
-                </field>
-                <field id="product_model_batch_size" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Product Model Batch Size</label>
-                    <comment>
-                        <![CDATA[The number of product models handled per database update.</br>
-                        You can lower this value to prevent MYSQL errors from database limitations.<br />
-                        If set to 1, product models will be imported one by one.<br />
-                        If set to 0, "Product Model Update Length" value below will be used instead.<br />
-                        <u>Default value: 500</u>]]>
-                    </comment>
-                </field>
-                <field id="product_model_update_length" translate="label comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Product Model Update Length</label>
-                    <comment>
-                        <![CDATA[If the above "Product Model Batch Size" value is set to 0, the database command to insert product models will be sliced into separate statements no bigger than the given value.</br>
-                        This is an approximate value, and must be superior to 1000 characters.</br>
-                        <u>Default value: 5000</u>]]>
                     </comment>
                 </field>
                 <field id="media_enabled" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">

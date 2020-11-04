@@ -25,11 +25,10 @@
                 <completeness_value>100</completeness_value>
                 <status>1</status>
                 <updated_mode>SINCE LAST N DAYS</updated_mode>
+                <model_completeness_type>no_condition</model_completeness_type>
             </products_filters>
             <product>
                 <url_generation_enabled>1</url_generation_enabled>
-                <product_model_batch_size>500</product_model_batch_size>
-                <product_model_update_length>5000</product_model_update_length>
                 <activation>2</activation>
             </product>
             <category>

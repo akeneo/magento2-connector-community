@@ -211,7 +211,7 @@ class Option extends Import
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var string|int $paginationSize */
-        $paginationSize = $this->configHelper->getPanigationSize();
+        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var PageInterface $attributes */
         $attributes = $this->getAllAttributes();
         /** @var int $lines */
@@ -444,7 +444,9 @@ class Option extends Import
             if (!$this->akeneoClient) {
                 $this->akeneoClient = $this->getAkeneoClient();
             }
-            $this->attributes = $this->akeneoClient->getAttributeApi()->all();
+            /** @var string|int $paginationSize */
+            $paginationSize = $this->configHelper->getPaginationSize();
+            $this->attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize);
         }
 
         return $this->attributes;

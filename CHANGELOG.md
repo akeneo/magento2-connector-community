@@ -94,3 +94,69 @@
 * Fix metric value set to "0" when empty on Akeneo
 * Fix website association not deleted when website attribute value is empty for a product
 * Optimize deletion of akeneo_connector_product_model columns during product model import job
+
+### Version 100.4.6 :
+* Add product import job batching family after family (https://help.akeneo.com/magento2-connector/v100/articles/overview.html#product-import-process)
+* Optimize product model column number in temporary table by adding filter for API request on mapped channels and available locales
+
+### Version 100.4.7 :
+* Fix product default status behavior conflict with Magento 2 Enterprise content staging feature
+* Optimize category association deletion request during product import
+* Skip product URL rewrite generation for non associated websites
+
+### Version 100.4.8 :
+* Fix strict type for Akeneo PHP client pagination variable
+* Fix product count during product model job
+* Optimize product association deletion request
+
+### Version 100.4.9 :
+* Fix product filters not being reseted after each family during command line execution
+* Fix create table function causing some products and product models not being imported in multi-website environment
+* Fix misleading warning label during image import
+* Fix Akeneo API connection being initialized in construct on the admin configuration page of the connector
+
+### Version 100.4.10 :
+* Add configuration check for empty mapping
+* Fix category url_path generation
+* Fix category and family source model return when API credentials are not configured
+* Fix advanced filter issue with family filter variable
+
+### Version 100.4.11 :
+* Fix website mapping attribute code comparison to lowercase
+* Fix configurable mapping attribute code comparison to lowercase
+
+### Version 100.4.12 :
+* Add credentials check before command line import jobs
+* Add pagination to API calls in the admin configuration page
+* Add security to prevent import of attributes starting with numbers (https://help.akeneo.com/magento2-connector/v100/articles/what-data.html#attributes)
+* Add column filtering for job status in the admin connector log grid
+* Fix custom options deletion after each product import
+
+### Version 100.4.13 :
+* Fix command constructor inverted comments causing compilation issue
+
+### Version 100.4.14 :
+* Fix product model temporary table data insertion when using multiple channels
+
+### Version 100.4.15 :
+* Fix image import with uppercase attribute codes
+
+### Version 100.4.16 :
+* Fix file import with uppercase attribute codes
+* Fix auto_increment generation compliance with MYSQL 8
+
+### Version 101.0.0 :
+* Add product model import family by family: (https://help.akeneo.com/magento2-connector/v100/articles/overview.html)
+    * Remove "Product Model" and "Family Variant" jobs (https://help.akeneo.com/magento2-connector/v100/articles/trigger.html)
+    * Remove deprecated table "akeneo_connector_product_models" (https://help.akeneo.com/magento2-connector/v100/articles/upgrade-connector.html)
+    * Remove deprecated configuration "Product Model Batch Size" and "Product Model Update Length" (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html)
+    * Merge "Product Model" and "Family Variant" job into "Product" job (https://help.akeneo.com/magento2-connector/v100/articles/overview.html#product-import-process)
+    * Add specific "Product Model Completeness Filter" configuration (https://help.akeneo.com/magento2-connector/v100/articles/03-products-filter-configuration.html)
+    * Add specific "Product Model Advanced Filter" configuration (https://help.akeneo.com/magento2-connector/v100/articles/03-products-filter-configuration.html)
+    * Apply "Standard Product Filters" to product models (https://help.akeneo.com/magento2-connector/v100/articles/03-products-filter-configuration.html)
+* Add automatic mapping of product model specific attributes in the "Configurable" configuration of the connector (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#configurable-product-attributes-and-default-values)
+* Remove type "Product Model Value" from "Configurable" configuration (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#configurable-product-attributes-and-default-values)
+
+**Warning :** *After updating Akeneo Connector for Magento 2 to this version, make sure to check to following:*
+* *Remove the previously declared CRON jobs for old "Product Model" and "Family Variant" jobs*
+* *Audit and rework your previous customizations on the "Product Model", "Family Variant" and "Product" jobs, as this new version contains compatibility break changes*

@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Console\Command;
 
+use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Framework\Data\Collection;
@@ -33,6 +34,12 @@ class AkeneoConnectorImportCommand extends Command
      */
     const IMPORT_CODE = 'code';
     /**
+     * This constant contains a string
+     *
+     * @var string IMPORT_CODE_PRODUCT
+     */
+    const IMPORT_CODE_PRODUCT = 'product';
+    /**
      * This variable contains a State
      *
      * @var State $appState
@@ -44,23 +51,32 @@ class AkeneoConnectorImportCommand extends Command
      * @var ImportRepositoryInterface $importRepository
      */
     protected $importRepository;
+    /**
+     * This variable contains a ConfigHelper
+     *
+     * @var ConfigHelper $configHelper
+     */
+    protected $configHelper;
 
     /**
-     * AkeneoConnectorImportCommand constructor.
+     * AkeneoConnectorImportCommand constructor
      *
      * @param ImportRepositoryInterface $importRepository
-     * @param State $appState
-     * @param null  $name
+     * @param State                     $appState
+     * @param ConfigHelper              $configHelper
+     * @param null                      $name
      */
     public function __construct(
         ImportRepositoryInterface $importRepository,
         State $appState,
+        ConfigHelper $configHelper,
         $name = null
     ) {
         parent::__construct($name);
 
         $this->appState         = $appState;
         $this->importRepository = $importRepository;
+        $this->configHelper     = $configHelper;
     }
 
     /**
@@ -97,7 +113,6 @@ class AkeneoConnectorImportCommand extends Command
             $this->checkEntities($code, $output);
         }
     }
-
 
     /**
      * Check if multiple entities have been specified
@@ -154,8 +169,56 @@ class AkeneoConnectorImportCommand extends Command
             return false;
         }
 
+        if (!$this->configHelper->checkAkeneoApiCredentials()) {
+            /** @var Phrase $message */
+            $message = __('API credentials are missing. Please configure the connector and retry.');
+            $this->displayError($message, $output);
+
+            return false;
+        }
+
+        // If product import, run the import once per family
+        /** @var array $productFamiliesToImport */
+        $productFamiliesToImport = [];
+        if ($code == self::IMPORT_CODE_PRODUCT) {
+            $productFamiliesToImport = $import->getFamiliesToImport();
+
+            if (!count($productFamiliesToImport)) {
+                $message = __('No family to import');
+                $this->displayError($message, $output);
+
+                return false;
+            }
+
+            foreach ($productFamiliesToImport as $family) {
+                $this->runImport($import, $output, $family);
+                $import->setIdentifier(null);
+            }
+
+            return true;
+        }
+
+        // Run the import normaly
+        $this->runImport($import, $output);
+
+        return true;
+    }
+
+    /**
+     * Run the import
+     *
+     * @param Import     $import
+     * @param OutputInterface     $output
+     * @param null|string $family
+     *
+     * @return void
+     */
+    protected function runImport(Import $import, OutputInterface $output, $family = null) {
         try {
             $import->setStep(0);
+            if ($family) {
+                $import->setFamily($family);
+            }
 
             while ($import->canExecute()) {
                 /** @var string $comment */

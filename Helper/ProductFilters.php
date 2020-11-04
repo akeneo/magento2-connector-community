@@ -3,6 +3,7 @@
 namespace Akeneo\Connector\Helper;
 
 use Akeneo\Pim\ApiClient\Search\SearchBuilder;
+use Akeneo\Pim\ApiClient\Search\SearchBuilderFactory;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
@@ -43,6 +44,12 @@ class ProductFilters
      */
     protected $localesHelper;
     /**
+     * This variable contains a SearchBuilderFactory
+     *
+     * @var SearchBuilderFactory $searchBuilderFactory
+     */
+    protected $searchBuilderFactory;
+    /**
      * This variable contains a SearchBuilder
      *
      * @var SearchBuilder $searchBuilder
@@ -52,29 +59,32 @@ class ProductFilters
     /**
      * ProductFilters constructor
      *
-     * @param ConfigHelper  $configHelper
-     * @param Store         $storeHelper
-     * @param Locales       $localesHelper
-     * @param SearchBuilder $searchBuilder
+     * @param ConfigHelper         $configHelper
+     * @param Store                $storeHelper
+     * @param Locales              $localesHelper
+     * @param SearchBuilderFactory $searchBuilderFactory
      */
     public function __construct(
         ConfigHelper $configHelper,
         StoreHelper $storeHelper,
         LocalesHelper $localesHelper,
-        SearchBuilder $searchBuilder
+        SearchBuilderFactory $searchBuilderFactory
     ) {
-        $this->configHelper  = $configHelper;
-        $this->storeHelper   = $storeHelper;
-        $this->localesHelper = $localesHelper;
-        $this->searchBuilder = $searchBuilder;
+        $this->configHelper         = $configHelper;
+        $this->storeHelper          = $storeHelper;
+        $this->localesHelper        = $localesHelper;
+        $this->searchBuilderFactory = $searchBuilderFactory;
     }
 
     /**
      * Get the filters for the product API query
      *
+     * @param string|null $productFamily
+     * @param bool        $isProductModel
+     *
      * @return mixed[]|string[]
      */
-    public function getFilters()
+    public function getFilters($productFamily = null, $isProductModel = false)
     {
         /** @var mixed[] $mappedChannels */
         $mappedChannels = $this->configHelper->getMappedChannels();
@@ -91,12 +101,38 @@ class ProductFilters
         $filters = [];
         /** @var mixed[] $search */
         $search = [];
-
+        /** @var  $productFilterAdded */
+        $productFilterAdded = false;
         /** @var string $mode */
         $mode = $this->configHelper->getFilterMode();
         if ($mode == Mode::ADVANCED) {
             /** @var mixed[] $advancedFilters */
-            $advancedFilters = $this->getAdvancedFilters();
+            $advancedFilters = $this->getAdvancedFilters($isProductModel);
+            // If product import gave a family, add it to the filter
+            if ($productFamily) {
+                if (isset($advancedFilters['search']['family'])) {
+                    /**
+                     * @var int      $key
+                     * @var string[] $familyFilter
+                     */
+                    foreach ($advancedFilters['search']['family'] as $key => $familyFilter) {
+                        if (isset($familyFilter['operator']) && $familyFilter['operator'] == 'IN') {
+                            $advancedFilters['search']['family'][$key]['value'][] = $productFamily;
+                            $productFilterAdded = true;
+
+                            break;
+                        }
+                    }
+                }
+
+                if (!$productFilterAdded) {
+                    /** @var string[] $familyFilter */
+                    $familyFilter = ['operator' => 'IN', 'value' => [$productFamily]];
+                    $advancedFilters['search']['family'][] = $familyFilter;
+                    $productFilterAdded = true;
+                }
+            }
+
             if (!empty($advancedFilters['scope'])) {
                 if (!in_array($advancedFilters['scope'], $mappedChannels)) {
                     /** @var string[] $error */
@@ -114,11 +150,19 @@ class ProductFilters
         }
 
         if ($mode == Mode::STANDARD) {
+            $this->searchBuilder = $this->searchBuilderFactory->create();
             $this->addCompletenessFilter();
             $this->addStatusFilter();
             $this->addFamiliesFilter();
             $this->addUpdatedFilter();
             $search = $this->searchBuilder->getFilters();
+        }
+
+        // If import product gave a family, add this family to the search
+        if ($productFamily && !$productFilterAdded) {
+            $familyFilter = ['operator' => 'IN', 'value' => [$productFamily]];
+            $search['family'][] = $familyFilter;
+            $productFilterAdded = true;
         }
 
         /** @var string $channel */
@@ -166,13 +210,70 @@ class ProductFilters
         return $filters;
     }
 
+
+    /**
+     * Get the filters for the product model API query
+     *
+     * @return mixed[]|string[]
+     */
+    public function getModelFilters()
+    {
+        /** @var mixed[] $mappedChannels */
+        $mappedChannels = $this->configHelper->getMappedChannels();
+        if (empty($mappedChannels)) {
+            /** @var string[] $error */
+            $error = [
+                'error' => __('No website/channel mapped. Please check your configurations.'),
+            ];
+
+            return $error;
+        }
+
+        /** @var mixed[] $filters */
+        $filters = [];
+
+        /** @var string $channel */
+        foreach ($mappedChannels as $channel) {
+            /** @var string[] $filter */
+            $filter = [
+                'scope'  => $channel,
+            ];
+
+            /** @var string[] $locales */
+            $locales = $this->storeHelper->getChannelStoreLangs($channel);
+            if (!empty($locales)) {
+                /** @var string $locales */
+                $akeneoLocales = $this->localesHelper->getAkeneoLocales();
+                if (!empty($akeneoLocales)) {
+                    $locales = array_intersect($locales, $akeneoLocales);
+                }
+
+                /** @var string $locales */
+                $locales           = implode(',', $locales);
+                $filter['locales'] = $locales;
+            }
+
+            $filters[] = $filter;
+        }
+
+        return $filters;
+    }
+
     /**
      * Retrieve advanced filters config
+     * 
+     * @param bool $isProductModel
      *
      * @return mixed[]
      */
-    protected function getAdvancedFilters()
+    protected function getAdvancedFilters($isProductModel = false)
     {
+        if ($isProductModel) {
+            /** @var mixed[] $filters */
+            $filters = $this->configHelper->getModelAdvancedFilters();
+
+            return $filters;
+        }
         /** @var mixed[] $filters */
         $filters = $this->configHelper->getAdvancedFilters();
 
