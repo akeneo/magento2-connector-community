@@ -192,13 +192,13 @@ class Category extends Import
 
         /** @var string $warning */
         $warning = '';
+        /** @var string[] $lang */
+        $lang    = $this->storeHelper->getStores('lang');
         /**
          * @var int   $index
          * @var array $category
          */
         foreach ($categories as $index => $category) {
-            /** @var string[] $lang */
-            $lang    = $this->storeHelper->getStores('lang');
             $warning = $this->checkLabelPerLocales($category, $lang, $warning);
 
             $this->entitiesHelper->insertDataFromApi($category, $this->getCode());
