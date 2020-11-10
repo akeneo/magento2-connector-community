@@ -80,7 +80,7 @@ class CategoryFilters
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
 
-        if ($edition === Edition::FOUR || $edition === Edition::SERENITY) {
+        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::SERENITY) {
             $this->searchBuilder = $this->searchBuilderFactory->create();
 
             /** @var string $excludedCategories */
