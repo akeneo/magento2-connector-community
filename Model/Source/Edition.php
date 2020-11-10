@@ -26,13 +26,13 @@ class Edition implements ArrayInterface
      *
      * @var string LESS_FOUR_POINT_ZERO_POINT_SIXTY_TWO
      */
-    const LESS_FOUR_POINT_ZERO_POINT_SIXTY_TWO = 'less_four_point_zero_sixty_two';
+    const LESS_FOUR_POINT_ZERO_POINT_SIXTY_TWO = 'less_four_point_zero_point_sixty_two';
     /**
      * Version >= 4.0.62 and up constant
      *
      * @var string GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO
      */
-    const GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO = 'greater_or_four_point_zero_sixty_two';
+    const GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO = 'greater_or_four_point_zero_point_sixty_two';
     /**
      * Version Serenity constant
      *
