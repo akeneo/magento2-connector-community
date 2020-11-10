@@ -103,6 +103,7 @@ class Category extends Import
      * @param ConfigHelper             $configHelper
      * @param CategoryModel            $categoryModel
      * @param CategoryUrlPathGenerator $categoryUrlPathGenerator
+     * @param CategoryFilters          $categoryFilters
      * @param array                    $data
      */
     public function __construct(
