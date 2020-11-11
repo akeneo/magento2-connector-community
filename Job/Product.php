@@ -2711,7 +2711,7 @@ class Product extends JobImport
                 /** @var string $filePath */
                 $filePath = $this->configHelper->getMediaFullPath($name);
 
-                if (!$this->configHelper->mediaFileExists($name)) {
+                if (!$this->configHelper->mediaFileExists($filePath)) {
                     /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
                     $this->configHelper->saveMediaFile($filePath, $binary);
