@@ -15,9 +15,29 @@ use Magento\Framework\Option\ArrayInterface;
  */
 class Edition implements ArrayInterface
 {
-    /** const keys */
+    /**
+     * Version 3.2 constant
+     *
+     * @var string THREE_POINT_TWO
+     */
     const THREE_POINT_TWO = 'three';
-    const FOUR = 'four';
+    /**
+     * Version < 4.0.62 constant
+     *
+     * @var string LESS_FOUR_POINT_ZERO_POINT_SIXTY_TWO
+     */
+    const LESS_FOUR_POINT_ZERO_POINT_SIXTY_TWO = 'less_four_point_zero_point_sixty_two';
+    /**
+     * Version >= 4.0.62 and up constant
+     *
+     * @var string GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO
+     */
+    const GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO = 'greater_or_four_point_zero_point_sixty_two';
+    /**
+     * Version Serenity constant
+     *
+     * @var string SERENITY
+     */
     const SERENITY = 'serenity';
 
     /**
@@ -29,7 +49,8 @@ class Edition implements ArrayInterface
     {
         return [
             self::THREE_POINT_TWO => __('3.2'),
-            self::FOUR => __('4.0 or greater'),
+            self::LESS_FOUR_POINT_ZERO_POINT_SIXTY_TWO => __('less 4.0.62'),
+            self::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO => __('4.0.62 or greater'),
             self::SERENITY    => __('Serenity Edition'),
         ];
     }
