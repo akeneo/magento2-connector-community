@@ -78,7 +78,7 @@ class AttributeFilters
         /** @var string[] $attributeTypeFilter */
         $attributeTypeFilter = [];
 
-        if ($edition == Edition::FOUR || $edition == Edition::SERENITY) {
+        if ($edition == Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition == Edition::SERENITY) {
             $attributeTypeFilter['search']['type'][] = [
                 'operator' => 'IN',
                 'value'    => $attributeTypes,
