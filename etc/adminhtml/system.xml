@@ -49,6 +49,10 @@
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Api\Test</frontend_model>
                     <label>Test API credentials</label>
                 </field>
+                <field id="edition" translate="label comment" type="select" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Akeneo Edition</label>
+                    <source_model>Akeneo\Connector\Model\Source\Edition</source_model>
+                </field>
                 <field id="pagination_size" translate="label comment" type="text" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Pagination size</label>
                     <comment>Must be a value between 1 and 100. Default value is 100.</comment>
