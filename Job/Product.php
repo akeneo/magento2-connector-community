@@ -946,7 +946,7 @@ class Product extends JobImport
             '_type_id'           => new Expr('"configurable"'),
             '_options_container' => new Expr('"container1"'),
             '_axis'              => 'v.axis',
-            'family'             => 'v.family',
+            'family'             => 'v.family_variant',
             'categories'         => 'v.categories'
         ];
 
