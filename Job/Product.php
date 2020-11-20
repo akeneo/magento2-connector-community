@@ -434,7 +434,7 @@ class Product extends JobImport
         $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        var_dump($filters);
+
         if ($connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
             return;
         }
