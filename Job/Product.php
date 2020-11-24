@@ -2637,8 +2637,6 @@ class Product extends JobImport
             $groupedProductFamily = [];
             /** @var string[] $groupedFamiliesConfig */
             $groupedFamiliesConfig = $this->configHelper->getGroupedFamiliesMapping();
-            /** @var int $groupedProductFamilyNumber */
-            $groupedProductFamilyNumber = 0;
         }
 
         /** @var mixed[] $family */
@@ -2647,7 +2645,6 @@ class Product extends JobImport
                 continue;
             }
             if($edition === Edition::SERENITY && in_array($family['code'], $groupedFamiliesConfig)) {
-                $groupedProductFamilyNumber++;
                 $groupedProductFamily[] = $family['code'];
                 continue;
             }
@@ -2662,15 +2659,13 @@ class Product extends JobImport
                 $families[] = $family;
             }
 
-            if($groupedProductFamilyNumber === 0)
+            // Detect bad configuration for warning message
+            /** @var string $familyConfig */
+            foreach($groupedFamiliesConfig as $familyConfig)
             {
-                // Detect bad configuration for warning message
-                foreach($groupedFamiliesConfig as $familyConfig)
+                if(!in_array($familyConfig, $families))
                 {
-                    if(!in_array($familyConfig, $families))
-                    {
-                        $this->setMessage(__('Grouped families %1 not found in families to import', $familyConfig));
-                    }
+                    $this->setMessage(__('Grouped families %1 not found in families to import', $familyConfig));
                 }
             }
         }
