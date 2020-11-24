@@ -14,6 +14,7 @@ use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Job\Import as JobImport;
 use Akeneo\Connector\Job\Option as JobOption;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
+use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Connector\Model\Source\Filters\Mode;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
@@ -89,7 +90,7 @@ class Product extends JobImport
      * @var string $name
      */
     protected $name = 'Product';
-    
+
     /**
      * Akeneo default association types, reformatted as column names
      *
@@ -2088,7 +2089,7 @@ class Product extends JobImport
                 $linkTable,
                 [
                     'link_type_id = ?' => $typeId,
-                    'product_id IN (?)' => $productIds
+                    'product_id IN (?)' => $productIds,
                 ]
             );
 
@@ -2629,13 +2630,37 @@ class Product extends JobImport
         $families = [];
         /** @var string[] $apiFamilies */
         $apiFamilies = $this->akeneoClient->getFamilyApi()->all($paginationSize);
+        /** @var string $edition */
+        $edition = $this->configHelper->getEdition();
+
+        if($edition === Edition::SERENITY) {
+            /** @var mixed[] $groupedProductFamily */
+            $groupedProductFamily = [];
+            /** @var string[] $groupedFamiliesConfig */
+            $groupedFamiliesConfig = $this->configHelper->getGroupedFamiliesMapping();
+        }
+
         /** @var mixed[] $family */
-        foreach ($apiFamilies as $family) {
+        foreach ($apiFamilies as $key => $family) {
             if (!isset($family['code'])) {
+                continue;
+            }
+            if($edition === Edition::SERENITY && in_array($family['code'], $groupedFamiliesConfig)) {
+                $groupedProductFamily[] = $family['code'];
                 continue;
             }
             $families[] = $family['code'];
         }
+
+        if($edition === Edition::SERENITY)
+        {
+            /** @var string[] $family */
+            foreach($groupedProductFamily as $family)
+            {
+                $families[] = $family;
+            }
+        }
+
         /** @var string $mode */
         $mode = $this->configHelper->getFilterMode();
         if ($mode == Mode::ADVANCED) {

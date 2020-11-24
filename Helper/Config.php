@@ -279,6 +279,12 @@ class Config
      */
     const PRODUCT_ACTIVATION = 'akeneo_connector/product/activation';
     /**
+     * Grouped product families mapping path
+     *
+     * @var string GROUPED_PRODUCTS_FAMILIES_MAPPING
+     */
+    const GROUPED_PRODUCTS_FAMILIES_MAPPING = 'akeneo_connector/grouped_products/families_mapping';
+    /**
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
      */
     const PAGINATION_SIZE_DEFAULT_VALUE = 10;
@@ -1221,6 +1227,28 @@ class Config
         }
 
         return $loweredMatches;
+    }
+
+    /**
+     * Description getGroupedFamiliesMapping function
+     *
+     * @return string[]
+     */
+    public function getGroupedFamiliesMapping()
+    {
+        /** @var string $familiesSerialized */
+        $familiesSerialized = $this->scopeConfig->getValue(self::GROUPED_PRODUCTS_FAMILIES_MAPPING);
+        /** @var mixed[] $associations */
+        $associations = $this->serializer->unserialize($familiesSerialized);
+        /** @var string[] $families */
+        $families = [];
+        /** @var mixed[] $association */
+        foreach($associations as $association)
+        {
+            $families[] = $association['akeneo_grouped_family_code'];
+        }
+
+        return $families;
     }
 
     /**
