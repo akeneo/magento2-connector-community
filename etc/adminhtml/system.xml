@@ -386,7 +386,7 @@ For example :<br/>
                     </depends>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">four,serenity</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,serenity</field>
                 </depends>
             </group>
         </section>
