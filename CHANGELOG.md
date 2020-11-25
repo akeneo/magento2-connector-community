@@ -160,3 +160,7 @@
 **Warning :** *After updating Akeneo Connector for Magento 2 to this version, make sure to check to following:*
 * *Remove the previously declared CRON jobs for old "Product Model" and "Family Variant" jobs*
 * *Audit and rework your previous customizations on the "Product Model", "Family Variant" and "Product" jobs, as this new version contains compatibility break changes*
+
+### Version 101.0.2 :
+* Add documentation link in the connector admin configuration page
+* Fix metric attribute unit missing test case
