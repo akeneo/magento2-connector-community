@@ -115,6 +115,18 @@ class Config
      */
     const PRODUCTS_FILTERS_COMPLETENESS_LOCALES = 'akeneo_connector/products_filters/completeness_locales';
     /**
+     * Product model filters completeness locales config path
+     *
+     * @var string PRODUCTS_MODEL_FILTERS_COMPLETENESS_LOCALES
+     */
+    const PRODUCTS_MODEL_FILTERS_COMPLETENESS_LOCALES = 'akeneo_connector/products_filters/model_completeness_locales';
+    /**
+     * Product model filters completeness type config path
+     *
+     * @var string PRODUCTS_MODEL_FILTERS_COMPLETENESS_TYPE
+     */
+    const PRODUCTS_MODEL_FILTERS_COMPLETENESS_TYPE = 'akeneo_connector/products_filters/model_completeness_type';
+    /**
      * Product filters status config path
      *
      * @var string PRODUCTS_FILTERS_STATUS
@@ -169,6 +181,12 @@ class Config
      */
     const PRODUCTS_FILTERS_ADVANCED_FILTER = 'akeneo_connector/products_filters/advanced_filter';
     /**
+     * Product model advanced filters config path
+     *
+     * @var string PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER
+     */
+    const PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER = 'akeneo_connector/products_filters/model_advanced_filter';
+    /**
      * Product category is active config path
      *
      * @var string PRODUCTS_CATEGORY_IS_ACTIVE
@@ -210,8 +228,6 @@ class Config
      * @var string PRODUCT_CONFIGURABLE_ATTRIBUTES
      */
     const PRODUCT_CONFIGURABLE_ATTRIBUTES = 'akeneo_connector/product/configurable_attributes';
-    const PRODUCT_PRODUCT_MODEL_BATCH_SIZE = 'akeneo_connector/product/product_model_batch_size';
-    const PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH = 'akeneo_connector/product/product_model_update_length';
     /**
      * Product tax class config path
      *
@@ -289,18 +305,6 @@ class Config
      */
     const PAGINATION_SIZE_DEFAULT_VALUE = 10;
     /**
-     * @var int PRODUCT_PRODUCT_MODEL_BATCH_SIZE_DEFAULT_VALUE
-     */
-    const PRODUCT_PRODUCT_MODEL_BATCH_SIZE_DEFAULT_VALUE = 500;
-    /**
-     * @var int PRODUCT_PRODUCT_MODEL_LENGTH_DEFAULT_VALUE
-     */
-    const PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_DEFAULT_VALUE = 5000;
-    /**
-     * @var int PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_MINIMUM
-     */
-    const PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_MINIMUM = 1000;
-    /**
      * This variable contains a Encryptor
      *
      * @var Encryptor $encryptor
@@ -366,6 +370,8 @@ class Config
      * @param Filesystem                    $filesystem
      * @param MediaConfig                   $mediaConfig
      * @param ScopeConfigInterface          $scopeConfig
+     *
+     * @throws FileSystemException
      */
     public function __construct(
         Encryptor $encryptor,
@@ -411,6 +417,7 @@ class Config
      * Retrieve Akeneo password
      *
      * @return string
+     * @throws Exception
      */
     public function getAkeneoApiPassword()
     {
@@ -522,6 +529,28 @@ class Config
     }
 
     /**
+     * Retrieve the locales to apply the completeness filter on
+     *
+     * @return string
+     */
+    public function getModelCompletenessLocalesFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_COMPLETENESS_LOCALES);
+    }
+
+    /**
+     * Retrieve the type of filter to apply on the completeness for product model
+     *
+     * @return string
+     * @see \Akeneo\Connector\Model\Source\Filters\ModelCompleteness
+     *
+     */
+    public function getModelCompletenessTypeFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_COMPLETENESS_TYPE);
+    }
+
+    /**
      * Retrieve the status filter
      *
      * @return string
@@ -616,6 +645,18 @@ class Config
     }
 
     /**
+     * Retrieve the product model advance filters
+     *
+     * @return array
+     */
+    public function getModelAdvancedFilters()
+    {
+        $filters = $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER);
+
+        return $this->serializer->unserialize($filters);
+    }
+
+    /**
      * Retrieve the status of imported categories
      *
      * @return string
@@ -682,7 +723,7 @@ class Config
      * @param bool $withDefault
      *
      * @return mixed[]
-     * @throws \Exception
+     * @throws Exception
      *
      */
     public function getWebsiteMapping($withDefault = true)
@@ -724,6 +765,7 @@ class Config
      * Get mapped channels
      *
      * @return string[]
+     * @throws Exception
      */
     public function getMappedChannels()
     {
@@ -789,7 +831,7 @@ class Config
      * @param string $entity
      *
      * @return int
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function getEntityTypeId($entity)
     {
@@ -803,6 +845,7 @@ class Config
      * @param string $code
      *
      * @return AbstractAttribute
+     * @throws LocalizedException
      */
     public function getAttribute($entityType, $code)
     {
@@ -871,7 +914,7 @@ class Config
      * Retrieve default website id
      *
      * @return int
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getDefaultWebsiteId()
     {
@@ -943,7 +986,7 @@ class Config
     }
 
     /**
-     * Retrieve is asset import is enabled
+     * Retrieve is file import is enabled
      *
      * @return bool
      */
@@ -953,13 +996,13 @@ class Config
     }
 
     /**
-     * Retrieve asset attribute columns
+     * Retrieve file attribute columns
      *
      * @return array
      */
     public function getFileImportColumns()
     {
-        /** @var array $assets */
+        /** @var array $fileAttributes */
         $fileAttributes = [];
         /** @var string $config */
         $config = $this->scopeConfig->getValue(self::PRODUCT_FILE_ATTRIBUTE);
@@ -1171,41 +1214,6 @@ class Config
         }
 
         return false;
-    }
-
-    /**
-     * Retrieve product_model batch size
-     *
-     * @return int
-     */
-    public function getAdvancedPmBatchSize()
-    {
-        /** @var int $advancedPmBatchSize */
-        $advancedPmBatchSize = $this->scopeConfig->getValue(self::PRODUCT_PRODUCT_MODEL_BATCH_SIZE);
-        if (filter_var($advancedPmBatchSize, FILTER_VALIDATE_INT) === false) {
-            $advancedPmBatchSize = self::PRODUCT_PRODUCT_MODEL_BATCH_SIZE_DEFAULT_VALUE;
-        }
-
-        return $advancedPmBatchSize;
-    }
-
-    /**
-     * Retrieve product_model update length
-     *
-     * @return int
-     */
-    public function getAdvancedPmUpdateLength()
-    {
-        /** @var int $advancedPmUpdateLength */
-        $advancedPmUpdateLength = $this->scopeConfig->getValue(self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH);
-        if ((filter_var(
-                $advancedPmUpdateLength,
-                FILTER_VALIDATE_INT
-            )) === false || ($advancedPmUpdateLength < self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_MINIMUM)) {
-            $advancedPmUpdateLength = self::PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_DEFAULT_VALUE;
-        }
-
-        return $advancedPmUpdateLength;
     }
 
     /**
