@@ -480,6 +480,9 @@ class Product extends JobImport
                      * @var mixed[] $metric
                      */
                     foreach ($product['values'][$metricsConcatSetting] as $key => $metric) {
+                        if (!isset($metric['data']['unit'])) {
+                            continue;
+                        }
                         /** @var string $unit */
                         $unit = $metric['data']['unit'];
                         /** @var string|false $symbol */
