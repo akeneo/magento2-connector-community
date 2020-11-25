@@ -375,6 +375,16 @@ class Product extends JobImport
         }
 
         if (empty($products)) {
+            // No product were found and we're in a grouped family, we don't import product models for it, so we stop the import
+            /** @var string[] $groupedFamilies */
+            $groupedFamilies = $this->configHelper->getGroupedFamiliesMapping();
+            if (in_array($this->getFamily(), $groupedFamilies)) {
+                $this->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()));
+                $this->stop(true);
+
+                return;
+            }
+
             /** @var mixed[] $modelFilters */
             $modelFilters = $this->getProductModelFilters($this->getFamily());
             foreach ($modelFilters as $filter) {
