@@ -159,3 +159,4 @@ The attribute %1 was not imported because it starts with a number. Update it in 
 "No family to import","Keine Familie zu importieren"
 "Info: No value found in the current batch for the attribute %1","Info: Im aktuellen Stapel wurde kein Wert für das Attribut gefunden %1"
 "Mysql version not recognized","Mysql-Version nicht erkannt"
+"Documentation link","Dokumentationslink"
