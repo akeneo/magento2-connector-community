@@ -2922,10 +2922,10 @@ class Product extends JobImport
                 return [];
             }
         }
+        /** @var string[] $families */
+        $families['families'] = [];
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
-        /** @var string[] $families */
-        $families = [];
         /** @var string[] $apiFamilies */
         $apiFamilies = $this->akeneoClient->getFamilyApi()->all($paginationSize);
         /** @var string $edition */
@@ -2946,7 +2946,7 @@ class Product extends JobImport
                 $groupedProductFamily[] = $family['code'];
                 continue;
             }
-            $families[] = $family['code'];
+            $families['families'][] = $family['code'];
         }
 
         if($edition === Edition::SERENITY)
@@ -2954,16 +2954,16 @@ class Product extends JobImport
             /** @var string[] $family */
             foreach($groupedProductFamily as $family)
             {
-                $families[] = $family;
+                $families['families'][] = $family;
             }
 
             // Detect bad configuration for warning message
             /** @var string $familyConfig */
             foreach($groupedFamiliesConfig as $familyConfig)
             {
-                if(!in_array($familyConfig, $families))
+                if(!in_array($familyConfig, $families['families']))
                 {
-                    $this->setMessage(__('Grouped families %1 not found in families to import', $familyConfig));
+                    $families['message'] = __('Grouped families %1 not found in families to import', $familyConfig);
                 }
             }
         }
@@ -2977,8 +2977,8 @@ class Product extends JobImport
                 foreach ($advancedFilters['search']['family'] as $key => $familyFilter) {
                     if (isset($familyFilter['operator']) && $familyFilter['operator'] == 'NOT IN') {
                         foreach ($familyFilter['value'] as $familyToRemove) {
-                            if (($familyKey = array_search($familyToRemove, $families)) !== false) {
-                                unset($families[$familyKey]);
+                            if (($familyKey = array_search($familyToRemove, $families['families'])) !== false) {
+                                unset($families['families'][$familyKey]);
                             }
                         }
                     }
@@ -2991,14 +2991,14 @@ class Product extends JobImport
             if ($familiesFilter) {
                 $familiesFilter = explode(',', $familiesFilter);
                 foreach ($familiesFilter as $familyFilter) {
-                    if (($key = array_search($familyFilter, $families)) !== false) {
-                        unset($families[$key]);
+                    if (($key = array_search($familyFilter, $families['families'])) !== false) {
+                        unset($families['families'][$key]);
                     }
                 }
             }
         }
 
-        $families = array_values($families);
+        $families['families'] = array_values($families['families']);
 
         return $families;
     }
