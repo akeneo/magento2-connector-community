@@ -299,6 +299,30 @@ class Config
      */
     const PAGINATION_SIZE_DEFAULT_VALUE = 10;
     /**
+     * @var int PRODUCT_PRODUCT_MODEL_BATCH_SIZE_DEFAULT_VALUE
+     */
+    const PRODUCT_PRODUCT_MODEL_BATCH_SIZE_DEFAULT_VALUE = 500;
+    /**
+     * @var int PRODUCT_PRODUCT_MODEL_LENGTH_DEFAULT_VALUE
+     */
+    const PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_DEFAULT_VALUE = 5000;
+    /**
+     * @var int PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_MINIMUM
+     */
+    const PRODUCT_PRODUCT_MODEL_UPDATE_LENGTH_MINIMUM = 1000;
+    /**
+     * Families filters updated mode config path
+     *
+     * @var string FAMILIES_FILTERS_UPDATED_MODE
+     */
+    const FAMILIES_FILTERS_UPDATED_MODE = 'akeneo_connector/families/updated_mode';
+    /**
+     * Families filters updated greater config path
+     *
+     * @var string FAMILIES_FILTERS_UPDATED_GREATER
+     */
+    const FAMILIES_FILTERS_UPDATED_GREATER = 'akeneo_connector/families/updated_greater';
+    /**
      * This variable contains a Encryptor
      *
      * @var Encryptor $encryptor
@@ -1242,5 +1266,25 @@ class Config
     public function getDefaultAttributeSetId($entity)
     {
         return $this->eavConfig->getEntityType($entity)->getDefaultAttributeSetId();
+    }
+
+    /**
+     * Description getFamiliesUpdatedMode function
+     *
+     * @return string|null
+     */
+    public function getFamiliesUpdatedMode()
+    {
+        return $this->scopeConfig->getValue(self::FAMILIES_FILTERS_UPDATED_MODE);
+    }
+
+    /**
+     * Description getFamiliesUpdatedGreater function
+     *
+     * @return string|null
+     */
+    public function getFamiliesUpdatedGreater()
+    {
+        return $this->scopeConfig->getValue(self::FAMILIES_FILTERS_UPDATED_GREATER);
     }
 }
