@@ -78,7 +78,7 @@ class File extends AbstractSource
         }
 
         foreach ($attributes as $attribute) {
-            if ($attribute['type'] != 'pim_catalog_file') {
+            if ($attribute['type'] != AttributeFilters::ATTRIBUTE_TYPE_CATALOG_FILE) {
                 continue;
             }
             $this->_options[] = ['label' => $attribute['code'], 'value' => $attribute['code']];

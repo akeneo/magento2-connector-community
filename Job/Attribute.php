@@ -235,9 +235,17 @@ class Attribute extends Import
             __('%1 line(s) found', $index)
         );
 
-        /* Remove attribute without a admin store label */
+        /* Remove attribute without an admin store label */
         /** @var string $localeCode */
         $localeCode = $this->configHelper->getDefaultLocale();
+
+        if (!$connection->tableColumnExists($tmpTable, 'labels-' . $localeCode)) {
+            $this->setMessage(__('No attributes with label in the admin locale %1 found.', $localeCode));
+            $this->stop(1);
+
+            return;
+        }
+
         /** @var \Magento\Framework\DB\Select $select */
         $select = $connection->select()->from(
             $tmpTable,

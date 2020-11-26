@@ -269,7 +269,7 @@ For example :<br/>
                     </depends>
                 </field>
             </group>
-            <group id="attribute" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+            <group id="attribute" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Attributes</label>
                 <field id="types" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Additional types</label>
@@ -277,29 +277,35 @@ For example :<br/>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>Match specific Akeneo type with Magento input field</comment>
                 </field>
-                <field id="updated_mode" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0"
-                        showInStore="0">
+            </group>
+            <group id="filter_attribute" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Filter Attributes</label>
+                <field id="updated_mode" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0"
+                    showInStore="0">
                     <label>Updated mode</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\AttributeUpdate</source_model>
                     <depends>
-                        <field id="akeneo_connector/akeneo_api/edition" separator=",">four,serenity</field>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,serenity</field>
                     </depends>
                 </field>
-                <field id="updated_greater" translate="label" type="date" sortOrder="40" showInDefault="1" showInWebsite="0"
-                        showInStore="0">
+                <field id="updated_greater" translate="label" type="date" sortOrder="20" showInDefault="1" showInWebsite="0"
+                    showInStore="0">
                     <label>Updated after</label>
                     <comment>Import only product updated after the given date. Leave blank for no filter.</comment>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
                     <depends>
                         <field id="updated_mode">&gt;</field>
-                        <field id="akeneo_connector/akeneo_api/edition" separator=",">four,serenity</field>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,serenity</field>
                     </depends>
                 </field>
-                <field id="filter_attribute_code_mode" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="filter_attribute_code_mode" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Filter by attribute code</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,serenity</field>
+                    </depends>
                 </field>
-                <field id="filter_attribute_code" translate="label comment" type="multiselect" sortOrder="140" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="filter_attribute_code" translate="label comment" type="multiselect" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Attribute codes to import</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Attribute</source_model>
                     <depends>
@@ -308,7 +314,7 @@ For example :<br/>
                     <can_be_empty>1</can_be_empty>
                 </field>
             </group>
-            <group id="product" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+            <group id="product" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Products</label>
                 <field id="website_attribute" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Website Attribute</label>

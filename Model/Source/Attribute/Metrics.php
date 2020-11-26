@@ -78,7 +78,7 @@ class Metrics extends AbstractSource
         }
 
         foreach ($attributes as $attribute) {
-            if ($attribute['type'] != 'pim_catalog_metric') {
+            if ($attribute['type'] != AttributeFilters::ATTRIBUTE_TYPE_CATALOG_METRIC) {
                 continue;
             }
             $this->_options[] = ['label' => $attribute['code'], 'value' => $attribute['code']];
@@ -132,7 +132,7 @@ class Metrics extends AbstractSource
         }
 
         foreach ($attributes as $attribute) {
-            if ($attribute['type'] != 'pim_catalog_metric') {
+            if ($attribute['type'] != AttributeFilters::ATTRIBUTE_TYPE_CATALOG_METRIC) {
                 continue;
             }
 
