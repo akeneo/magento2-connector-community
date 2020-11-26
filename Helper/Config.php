@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Helper;
 
+use Akeneo\Connector\Model\Source\Edition;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Encryption\Encryptor;
@@ -65,6 +66,12 @@ class Config
      * @var string AKENEO_API_CLIENT_SECRET
      */
     const AKENEO_API_CLIENT_SECRET = 'akeneo_connector/akeneo_api/client_secret';
+    /**
+     * API edition config path
+     *
+     * @var string AKENEO_API_EDITION
+     */
+    const AKENEO_API_EDITION = 'akeneo_connector/akeneo_api/edition';
     /**
      * API pagination size config path
      *
@@ -282,6 +289,18 @@ class Config
      */
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     /**
+     * Attribute filter updated mode
+     *
+     * @var string ATTRIBUTE_FILTERS_UPDATED_MODE
+     */
+    const ATTRIBUTE_FILTERS_UPDATED_MODE = 'akeneo_connector/attribute/updated_mode';
+    /**
+     * Attribute filter greater
+     *
+     * @var string ATTRIBUTE_FILTERS_UPDATED_GREATER
+     */
+    const ATTRIBUTE_FILTERS_UPDATED_GREATER = 'akeneo_connector/attribute/updated_greater';
+    /**
      * Product activation flag config path
      *
      * @var string PRODUCT_ACTIVATION
@@ -450,6 +469,28 @@ class Config
     }
 
     /**
+     * Check if the pim is in Serenity edition
+     *
+     * @return string
+     */
+    public function isSerenityEdition()
+    {
+        $edition = $this->scopeConfig->getValue(self::AKENEO_API_EDITION);
+
+        return $edition === Edition::SERENITY ? true : false;
+    }
+
+    /**
+     * Get pim edition
+     *
+     * @return string
+     */
+    public function getEdition()
+    {
+        return  $this->scopeConfig->getValue(self::AKENEO_API_EDITION);
+    }
+
+    /**
      * Retrieve the filter mode used
      *
      * @return string
@@ -585,6 +626,26 @@ class Config
     public function getUpdatedSinceFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_SINCE);
+    }
+
+    /**
+     * Retrieve attribute updated mode
+     *
+     * @return string
+     */
+    public function getAttributeUpdatedMode()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_UPDATED_MODE);
+    }
+
+    /**
+     * Retrieve the attribute updated after filter
+     *
+     * @return string
+     */
+    public function getAttributeUpdatedGreaterFilter()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_UPDATED_GREATER);
     }
 
     /**

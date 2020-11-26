@@ -53,6 +53,10 @@
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Api\Test</frontend_model>
                     <label>Test API credentials</label>
                 </field>
+                <field id="edition" translate="label comment" type="select" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Akeneo Edition</label>
+                    <source_model>Akeneo\Connector\Model\Source\Edition</source_model>
+                </field>
                 <field id="pagination_size" translate="label comment" type="text" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Pagination size</label>
                     <comment>Must be a value between 1 and 100. Default value is 100.</comment>
@@ -272,6 +276,24 @@ For example :<br/>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Type</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>Match specific Akeneo type with Magento input field</comment>
+                </field>
+                <field id="updated_mode" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0"
+                        showInStore="0">
+                    <label>Updated mode</label>
+                    <source_model>Akeneo\Connector\Model\Source\Filters\AttributeUpdate</source_model>
+                    <depends>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">four,serenity</field>
+                    </depends>
+                </field>
+                <field id="updated_greater" translate="label" type="date" sortOrder="40" showInDefault="1" showInWebsite="0"
+                        showInStore="0">
+                    <label>Updated after</label>
+                    <comment>Import only product updated after the given date. Leave blank for no filter.</comment>
+                    <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
+                    <depends>
+                        <field id="updated_mode">&gt;</field>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">four,serenity</field>
+                    </depends>
                 </field>
             </group>
             <group id="product" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
