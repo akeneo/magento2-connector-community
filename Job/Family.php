@@ -164,13 +164,13 @@ class Family extends Import
         $families = $this->akeneoClient->getFamilyApi()->all($paginationSize, $filters);
         /** @var string $warning */
         $warning = '';
+        /** @var string[] $lang */
+        $lang = $this->storeHelper->getStores('lang');
         /**
          * @var int   $index
          * @var array $family
          */
         foreach ($families as $index => $family) {
-            /** @var string[] $lang */
-            $lang    = $this->storeHelper->getStores('lang');
             $warning = $this->checkLabelPerLocales($family, $lang, $warning);
 
             $this->entitiesHelper->insertDataFromApi($family, $this->getCode());

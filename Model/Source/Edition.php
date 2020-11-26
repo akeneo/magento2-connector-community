@@ -49,9 +49,9 @@ class Edition implements ArrayInterface
     {
         return [
             self::THREE_POINT_TWO => __('3.2'),
-            self::LESS_FOUR_POINT_ZERO_POINT_SIXTY_TWO => __('less 4.0.62'),
+            self::LESS_FOUR_POINT_ZERO_POINT_SIXTY_TWO => __('Between 4.0.0 and 4.0.62'),
             self::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO => __('4.0.62 or greater'),
-            self::SERENITY    => __('Serenity Edition'),
+            self::SERENITY => __('Serenity Edition'),
         ];
     }
 }

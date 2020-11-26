@@ -269,7 +269,28 @@ For example :<br/>
                     </depends>
                 </field>
             </group>
-            <group id="attribute" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+            <group id="families" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Filter Families</label>
+                <field id="updated_mode" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0"
+                    showInStore="0">
+                    <label>Updated mode</label>
+                    <source_model>Akeneo\Connector\Model\Source\Filters\FamilyUpdate</source_model>
+                </field>
+                <field id="updated_greater" translate="label" type="date" sortOrder="90" showInDefault="1" showInWebsite="0"
+                    showInStore="0">
+                    <label>Updated after</label>
+                    <comment>Import only families updated after the given date. Leave blank for no filter.</comment>
+                    <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
+                    <depends>
+                        <field id="mode">standard</field>
+                        <field id="updated_mode">&gt;</field>
+                    </depends>
+                </field>
+                <depends>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,serenity</field>
+                </depends>
+            </group>
+            <group id="attribute" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Attributes</label>
                 <field id="types" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Additional types</label>
@@ -278,7 +299,7 @@ For example :<br/>
                     <comment>Match specific Akeneo type with Magento input field</comment>
                 </field>
             </group>
-            <group id="product" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+            <group id="product" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Products</label>
                 <field id="website_attribute" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Website Attribute</label>
@@ -377,27 +398,6 @@ For example :<br/>
                     <label>Regenerate url rewrites</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-            </group>
-            <group id="families" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
-                <label>Families</label>
-                <field id="updated_mode" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0"
-                    showInStore="0">
-                    <label>Updated mode</label>
-                    <source_model>Akeneo\Connector\Model\Source\Filters\FamilyUpdate</source_model>
-                </field>
-                <field id="updated_greater" translate="label" type="date" sortOrder="90" showInDefault="1" showInWebsite="0"
-                    showInStore="0">
-                    <label>Updated after</label>
-                    <comment>Import only families updated after the given date. Leave blank for no filter.</comment>
-                    <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
-                    <depends>
-                        <field id="mode">standard</field>
-                        <field id="updated_mode">&gt;</field>
-                    </depends>
-                </field>
-                <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,serenity</field>
-                </depends>
             </group>
         </section>
     </system>
