@@ -301,6 +301,18 @@ class Config
      */
     const ATTRIBUTE_FILTERS_UPDATED_GREATER = 'akeneo_connector/attribute/updated_greater';
     /**
+     * Attribute filter by code mode
+     *
+     * @var string ATTRIBUTE_FILTERS_BY_CODE_MODE
+     */
+    const ATTRIBUTE_FILTERS_BY_CODE_MODE = 'akeneo_connector/attribute/filter_attribute_code_mode';
+    /**
+     * Attribute filter by code
+     *
+     * @var string ATTRIBUTE_FILTERS_BY_CODE
+     */
+    const ATTRIBUTE_FILTERS_BY_CODE = 'akeneo_connector/attribute/filter_attribute_code';
+    /**
      * Product activation flag config path
      *
      * @var string PRODUCT_ACTIVATION
@@ -646,6 +658,26 @@ class Config
     public function getAttributeUpdatedGreaterFilter()
     {
         return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_UPDATED_GREATER);
+    }
+
+    /**
+     * Retrieve the attribute filter by code mode
+     *
+     * @return bool
+     */
+    public function getAttributeFilterByCodeMode()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_BY_CODE_MODE);
+    }
+
+    /**
+     * Retrieve the attribute filter by code
+     *
+     * @return array
+     */
+    public function getAttributeFilterByCode()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_BY_CODE);
     }
 
     /**

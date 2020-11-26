@@ -32,6 +32,18 @@ class AttributeFilters
      */
     const ATTRIBUTE_TYPE_CATALOG_METRIC = 'pim_catalog_metric';
     /**
+     * Attribute type for reference entity
+     *
+     * @var string ATTRIBUTE_TYPE_REFERENCE_ENTITY
+     */
+    const ATTRIBUTE_TYPE_REFERENCE_ENTITY = 'akeneo_reference_entity';
+    /**
+     * Attribute type for reference entity collection
+     *
+     * @var string ATTRIBUTE_TYPE_REFERENCE_ENTITY_COLLECTION
+     */
+    const ATTRIBUTE_TYPE_REFERENCE_ENTITY_COLLECTION = 'akeneo_reference_entity_collection';
+    /**
      * This variable contains a ConfigHelper
      *
      * @var ConfigHelper $configHelper
@@ -73,19 +85,28 @@ class AttributeFilters
      */
     public function createAttributeTypeFilter($attributeTypes)
     {
+        /** @var mixed[] $filters */
+        $filters = [];
+        /** @var mixed[] $search */
+        $search              = [];
+        $this->searchBuilder = $this->searchBuilderFactory->create();
+        $this->addCodeFilter();
+        $search  = $this->searchBuilder->getFilters();
+        $filters = [
+            'search' => $search,
+        ];
+
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
-        /** @var string[] $attributeTypeFilter */
-        $attributeTypeFilter = [];
 
         if ($edition == Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition == Edition::SERENITY) {
-            $attributeTypeFilter['search']['type'][] = [
+            $filters['search']['type'][] = [
                 'operator' => 'IN',
                 'value'    => $attributeTypes,
             ];
         }
 
-        return $attributeTypeFilter;
+        return $filters;
     }
 
     /**
@@ -100,6 +121,7 @@ class AttributeFilters
         /** @var mixed[] $search */
         $search              = [];
         $this->searchBuilder = $this->searchBuilderFactory->create();
+        $this->addCodeFilter();
         $this->addUpdatedFilter();
         $search  = $this->searchBuilder->getFilters();
         $filters = [
@@ -131,6 +153,28 @@ class AttributeFilters
         if (!empty($date)) {
             $this->searchBuilder->addFilter('updated', $mode, $date);
         }
+
+        return;
+    }
+
+    /**
+     * Add updated filter for Akeneo API
+     *
+     * @return void
+     */
+    protected function addCodeFilter()
+    {
+        if ($this->configHelper->getAttributeFilterByCodeMode() == false) {
+            return;
+        }
+        /** @var string $codes */
+        $codes = $this->configHelper->getAttributeFilterByCode();
+
+        if (!$codes || empty($codes)) {
+            return;
+        }
+        $codes = explode(',', $codes);
+        $this->searchBuilder->addFilter('code', 'IN', $codes);
 
         return;
     }
