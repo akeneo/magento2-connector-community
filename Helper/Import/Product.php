@@ -40,6 +40,19 @@ class Product extends Entities
      */
     const VALUES_KEY = 'values';
     /**
+     * QUANTIFIED_ASSOCIATIONS_KEY const
+     *
+     * @var string QUANTIFIED_ASSOCIATIONS_KEY
+     */
+    public const QUANTIFIED_ASSOCIATIONS_KEY = 'quantified_associations';
+    /**
+     * ALL_ASSOCIATIONS_KEY const
+     *
+     * @var string[] ALL_ASSOCIATIONS_KEY
+     */
+    public const ALL_ASSOCIATIONS_KEY = [self::QUANTIFIED_ASSOCIATIONS_KEY, self::ASSOCIATIONS_KEY];
+
+    /**
      * This variable contains a JsonSerializer
      *
      * @var JsonSerializer $serializer
@@ -106,9 +119,9 @@ class Product extends Entities
                 continue;
             }
 
-            if ($key === self::ASSOCIATIONS_KEY) {
+            if (in_array($key, self::ALL_ASSOCIATIONS_KEY, true)) {
                 /** @var array $values */
-                $values = $this->formatAssociations($value);
+                $values = $this->formatAssociations($value, $key);
                 /** @var array $columns */
                 $columns = $columns + $values;
 
@@ -228,11 +241,12 @@ class Product extends Entities
     /**
      * Format associations field
      *
-     * @param array $values
+     * @param mixed[] $values
+     * @param ?string  $assoKey
      *
      * @return array
      */
-    public function formatAssociations(array $values)
+    public function formatAssociations(array $values, ?string $assoKey = null)
     {
         /** @var array $associations */
         $associations = [];
@@ -252,6 +266,10 @@ class Product extends Entities
                 }
                 /** @var string $name */
                 $name = $group . '-' . $key;
+
+                if ($assoKey === self::QUANTIFIED_ASSOCIATIONS_KEY) {
+                    continue;
+                }
 
                 $associations[$name] = implode(',', $products);
             }
