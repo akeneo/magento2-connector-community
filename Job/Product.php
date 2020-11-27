@@ -376,9 +376,7 @@ class Product extends JobImport
 
         if (empty($products)) {
             // No product were found and we're in a grouped family, we don't import product models for it, so we stop the import
-            /** @var string[] $groupedFamilies */
-            $groupedFamilies = $this->configHelper->getGroupedFamiliesMapping();
-            if (in_array($this->getFamily(), $groupedFamilies)) {
+            if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
                 $this->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()));
                 $this->stop(true);
 
@@ -572,6 +570,10 @@ class Product extends JobImport
      */
     public function productModelImport()
     {
+        if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            return;
+        }
+        
         /** @var string[] $messages */
         $messages = [];
         /** @var mixed[] $filters */
@@ -606,6 +608,10 @@ class Product extends JobImport
      */
     public function familyVariantImport()
     {
+        if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            return;
+        }
+        
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         if ($connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
@@ -903,6 +909,10 @@ class Product extends JobImport
      */
     public function createConfigurable()
     {
+        if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            return;
+        }
+        
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
@@ -1717,6 +1727,10 @@ class Product extends JobImport
      */
     public function linkConfigurable()
     {
+        if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            return;
+        }
+        
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
@@ -1896,6 +1910,10 @@ class Product extends JobImport
      */
     public function linkSimple()
     {
+        if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            return;
+        }
+        
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
