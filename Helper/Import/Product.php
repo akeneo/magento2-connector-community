@@ -509,4 +509,21 @@ class Product extends Entities
 
         return $requestPath;
     }
+
+    /**
+     * Check if given family is a grouped family
+     *
+     * @param $family
+     *
+     * @return bool
+     */
+    public function isFamilyGrouped($family) {
+        /** @var string[] $groupedFamilies */
+        $groupedFamilies = $this->configHelper->getGroupedFamiliesToImport();
+        if (in_array($family, $groupedFamilies)) {
+            return true;
+        }
+
+        return false;
+    }
 }
