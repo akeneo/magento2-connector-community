@@ -79,17 +79,11 @@ class RunProduct extends Action
      */
     public function execute()
     {
-        /** @var string[] $familiesWithMessage */
-        $familiesWithMessage = $this->jobProduct->getFamiliesToImport();
         /** @var string[] $families */
-        $families = $familiesWithMessage['families'];
+        $families = $this->jobProduct->getFamiliesToImport();
 
         if (!count($families)) {
             $families['message'] = __('No family to import');
-        }
-
-        if(isset($familiesWithMessage['message'])) {
-            $families['message'] = $familiesWithMessage['message'];
         }
 
         return $this->arrayToJsonResponseConverter->convert($families);

@@ -2933,47 +2933,34 @@ class Product extends JobImport
             }
         }
         /** @var string[] $families */
-        $families['families'] = [];
+        $families = [];
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
         /** @var string[] $apiFamilies */
         $apiFamilies = $this->akeneoClient->getFamilyApi()->all($paginationSize);
-        /** @var string $edition */
-        $edition = $this->configHelper->getEdition();
-        if($edition === Edition::SERENITY) {
-            /** @var mixed[] $groupedProductFamily */
-            $groupedProductFamily = [];
-            /** @var string[] $groupedFamiliesConfig */
-            $groupedFamiliesConfig = $this->configHelper->getGroupedFamiliesMapping();
-        }
 
         /** @var mixed[] $family */
-        foreach ($apiFamilies as $key => $family) {
+        foreach ($apiFamilies as $family) {
             if (!isset($family['code'])) {
                 continue;
             }
-            if($edition === Edition::SERENITY && in_array($family['code'], $groupedFamiliesConfig)) {
-                $groupedProductFamily[] = $family['code'];
-                continue;
-            }
-            $families['families'][] = $family['code'];
+            $families[] = $family['code'];
         }
 
-        if($edition === Edition::SERENITY)
-        {
-            /** @var string[] $family */
-            foreach($groupedProductFamily as $family)
-            {
-                $families['families'][] = $family;
-            }
-
-            // Detect bad configuration for warning message
-            /** @var string $familyConfig */
-            foreach($groupedFamiliesConfig as $familyConfig)
-            {
-                if(!in_array($familyConfig, $families['families']))
-                {
-                    $families['message'] = __('Grouped families %1 not found in families to import', $familyConfig);
+        // If we are in serenity mode, place the mapped grouped families to the end of the imports
+        /** @var string $edition */
+        $edition = $this->configHelper->getEdition();
+        if ($edition === Edition::SERENITY) {
+            /** @var string[] $groupedFamiliesToImport */
+            $groupedFamiliesToImport = $this->configHelper->getGroupedFamiliesToImport();
+            /**
+             * @var int    $key
+             * @var string $family
+             */
+            foreach ($families as $key => $family) {
+                if (in_array($family, $groupedFamiliesToImport)) {
+                    unset($families[$key]);
+                    $families[] = $family;
                 }
             }
         }
@@ -2987,8 +2974,8 @@ class Product extends JobImport
                 foreach ($advancedFilters['search']['family'] as $key => $familyFilter) {
                     if (isset($familyFilter['operator']) && $familyFilter['operator'] == 'NOT IN') {
                         foreach ($familyFilter['value'] as $familyToRemove) {
-                            if (($familyKey = array_search($familyToRemove, $families['families'])) !== false) {
-                                unset($families['families'][$familyKey]);
+                            if (($familyKey = array_search($familyToRemove, $families)) !== false) {
+                                unset($families[$familyKey]);
                             }
                         }
                     }
@@ -3001,14 +2988,14 @@ class Product extends JobImport
             if ($familiesFilter) {
                 $familiesFilter = explode(',', $familiesFilter);
                 foreach ($familiesFilter as $familyFilter) {
-                    if (($key = array_search($familyFilter, $families['families'])) !== false) {
-                        unset($families['families'][$key]);
+                    if (($key = array_search($familyFilter, $families)) !== false) {
+                        unset($families[$key]);
                     }
                 }
             }
         }
 
-        $families['families'] = array_values($families['families']);
+        $families = array_values($families);
 
         return $families;
     }

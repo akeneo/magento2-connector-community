@@ -1238,11 +1238,11 @@ class Config
     }
 
     /**
-     * Description getGroupedFamiliesMapping function
+     * Get all grouped families from the mapping
      *
      * @return string[]
      */
-    public function getGroupedFamiliesMapping()
+    public function getGroupedFamiliesToImport()
     {
         /** @var string $familiesSerialized */
         $familiesSerialized = $this->scopeConfig->getValue(self::GROUPED_PRODUCTS_FAMILIES_MAPPING);
@@ -1257,6 +1257,21 @@ class Config
         }
 
         return $families;
+    }
+    
+    /**
+     * Get all families and their associations to import
+     *
+     * @return string[]
+     */
+    public function getGroupedAssociationsToImport()
+    {
+        /** @var string $familiesSerialized */
+        $associationsSerialized = $this->scopeConfig->getValue(self::GROUPED_PRODUCTS_FAMILIES_MAPPING);
+        /** @var mixed[] $associations */
+        $associations = $this->serializer->unserialize($associationsSerialized);
+
+        return $associations;
     }
 
     /**
