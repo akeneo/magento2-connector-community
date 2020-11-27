@@ -268,7 +268,7 @@ class Product extends Entities
                 $name = $group . '-' . $key;
 
                 if ($assoKey === self::QUANTIFIED_ASSOCIATIONS_KEY) {
-                    continue;
+                    $products = array_column($products, 'identifier');
                 }
 
                 $associations[$name] = implode(',', $products);
