@@ -284,9 +284,6 @@ For example :<br/>
                     showInStore="0">
                     <label>Updated mode</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\AttributeUpdate</source_model>
-                    <depends>
-                        <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,serenity</field>
-                    </depends>
                 </field>
                 <field id="updated_greater" translate="label" type="date" sortOrder="20" showInDefault="1" showInWebsite="0"
                     showInStore="0">
@@ -295,15 +292,11 @@ For example :<br/>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
                     <depends>
                         <field id="updated_mode">&gt;</field>
-                        <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,serenity</field>
                     </depends>
                 </field>
                 <field id="filter_attribute_code_mode" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Filter by attribute code</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <depends>
-                        <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,serenity</field>
-                    </depends>
                 </field>
                 <field id="filter_attribute_code" translate="label comment" type="multiselect" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Attribute codes to import</label>
@@ -313,6 +306,9 @@ For example :<br/>
                     </depends>
                     <can_be_empty>1</can_be_empty>
                 </field>
+                <depends>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,serenity</field>
+                </depends>
             </group>
             <group id="product" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Products</label>
