@@ -523,7 +523,7 @@ class Product extends JobImport
                         foreach($associationsCurrentFamily as $familyAssociation) {
                             if (in_array($key, $familyAssociation)) {
                                 $qtyAssociationFound = true;
-                                $associations[] = [$key => $association];
+                                $associationProducts[] = [$key => $association];
                             }
                         }
                     }
