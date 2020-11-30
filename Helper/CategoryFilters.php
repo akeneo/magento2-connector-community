@@ -82,7 +82,7 @@ class CategoryFilters
 
         if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::SERENITY) {
             $this->searchBuilder = $this->searchBuilderFactory->create();
-
+            /** @var string[] $categoriesToImport */
             $categoriesToImport = $this->getCategoriesToImport();
 
             if ($categoriesToImport) {
