@@ -529,7 +529,7 @@ class Product extends JobImport
                     }
 
                     if ($qtyAssociationFound) {
-                        // Get and link products
+                        // Get and link products from associations to the current product
                     }
                 }
 
