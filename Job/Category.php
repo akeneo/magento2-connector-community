@@ -190,7 +190,7 @@ class Category extends Import
             /** @var string[] $categoriesToImport */
             $categoriesToImport = $this->categoryFilters->getCategoriesToImport();
 
-            if (count($categoriesToImport) != $parentCategories->getPageSize()) {
+            if (count($categoriesToImport) != iterator_count($parentCategories)) {
                 /** @var string[] $editions */
                 $editions = $this->editionSource->toOptionArray();
                 $this->setMessage(
