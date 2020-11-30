@@ -110,6 +110,7 @@ class Category extends Import
      * @param CategoryModel            $categoryModel
      * @param CategoryUrlPathGenerator $categoryUrlPathGenerator
      * @param CategoryFilters          $categoryFilters
+     * @param Edition                  $editionSource
      * @param array                    $data
      */
     public function __construct(
@@ -193,7 +194,10 @@ class Category extends Import
                 /** @var string[] $editions */
                 $editions = $this->editionSource->toOptionArray();
                 $this->setMessage(
-                    __('Wrong Akeneo version selected in the Akeneo Edition configuration field: %1', $editions[$edition])
+                    __(
+                        'Wrong Akeneo version selected in the Akeneo Edition configuration field: %1',
+                        $editions[$edition]
+                    )
                 );
                 $this->stop(1);
 
