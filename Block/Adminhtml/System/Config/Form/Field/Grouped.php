@@ -147,7 +147,7 @@ class Grouped extends AbstractFieldArray
 
             /** @var string|int $paginationSize */
             $paginationSize = $this->configHelper->getPaginationSize();
-            /** @var ResourceCursorInterface $families */
+            /** @var ResourceCursorInterface $akeneoFamilies */
             $akeneoFamilies = $client->getFamilyApi()->all($paginationSize);
             /** @var mixed[] $family */
             foreach ($akeneoFamilies as $family) {

@@ -481,7 +481,7 @@ class Config
      */
     public function getEdition()
     {
-        return  $this->scopeConfig->getValue(self::AKENEO_API_EDITION);
+        return $this->scopeConfig->getValue(self::AKENEO_API_EDITION);
     }
 
     /**
@@ -1251,8 +1251,7 @@ class Config
         /** @var string[] $families */
         $families = [];
         /** @var mixed[] $association */
-        foreach($associations as $association)
-        {
+        foreach ($associations as $association) {
             $families[] = $association['akeneo_grouped_family_code'];
         }
 
@@ -1266,7 +1265,7 @@ class Config
      */
     public function getGroupedAssociationsToImport()
     {
-        /** @var string $familiesSerialized */
+        /** @var string $associationsSerialized */
         $associationsSerialized = $this->scopeConfig->getValue(self::GROUPED_PRODUCTS_FAMILIES_MAPPING);
         /** @var mixed[] $associations */
         $associations = $this->serializer->unserialize($associationsSerialized);
