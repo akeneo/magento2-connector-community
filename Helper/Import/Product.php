@@ -51,7 +51,6 @@ class Product extends Entities
      * @var string[] ALL_ASSOCIATIONS_KEY
      */
     public const ALL_ASSOCIATIONS_KEY = [self::QUANTIFIED_ASSOCIATIONS_KEY, self::ASSOCIATIONS_KEY];
-
     /**
      * This variable contains a JsonSerializer
      *
@@ -361,8 +360,7 @@ class Product extends Entities
             $entityKey = $this->getColumnIdentifier($entityTable);
         }
 
-        /* Connect existing Magento products to new Akeneo items */
-        // Get existing entities from Akeneo table
+        /* Connect existing Magento products to new Akeneo items */ // Get existing entities from Akeneo table
         /** @var Select $select */
         $select = $connection->select()->from($akeneoConnectorTable, ['entity_id' => 'entity_id'])->where(
             'import = ?',
@@ -427,13 +425,13 @@ class Product extends Entities
         /* Update akeneo_connector_entities table with code and new entity_id */
         /** @var Select $select */
         $select = $connection->select()->from(
-                $tableName,
-                [
-                    'import'    => new Expr("'" . $import . "'"),
-                    'code'      => $prefix ? new Expr('CONCAT(`' . $prefix . '`, "_", `' . $pimKey . '`)') : $pimKey,
-                    'entity_id' => '_entity_id',
-                ]
-            )->where('_is_new = ?', 1);
+            $tableName,
+            [
+                'import'    => new Expr("'" . $import . "'"),
+                'code'      => $prefix ? new Expr('CONCAT(`' . $prefix . '`, "_", `' . $pimKey . '`)') : $pimKey,
+                'entity_id' => '_entity_id',
+            ]
+        )->where('_is_new = ?', 1);
 
         $connection->query(
             $connection->insertFromSelect($select, $akeneoConnectorTable, ['import', 'code', 'entity_id'], 2)
@@ -448,9 +446,9 @@ class Product extends Entities
             /** @var string $maxCode */
             $maxCode = $connection->fetchOne(
                 $connection->select()->from($akeneoConnectorTable, new Expr('MAX(`entity_id`)'))->where(
-                        'import = ?',
-                        $import
-                    )
+                    'import = ?',
+                    $import
+                )
             );
             /** @var string $maxEntity */
             $maxEntity = $connection->fetchOne(
@@ -517,7 +515,8 @@ class Product extends Entities
      *
      * @return bool
      */
-    public function isFamilyGrouped($family) {
+    public function isFamilyGrouped($family)
+    {
         /** @var string[] $groupedFamilies */
         $groupedFamilies = $this->configHelper->getGroupedFamiliesToImport();
         if (in_array($family, $groupedFamilies)) {
