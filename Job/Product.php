@@ -573,7 +573,7 @@ class Product extends JobImport
         if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
             return;
         }
-        
+
         /** @var string[] $messages */
         $messages = [];
         /** @var mixed[] $filters */
@@ -611,7 +611,7 @@ class Product extends JobImport
         if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
             return;
         }
-        
+
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         if ($connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
@@ -808,6 +808,16 @@ class Product extends JobImport
         if ($connection->tableColumnExists($tmpTable, 'enabled')) {
             $connection->update($tmpTable, ['_status' => new Expr('IF(`enabled` <> 1, 2, 1)')], ['_type_id = ?' => 'simple']);
         }
+        /** @var string $edition */
+        $edition = $this->configHelper->getEdition();
+        if ($edition === Edition::SERENITY && $this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            $connection->update(
+                $tmpTable,
+                [
+                    '_type_id' => 'grouped',
+                ]
+            );
+        }
 
         /** @var string|array $matches */
         $matches = $this->configHelper->getAttributeMapping();
@@ -912,7 +922,7 @@ class Product extends JobImport
         if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
             return;
         }
-        
+
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
@@ -1730,7 +1740,7 @@ class Product extends JobImport
         if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
             return;
         }
-        
+
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
@@ -1913,7 +1923,7 @@ class Product extends JobImport
         if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
             return;
         }
-        
+
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */

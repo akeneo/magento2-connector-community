@@ -1267,8 +1267,32 @@ class Config
     {
         /** @var string $associationsSerialized */
         $associationsSerialized = $this->scopeConfig->getValue(self::GROUPED_PRODUCTS_FAMILIES_MAPPING);
-        /** @var mixed[] $associations */
+        /** @var string[] $associations */
         $associations = $this->serializer->unserialize($associationsSerialized);
+
+        return $associations;
+    }
+
+    /**
+     * Description getGroupedAssociationsForFamily function
+     *
+     * @param string $family
+     *
+     * @return string[]
+     */
+    public function getGroupedAssociationsForFamily(string $family)
+    {
+        /** @var string[] $allAssociations */
+        $allAssociations = $this->getGroupedAssociationsToImport();
+        /** @var string[] $associations */
+        $associations = [];
+
+        /** @var string[] $association */
+        foreach ($allAssociations as $association) {
+            if ($association['akeneo_grouped_family_code'] === $family) {
+                $associations[] = $association;
+            }
+        }
 
         return $associations;
     }
