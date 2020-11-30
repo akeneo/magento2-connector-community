@@ -138,7 +138,11 @@ class Category extends Import
     public function createTable()
     {
         /** @var PageInterface $families */
-        $categories = $this->akeneoClient->getCategoryApi()->listPerPage(1, false, $this->categoryFilters->getParentFilters());
+        $categories = $this->akeneoClient->getCategoryApi()->listPerPage(
+            1,
+            false,
+            $this->categoryFilters->getParentFilters()
+        );
         /** @var array $category */
         $category = $categories->getItems();
 
@@ -174,6 +178,18 @@ class Category extends Import
                 $this->categoryFilters->getParentFilters()
             );
 
+            /** @var string[] $categoriesToImport */
+            $categoriesToImport = $this->categoryFilters->getCategoriesToImport();
+
+            if (count($categoriesToImport) != $parentCategories->getPageSize()) {
+                $this->setMessage(
+                    __('Wrong Akeneo version selected in the Akeneo Edition configuration field: %1', $edition)
+                );
+                $this->stop(1);
+
+                return;
+            }
+
             /** @var string[] $category */
             foreach ($parentCategories as $category) {
                 $categories[] = $category;
@@ -194,7 +210,7 @@ class Category extends Import
         /** @var string $warning */
         $warning = '';
         /** @var string[] $lang */
-        $lang    = $this->storeHelper->getStores('lang');
+        $lang = $this->storeHelper->getStores('lang');
         /**
          * @var int   $index
          * @var array $category

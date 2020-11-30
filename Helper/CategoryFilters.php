@@ -83,16 +83,9 @@ class CategoryFilters
         if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::SERENITY) {
             $this->searchBuilder = $this->searchBuilderFactory->create();
 
-            /** @var string $excludedCategories */
-            $excludedCategories = $this->configHelper->getCategoriesFilter();
-            /** @var string[] $allParentCategories */
-            $allParentCategories = array_keys($this->categoryFilterSourceModel->getCategories());
+            $categoriesToImport = $this->getCategoriesToImport();
 
-            if ($excludedCategories) {
-                /** @var string[] $explodedCategories */
-                $explodedCategories = explode(',', $excludedCategories);
-                /** @var string[] $categoriesToImport */
-                $categoriesToImport = array_diff($allParentCategories, $explodedCategories);
+            if ($categoriesToImport) {
                 $this->searchBuilder->addFilter('code', 'IN', array_values($categoriesToImport));
             }
 
@@ -103,6 +96,28 @@ class CategoryFilters
         }
 
         return $filters;
+    }
+
+    /**
+     * Return categories to import without excluded categories
+     *
+     * @return string[]
+     */
+    public function getCategoriesToImport()
+    {
+        /** @var string $excludedCategories */
+        $excludedCategories = $this->configHelper->getCategoriesFilter();
+        /** @var string[] $allParentCategories */
+        $allParentCategories = array_keys($this->categoryFilterSourceModel->getCategories());
+        /** @var string[] $categoriesToImport */
+        $categoriesToImport = [];
+        if ($excludedCategories) {
+            /** @var string[] $explodedCategories */
+            $explodedCategories = explode(',', $excludedCategories);
+            $categoriesToImport = array_diff($allParentCategories, $explodedCategories);
+        }
+
+        return $categoriesToImport;
     }
 
     /**
@@ -123,7 +138,7 @@ class CategoryFilters
 
         $this->searchBuilder->addFilter('parent', '=', $parent['code']);
         /** @var string[] $search */
-        $search = $this->searchBuilder->getFilters();
+        $search  = $this->searchBuilder->getFilters();
         $filters = [
             'search' => $search,
         ];
