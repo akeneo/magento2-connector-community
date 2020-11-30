@@ -26,6 +26,12 @@ use Psr\Log\LoggerInterface as Logger;
 class Grouped extends AbstractFieldArray
 {
     /**
+     * Description AKENEO_GROUPED_FAMILY_CODE constant
+     *
+     * @var string AKENEO_GROUPED_FAMILY_CODE
+     */
+    const AKENEO_GROUPED_FAMILY_CODE = 'akeneo_grouped_family_code';
+    /**
      * This variable contains a mixed value
      *
      * @var Authenticator $akeneoAuthenticator
@@ -73,7 +79,7 @@ class Grouped extends AbstractFieldArray
         $this->akeneoAuthenticator = $akeneoAuthenticator;
         $this->logger              = $logger;
         $this->configHelper        = $configHelper;
-        $this->elementFactory  = $elementFactory;
+        $this->elementFactory      = $elementFactory;
     }
 
     /**
@@ -83,7 +89,7 @@ class Grouped extends AbstractFieldArray
      */
     protected function _construct()
     {
-        $this->addColumn('akeneo_grouped_family_code', ['label' => __('Grouped product family code')]);
+        $this->addColumn(self::AKENEO_GROUPED_FAMILY_CODE, ['label' => __('Grouped product family code')]);
         $this->addColumn('akeneo_quantity_association', ['label' => __('Quantity association code')]);
         $this->_addAfter       = false;
         $this->_addButtonLabel = __('Add');
@@ -100,7 +106,7 @@ class Grouped extends AbstractFieldArray
      */
     public function renderCellTemplate($columnName)
     {
-        if ($columnName != 'akeneo_grouped_family_code' || !isset($this->_columns[$columnName])) {
+        if ($columnName != self::AKENEO_GROUPED_FAMILY_CODE || !isset($this->_columns[$columnName])) {
             return parent::renderCellTemplate($columnName);
         }
 
