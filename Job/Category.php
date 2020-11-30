@@ -90,6 +90,12 @@ class Category extends Import
      * @var CategoryFilters $categoryFilters
      */
     protected $categoryFilters;
+    /**
+     * Description $editionSource field
+     *
+     * @var Edition $editionSource
+     */
+    protected $editionSource;
 
     /**
      * Category constructor
@@ -117,6 +123,7 @@ class Category extends Import
         CategoryModel $categoryModel,
         CategoryUrlPathGenerator $categoryUrlPathGenerator,
         CategoryFilters $categoryFilters,
+        Edition $editionSource,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
@@ -128,6 +135,7 @@ class Category extends Import
         $this->categoryModel            = $categoryModel;
         $this->categoryUrlPathGenerator = $categoryUrlPathGenerator;
         $this->categoryFilters          = $categoryFilters;
+        $this->editionSource            = $editionSource;
     }
 
     /**
@@ -182,8 +190,10 @@ class Category extends Import
             $categoriesToImport = $this->categoryFilters->getCategoriesToImport();
 
             if (count($categoriesToImport) != $parentCategories->getPageSize()) {
+                /** @var string[] $editions */
+                $editions = $this->editionSource->toOptionArray();
                 $this->setMessage(
-                    __('Wrong Akeneo version selected in the Akeneo Edition configuration field: %1', $edition)
+                    __('Wrong Akeneo version selected in the Akeneo Edition configuration field: %1', $editions[$edition])
                 );
                 $this->stop(1);
 
