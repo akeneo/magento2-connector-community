@@ -1278,13 +1278,13 @@ class Config
      *
      * @param string $family
      *
-     * @return string[]
+     * @return mixed[]
      */
     public function getGroupedAssociationsForFamily(string $family)
     {
         /** @var string[] $allAssociations */
         $allAssociations = $this->getGroupedAssociationsToImport();
-        /** @var string[] $associations */
+        /** @var mixed[] $associations */
         $associations = [];
 
         /** @var string[] $association */

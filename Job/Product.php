@@ -504,6 +504,34 @@ class Product extends JobImport
                         $product['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
                     }
                 }
+                /** @var string $edition */
+                $edition = $this->configHelper->getEdition();
+                if ($edition === Edition::SERENITY) {
+                    /** @var mixed[] $associations */
+                    $associationsCurrentFamily = $this->configHelper->getGroupedAssociationsForFamily($this->getFamily());
+                    /** @var bool $qtyAssociationFound */
+                    $qtyAssociationFound = false;
+                    /** @var mixed[] $qtyAssociation */
+                    $associationProducts = [];
+
+                    // Get setted products associations with the current family
+                    /**
+                     * @var string $key
+                     * @var mixed[] $association */
+                    foreach ($product[ProductImportHelper::QUANTIFIED_ASSOCIATIONS_KEY] as $key => $association) {
+                        /** @var mixed[] $familyAssociation */
+                        foreach($associationsCurrentFamily as $familyAssociation) {
+                            if (in_array($key, $familyAssociation)) {
+                                $qtyAssociationFound = true;
+                                $associations[] = [$key => $association];
+                            }
+                        }
+                    }
+
+                    if ($qtyAssociationFound) {
+                        // Get and link products
+                    }
+                }
 
                 /** @var bool $result */
                 $result = $this->entitiesHelper->insertDataFromApi($product, $this->getCode());
@@ -981,7 +1009,7 @@ class Product extends JobImport
             '_options_container' => new Expr('"container1"'),
             '_axis'              => 'v.axis',
             'family'             => 'v.family',
-            'categories'         => 'v.categories'
+            'categories'         => 'v.categories',
         ];
 
         if ($this->configHelper->isUrlGenerationEnabled()) {
