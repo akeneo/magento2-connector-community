@@ -305,6 +305,7 @@ For example :<br/>
                     <depends>
                         <field id="filter_attribute_code_mode">1</field>
                     </depends>
+                    <validate>required-entry</validate>
                     <can_be_empty>1</can_be_empty>
                 </field>
                 <depends>
