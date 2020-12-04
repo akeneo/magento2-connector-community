@@ -300,12 +300,11 @@ For example :<br/>
                 </field>
                 <field id="filter_attribute_code" translate="label comment" type="multiselect" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Attribute codes to import</label>
-                    <comment>Select the attributes you want to import.</comment>
+                    <comment>Select the attributes you want to import. Not choosing any attribute in this list will import all your attributes into Magento 2.</comment>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Attribute</source_model>
                     <depends>
                         <field id="filter_attribute_code_mode">1</field>
                     </depends>
-                    <validate>required-entry</validate>
                     <can_be_empty>1</can_be_empty>
                 </field>
                 <depends>
