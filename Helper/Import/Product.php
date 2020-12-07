@@ -267,7 +267,13 @@ class Product extends Entities
                 $name = $group . '-' . $key;
 
                 if ($assoKey === self::QUANTIFIED_ASSOCIATIONS_KEY) {
-                    $products = array_column($products, 'identifier');
+                    /** @var string[] $finalProducts */
+                    $finalProducts = [];
+                    /** @var string[] $product */
+                    foreach ($products as $product) {
+                        $finalProducts[] = $product['identifier'] . ';' . $product['quantity'];
+                    }
+                    $products = $finalProducts;
                 }
 
                 $associations[$name] = implode(',', $products);
@@ -524,5 +530,35 @@ class Product extends Entities
         }
 
         return false;
+    }
+
+    /**
+     * Format grouped association string into an array
+     *
+     * @param string $productAssociationData
+     *
+     * @return void
+     */
+    public function formatGroupedAssociationData($productAssociationData)
+    {
+        /** @var string[] $productAssociations */
+        $productAssociations = explode(',', $productAssociationData);
+        /** @var string[] $formatedAssociations */
+        $formatedAssociations = [];
+        /**
+         * @var int    $key
+         * @var string $association
+         */
+        foreach ($productAssociations as $key => $association) {
+            /** @var string[] $associationData */
+            $associationData                          = explode(';', $association);
+            $formatedAssociations[$key]['identifier'] = $associationData[0];
+            if(is_float($associationData[1])) {
+                return false;
+            }
+            $formatedAssociations[$key]['quantity']   = $associationData[1];
+        }
+
+        return $formatedAssociations;
     }
 }
