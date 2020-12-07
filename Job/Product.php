@@ -504,34 +504,6 @@ class Product extends JobImport
                         $product['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
                     }
                 }
-                /** @var string $edition */
-                $edition = $this->configHelper->getEdition();
-                if ($edition === Edition::SERENITY) {
-                    /** @var mixed[] $associations */
-                    $associationsCurrentFamily = $this->configHelper->getGroupedAssociationsForFamily($this->getFamily());
-                    /** @var bool $qtyAssociationFound */
-                    $qtyAssociationFound = false;
-                    /** @var mixed[] $qtyAssociation */
-                    $associationProducts = [];
-
-                    // Get setted products associations with the current family
-                    /**
-                     * @var string $key
-                     * @var mixed[] $association */
-                    foreach ($product[ProductImportHelper::QUANTIFIED_ASSOCIATIONS_KEY] as $key => $association) {
-                        /** @var mixed[] $familyAssociation */
-                        foreach($associationsCurrentFamily as $familyAssociation) {
-                            if (in_array($key, $familyAssociation)) {
-                                $qtyAssociationFound = true;
-                                $associationProducts[] = [$key => $association];
-                            }
-                        }
-                    }
-
-                    if ($qtyAssociationFound) {
-                        // Get and link products from associations to the current product
-                    }
-                }
 
                 /** @var bool $result */
                 $result = $this->entitiesHelper->insertDataFromApi($product, $this->getCode());
@@ -706,17 +678,34 @@ class Product extends JobImport
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
 
-        $connection->addColumn(
-            $tmpTable,
-            '_type_id',
-            [
-                'type'     => 'text',
-                'length'   => 255,
-                'default'  => 'simple',
-                'COMMENT'  => ' ',
-                'nullable' => false,
-            ]
-        );
+        /** @var string $edition */
+        $edition = $this->configHelper->getEdition();
+        // If family is grouped, create grouped products
+        if ($edition === Edition::SERENITY && $this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            $connection->addColumn(
+                $tmpTable,
+                '_type_id',
+                [
+                    'type'     => 'text',
+                    'length'   => 255,
+                    'default'  => 'grouped',
+                    'COMMENT'  => ' ',
+                    'nullable' => false,
+                ]
+            );
+        } else {
+            $connection->addColumn(
+                $tmpTable,
+                '_type_id',
+                [
+                    'type'     => 'text',
+                    'length'   => 255,
+                    'default'  => 'simple',
+                    'COMMENT'  => ' ',
+                    'nullable' => false,
+                ]
+            );
+        }
         $connection->addColumn(
             $tmpTable,
             '_options_container',
@@ -2425,6 +2414,99 @@ class Product extends JobImport
                 );
             }
         }
+    }
+
+    /**
+     * Update or set grouped products relations
+     *
+     * @return void
+     * @throws \Zend_Db_Exception
+     */
+    public function setGrouped()
+    {
+        /** @var string $edition */
+        $edition = $this->configHelper->getEdition();
+        // Is family is not grouped or edition not Serenity, skip
+        if ($edition != Edition::SERENITY || !$this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            return;
+        }
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        /** @var string $entitiesTable */
+        $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
+        /** @var string $productsEntityTable */
+        $productsEntityTable = $this->entitiesHelper->getTable('catalog_product_entity');
+        /** @var string $productsRelationTable */
+        $productsRelationTable = $this->entitiesHelper->getTable('catalog_product_relation');
+        /** @var string $productsLinkTable */
+        $productsLinkTable = $this->entitiesHelper->getTable('catalog_product_link');
+        /** @var string $productsLinkAttributeTable */
+        $productsLinkAttributeTable = $this->entitiesHelper->getTable('catalog_product_link_attribute');
+        /** @var string $productsLinkAttributeDecimalTable */
+        $productsLinkAttributeDecimalTable = $this->entitiesHelper->getTable('catalog_product_link_attribute_decimal');
+        /** @var string $productsLinkAttributeIntTable */
+        $productsLinkAttributeIntTable = $this->entitiesHelper->getTable('catalog_product_link_attribute_int');
+        /** @var string $columnIdentifier */
+        $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($productsEntityTable);
+
+        /** @var mixed[] $associationsCurrentFamily */
+        $associationsCurrentFamily = $this->configHelper->getGroupedAssociationsForFamily($this->getFamily());
+
+        // TO DO : Récupérer les id Magento des associations de produits groupés dans les tables d'informations
+
+        /** @var string[] $affectedProductIds */
+        $affectedProductIds = [];
+        // A NOTER : Il va falloir stocker les requêtes à lancer et les faire après toute cette boucle
+        // Il faudra en effet supprimer les relations déjà existantes, et on le fera une fois que toutes les associations seront traitées
+        /** @var mixed[] $familyAssociation */
+        foreach ($associationsCurrentFamily as $familyAssociation) {
+            /** @var string $associationColumnName */
+            $associationColumnName = $familyAssociation['akeneo_quantity_association'] . '-products';
+            if ($connection->tableColumnExists($tmpTable, $associationColumnName)) {
+                /** @var \Magento\Framework\DB\Select $select */
+                $select = $connection->select()->from(
+                    $tmpTable,
+                    [
+                        'identifier' => 'identifier',
+                        'entity_id' => '_entity_id',
+                        'association_column' => $associationColumnName,
+                    ]
+                );
+
+                /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+                $query = $connection->query($select);
+
+                /** @var array $row */
+                while (($row = $query->fetch())) {
+                    $affectedProductIds[] = $row['entity_id'];
+                    if ($row['association_column'] == null) {
+                        $this->setAdditionalMessage(
+                            __('The grouped product %s does not have values for its grouped association')
+                        );
+
+                        continue;
+                    }
+                    /** @var string[] $associationProductInfo */
+                    $associationProductInfo = $this->entitiesHelper->formatGroupedAssociationData(
+                        $row['association_column']
+                    );
+
+                    if (!$associationProductInfo) {
+                        $this->setAdditionalMessage(__('The product %1 has a decimal value in its association, skipped', $row['identifier']));
+
+                        continue;
+                    }
+
+                    // TO DO : Préparer les liens à ajouter pour chaque association
+                    // -> Vérifier que les produits auxquels on va lier existent et ne sont pas des models
+                }
+            }
+        }
+
+        // Use this array to remove all old links
+        $affectedProductIds = array_unique($affectedProductIds);
     }
 
     /**
