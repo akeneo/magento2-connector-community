@@ -551,7 +551,7 @@ class Product extends Entities
          */
         foreach ($productAssociations as $key => $association) {
             /** @var string[] $associationData */
-            $associationData                          = explode(';', $association);
+            $associationData = explode(';', $association);
             $formatedAssociations[$key]['identifier'] = $associationData[0];
             if (is_float($associationData[1])) {
                 return false;
