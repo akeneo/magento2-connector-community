@@ -99,6 +99,7 @@ class Family extends Import
      * @param SetFactory        $attributeSetFactory
      * @param TypeListInterface $cacheTypeList
      * @param Config            $eavConfig
+     * @param FamilyFilters     $familyFilters
      * @param array             $data
      */
     public function __construct(
