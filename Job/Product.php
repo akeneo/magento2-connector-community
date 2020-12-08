@@ -825,16 +825,6 @@ class Product extends JobImport
         if ($connection->tableColumnExists($tmpTable, 'enabled')) {
             $connection->update($tmpTable, ['_status' => new Expr('IF(`enabled` <> 1, 2, 1)')], ['_type_id = ?' => 'simple']);
         }
-        /** @var string $edition */
-        $edition = $this->configHelper->getEdition();
-        if ($edition === Edition::SERENITY && $this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
-            $connection->update(
-                $tmpTable,
-                [
-                    '_type_id' => 'grouped',
-                ]
-            );
-        }
 
         /** @var string|array $matches */
         $matches = $this->configHelper->getAttributeMapping();
