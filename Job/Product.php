@@ -1154,7 +1154,7 @@ class Product extends JobImport
         $akeneoConnectorTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         /** @var string $entityTable */
         $entityTable = $this->entitiesHelper->getTable('catalog_product_entity');
-        /** @var \Magento\Framework\DB\Select $selectExistingEntities */
+        /** @var Select $selectExistingEntities */
         $selectExistingEntities = $connection->select()->from($entityTable, 'entity_id');
         /** @var string[] $existingEntities */
         $existingEntities = array_column($connection->query($selectExistingEntities)->fetchAll(), 'entity_id');
@@ -1942,7 +1942,7 @@ class Product extends JobImport
         /** @var string $productSuperLinkTable */
         $productSuperLinkTable = $this->entitiesHelper->getTable('catalog_product_super_link');
 
-        /** @var \Magento\Framework\DB\Select $select */
+        /** @var Select $select */
         $select = $connection->select()->from($tmpTable, ['_entity_id', 'parent'])->where('parent IS NOT NULL');
 
         /** @var string $pKeyColumn */
@@ -2073,7 +2073,7 @@ class Product extends JobImport
                 }
 
                 if ($connection->tableColumnExists($tmpTable, $websiteAttribute)) {
-                    /** @var \Magento\Framework\DB\Select $select */
+                    /** @var Select $select */
                     $select = $connection->select()->from(
                         $tmpTable,
                         [
@@ -2331,7 +2331,7 @@ class Product extends JobImport
         if ($rowIdExists) {
             $values['product_id'] = 'p.row_id';
         }
-        /** @var \Magento\Framework\DB\Select $productIds */
+        /** @var Select $productIds */
         $productIds = $connection->select()->from($tmpTable, $values);
 
         if ($rowIdExists) {
@@ -2357,7 +2357,7 @@ class Product extends JobImport
             }
             /** @var string $concat */
             $concat = sprintf('CONCAT_WS(",", %s)', implode(', ', $columns));
-            /** @var \Magento\Framework\DB\Select $select */
+            /** @var Select $select */
             $select = $connection->select()->from(['c' => $entitiesTable], [])->joinInner(
                 ['d' => $tmpTable],
                 sprintf('FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"', $concat, $this->getCode()),
@@ -2438,11 +2438,36 @@ class Product extends JobImport
         $productsLinkAttributeDecimalTable = $this->entitiesHelper->getTable('catalog_product_link_attribute_decimal');
         /** @var string $productsLinkAttributeIntTable */
         $productsLinkAttributeIntTable = $this->entitiesHelper->getTable('catalog_product_link_attribute_int');
+        /** @var string $productsLinkTypeTable */
+        $productsLinkTypeTable = $this->entitiesHelper->getTable('catalog_product_link_type');
         /** @var string $columnIdentifier */
         $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($productsEntityTable);
 
         /** @var mixed[] $associationsCurrentFamily */
         $associationsCurrentFamily = $this->configHelper->getGroupedAssociationsForFamily($this->getFamily());
+
+        // Product link attribute with code 'super'
+        /** @var Select $selectSuperId */
+        $selectSuperLinkType = $connection->select()->from($productsLinkTypeTable)->where('code = ?', 'super');
+        /** @var mixed[] $attributeSuperLinkType */
+        $attributeSuperLinkType = $connection->query($selectSuperLinkType)->fetch();
+        /** @var string $selectProductLinkAttributeQty */
+        $selectProductLinkAttributeQty = $connection->select()->from($productsLinkAttributeTable)->where(
+            'product_link_attribute_code = ?',
+            'qty'
+        )->where(
+            'link_type_id = ?',
+            $attributeSuperLinkType['link_type_id']
+        );
+        /** @var mixed[] $productLinkAttributeQty */
+        $productLinkAttributeQty = $connection->query($selectProductLinkAttributeQty)->fetch();
+        /** @var string $selectProductLinkAttributePosition */
+        $selectProductLinkAttributeQty = $connection->select()->from($productsLinkAttributeTable)->where(
+            'product_link_attribute_code = ?',
+            'position'
+        );
+        /** @var mixed[] $productLinkAttributePosition */
+        $productLinkAttributePosition = $connection->query($selectProductLinkAttributeQty)->fetch();
 
         // TO DO : Récupérer les id Magento des associations de produits groupés dans les tables d'informations
 
@@ -2454,8 +2479,9 @@ class Product extends JobImport
         foreach ($associationsCurrentFamily as $familyAssociation) {
             /** @var string $associationColumnName */
             $associationColumnName = $familyAssociation['akeneo_quantity_association'] . '-products';
+
             if ($connection->tableColumnExists($tmpTable, $associationColumnName)) {
-                /** @var \Magento\Framework\DB\Select $select */
+                /** @var Select $select */
                 $select = $connection->select()->from(
                     $tmpTable,
                     [
@@ -2483,6 +2509,19 @@ class Product extends JobImport
                         $row['association_column']
                     );
 
+                    // Prepare catalog_product_link insertion data
+                    /** @var mixed[] $products */
+                    $linkedProducts = [];
+                    foreach($associationProductInfo as $productInfo)
+                    {
+                        $linkedProducts[] = [
+                            'product_id' => $row['entity_id'],
+                            'linked_product_id' => $productInfo['identifier'],
+                            'link_type_id' => $attributeSuperLinkType['link_type_id']
+
+                        ];
+                    }
+
                     if (!$associationProductInfo) {
                         $this->setAdditionalMessage(__('The product %1 has a decimal value in its association, skipped', $row['identifier']));
 
@@ -2494,7 +2533,6 @@ class Product extends JobImport
                 }
             }
         }
-
         // Use this array to remove all old links
         $affectedProductIds = array_unique($affectedProductIds);
     }
@@ -2555,7 +2593,7 @@ class Product extends JobImport
                 if (!$store['store_id']) {
                     continue;
                 }
-                /** @var \Magento\Framework\DB\Select $select */
+                /** @var Select $select */
                 $select = $connection->select()->from(
                     $tmpTable,
                     [
@@ -2576,7 +2614,7 @@ class Product extends JobImport
                     $product->setData($row);
 
                     if (isset($store['website_id'])) {
-                        /** @var \Magento\Framework\DB\Select $selectIsInWebsite */
+                        /** @var Select $selectIsInWebsite */
                         $selectIsInWebsite = $connection->select()->from(
                             $this->entitiesHelper->getTable('catalog_product_website'),
                             [
@@ -2912,7 +2950,7 @@ class Product extends JobImport
                 $files[] = $file;
             }
 
-            /** @var \Magento\Framework\DB\Select $cleaner */
+            /** @var Select $cleaner */
             $cleaner = $connection->select()->from($galleryTable, ['value_id'])->where('value NOT IN (?)', $files);
 
             $connection->delete(
