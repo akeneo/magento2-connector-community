@@ -164,3 +164,11 @@
 ### Version 101.0.2 :
 * Add documentation link in the connector admin configuration page
 * Fix metric attribute unit missing test case
+
+### Version 101.1.0 :
+* Add new Akeneo Edition selector configuration (https://help.akeneo.com/magento2-connector/v100/articles/02-configure-PIM-API.html#configure-your-akeneo-edition)
+
+**Warning :** *After updating Akeneo Connector for Magento 2 to this version, make sure to configure the correct Akeneo Edition in your connector configuration*
+
+* Add category tree filtering from API for Akeneo version 4.0.62 or greater and Akeneo Serenity
+* Add family updated date filter in connector configuration for Akeneo version 4.0.62 or greater and Akeneo Serenity (https://help.akeneo.com/magento2-connector/v100/articles/10-configure-families.html#how-can-i-filter-my-families-during-import)
