@@ -106,7 +106,8 @@ class File extends AbstractSource
 
             /** @var string[] $attributeTypeFilter */
             $attributeTypeFilter = $this->attributeFilters->createAttributeTypeFilter(
-                [AttributeFilters::ATTRIBUTE_TYPE_CATALOG_FILE]
+                [AttributeFilters::ATTRIBUTE_TYPE_CATALOG_FILE],
+                true
             );
 
             return $akeneoClient->getAttributeApi()->all($paginationSize, $attributeTypeFilter);

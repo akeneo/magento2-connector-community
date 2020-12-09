@@ -80,17 +80,20 @@ class AttributeFilters
      * Create an attribute filter for a given types array
      *
      * @param string[] $attributeTypes
+     * @param bool     $isConfig
      *
      * @return void
      */
-    public function createAttributeTypeFilter($attributeTypes)
+    public function createAttributeTypeFilter($attributeTypes, $isConfig = false)
     {
         /** @var mixed[] $filters */
         $filters = [];
         /** @var mixed[] $search */
         $search              = [];
         $this->searchBuilder = $this->searchBuilderFactory->create();
-        $this->addCodeFilter();
+        if (!$isConfig) {
+            $this->addCodeFilter();
+        }
         $search  = $this->searchBuilder->getFilters();
         $filters = [
             'search' => $search,

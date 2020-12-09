@@ -106,7 +106,8 @@ class Metrics extends AbstractSource
 
             /** @var string[] $attributeTypeFilter */
             $attributeTypeFilter = $this->attributeFilters->createAttributeTypeFilter(
-                [AttributeFilters::ATTRIBUTE_TYPE_CATALOG_METRIC]
+                [AttributeFilters::ATTRIBUTE_TYPE_CATALOG_METRIC],
+                true
             );
 
             return $akeneoClient->getAttributeApi()->all($paginationSize, $attributeTypeFilter);
