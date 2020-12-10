@@ -146,6 +146,12 @@ class Category extends Import
      */
     public function createTable()
     {
+        if (!$this->categoryFilters->getCategoriesToImport()) {
+            $this->setMessage(__('No categories to import, check your category filter configuration'));
+            $this->stop(1);
+
+            return;
+        }
         /** @var PageInterface $families */
         $categories = $this->akeneoClient->getCategoryApi()->listPerPage(
             1,
