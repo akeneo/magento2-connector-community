@@ -2442,10 +2442,6 @@ class Product extends JobImport
         $productsLinkTypeTable = $this->entitiesHelper->getTable('catalog_product_link_type');
         /** @var string $columnIdentifier */
         $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($productsEntityTable);
-
-        /** @var mixed[] $associationsCurrentFamily */
-        $associationsCurrentFamily = $this->configHelper->getGroupedAssociationsForFamily($this->getFamily());
-
         // Product link attribute with code 'super'
         /** @var Select $selectSuperId */
         $selectSuperLinkType = $connection->select()->from($productsLinkTypeTable)->where('code = ?', 'super');
@@ -2465,76 +2461,165 @@ class Product extends JobImport
         $selectProductLinkAttributeQty = $connection->select()->from($productsLinkAttributeTable)->where(
             'product_link_attribute_code = ?',
             'position'
+        )->where(
+            'link_type_id = ?',
+            $attributeSuperLinkType['link_type_id']
         );
         /** @var mixed[] $productLinkAttributePosition */
         $productLinkAttributePosition = $connection->query($selectProductLinkAttributeQty)->fetch();
 
-        // TO DO : Récupérer les id Magento des associations de produits groupés dans les tables d'informations
+        /** @var mixed[] $associationsCurrentFamily */
+        $associationsCurrentFamily = $this->configHelper->getGroupedAssociationsForFamily($this->getFamily());
 
-        /** @var string[] $affectedProductIds */
-        $affectedProductIds = [];
-        // A NOTER : Il va falloir stocker les requêtes à lancer et les faire après toute cette boucle
-        // Il faudra en effet supprimer les relations déjà existantes, et on le fera une fois que toutes les associations seront traitées
-        /** @var mixed[] $familyAssociation */
+        /** @var string[] $associationSelect */
+        $associationSelect = [
+            'identifier' => 'identifier',
+            'entity_id'  => '_entity_id',
+        ];
+
+        /** @var string[] $familyAssociation */
         foreach ($associationsCurrentFamily as $familyAssociation) {
             /** @var string $associationColumnName */
             $associationColumnName = $familyAssociation['akeneo_quantity_association'] . '-products';
-
             if ($connection->tableColumnExists($tmpTable, $associationColumnName)) {
-                /** @var Select $select */
-                $select = $connection->select()->from(
-                    $tmpTable,
-                    [
-                        'identifier' => 'identifier',
-                        'entity_id' => '_entity_id',
-                        'association_column' => $associationColumnName,
-                    ]
+                $associationSelect[$familyAssociation['akeneo_quantity_association']] = $associationColumnName;
+            } else {
+                $this->setAdditionalMessage(
+                    __('The association %1 is not imported', $familyAssociation['akeneo_quantity_association'])
+                );
+            }
+        }
+
+        /** @var \Magento\Framework\DB\Select $select */
+        $select = $connection->select()->from(
+            $tmpTable,
+            $associationSelect
+        );
+        $query  = $connection->query($select);
+
+        /** @var array $row */
+        while (($row = $query->fetch())) {
+            // TO DO : Supprimer les associations de ce produit ici
+
+            // Initialize position
+            /** @var int $position */
+            $position = 0;
+
+            /** @var string[] $familyAssociation */
+            foreach ($associationsCurrentFamily as $familyAssociation) {
+                $affectedProductIds[] = $row['entity_id'];
+                if ($row[$familyAssociation['akeneo_quantity_association']] == null) {
+                    $this->setAdditionalMessage(
+                        __(
+                            'The grouped product with identifier %1 does not have values for its grouped association %2',
+                            $row['identifier'],
+                            $familyAssociation['akeneo_quantity_association']
+                        )
+                    );
+
+                    continue;
+                }
+                /** @var string[] $associationProductInfo */
+                $associationProductInfo = $this->formatGroupedAssociationData(
+                    $row[$familyAssociation['akeneo_quantity_association']],
+                    $row['identifier']
                 );
 
-                /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
-                $query = $connection->query($select);
+                /** @var string[] $productInfo */
+                foreach ($associationProductInfo as $productInfo) {
+                    /** @var string[] $linkedProductEntityId */
+                    $linkedProductEntityId = $connection->query(
+                        $connection->select()->from($entitiesTable, 'entity_id')->where(
+                            'code = ?',
+                            $productInfo['identifier']
+                        )->where(
+                            'import = ?',
+                            'product'
+                        )
+                    )->fetch();
 
-                /** @var array $row */
-                while (($row = $query->fetch())) {
-                    $affectedProductIds[] = $row['entity_id'];
-                    if ($row['association_column'] == null) {
+                    /** @var string[] $linkedProductType */
+                    $linkedProductType = $connection->query(
+                        $connection->select()->from($productsEntityTable, 'type_id')->where(
+                            'entity_id = ?',
+                            $linkedProductEntityId['entity_id']
+                        )
+                    )->fetch();
+
+                    if ($linkedProductType['type_id'] != 'simple') {
                         $this->setAdditionalMessage(
-                            __('The grouped product %s does not have values for its grouped association')
+                            __(
+                                'The grouped product %1 is linked to product %2, which is not a simple product, they were not linked',
+                                $row['identifier'],
+                                $productInfo['identifier']
+                            )
                         );
 
                         continue;
                     }
-                    /** @var string[] $associationProductInfo */
-                    $associationProductInfo = $this->entitiesHelper->formatGroupedAssociationData(
-                        $row['association_column']
+
+                    // Start the inserts in the different tables
+
+                    // Insert in catalog_product_link
+                    /** @var string[] $linkedProduct */
+                    $linkedProduct = [
+                        'product_id'        => $row['entity_id'],
+                        'linked_product_id' => $linkedProductEntityId['entity_id'],
+                        'link_type_id'      => $attributeSuperLinkType['link_type_id'],
+                    ];
+
+                    $connection->insertOnDuplicate(
+                        $productsLinkTable,
+                        $linkedProduct,
+                        array_keys($linkedProduct)
                     );
 
-                    // Prepare catalog_product_link insertion data
-                    /** @var mixed[] $products */
-                    $linkedProducts = [];
-                    foreach($associationProductInfo as $productInfo)
-                    {
-                        $linkedProducts[] = [
-                            'product_id' => $row['entity_id'],
-                            'linked_product_id' => $productInfo['identifier'],
-                            'link_type_id' => $attributeSuperLinkType['link_type_id']
+                    // Get the id of the created link
+                    /** @var string[] $linkId */
+                    $linkId = $connection->query(
+                        $connection->select()->from($productsLinkTable, 'link_id')->where(
+                            'product_id = ?',
+                            $row['entity_id']
+                        )->where(
+                            'linked_product_id = ?',
+                            $linkedProductEntityId['entity_id']
+                        )->where(
+                            'link_type_id = ?',
+                            $attributeSuperLinkType['link_type_id']
+                        )
+                    )->fetch();
 
-                        ];
-                    }
+                    // Insert in catalog_product_link_attribute_int
+                    $linkedProduct = [
+                        'product_link_attribute_id' => $productLinkAttributePosition['product_link_attribute_id'],
+                        'link_id'                   => $linkId['link_id'],
+                        'value'                     => $position,
+                    ];
 
-                    if (!$associationProductInfo) {
-                        $this->setAdditionalMessage(__('The product %1 has a decimal value in its association, skipped', $row['identifier']));
+                    $connection->insertOnDuplicate(
+                        $productsLinkAttributeIntTable,
+                        $linkedProduct,
+                        array_keys($linkedProduct)
+                    );
 
-                        continue;
-                    }
+                    // Increment position
+                    $position = $position + 1;
 
-                    // TO DO : Préparer les liens à ajouter pour chaque association
-                    // -> Vérifier que les produits auxquels on va lier existent et ne sont pas des models
+                    // Insert in catalog_product_link_attribute_decimal
+                    $linkedProduct = [
+                        'product_link_attribute_id' => $productLinkAttributeQty['product_link_attribute_id'],
+                        'link_id'                   => $linkId['link_id'],
+                        'value'                     => $productInfo['quantity'],
+                    ];
+
+                    $connection->insertOnDuplicate(
+                        $productsLinkAttributeDecimalTable,
+                        $linkedProduct,
+                        array_keys($linkedProduct)
+                    );
                 }
             }
         }
-        // Use this array to remove all old links
-        $affectedProductIds = array_unique($affectedProductIds);
     }
 
     /**
@@ -3188,5 +3273,39 @@ class Product extends JobImport
     public function getFamily()
     {
         return $this->family;
+    }
+
+    /**
+     * Format grouped association string into an array
+     *
+     * @param string $productAssociationData
+     *
+     * @return void
+     */
+    public function formatGroupedAssociationData($productAssociationData, $productIdentifier)
+    {
+        /** @var string[] $productAssociations */
+        $productAssociations = explode(',', $productAssociationData);
+        /** @var string[] $formatedAssociations */
+        $formatedAssociations = [];
+        /**
+         * @var int    $key
+         * @var string $association
+         */
+        foreach ($productAssociations as $key => $association) {
+            /** @var string[] $associationData */
+            $associationData = explode(';', $association);
+            if (is_float($associationData[1])) {
+                $this->setAdditionalMessage(
+                    __('The product %1 has a decimal value in its association, skipped', $productIdentifier)
+                );
+
+                continue;
+            }
+            $formatedAssociations[$key]['identifier'] = $associationData[0];
+            $formatedAssociations[$key]['quantity'] = $associationData[1];
+        }
+
+        return $formatedAssociations;
     }
 }
