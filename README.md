@@ -2,9 +2,7 @@
 
 Akeneo Connector for Magento 2 is a module that allows you to export your catalog data and structure from Akeneo PIM to Magento 2 through API calls. This version of the connector is designed to work with Akeneo PIM Community Edition. It could either work with Magento 2 Community Edition or Enterprise Edition.
 
-You can discover Akeneo Connector on the [Akeneo Marketplace](https://marketplace.akeneo.com/extension/akeneo-connector-magento-2-community-edition) or on the Magento Marketplace.
-
-> [PIMGento 2 API](https://github.com/Agence-DnD/PIMGento-2-API) becomes Akeneo Connector for Magento2!
+You can discover Akeneo Connector on the [Akeneo Marketplace](https://marketplace.akeneo.com/extension/akeneo-connector-magento-2-community-edition) or on the [Magento Marketplace](https://marketplace.magento.com/akeneo-module-magento2-connector-community.html).
 
 ### Documentation:
 
@@ -29,9 +27,8 @@ With Akeneo Connector for Magento 2, you can import:
 
 ### Requirements:
 
-* Akeneo PIM >= 2.0 (CE & EE) | Akeneo EE features are not included in this version of the Connector
-* Akeneo PIM >= 3.0 (CE & EE) | Akeneo EE features are not included in this version of the Connector
-* Magento >= 2.2 (CE & EE)
+* Akeneo PIM >= 3.2 (CE & EE) | Akeneo EE features are not included in this version of the Connector
+* Magento >= 2.3 (CE & EE)
 * Database encoding must be UTF-8
 
 ### Migration:
@@ -51,4 +48,5 @@ Akeneo and Magento solutions are a logical fit as they are both Open Source, sha
 Akeneo now partners with Agence Dn'D on Akeneo Connector for Magento 2, to provide the best customer experience to Magento merchants looking for a compelling product experience that will improve their revenue.
 
 ### About Agence Dn'D
+
 Founded by lovers of innovation and design, [Agence Dn'D](https://www.dnd.fr) assists companies in the creation and development of customized digital (open source) solutions for web and E-commerce since 2004.
