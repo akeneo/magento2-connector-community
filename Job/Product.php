@@ -2499,7 +2499,22 @@ class Product extends JobImport
 
         /** @var array $row */
         while (($row = $query->fetch())) {
-            // TO DO : Supprimer les associations de ce produit ici
+            // Delete links for the product in catalog_product_link table
+            $connection->delete(
+                $productsLinkTable,
+                ['product_id = ?' => $row['entity_id']]
+            );
+
+            // Verify if the product exist in catalog_product_entity
+            /** @var string $productExistenceSelect */
+            $productExistenceSelect = $connection->select()->from('catalog_product_entity', 'entity_id')->where('entity_id = ?', $row['entity_id']);
+            $query = $connection->query($productExistenceSelect);
+
+            $magentoProduct = $query->fetch();
+            if(sizeof($magentoProduct) <= 0)
+            {
+                continue;
+            }
 
             // Initialize position
             /** @var int $position */
