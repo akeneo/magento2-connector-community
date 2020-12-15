@@ -2551,7 +2551,7 @@ class Product extends JobImport
                 foreach ($associationProductInfo as $productInfo) {
 
                     // Verify if the product exist in catalog_product_entity
-                    if (!$this->productExistInMagento($productInfo['identifier'])) {
+                    if (!$this->productExistInMagento($productInfo['entity_id'])) {
                         $this->setAdditionalMessage(
                             __(
                                 'The grouped product %1 is linked to product %2, which not exist in magento, they will not be linked',
