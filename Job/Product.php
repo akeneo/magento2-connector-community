@@ -36,6 +36,7 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
+use Magento\Framework\DB\Statement\Pdo\Mysql;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Exception\LocalizedException;
@@ -71,6 +72,12 @@ class Product extends JobImport
      * @var int CONFIGURABLE_INSERTION_MAX_SIZE
      */
     const CONFIGURABLE_INSERTION_MAX_SIZE = 500;
+    /**
+     * Description CATALOG_PRODUCT_ENTITY_TABLE_NAME constant
+     *
+     * @var string CATALOG_PRODUCT_ENTITY_TABLE_NAME
+     */
+    const CATALOG_PRODUCT_ENTITY_TABLE_NAME = 'catalog_product_entity';
     /**
      * This variable contains a string value
      *
@@ -468,7 +475,7 @@ class Product extends JobImport
                     foreach ($product['values'][$attributeMetric] as $key => $metric) {
                         /** @var string|float $amount */
                         $amount = $metric['data']['amount'];
-                        if ($amount != NULL) {
+                        if ($amount != null) {
                             $amount = floatval($amount);
                         }
 
@@ -1011,9 +1018,9 @@ class Product extends JobImport
             /** @var string $associationName */
             foreach ($associationNames as $associationName) {
                 if (!empty($associationName) && $connection->tableColumnExists(
-                        $productModelTable,
-                        $associationName
-                    ) && $connection->tableColumnExists($tmpTable, $associationName)) {
+                    $productModelTable,
+                    $associationName
+                ) && $connection->tableColumnExists($tmpTable, $associationName)) {
                     $data[$associationName] = sprintf('v.%s', $associationName);
                 }
             }
@@ -1107,7 +1114,7 @@ class Product extends JobImport
         /** @var Select $configurable */
         $configurable = $connection->select()
             ->from(['v' => $productModelTable], $data)
-            ->joinLeft(['e' => $tmpTable],'v.code = ' . 'e.' . $groupColumn, [])
+            ->joinLeft(['e' => $tmpTable], 'v.code = ' . 'e.' . $groupColumn, [])
             ->where('v.parent IS NULL')
             ->group('v.code');
 
@@ -1119,8 +1126,8 @@ class Product extends JobImport
         // Update _children column if possible
         /** @var Select $childList */
         $childList = $connection->select()
-            ->from(['v' => $productModelTable] , ['v.identifier', '_children' => new Expr('GROUP_CONCAT(e.identifier SEPARATOR ",")')])
-            ->joinInner(['e' => $tmpTable],'v.code = ' . 'e.' . $groupColumn, [])
+            ->from(['v' => $productModelTable], ['v.identifier', '_children' => new Expr('GROUP_CONCAT(e.identifier SEPARATOR ",")')])
+            ->joinInner(['e' => $tmpTable], 'v.code = ' . 'e.' . $groupColumn, [])
             ->group('v.identifier');
 
         /** @var string $queryChilds */
@@ -1153,7 +1160,7 @@ class Product extends JobImport
         /** @var string $akeneoConnectorTable */
         $akeneoConnectorTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         /** @var string $entityTable */
-        $entityTable = $this->entitiesHelper->getTable('catalog_product_entity');
+        $entityTable = $this->entitiesHelper->getTable(self::CATALOG_PRODUCT_ENTITY_TABLE_NAME);
         /** @var Select $selectExistingEntities */
         $selectExistingEntities = $connection->select()->from($entityTable, 'entity_id');
         /** @var string[] $existingEntities */
@@ -1296,8 +1303,8 @@ class Product extends JobImport
             //in case of multiselect
             /** @var string $conditionJoin */
             $conditionJoin = "IF ( locate(',', `" . $column . "`) > 0 , " . new Expr(
-                    "FIND_IN_SET(`c1`.`code`,`p`.`" . $column ."`) > 0"
-                ) . ", `p`.`" . $column . "` = `c1`.`code` )";
+                "FIND_IN_SET(`c1`.`code`,`p`.`" . $column . "`) > 0"
+            ) . ", `p`.`" . $column . "` = `c1`.`code` )";
 
             /** @var Select $select */
             $select = $connection->select()->from(
@@ -1471,7 +1478,7 @@ class Product extends JobImport
         if ($rowIdExists) {
             $this->entities->addJoinForContentStaging($select, []);
         }
-        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+        /** @var Mysql $query */
         $query = $connection->query($select);
 
         /** @var array $row */
@@ -1953,7 +1960,7 @@ class Product extends JobImport
             $pKeyColumn = 'row_id';
         }
 
-        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+        /** @var Mysql $query */
         $query = $connection->query($select);
 
         /** @var array $row */
@@ -2082,7 +2089,7 @@ class Product extends JobImport
                             'associated_website' => $websiteAttribute,
                         ]
                     );
-                    /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+                    /** @var Mysql $query */
                     $query = $connection->query($select);
                     /** @var array $row */
                     while (($row = $query->fetch())) {
@@ -2230,7 +2237,7 @@ class Product extends JobImport
             )
             ->joinInner(
                 ['p' => $tmpTable],
-                $this->entitiesHelper->getTable('catalog_category_product').'.product_id = `p`.`_entity_id`',
+                $this->entitiesHelper->getTable('catalog_category_product') . '.product_id = `p`.`_entity_id`',
                 [
                     'category_id' => 'c.entity_id',
                     'product_id'  => 'p._entity_id',
@@ -2427,7 +2434,7 @@ class Product extends JobImport
         /** @var string $entitiesTable */
         $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         /** @var string $productsEntityTable */
-        $productsEntityTable = $this->entitiesHelper->getTable('catalog_product_entity');
+        $productsEntityTable = $this->entitiesHelper->getTable(self::CATALOG_PRODUCT_ENTITY_TABLE_NAME);
         /** @var string $productsRelationTable */
         $productsRelationTable = $this->entitiesHelper->getTable('catalog_product_relation');
         /** @var string $productsLinkTable */
@@ -2506,13 +2513,13 @@ class Product extends JobImport
             );
 
             // Verify if the product exist in catalog_product_entity
-            /** @var string $productExistenceSelect */
-            $productExistenceSelect = $connection->select()->from('catalog_product_entity', 'entity_id')->where('entity_id = ?', $row['entity_id']);
-            $query = $connection->query($productExistenceSelect);
-
-            $magentoProduct = $query->fetch();
-            if(sizeof($magentoProduct) <= 0)
-            {
+            if (!$this->productExistInMagento($row['entity_id'])) {
+                $this->setAdditionalMessage(
+                    __(
+                        'The grouped product with identifier %1 does not exist in magento, links will not be imported',
+                        $row['identifier']
+                    )
+                );
                 continue;
             }
 
@@ -2570,6 +2577,18 @@ class Product extends JobImport
                             )
                         );
 
+                        continue;
+                    }
+
+                    // Verify if the product exist in catalog_product_entity
+                    if ($this->productExistInMagento($row['entity_id'])) {
+                        $this->setAdditionalMessage(
+                            __(
+                                'The grouped product %1 is linked to product %2, which not exist in magento, they will not be linked',
+                                $row['identifier'],
+                                $productInfo['identifier']
+                            )
+                        );
                         continue;
                     }
 
@@ -2704,7 +2723,7 @@ class Product extends JobImport
                     ]
                 );
 
-                /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+                /** @var Mysql $query */
                 $query = $connection->query($select);
 
                 /** @var array $row */
@@ -2724,7 +2743,7 @@ class Product extends JobImport
                             'product_id = ?',
                             $product->getEntityId()
                         );
-                        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $queryIsInWebsite */
+                        /** @var Mysql $queryIsInWebsite */
                         $queryIsInWebsite = $connection->query($selectIsInWebsite);
                         /** @var string[] $isInWebsite */
                         $isInWebsite = $queryIsInWebsite->fetchAll();
@@ -2959,7 +2978,7 @@ class Product extends JobImport
             $this->entities->addJoinForContentStaging($select, []);
         }
 
-        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+        /** @var Mysql $query */
         $query = $connection->query($select);
 
         /** @var \Magento\Catalog\Model\ResourceModel\Eav\Attribute $galleryAttribute */
@@ -3160,7 +3179,6 @@ class Product extends JobImport
         return $filters;
     }
 
-
     /**
      * Get product models completeness filter
      *
@@ -3322,5 +3340,33 @@ class Product extends JobImport
         }
 
         return $formatedAssociations;
+    }
+
+    /**
+     * Description productExistInMagento function
+     *
+     * @param string $entityId
+     *
+     * @return bool
+     * @throws Zend_Db_Statement_Exception
+     */
+    public function productExistInMagento(string $entityId)
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $productsEntityTable */
+        $productsEntityTable = $this->entitiesHelper->getTable(self::CATALOG_PRODUCT_ENTITY_TABLE_NAME);
+        /** @var Select $productExistenceSelect */
+        $productExistenceSelect = $connection->select()->from($productsEntityTable, 'entity_id')->where('entity_id = ?', $entityId);
+        /** @var Mysql $query */
+        $query = $connection->query($productExistenceSelect);
+        /** @var mixed[] $magentoProduct */
+        $magentoProduct = $query->fetch();
+
+        if (sizeof($magentoProduct) > 0) {
+            return true;
+        }
+
+        return false;
     }
 }
