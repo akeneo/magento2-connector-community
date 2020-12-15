@@ -2564,7 +2564,7 @@ class Product extends JobImport
                 foreach ($associationProductInfo as $productInfo) {
 
                     // Verify if the product exist in catalog_product_entity
-                    if (!$this->productExistInMagento($productInfo['identifier'], 'sku')) {
+                    if (!$this->productExistInMagento($productInfo['identifier'])) {
                         $this->setAdditionalMessage(
                             __(
                                 'The grouped product %1 is linked to product %2, which not exist in magento, they will not be linked',
@@ -2598,19 +2598,6 @@ class Product extends JobImport
                         $this->setAdditionalMessage(
                             __(
                                 'The grouped product %1 is linked to product %2, which is not a simple product, they were not linked',
-                                $row['identifier'],
-                                $productInfo['identifier']
-                            )
-                        );
-
-                        continue;
-                    }
-
-                    // Verify if the product exist in catalog_product_entity
-                    if ($this->productExistInMagento($row['entity_id'])) {
-                        $this->setAdditionalMessage(
-                            __(
-                                'The grouped product %1 is linked to product %2, which not exist in magento, they will not be linked',
                                 $row['identifier'],
                                 $productInfo['identifier']
                             )
@@ -3390,7 +3377,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var Select $productExistenceSelect */
-        $productExistenceSelect = $connection->select()->from($productsEntityTable, $entityIdFieldName)->where(  'sku = ?', $sku);
+        $productExistenceSelect = $connection->select()->from($productsEntityTable, $entityIdFieldName)->where('sku = ?', $sku);
         /** @var Mysql $query */
         $query = $connection->query($productExistenceSelect);
         /** @var mixed[] $magentoProduct */
