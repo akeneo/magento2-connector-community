@@ -3376,7 +3376,7 @@ class Product extends JobImport
         /** @var mixed[] $magentoProduct */
         $magentoProduct = $query->fetch();
 
-        if (sizeof($magentoProduct) > 0) {
+        if (is_array($magentoProduct) && count($magentoProduct) > 0) {
             return true;
         }
 
