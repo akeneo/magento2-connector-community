@@ -3367,13 +3367,17 @@ class Product extends JobImport
     {
         /** @var string $productsEntityTable */
         $productsEntityTable = $this->entitiesHelper->getTable(self::CATALOG_PRODUCT_ENTITY_TABLE_NAME);
-
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productsEntityTable);
+        /** @var string $entityIdFieldName */
+        $entityIdFieldName = 'entity_id';
+        if ($rowIdExists) {
+            $entityIdFieldName = 'row_id';
+        }
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $productsEntityTable */
-        $productsEntityTable = $this->entitiesHelper->getTable(self::CATALOG_PRODUCT_ENTITY_TABLE_NAME);
         /** @var Select $productExistenceSelect */
-        $productExistenceSelect = $connection->select()->from($productsEntityTable, 'entity_id')->where('entity_id = ?', $entityId);
+        $productExistenceSelect = $connection->select()->from($productsEntityTable, $entityIdFieldName)->where(  'sku = ?', $sku);
         /** @var Mysql $query */
         $query = $connection->query($productExistenceSelect);
         /** @var mixed[] $magentoProduct */
