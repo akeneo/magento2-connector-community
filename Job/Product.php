@@ -2549,6 +2549,19 @@ class Product extends JobImport
 
                 /** @var string[] $productInfo */
                 foreach ($associationProductInfo as $productInfo) {
+
+                    // Verify if the product exist in catalog_product_entity
+                    if ($this->productExistInMagento($productInfo['identifier'])) {
+                        $this->setAdditionalMessage(
+                            __(
+                                'The grouped product %1 is linked to product %2, which not exist in magento, they will not be linked',
+                                $row['identifier'],
+                                $productInfo['identifier']
+                            )
+                        );
+                        continue;
+                    }
+
                     /** @var string[] $linkedProductEntityId */
                     $linkedProductEntityId = $connection->query(
                         $connection->select()->from($entitiesTable, 'entity_id')->where(
