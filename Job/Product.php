@@ -2478,10 +2478,18 @@ class Product extends JobImport
         /** @var mixed[] $associationsCurrentFamily */
         $associationsCurrentFamily = $this->configHelper->getGroupedAssociationsForFamily($this->getFamily());
 
+        /** @var string $entityIdFieldName */
+        $entityIdFieldName = '_entity_id';
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productsEntityTable);
+        if ($rowIdExists) {
+            $entityIdFieldName = 'p.row_id';
+        }
+
         /** @var string[] $associationSelect */
         $associationSelect = [
             'identifier' => 'identifier',
-            'entity_id'  => '_entity_id',
+            'entity_id'  => $entityIdFieldName,
         ];
 
         /** @var string[] $familyAssociation */
@@ -2502,6 +2510,11 @@ class Product extends JobImport
             $tmpTable,
             $associationSelect
         );
+
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStaging($select, []);
+        }
+
         $query  = $connection->query($select);
 
         /** @var array $row */
