@@ -172,3 +172,11 @@
 
 * Add category tree filtering from API for Akeneo version 4.0.62 or greater and Akeneo Serenity
 * Add family updated date filter in connector configuration for Akeneo version 4.0.62 or greater and Akeneo Serenity (https://help.akeneo.com/magento2-connector/v100/articles/10-configure-families.html#how-can-i-filter-my-families-during-import)
+
+### Version 101.1.1 :
+* Add attribute filtering by type from API in the admin configuration page for Akeneo version 4.0.62 or greater and Akeneo Serenity
+* Add attribute updated date filter in connector configuration for Akeneo version 4.0.62 or greater and Akeneo Serenity (https://help.akeneo.com/magento2-connector/v100/articles/11-filter-attributes.html)
+* Add attribute filter by code in connector configuration for Akeneo version 4.0.62 or greater and Akeneo Serenity (https://help.akeneo.com/magento2-connector/v100/articles/11-filter-attributes.html)
+* Fix category tree filtering when no categories are excluded for Akeneo version 4.0.62 or greater and Akeneo Serenity
+* Fix attribute job when no attribute is found with correct label
+* Fix metric option import when no option is found

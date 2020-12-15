@@ -299,6 +299,39 @@ For example :<br/>
                     <comment>Match specific Akeneo type with Magento input field</comment>
                 </field>
             </group>
+            <group id="filter_attribute" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Filter Attributes</label>
+                <field id="updated_mode" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0"
+                    showInStore="0">
+                    <label>Updated mode</label>
+                    <source_model>Akeneo\Connector\Model\Source\Filters\AttributeUpdate</source_model>
+                </field>
+                <field id="updated_greater" translate="label" type="date" sortOrder="20" showInDefault="1" showInWebsite="0"
+                    showInStore="0">
+                    <label>Updated after</label>
+                    <comment>Import only attributes updated after the given date. Leave blank for no filter.</comment>
+                    <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
+                    <depends>
+                        <field id="updated_mode">&gt;</field>
+                    </depends>
+                </field>
+                <field id="filter_attribute_code_mode" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Filter by attribute code</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="filter_attribute_code" translate="label comment" type="multiselect" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Attribute codes to import</label>
+                    <comment>Select the attributes you want to import. Not choosing any attribute in this list will import all your attributes into Magento 2.</comment>
+                    <source_model>Akeneo\Connector\Model\Source\Filters\Attribute</source_model>
+                    <depends>
+                        <field id="filter_attribute_code_mode">1</field>
+                    </depends>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <depends>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,serenity</field>
+                </depends>
+            </group>
             <group id="product" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Products</label>
                 <field id="website_attribute" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">

@@ -32,6 +32,9 @@
                 <url_generation_enabled>1</url_generation_enabled>
                 <activation>2</activation>
             </product>
+            <filter_attribute>
+                <filter_attribute_code_mode>0</filter_attribute_code_mode>
+            </filter_attribute>
             <category>
                 <is_active>1</is_active>
                 <include_in_menu>1</include_in_menu>

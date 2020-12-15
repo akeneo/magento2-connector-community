@@ -162,7 +162,6 @@ class ProductFilters
         if ($productFamily && !$productFilterAdded) {
             $familyFilter = ['operator' => 'IN', 'value' => [$productFamily]];
             $search['family'][] = $familyFilter;
-            $productFilterAdded = true;
         }
 
         /** @var string $channel */
@@ -190,6 +189,10 @@ class ProductFilters
                 }
             }
 
+            if ($this->configHelper->getAttributeFilterByCodeMode() == true) {
+                $filter['attributes'] = $this->configHelper->getAttributeFilterByCode();
+            }
+            
             /** @var string[] $locales */
             $locales = $this->storeHelper->getChannelStoreLangs($channel);
             if (!empty($locales)) {

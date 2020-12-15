@@ -878,6 +878,12 @@ class Product extends JobImport
             }
         }
 
+        if (!$connection->isTableExists($this->entitiesHelper->getTableName($this->jobOption->getCode()))) {
+            $this->setMessage(__('No metric option to import'));
+
+            return;
+        }
+
         $this->jobOption->matchEntities();
         $this->jobOption->insertOptions();
         $this->jobOption->insertValues();
