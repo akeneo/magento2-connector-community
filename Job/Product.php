@@ -2513,7 +2513,7 @@ class Product extends JobImport
             );
 
             // Verify if the product exist in catalog_product_entity
-            if (!$this->productExistInMagento($row['entity_id'])) {
+            if (!$this->productExistInMagento($row['identifier'])) {
                 $this->setAdditionalMessage(
                     __(
                         'The grouped product with identifier %1 does not exist in magento, links will not be imported',
@@ -2551,7 +2551,7 @@ class Product extends JobImport
                 foreach ($associationProductInfo as $productInfo) {
 
                     // Verify if the product exist in catalog_product_entity
-                    if (!$this->productExistInMagento($productInfo['entity_id'])) {
+                    if (!$this->productExistInMagento($productInfo['identifier'], 'sku')) {
                         $this->setAdditionalMessage(
                             __(
                                 'The grouped product %1 is linked to product %2, which not exist in magento, they will not be linked',
@@ -3358,13 +3358,16 @@ class Product extends JobImport
     /**
      * Description productExistInMagento function
      *
-     * @param string $entityId
+     * @param string $sku
      *
      * @return bool
      * @throws Zend_Db_Statement_Exception
      */
-    public function productExistInMagento(string $entityId)
+    public function productExistInMagento(string $sku)
     {
+        /** @var string $productsEntityTable */
+        $productsEntityTable = $this->entitiesHelper->getTable(self::CATALOG_PRODUCT_ENTITY_TABLE_NAME);
+
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $productsEntityTable */
