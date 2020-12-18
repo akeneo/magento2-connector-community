@@ -1087,7 +1087,7 @@ class Product extends JobImport
         // Update _children column if possible
         /** @var Select $childList */
         $childList = $connection->select()
-            ->from(['v' => $productModelTable] , ['v.identifier', '_children' => new Expr('GROUP_CONCAT(e.identifier SEPARATOR ",")')])
+            ->from(['v' => $productModelTable] , ['v.identifier', '_children' => new Expr('"1"')])
             ->joinInner(['e' => $tmpTable],'v.code = ' . 'e.' . $groupColumn, [])
             ->group('v.identifier');
 
@@ -1746,7 +1746,7 @@ class Product extends JobImport
         }
 
         /** @var Select $configurableSelect */
-        $configurableSelect = $connection->select()->from($tmpTable, ['_entity_id', '_axis', '_children'])->where('_type_id = ?', 'configurable')->where('_axis IS NOT NULL');
+        $configurableSelect = $connection->select()->from($tmpTable, ['identifier','_entity_id', '_axis', '_children'])->where('_type_id = ?', 'configurable')->where('_axis IS NOT NULL');
 
         /** @var string $pKeyColumn */
         $pKeyColumn = '_entity_id';
@@ -1768,6 +1768,10 @@ class Product extends JobImport
         $query = $connection->query($configurableSelect);
         /** @var array $stores */
         $stores = $this->storeHelper->getStores('store_id');
+
+        $childrenSelect = $connection->select()
+                                     ->from($tmpTable, ['identifier'])
+                                     ->where('parent = :id');
 
         /** @var array $row */
         while ($row = $query->fetch()) {
@@ -1841,7 +1845,10 @@ class Product extends JobImport
                 }
 
                 /** @var array $children */
-                $children = explode(',', $row['_children']);
+                $children = $connection->fetchCol(
+                    $childrenSelect,
+                    ['id' => $row['identifier']]
+                );
                 /** @var string $child */
                 foreach ($children as $child) {
                     /** @var int $childId */
