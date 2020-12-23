@@ -94,7 +94,7 @@ class Product extends JobImport
      * @var string $name
      */
     protected $name = 'Product';
-    
+
     /**
      * Akeneo default association types, reformatted as column names
      *
@@ -438,7 +438,7 @@ class Product extends JobImport
         if ($connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
             return;
         }
-        
+
         /** @var mixed[] $filter */
         foreach ($filters as $filter) {
             /** @var ResourceCursorInterface $products */
@@ -948,7 +948,7 @@ class Product extends JobImport
                 $connection->updateFromSelect($select, ['e' => $tmpTable])
             );
         }
-        
+
         /** @var array $data */
         $data = [
             'identifier'         => 'v.code',
@@ -1833,7 +1833,7 @@ class Product extends JobImport
                         'value'                      => '',
                     ];
                 }
-                
+
                 $connection->insertOnDuplicate($productSuperAttrLabelTable, $valuesLabels, []);
 
                 if (!isset($row['_children'])) {
@@ -2723,7 +2723,9 @@ class Product extends JobImport
                 if (!$this->configHelper->mediaFileExists($name)) {
                     /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
-                    $this->configHelper->saveMediaFile($filePath, $binary);
+                    /** @var string $imageContent */
+                    $imageContent = $binary->getBody()->getContents();
+                    $this->configHelper->saveMediaFile($name, $imageContent);
                 }
 
                 /** @var string $file */
