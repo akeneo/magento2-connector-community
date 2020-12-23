@@ -7,7 +7,7 @@
     "magento/module-catalog": ">=100.0.1",
     "magento/module-eav": ">=100.0.1",
     "magento/module-store": ">=100.0.1",
-    "akeneo/api-php-client": "^3.0",
+    "akeneo/api-php-client": "^6.0",
     "php-http/guzzle6-adapter": "^1.1"
   },
   "type": "magento2-module",
