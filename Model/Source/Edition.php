@@ -34,6 +34,12 @@ class Edition implements ArrayInterface
      */
     const GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO = 'greater_or_four_point_zero_point_sixty_two';
     /**
+     * Version >= 4.0.62 and up constant
+     *
+     * @var string GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO
+     */
+    const GREATER_OR_FIVE = 'greater_or_five';
+    /**
      * Version Serenity constant
      *
      * @var string SERENITY
@@ -51,6 +57,7 @@ class Edition implements ArrayInterface
             self::THREE_POINT_TWO => __('3.2'),
             self::LESS_FOUR_POINT_ZERO_POINT_SIXTY_TWO => __('Between 4.0.0 and 4.0.62'),
             self::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO => __('4.0.62 or greater'),
+            self::GREATER_OR_FIVE => __('5.0 or greater'),
             self::SERENITY => __('Serenity Edition'),
         ];
     }
