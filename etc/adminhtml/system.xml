@@ -377,6 +377,19 @@ For example :<br/>
                     <label>Regenerate url rewrites</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="association_related" translate="label" type="text" sortOrder="220" showInDefault="1" showInWebsite="0"
+                        showInStore="0">
+                    <label>Association code for Related</label>
+                    <comment>Note: Quantified associations cannot be mapped with Crosssell / Related / Upsell</comment>
+                </field>
+                <field id="association_upsell" translate="label" type="text" sortOrder="230" showInDefault="1" showInWebsite="0"
+                        showInStore="0">
+                    <label>Association code for Upsell</label>
+                </field>
+                <field id="association_crossell" translate="label" type="text" sortOrder="240" showInDefault="1" showInWebsite="0"
+                        showInStore="0">
+                    <label>Association code for Crossell</label>
+                </field>
             </group>
             <group id="grouped_products" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Grouped products</label>

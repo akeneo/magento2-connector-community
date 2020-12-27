@@ -104,25 +104,6 @@ class Product extends JobImport
     protected $name = 'Product';
 
     /**
-     * Akeneo default association types, reformatted as column names
-     *
-     * @var string[] $associationTypes
-     */
-    protected $associationTypes = [
-        Link::LINK_TYPE_RELATED   => [
-            'SUBSTITUTION-products',
-            'SUBSTITUTION-product_models',
-        ],
-        Link::LINK_TYPE_UPSELL    => [
-            'UPSELL-products',
-            'UPSELL-product_models',
-        ],
-        Link::LINK_TYPE_CROSSSELL => [
-            'X_SELL-products',
-            'X_SELL-product_models',
-        ],
-    ];
-    /**
      * list of allowed type_id that can be imported
      *
      * @var string[]
@@ -1010,8 +991,10 @@ class Product extends JobImport
             }
         }
 
+        /** @var string[] $associationTypes */
+        $associationTypes = $this->configHelper->getAssociationTypes();
         /** @var string[] $associationNames */
-        foreach ($this->associationTypes as $associationNames) {
+        foreach ($associationTypes as $associationNames) {
             if (empty($associationNames)) {
                 continue;
             }
@@ -2317,19 +2300,6 @@ class Product extends JobImport
         /** @var string $columnIdentifier */
         $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($productsTable);
 
-        /** @var int $linkType */
-        /** @var string[] $associationNames */
-        foreach ($this->associationTypes as $linkType => $associationNames) {
-            if (empty($associationNames)) {
-                continue;
-            }
-            /** @var string $associationName */
-            foreach ($associationNames as $associationName) {
-                if (!empty($associationName) && $connection->tableColumnExists($tmpTable, $associationName)) {
-                    $related[$linkType][] = sprintf('`d`.`%s`', $associationName);
-                }
-            }
-        }
         /** @var array $values */
         $values = ['product_id' => '_entity_id'];
 
@@ -2344,6 +2314,29 @@ class Product extends JobImport
         if ($rowIdExists) {
             $this->entities->addJoinForContentStaging($productIds, []);
         }
+
+        /** @var string[] $associationTypes */
+        $associationTypes = $this->configHelper->getAssociationTypes();
+        /** @var int $linkType */
+        /** @var string[] $associationNames */
+        foreach ($associationTypes as $linkType => $associationNames) {
+            if (empty($associationNames)) {
+                continue;
+            }
+
+            /* Remove old link */
+            $connection->delete(
+                $linkTable,
+                ['link_type_id = ?' => $linkType, 'product_id IN (?)' => $productIds]
+            );
+            /** @var string $associationName */
+            foreach ($associationNames as $associationName) {
+                if (!empty($associationName) && $connection->tableColumnExists($tmpTable, $associationName)) {
+                    $related[$linkType][] = sprintf('`d`.`%s`', $associationName);
+                }
+            }
+        }
+
         /**
          * @var int      $typeId
          * @var string[] $columns
@@ -2376,12 +2369,6 @@ class Product extends JobImport
             } else {
                 $select->joinInner(['e' => $productsTable], sprintf('c.entity_id = e.%s', $columnIdentifier), []);
             }
-
-            /* Remove old link */
-            $connection->delete(
-                $linkTable,
-                ['link_type_id = ?' => $typeId, 'product_id IN (?)' => $productIds]
-            );
 
             /* Insert new link */
             $connection->query(

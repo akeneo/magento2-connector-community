@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Helper;
 
+use Magento\Catalog\Model\Product\Link;
 use Akeneo\Connector\Model\Source\Edition;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
@@ -288,6 +289,24 @@ class Config
      * @var string ATTRIBUTE_TYPES
      */
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
+    /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_ASSOCIATION_RELATED
+     */
+    const PRODUCT_ASSOCIATION_RELATED = 'akeneo_connector/product/association_related';
+    /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_ASSOCIATION_UPSELL
+     */
+    const PRODUCT_ASSOCIATION_UPSELL = 'akeneo_connector/product/association_upsell';
+    /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_AKENEO_MASTER
+     */
+    const PRODUCT_ASSOCIATION_CROSSELL = 'akeneo_connector/product/association_crossell';    /**
     /**
      * Product activation flag config path
      *
@@ -1308,5 +1327,42 @@ class Config
     public function getDefaultAttributeSetId($entity)
     {
         return $this->eavConfig->getEntityType($entity)->getDefaultAttributeSetId();
+    }
+    
+    /**
+     * Get association types configuration array for product import
+     *
+     * @return string[]
+     */
+    public function getAssociationTypes()
+    {
+        /** @var string $relatedCode */
+        $relatedCode  = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_RELATED);
+        /** @var string $upsellCode */
+        $upsellCode   = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_UPSELL);
+        /** @var string $crossellCode */
+        $crossellCode = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_CROSSELL);
+        /** @var string[] $associationTypes */
+        $associationTypes = [];
+        if ($relatedCode) {
+            $associationTypes[Link::LINK_TYPE_RELATED] = [
+                $relatedCode . '-products',
+                $relatedCode . '-product_models',
+            ];
+        }
+        if ($upsellCode) {
+            $associationTypes[Link::LINK_TYPE_UPSELL] =  [
+                $upsellCode . '-products',
+                $upsellCode . '-product_models',
+            ];
+        }
+        if ($crossellCode) {
+            $associationTypes[Link::LINK_TYPE_CROSSSELL] = [
+                $crossellCode . '-products',
+                $crossellCode . '-product_models',
+            ];
+        }
+
+        return $associationTypes;
     }
 }
