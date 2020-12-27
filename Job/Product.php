@@ -2697,6 +2697,8 @@ class Product extends JobImport
         $galleryTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery');
         /** @var string $galleryEntityTable */
         $galleryEntityTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery_value_to_entity');
+        /** @var string $galleryValueTable */
+        $galleryValueTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery_value');
         /** @var string $productImageTable */
         $productImageTable = $this->entitiesHelper->getTable('catalog_product_entity_varchar');
 
@@ -2758,6 +2760,17 @@ class Product extends JobImport
                     $columnIdentifier => $row[$columnIdentifier],
                 ];
                 $connection->insertOnDuplicate($galleryEntityTable, $data, array_keys($data));
+
+                /** @var array $data */
+                $data = [
+                    'value_id'        => $valueId,
+                    'store_id'        => 0,
+                    $columnIdentifier => $row[$columnIdentifier],
+                    'label'           => '',
+                    'position'        => 0,
+                    'disabled'        => 0,
+                ];
+                $connection->insertOnDuplicate($galleryValueTable, $data, array_keys($data));
 
                 /** @var array $columns */
                 $columns = $this->configHelper->getMediaImportImagesColumns();
