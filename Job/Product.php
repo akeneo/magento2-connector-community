@@ -2725,7 +2725,7 @@ class Product extends JobImport
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
                     /** @var string $imageContent */
                     $imageContent = $binary->getBody()->getContents();
-                    $this->configHelper->saveMediaFile($name, $imageContent);
+                    $this->configHelper->saveMediaFile($filepath, $imageContent);
                 }
 
                 /** @var string $file */
