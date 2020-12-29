@@ -94,7 +94,7 @@ class Product extends JobImport
      * @var string $name
      */
     protected $name = 'Product';
-    
+
     /**
      * Akeneo default association types, reformatted as column names
      *
@@ -438,7 +438,7 @@ class Product extends JobImport
         if ($connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
             return;
         }
-        
+
         /** @var mixed[] $filter */
         foreach ($filters as $filter) {
             /** @var ResourceCursorInterface $products */
@@ -948,7 +948,7 @@ class Product extends JobImport
                 $connection->updateFromSelect($select, ['e' => $tmpTable])
             );
         }
-        
+
         /** @var array $data */
         $data = [
             'identifier'         => 'v.code',
@@ -1833,7 +1833,7 @@ class Product extends JobImport
                         'value'                      => '',
                     ];
                 }
-                
+
                 $connection->insertOnDuplicate($productSuperAttrLabelTable, $valuesLabels, []);
 
                 if (!isset($row['_children'])) {
@@ -1933,41 +1933,27 @@ class Product extends JobImport
                 $valuesRelations = [];
                 /** @var string[] $valuesSuperLink */
                 $valuesSuperLink = [];
-                // Check for relations and add them if they don't exist
-                /** @var bool $hasRelation */
-                $hasRelation = (bool)$connection->fetchOne(
-                    $connection->select()->from($productRelationTable, [new Expr(1)])->where(
-                        'parent_id = ?',
-                        $productModelEntityId
-                    )->where('child_id = ?', $row['_entity_id'])->limit(1)
-                );
 
-                if (!$hasRelation) {
-                    $valuesRelations[] = [
-                        'parent_id' => $productModelEntityId,
-                        'child_id'  => $row['_entity_id'],
-                    ];
+                // Delete relation for this child before insertion
+                $connection->delete($productRelationTable, ['child_id = ?' => $row['_entity_id']]);
 
-                    $connection->insertOnDuplicate($productRelationTable, $valuesRelations, []);
-                }
+                // Insert the relation for the child
+                $valuesRelations[] = [
+                    'parent_id' => $productModelEntityId,
+                    'child_id'  => $row['_entity_id'],
+                ];
+
+                $connection->insertOnDuplicate($productRelationTable, $valuesRelations, []);
 
                 // Do the same for super links
-                /** @var bool $hasSuperLink */
-                $hasSuperLink = (bool)$connection->fetchOne(
-                    $connection->select()->from($productSuperLinkTable, [new Expr(1)])->where(
-                        'parent_id = ?',
-                        $productModelEntityId
-                    )->where('product_id = ?', $row['_entity_id'])->limit(1)
-                );
+                $connection->delete($productSuperLinkTable, ['product_id = ?' => $row['_entity_id']]);
 
-                if (!$hasSuperLink) {
-                    $valuesSuperLink[] = [
-                        'product_id' => $row['_entity_id'],
-                        'parent_id'  => $productModelEntityId,
-                    ];
+                $valuesSuperLink[] = [
+                    'product_id' => $row['_entity_id'],
+                    'parent_id'  => $productModelEntityId,
+                ];
 
-                    $connection->insertOnDuplicate($productSuperLinkTable, $valuesSuperLink, []);
-                }
+                $connection->insertOnDuplicate($productSuperLinkTable, $valuesSuperLink, []);
             }
         }
     }
