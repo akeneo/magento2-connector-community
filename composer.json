@@ -8,7 +8,8 @@
     "magento/module-eav": ">=100.0.1",
     "magento/module-store": ">=100.0.1",
     "akeneo/api-php-client": "^6.0",
-    "php-http/guzzle6-adapter": "^2.0"
+    "php-http/guzzle6-adapter": "^2.0",
+    "http-interop/http-factory-guzzle": "^1.0"
   },
   "type": "magento2-module",
   "version": "101.1.1",
