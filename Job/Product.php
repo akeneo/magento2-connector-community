@@ -1903,7 +1903,7 @@ class Product extends JobImport
         $productSuperLinkTable = $this->entitiesHelper->getTable('catalog_product_super_link');
 
         /** @var \Magento\Framework\DB\Select $select */
-        $select = $connection->select()->from($tmpTable, ['_entity_id', 'parent'])->where('parent IS NOT NULL');
+        $select = $connection->select()->from($tmpTable, ['_entity_id', 'parent']);
 
         /** @var string $pKeyColumn */
         $pKeyColumn = 'entity_id';
@@ -1918,8 +1918,14 @@ class Product extends JobImport
 
         /** @var array $row */
         while (($row = $query->fetch())) {
-            if (!isset($row['parent']) || !isset($row['_entity_id'])) {
+            if ((!isset($row['parent']) && $row['_type_id'] !== 'simple') || !isset($row['_entity_id'])) {
                 continue;
+            }
+
+            if(!isset($row['parent']) && $row['_type_id'] === 'simple') {
+                // Check if relations exists for this product and delete the relations
+                $connection->delete($productRelationTable, ['child_id = ?' => $row['_entity_id']]);
+                $connection->delete($productSuperLinkTable, ['product_id = ?' => $row['_entity_id']]);
             }
 
             /** @var string $productModelEntityId */
