@@ -11,7 +11,7 @@
     "php-http/guzzle6-adapter": "^1.1"
   },
   "type": "magento2-module",
-  "version": "101.1.1",
+  "version": "101.1.2",
   "license": [
     "OSL-3.0",
     "AFL-3.0"
