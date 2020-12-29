@@ -180,3 +180,6 @@
 * Fix category tree filtering when no categories are excluded for Akeneo version 4.0.62 or greater and Akeneo Serenity
 * Fix attribute job when no attribute is found with correct label
 * Fix metric option import when no option is found
+
+### Version 101.1.2 :
+* Fix image attribute import to fill the catalog_product_entity_media_gallery_value table
