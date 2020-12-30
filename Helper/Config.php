@@ -290,6 +290,30 @@ class Config
      */
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     /**
+     * Attribute filter updated mode
+     *
+     * @var string ATTRIBUTE_FILTERS_UPDATED_MODE
+     */
+    const ATTRIBUTE_FILTERS_UPDATED_MODE = 'akeneo_connector/filter_attribute/updated_mode';
+    /**
+     * Attribute filter greater
+     *
+     * @var string ATTRIBUTE_FILTERS_UPDATED_GREATER
+     */
+    const ATTRIBUTE_FILTERS_UPDATED_GREATER = 'akeneo_connector/filter_attribute/updated_greater';
+    /**
+     * Attribute filter by code mode
+     *
+     * @var string ATTRIBUTE_FILTERS_BY_CODE_MODE
+     */
+    const ATTRIBUTE_FILTERS_BY_CODE_MODE = 'akeneo_connector/filter_attribute/filter_attribute_code_mode';
+    /**
+     * Attribute filter by code
+     *
+     * @var string ATTRIBUTE_FILTERS_BY_CODE
+     */
+    const ATTRIBUTE_FILTERS_BY_CODE = 'akeneo_connector/filter_attribute/filter_attribute_code';
+    /**
      * Akeneo master of staging content flag config path
      *
      * @var string PRODUCT_ASSOCIATION_RELATED
@@ -306,7 +330,7 @@ class Config
      *
      * @var string PRODUCT_AKENEO_MASTER
      */
-    const PRODUCT_ASSOCIATION_CROSSELL = 'akeneo_connector/product/association_crossell';    /**
+    const PRODUCT_ASSOCIATION_CROSSELL = 'akeneo_connector/product/association_crossell';
     /**
      * Product activation flag config path
      *
@@ -323,6 +347,18 @@ class Config
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
      */
     const PAGINATION_SIZE_DEFAULT_VALUE = 10;
+    /**
+     * Families filters updated mode config path
+     *
+     * @var string FAMILIES_FILTERS_UPDATED_MODE
+     */
+    const FAMILIES_FILTERS_UPDATED_MODE = 'akeneo_connector/families/updated_mode';
+    /**
+     * Families filters updated greater config path
+     *
+     * @var string FAMILIES_FILTERS_UPDATED_GREATER
+     */
+    const FAMILIES_FILTERS_UPDATED_GREATER = 'akeneo_connector/families/updated_greater';
     /**
      * This variable contains a Encryptor
      *
@@ -639,6 +675,46 @@ class Config
     public function getUpdatedSinceFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_SINCE);
+    }
+
+    /**
+     * Retrieve attribute updated mode
+     *
+     * @return string
+     */
+    public function getAttributeUpdatedMode()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_UPDATED_MODE);
+    }
+
+    /**
+     * Retrieve the attribute updated after filter
+     *
+     * @return string
+     */
+    public function getAttributeUpdatedGreaterFilter()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_UPDATED_GREATER);
+    }
+
+    /**
+     * Retrieve the attribute filter by code mode
+     *
+     * @return bool
+     */
+    public function getAttributeFilterByCodeMode()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_BY_CODE_MODE);
+    }
+
+    /**
+     * Retrieve the attribute filter by code
+     *
+     * @return array
+     */
+    public function getAttributeFilterByCode()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_BY_CODE);
     }
 
     /**
@@ -1328,7 +1404,27 @@ class Config
     {
         return $this->eavConfig->getEntityType($entity)->getDefaultAttributeSetId();
     }
-    
+
+    /**
+     * Description getFamiliesUpdatedMode function
+     *
+     * @return string|null
+     */
+    public function getFamiliesUpdatedMode()
+    {
+        return $this->scopeConfig->getValue(self::FAMILIES_FILTERS_UPDATED_MODE);
+    }
+
+    /**
+     * Description getFamiliesUpdatedGreater function
+     *
+     * @return string|null
+     */
+    public function getFamiliesUpdatedGreater()
+    {
+        return $this->scopeConfig->getValue(self::FAMILIES_FILTERS_UPDATED_GREATER);
+    }
+
     /**
      * Get association types configuration array for product import
      *
