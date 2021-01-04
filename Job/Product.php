@@ -2485,16 +2485,29 @@ class Product extends JobImport
             'entity_id'  => $entityIdFieldName,
         ];
 
-        /** @var string[] $familyAssociation */
-        foreach ($associationsCurrentFamily as $familyAssociation) {
+        /**
+         * @var int $key
+         * @var string[] $familyAssociation
+         */
+        foreach ($associationsCurrentFamily as $key => $familyAssociation) {
             /** @var string $associationColumnName */
             $associationColumnName = $familyAssociation['akeneo_quantity_association'] . '-products';
             if ($connection->tableColumnExists($tmpTable, $associationColumnName)) {
                 $associationSelect[$familyAssociation['akeneo_quantity_association']] = $associationColumnName;
             } else {
-                $this->setAdditionalMessage(
-                    __('The association %1 is not imported', $familyAssociation['akeneo_quantity_association'])
-                );
+                if ($familyAssociation['akeneo_quantity_association'] === "") {
+                    $this->setAdditionalMessage(
+                        __(
+                            'The family %1 was mapped to an empty association, please check your configuration',
+                            $this->getFamily()
+                        )
+                    );
+                } else {
+                    $this->setAdditionalMessage(
+                        __('The association %1 is not imported', $familyAssociation['akeneo_quantity_association'])
+                    );
+                }
+                unset($associationsCurrentFamily[$key]);
             }
         }
 
@@ -2510,6 +2523,8 @@ class Product extends JobImport
 
         $query  = $connection->query($select);
 
+        /** @var bool $badAssociationFlag */
+        $badAssociationFlag = false;
         /** @var array $row */
         while (($row = $query->fetch())) {
             // Delete links for the product in catalog_product_link table
@@ -2553,6 +2568,22 @@ class Product extends JobImport
                     $row['identifier']
                 );
 
+                // Check if the assoication was correctly formated
+                if ($associationProductInfo === false) {
+                    if ($badAssociationFlag === false) {
+                        $this->setAdditionalMessage(
+                            __(
+                                'The association %1 is not a quantified association, please check your configuration',
+                                $familyAssociation['akeneo_quantity_association']
+                            )
+                        );
+
+                        $badAssociationFlag = true;
+                    }
+
+                    continue;
+                }
+
                 /** @var string[] $productInfo */
                 foreach ($associationProductInfo as $productInfo) {
 
@@ -2560,7 +2591,7 @@ class Product extends JobImport
                     if (!$this->productExistInMagento($productInfo['identifier'])) {
                         $this->setAdditionalMessage(
                             __(
-                                'The grouped product %1 is linked to product %2, which not exist in magento, they will not be linked',
+                                'The grouped product %1 is linked to the product %2 but it does not exist in Magento. The association has been skipped.',
                                 $row['identifier'],
                                 $productInfo['identifier']
                             )
@@ -2590,7 +2621,7 @@ class Product extends JobImport
                     if ($linkedProductType['type_id'] != 'simple') {
                         $this->setAdditionalMessage(
                             __(
-                                'The grouped product %1 is linked to product %2, which is not a simple product, they were not linked',
+                                'The grouped product %1 is linked to the product %2 but it is not a simple product. The association has been skipped.',
                                 $row['identifier'],
                                 $productInfo['identifier']
                             )
@@ -3370,6 +3401,9 @@ class Product extends JobImport
         foreach ($productAssociations as $key => $association) {
             /** @var string[] $associationData */
             $associationData = explode(';', $association);
+            if (!isset($associationData[1])) {
+                return false;
+            }
             if (is_float($associationData[1])) {
                 $this->setAdditionalMessage(
                     __('The product %1 has a decimal value in its association, skipped', $productIdentifier)
