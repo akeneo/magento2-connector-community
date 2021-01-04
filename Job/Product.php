@@ -2504,7 +2504,7 @@ class Product extends JobImport
                     );
                 } else {
                     $this->setAdditionalMessage(
-                        __('The association %1 is not imported', $familyAssociation['akeneo_quantity_association'])
+                        __('The grouped product association %1 has not been imported', $familyAssociation['akeneo_quantity_association'])
                     );
                 }
                 unset($associationsCurrentFamily[$key]);
