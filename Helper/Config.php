@@ -1447,7 +1447,7 @@ class Config
             ];
         }
         if ($upsellCode) {
-            $associationTypes[Link::LINK_TYPE_UPSELL] =  [
+            $associationTypes[Link::LINK_TYPE_UPSELL] = [
                 $upsellCode . '-products',
                 $upsellCode . '-product_models',
             ];
