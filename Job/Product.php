@@ -1918,10 +1918,6 @@ class Product extends JobImport
 
         /** @var array $row */
         while (($row = $query->fetch())) {
-            $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/-debug.log');
-            $logger = new \Zend\Log\Logger();
-            $logger->addWriter($writer);
-            $logger->info($row);
             if ((!isset($row['parent']) && $row['_type_id'] !== 'simple') || !isset($row['_entity_id'])) {
                 continue;
             }
