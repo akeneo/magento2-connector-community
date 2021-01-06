@@ -1903,7 +1903,7 @@ class Product extends JobImport
         $productSuperLinkTable = $this->entitiesHelper->getTable('catalog_product_super_link');
 
         /** @var \Magento\Framework\DB\Select $select */
-        $select = $connection->select()->from($tmpTable, ['_entity_id', 'parent']);
+        $select = $connection->select()->from($tmpTable, ['_entity_id', 'parent', '_type_id']);
 
         /** @var string $pKeyColumn */
         $pKeyColumn = 'entity_id';
@@ -1918,6 +1918,10 @@ class Product extends JobImport
 
         /** @var array $row */
         while (($row = $query->fetch())) {
+            $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/-debug.log');
+            $logger = new \Zend\Log\Logger();
+            $logger->addWriter($writer);
+            $logger->info($row);
             if ((!isset($row['parent']) && $row['_type_id'] !== 'simple') || !isset($row['_entity_id'])) {
                 continue;
             }
