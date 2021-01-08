@@ -2530,7 +2530,7 @@ class Product extends JobImport
             // Delete links for the product in catalog_product_link table
             $connection->delete(
                 $productsLinkTable,
-                ['product_id = ?' => $row['entity_id']]
+                ['product_id = ?' => $row['entity_id'], 'link_type_id = ?' => $attributeSuperLinkType['link_type_id']]
             );
 
             // Verify if the product exist in catalog_product_entity
