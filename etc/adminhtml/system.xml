@@ -393,8 +393,8 @@ For example :<br/>
                 </field>
                 <field id="association_crossell" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="0"
                         showInStore="0">
-                    <label>Akeneo association code for Crossell products</label>
-                    <comment>Note: Quantified associations cannot be mapped with Crosssell / Related / Upsell</comment>
+                    <label>Akeneo association code for Cross-sell products</label>
+                    <comment>Note: Quantified associations cannot be mapped with Cross-sell / Related / Upsell</comment>
                 </field>
                 <field id="media_enabled" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Import Image Attributes</label>
