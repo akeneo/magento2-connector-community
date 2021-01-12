@@ -2486,14 +2486,19 @@ class Product extends JobImport
         ];
 
         /**
-         * @var int $key
+         * @var int      $key
          * @var string[] $familyAssociation
          */
         foreach ($associationsCurrentFamily as $key => $familyAssociation) {
             /** @var string $associationColumnName */
             $associationColumnName = $familyAssociation['akeneo_quantity_association'] . '-products';
+            /** @var string $associationColumnNameModels */
+            $associationColumnNameModels = $familyAssociation['akeneo_quantity_association'] . '-product_models';
             if ($connection->tableColumnExists($tmpTable, $associationColumnName)) {
                 $associationSelect[$familyAssociation['akeneo_quantity_association']] = $associationColumnName;
+                if ($connection->tableColumnExists($tmpTable, $associationColumnNameModels)) {
+                    $associationSelect[$familyAssociation['akeneo_quantity_association'] . '-models'] = $associationColumnNameModels;
+                }
             } else {
                 if ($familyAssociation['akeneo_quantity_association'] === "") {
                     $this->setAdditionalMessage(
@@ -2550,6 +2555,32 @@ class Product extends JobImport
 
             /** @var string[] $familyAssociation */
             foreach ($associationsCurrentFamily as $familyAssociation) {
+                if (isset($row[$familyAssociation['akeneo_quantity_association'] . '-models'])) {
+                    /** @var string[] $skuModels */
+                    $skuModels       = [];
+                    /** @var string[] $associationData */
+                    $associationData = explode(
+                        ',',
+                        $row[$familyAssociation['akeneo_quantity_association'] . '-models']
+                    );
+                    /** @var string $association */
+                    foreach ($associationData as $association) {
+                        /** @var string[] $modelAssociation */
+                        $modelAssociation = explode(';', $association);
+
+                        $skuModels[] = $modelAssociation[0];
+                    }
+                    $skuModels = implode(', ', $skuModels);
+
+                    $this->setAdditionalMessage(
+                        __(
+                            'The grouped product %1 is linked to the product(s) %2 but they are not simple product(s). The association has been skipped.',
+                            $row['identifier'],
+                            $skuModels
+                        )
+                    );
+                }
+                
                 $affectedProductIds[] = $row['entity_id'];
                 if ($row[$familyAssociation['akeneo_quantity_association']] == null) {
                     $this->setAdditionalMessage(
