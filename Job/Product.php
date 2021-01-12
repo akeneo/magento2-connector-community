@@ -2557,7 +2557,7 @@ class Product extends JobImport
             foreach ($associationsCurrentFamily as $familyAssociation) {
                 if (isset($row[$familyAssociation['akeneo_quantity_association'] . '-models'])) {
                     /** @var string[] $skuModels */
-                    $skuModels       = [];
+                    $skuModels = [];
                     /** @var string[] $associationData */
                     $associationData = explode(
                         ',',
@@ -2567,7 +2567,6 @@ class Product extends JobImport
                     foreach ($associationData as $association) {
                         /** @var string[] $modelAssociation */
                         $modelAssociation = explode(';', $association);
-
                         $skuModels[] = $modelAssociation[0];
                     }
                     $skuModels = implode(', ', $skuModels);
