@@ -59,21 +59,6 @@ class ExportPdf extends Field
      */
     public function getExportUrl()
     {
-        return $this->getUrl('akeneo_connector/controller/exportPdf');
-    }
-
-    /**
-     * Description getButtonHtml function
-     *
-     * @return mixed
-     */
-    public function getButtonHtml()
-    {
-        /** @var BlockInterface $button */
-        $button = $this->getLayout()->createBlock('Magento\Backend\Block\Widget\Button')->setData(
-            ['id' => 'config_export_pdf', 'label' => __('Export PDF'), 'value'=> $this->getExportUrl()]
-        );
-
-        return $button->toHtml();
+        return $this->getUrl('akeneo_connector/config/exportpdf');
     }
 }
