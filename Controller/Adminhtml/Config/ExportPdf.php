@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akeneo\Connector\Controller\Adminhtml\Config;
 
 use Akeneo\Connector\Helper\Config;
+use Akeneo\Connector\Model\Source\Edition;
 use Exception;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
@@ -44,6 +45,12 @@ class ExportPdf extends Action
      * @var ResourceConnection $resourceConnection
      */
     protected $resourceConnection;
+    /**
+     * Description $sourceEdition field
+     *
+     * @var Edition $sourceEdition
+     */
+    protected $sourceEdition;
     /**
      * Description HIDDEN_FIELDS constant
      *
@@ -122,6 +129,10 @@ class ExportPdf extends Action
                 $value .= $config['value'];
             }
 
+            if($config['path'] === Config::AKENEO_API_EDITION) {
+                $value = $this->getEdition();
+            }
+
             $page->drawText($value, 100, $lastPosition);
             $lastPosition -= 10;
         }
@@ -153,5 +164,16 @@ class ExportPdf extends Action
         $page->setStyle($style);
 
         return $page;
+    }
+
+    /**
+     * Description getEdition function
+     *
+     * @return string
+     */
+    protected function getEdition()
+    {
+        $version = '';
+        return $version;
     }
 }
