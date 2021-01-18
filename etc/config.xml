@@ -31,6 +31,9 @@
             <product>
                 <url_generation_enabled>1</url_generation_enabled>
                 <activation>2</activation>
+                <association_related>SUBSTITUTION</association_related>
+                <association_upsell>UPSELL</association_upsell>
+                <association_crossell>X_SELL</association_crossell>
             </product>
             <filter_attribute>
                 <filter_attribute_code_mode>0</filter_attribute_code_mode>
