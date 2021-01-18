@@ -183,3 +183,7 @@
 
 ### Version 101.1.2 :
 * Fix image attribute import to fill the catalog_product_entity_media_gallery_value table
+
+### Version 101.2.0 :
+* Add grouped product management with quantity association (https://help.akeneo.com/magento2-connector/v100/articles/12-configure-grouped-products.md)
+* Add product association mapping in connector configuration (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#configure-related-upsell-and-cross-sell-products)
