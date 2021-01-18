@@ -40,6 +40,18 @@ class Product extends Entities
      */
     const VALUES_KEY = 'values';
     /**
+     * QUANTIFIED_ASSOCIATIONS_KEY const
+     *
+     * @var string QUANTIFIED_ASSOCIATIONS_KEY
+     */
+    public const QUANTIFIED_ASSOCIATIONS_KEY = 'quantified_associations';
+    /**
+     * ALL_ASSOCIATIONS_KEY const
+     *
+     * @var string[] ALL_ASSOCIATIONS_KEY
+     */
+    public const ALL_ASSOCIATIONS_KEY = [self::QUANTIFIED_ASSOCIATIONS_KEY, self::ASSOCIATIONS_KEY];
+    /**
      * This variable contains a JsonSerializer
      *
      * @var JsonSerializer $serializer
@@ -106,9 +118,9 @@ class Product extends Entities
                 continue;
             }
 
-            if ($key === self::ASSOCIATIONS_KEY) {
+            if (in_array($key, self::ALL_ASSOCIATIONS_KEY, true)) {
                 /** @var array $values */
-                $values = $this->formatAssociations($value);
+                $values = $this->formatAssociations($value, $key);
                 /** @var array $columns */
                 $columns = $columns + $values;
 
@@ -228,11 +240,12 @@ class Product extends Entities
     /**
      * Format associations field
      *
-     * @param array $values
+     * @param mixed[] $values
+     * @param ?string  $assoKey
      *
      * @return array
      */
-    public function formatAssociations(array $values)
+    public function formatAssociations(array $values, ?string $assoKey = null)
     {
         /** @var array $associations */
         $associations = [];
@@ -252,6 +265,16 @@ class Product extends Entities
                 }
                 /** @var string $name */
                 $name = $group . '-' . $key;
+
+                if ($assoKey === self::QUANTIFIED_ASSOCIATIONS_KEY) {
+                    /** @var string[] $finalProducts */
+                    $finalProducts = [];
+                    /** @var string[] $product */
+                    foreach ($products as $product) {
+                        $finalProducts[] = $product['identifier'] . ';' . $product['quantity'];
+                    }
+                    $products = $finalProducts;
+                }
 
                 $associations[$name] = implode(',', $products);
             }
@@ -343,8 +366,7 @@ class Product extends Entities
             $entityKey = $this->getColumnIdentifier($entityTable);
         }
 
-        /* Connect existing Magento products to new Akeneo items */
-        // Get existing entities from Akeneo table
+        /* Connect existing Magento products to new Akeneo items */ // Get existing entities from Akeneo table
         /** @var Select $select */
         $select = $connection->select()->from($akeneoConnectorTable, ['entity_id' => 'entity_id'])->where(
             'import = ?',
@@ -409,13 +431,13 @@ class Product extends Entities
         /* Update akeneo_connector_entities table with code and new entity_id */
         /** @var Select $select */
         $select = $connection->select()->from(
-                $tableName,
-                [
-                    'import'    => new Expr("'" . $import . "'"),
-                    'code'      => $prefix ? new Expr('CONCAT(`' . $prefix . '`, "_", `' . $pimKey . '`)') : $pimKey,
-                    'entity_id' => '_entity_id',
-                ]
-            )->where('_is_new = ?', 1);
+            $tableName,
+            [
+                'import'    => new Expr("'" . $import . "'"),
+                'code'      => $prefix ? new Expr('CONCAT(`' . $prefix . '`, "_", `' . $pimKey . '`)') : $pimKey,
+                'entity_id' => '_entity_id',
+            ]
+        )->where('_is_new = ?', 1);
 
         $connection->query(
             $connection->insertFromSelect($select, $akeneoConnectorTable, ['import', 'code', 'entity_id'], 2)
@@ -430,9 +452,9 @@ class Product extends Entities
             /** @var string $maxCode */
             $maxCode = $connection->fetchOne(
                 $connection->select()->from($akeneoConnectorTable, new Expr('MAX(`entity_id`)'))->where(
-                        'import = ?',
-                        $import
-                    )
+                    'import = ?',
+                    $import
+                )
             );
             /** @var string $maxEntity */
             $maxEntity = $connection->fetchOne(
@@ -490,5 +512,23 @@ class Product extends Entities
         } while ($exists);
 
         return $requestPath;
+    }
+
+    /**
+     * Check if given family is a grouped family
+     *
+     * @param $family
+     *
+     * @return bool
+     */
+    public function isFamilyGrouped($family)
+    {
+        /** @var string[] $groupedFamilies */
+        $groupedFamilies = $this->configHelper->getGroupedFamiliesToImport();
+        if (in_array($family, $groupedFamilies)) {
+            return true;
+        }
+
+        return false;
     }
 }

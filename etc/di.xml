@@ -307,18 +307,22 @@
                         <item name="comment" xsi:type="string">Update related, up-sell and cross-sell products</item>
                     </item>
                     <item name="21" xsi:type="array">
+                        <item name="method" xsi:type="string">setGrouped</item>
+                        <item name="comment" xsi:type="string">Set grouped products relations</item>
+                    </item>
+                    <item name="22" xsi:type="array">
                         <item name="method" xsi:type="string">setUrlRewrite</item>
                         <item name="comment" xsi:type="string">Set Url Rewrite</item>
                     </item>
-                    <item name="22" xsi:type="array">
+                    <item name="23" xsi:type="array">
                         <item name="method" xsi:type="string">importMedia</item>
                         <item name="comment" xsi:type="string">Import image attributes</item>
                     </item>
-                    <item name="23" xsi:type="array">
+                    <item name="24" xsi:type="array">
                         <item name="method" xsi:type="string">dropTable</item>
                         <item name="comment" xsi:type="string">Drop temporary table</item>
                     </item>
-                    <item name="24" xsi:type="array">
+                    <item name="25" xsi:type="array">
                         <item name="method" xsi:type="string">cleanCache</item>
                         <item name="comment" xsi:type="string">Clean cache</item>
                     </item>
