@@ -2579,7 +2579,7 @@ class Product extends JobImport
                         )
                     );
                 }
-                
+
                 $affectedProductIds[] = $row['entity_id'];
                 if ($row[$familyAssociation['akeneo_quantity_association']] == null) {
                     $this->setAdditionalMessage(
@@ -3084,7 +3084,9 @@ class Product extends JobImport
                 if (!$this->configHelper->mediaFileExists($name)) {
                     /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
-                    $this->configHelper->saveMediaFile($filePath, $binary);
+                    /** @var string $imageContent */
+                    $imageContent = $binary->getBody()->getContents();
+                    $this->configHelper->saveMediaFile($filePath, $imageContent);
                 }
 
                 /** @var string $file */
