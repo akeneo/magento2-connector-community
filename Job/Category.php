@@ -186,7 +186,7 @@ class Category extends Import
 
         /** @var ResourceCursorInterface $categories */
         $categories = [];
-        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::SERENITY) {
+        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY) {
             /** @var ResourceCursorInterface $parentCategories */
             $parentCategories = $this->akeneoClient->getCategoryApi()->all(
                 $paginationSize,
@@ -677,7 +677,7 @@ class Category extends Import
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
 
-        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::SERENITY) {
+        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY) {
             return;
         }
 
