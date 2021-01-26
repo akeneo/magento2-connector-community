@@ -505,18 +505,6 @@ class Config
     }
 
     /**
-     * Check if the pim is in Serenity edition
-     *
-     * @return string
-     */
-    public function isSerenityEdition()
-    {
-        $edition = $this->scopeConfig->getValue(self::AKENEO_API_EDITION);
-
-        return $edition === Edition::SERENITY ? true : false;
-    }
-
-    /**
      * Get pim edition
      *
      * @return string

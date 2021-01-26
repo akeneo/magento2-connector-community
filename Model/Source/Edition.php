@@ -34,7 +34,7 @@ class Edition implements ArrayInterface
      */
     const GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO = 'greater_or_four_point_zero_point_sixty_two';
     /**
-     * Version >= 4.0.62 and up constant
+     * Version >= 5.0 and up constant
      *
      * @var string GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO
      */
