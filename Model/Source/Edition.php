@@ -36,7 +36,7 @@ class Edition implements ArrayInterface
     /**
      * Version >= 5.0 and up constant
      *
-     * @var string GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO
+     * @var string GREATER_OR_FIVE
      */
     const GREATER_OR_FIVE = 'greater_or_five';
     /**
