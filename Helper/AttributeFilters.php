@@ -102,7 +102,7 @@ class AttributeFilters
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
 
-        if ($edition == Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition == Edition::SERENITY) {
+        if ($edition == Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition == Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY) {
             $filters['search']['type'][] = [
                 'operator' => 'IN',
                 'value'    => $attributeTypes,
