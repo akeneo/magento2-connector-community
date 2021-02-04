@@ -6,8 +6,8 @@ use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\AkeneoPimClientBuilder;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Http\Adapter\Guzzle6\Client;
-use Http\Message\StreamFactory\GuzzleStreamFactory;
-use Http\Message\MessageFactory\GuzzleMessageFactory;
+use Http\Factory\Guzzle\StreamFactory;
+use Http\Factory\Guzzle\RequestFactory;
 
 /**
  * Class Authenticator
@@ -65,8 +65,8 @@ class Authenticator
         $akeneoClientBuilder = new AkeneoPimClientBuilder($baseUri);
 
         $akeneoClientBuilder->setHttpClient(new Client());
-        $akeneoClientBuilder->setStreamFactory(new GuzzleStreamFactory());
-        $akeneoClientBuilder->setRequestFactory(new GuzzleMessageFactory());
+        $akeneoClientBuilder->setStreamFactory(new StreamFactory());
+        $akeneoClientBuilder->setRequestFactory(new RequestFactory());
 
         return $akeneoClientBuilder->buildAuthenticatedByPassword($clientId, $secret, $username, $password);
     }

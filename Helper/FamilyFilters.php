@@ -67,7 +67,7 @@ class FamilyFilters
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
 
-        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::SERENITY) {
+        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY) {
             $this->searchBuilder = $this->searchBuilderFactory->create();
             $this->addUpdatedFilter();
             $search  = $this->searchBuilder->getFilters();

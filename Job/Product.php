@@ -669,7 +669,7 @@ class Product extends JobImport
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
         // If family is grouped, create grouped products
-        if ($edition === Edition::SERENITY && $this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+        if (($edition === Edition::SERENITY || $edition === Edition::GREATER_OR_FIVE) && $this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
             $connection->addColumn(
                 $tmpTable,
                 '_type_id',
@@ -2417,7 +2417,7 @@ class Product extends JobImport
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
         // Is family is not grouped or edition not Serenity, skip
-        if ($edition != Edition::SERENITY || !$this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+        if (($edition != Edition::SERENITY && $edition != Edition::GREATER_OR_FIVE) || !$this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
             return;
         }
         /** @var AdapterInterface $connection */
@@ -2579,7 +2579,7 @@ class Product extends JobImport
                         )
                     );
                 }
-                
+
                 $affectedProductIds[] = $row['entity_id'];
                 if ($row[$familyAssociation['akeneo_quantity_association']] == null) {
                     $this->setAdditionalMessage(
@@ -3084,7 +3084,9 @@ class Product extends JobImport
                 if (!$this->configHelper->mediaFileExists($name)) {
                     /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
-                    $this->configHelper->saveMediaFile($filePath, $binary);
+                    /** @var string $imageContent */
+                    $imageContent = $binary->getBody()->getContents();
+                    $this->configHelper->saveMediaFile($filePath, $imageContent);
                 }
 
                 /** @var string $file */
@@ -3337,7 +3339,7 @@ class Product extends JobImport
         // If we are in serenity mode, place the mapped grouped families to the end of the imports
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
-        if ($edition === Edition::SERENITY) {
+        if ($edition === Edition::SERENITY || $edition === Edition::GREATER_OR_FIVE) {
             /** @var string[] $groupedFamiliesToImport */
             $groupedFamiliesToImport = $this->configHelper->getGroupedFamiliesToImport();
             /**

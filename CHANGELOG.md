@@ -187,3 +187,10 @@
 ### Version 101.2.0 :
 * Add grouped product management with quantity association (https://help.akeneo.com/magento2-connector/v100/articles/12-configure-grouped-products.html)
 * Add product association mapping in connector configuration (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#configure-related-upsell-and-cross-sell-products)
+
+### Version 101.3.0 :
+* Upgrade Akeneo API PHP Client to version 6.0
+
+**Warning :** *After updating Akeneo Connector for Magento 2 to this version, make sure to update your composer dependencies*
+
+* Add Akeneo version 5.0 or greater in version selector
