@@ -24,7 +24,7 @@ class ExportPdf extends Field
      *
      * @var string $template
      */
-    protected $_template = 'Akeneo_Connector::system/config/exportPdf.phtml';
+    protected $_template = 'Akeneo_Connector::system/config/export_pdf.phtml';
 
     /**
      * Description render function
