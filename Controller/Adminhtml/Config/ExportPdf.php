@@ -36,6 +36,12 @@ class ExportPdf extends Action
      * @var ConfigManagement $configManagement
      */
     protected $configManagement;
+    /**
+     * Description FILENAME constant
+     *
+     * @var string FILENAME
+     */
+    const FILENAME = "Akeneo Connector - Configuration Export";
 
     /**
      * ExportPdf constructor
@@ -65,7 +71,7 @@ class ExportPdf extends Action
     public function execute()
     {
         /** @var string $fileName */
-        $fileName = 'export.pdf';
+        $fileName = self::FILENAME;
 
         $pdf = $this->configManagement->generatePdf();
 
