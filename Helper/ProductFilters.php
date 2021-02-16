@@ -129,24 +129,10 @@ class ProductFilters
                     /** @var string[] $familyFilter */
                     $familyFilter = ['operator' => 'IN', 'value' => [$productFamily]];
                     $advancedFilters['search']['family'][] = $familyFilter;
-                    $productFilterAdded = true;
                 }
             }
 
-            if (!empty($advancedFilters['scope'])) {
-                if (!in_array($advancedFilters['scope'], $mappedChannels)) {
-                    /** @var string[] $error */
-                    $error = [
-                        'error' => __('Advanced filters contains an unauthorized scope, please add check your filters and website mapping.'),
-                    ];
-
-                    return $error;
-                }
-
-                return [$advancedFilters];
-            }
-
-            $search = $advancedFilters['search'];
+            return [$advancedFilters];
         }
 
         if ($mode == Mode::STANDARD) {
