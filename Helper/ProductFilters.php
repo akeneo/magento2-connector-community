@@ -158,12 +158,6 @@ class ProductFilters
                 'scope'  => $channel,
             ];
 
-            if ($mode == Mode::ADVANCED) {
-                $filters[] = $filter;
-
-                continue;
-            }
-
             if ($this->configHelper->getCompletenessTypeFilter() !== Completeness::NO_CONDITION) {
                 /** @var string[] $completeness */
                 $completeness = reset($search['completeness']);
