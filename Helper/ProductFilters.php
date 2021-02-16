@@ -145,7 +145,7 @@ class ProductFilters
         }
 
         // If import product gave a family, add this family to the search
-        if ($productFamily && !$productFilterAdded) {
+        if ($productFamily) {
             $familyFilter = ['operator' => 'IN', 'value' => [$productFamily]];
             $search['family'][] = $familyFilter;
         }
