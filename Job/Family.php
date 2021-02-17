@@ -235,49 +235,10 @@ class Family extends Import
             ->getEntityTypeId();
 
         /** @var array $values */
-        $attributeToSelect = [
-            'attribute_set_name' => new Expr('CONCAT("Pim", " ", `' . $label . '`)'),
-            'family_code'        => 'code',
-        ];
-
-        /** @var Select $families */
-        $tmpFamilyNames = $connection->select()->from($tmpTable, $attributeToSelect);
-
-        /** @var \Zend_Db_Statement_Interface $query */
-        $query = $connection->query($tmpFamilyNames);
-
-        /** @var array $familyNames */
-        $familyNames = [];
-
-        /** @var array $row */
-        while (($row = $query->fetch())) {
-            /** @var string $familyName */
-            $familyName = $row['attribute_set_name'];
-
-            if (in_array($familyName, $familyNames)) {
-                /** @var string $familyCode */
-                $familyCode = $row['family_code'];
-
-                $connection->delete($tmpTable, ['code = ?' => $familyCode]);
-
-                $this->setAdditionalMessage(
-                    __(
-                        'Family with code "%1" has the same label than another family in Akeneo and has been skipped from import',
-                        $familyCode
-                    )
-                );
-
-                continue;
-            }
-
-            $familyNames[] = $familyName;
-        }
-
-        /** @var array $values */
         $values = [
             'attribute_set_id'   => '_entity_id',
             'entity_type_id'     => new Expr($productEntityTypeId),
-            'attribute_set_name' => new Expr('CONCAT("Pim", " ", `' . $label . '`)'),
+            'attribute_set_name' => new Expr('CONCAT("Pim", " ", IFNULL(`' . $label . '`, ""), " (", `code`, ")")'),
             'sort_order'         => new Expr(1),
         ];
         /** @var Select $families */
