@@ -3081,7 +3081,7 @@ class Product extends JobImport
                 /** @var bool|string[] $databaseRecords */
                 $databaseRecords = false;
 
-                if (!$this->configHelper->mediaFileExists($name)) {
+                if (!$this->configHelper->mediaFileExists($filePath)) {
                     /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
                     /** @var string $imageContent */
