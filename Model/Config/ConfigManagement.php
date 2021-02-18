@@ -254,7 +254,7 @@ class ConfigManagement
             }
 
             if ($config['path'] === ConfigHelper::AKENEO_API_EDITION) {
-                $value .= $this->getEdition();
+                $value = $label . ' : ' . $this->getEdition();
             }
 
             $this->page->drawText($value, 100, $this->lastPosition);
