@@ -259,7 +259,7 @@ class ConfigManagement
 
             $this->page->drawText($value, 100, $this->lastPosition);
 
-            $this->addLineBreak();
+            $this->addLineBreak(10);
         }
 
         return $this->pdf;
