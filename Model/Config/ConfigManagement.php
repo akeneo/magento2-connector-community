@@ -598,8 +598,8 @@ class ConfigManagement
      */
     protected function addArrayRow(
         array $values,
-        $cellLength,
-        $rowLength
+        float $cellLength,
+        float $rowLength
     ) {
         /** @var Zend_Pdf_Canvas_Interface $line */
         $this->page->drawRectangle(
