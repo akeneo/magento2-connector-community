@@ -514,7 +514,7 @@ class ConfigManagement
      * @return float|int
      * @throws Zend_Pdf_Exception
      */
-    protected function widthForStringUsingFontSize($string)
+    protected function widthForStringUsingFontSize(string $string)
     {
         $drawingString = iconv('UTF-8', 'UTF-16BE//IGNORE', $string);
         $characters    = [];
@@ -525,9 +525,7 @@ class ConfigManagement
         $font        = $this->page->getFont();
         $glyphs      = $this->page->getFont()->glyphNumbersForCharacters($characters);
         $widths      = $font->widthsForGlyphs($glyphs);
-        $stringWidth = (array_sum($widths) / $font->getUnitsPerEm()) * $this->page->getFontSize();
-
-        return $stringWidth;
+        return (array_sum($widths) / $font->getUnitsPerEm()) * $this->page->getFontSize();
     }
 
     /**
