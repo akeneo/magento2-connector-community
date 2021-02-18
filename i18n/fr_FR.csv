@@ -164,3 +164,4 @@ The attribute %1 was not imported because it starts with a number. Update it in 
 "Between 4.0.0 and 4.0.62","Entre 4.0.0 et 4.0.62"
 "4.0.62 or greater","4.0.62 ou supérieure"
 "Export PDF","Exporter le PDF"
+"Akeneo Connector for Magento 2 - Configuration export","Connecteur Akeneo pour Magento 2 - Export de la configuration"

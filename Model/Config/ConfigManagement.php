@@ -211,6 +211,9 @@ class ConfigManagement
         foreach ($configs as $index => $config) {
             /** @var string $label */
             $label = $this->getSystemConfigAttribute($config['path'], 'label');
+            if(!$label) {
+                continue;
+            }
             /** @var string $value */
             $value = $label . ' : ';
 
@@ -238,7 +241,7 @@ class ConfigManagement
                 continue;
             }
 
-            if ($config['value'] && str_contains($config['value'], ',')) {
+            if ($config['value'] && strpos($config['value'], ',')) {
                 $this->page->drawText($value, self::INDENT_TEXT, $this->lastPosition);
                 $this->insertMultiselect($config['value']);
                 continue;
@@ -251,7 +254,7 @@ class ConfigManagement
             }
 
             if ($config['path'] === ConfigHelper::AKENEO_API_EDITION) {
-                $value = $this->getEdition();
+                $value .= $this->getEdition();
             }
 
             $this->page->drawText($value, 100, $this->lastPosition);
@@ -350,7 +353,7 @@ class ConfigManagement
         /** @var string $title */
         $title = __('Akeneo Connector for Magento 2 - Configuration export');
         /** @var float $titleLength */
-        $titleLength = $this->widthForStringUsingFontSize($title, $page);
+        $titleLength = $this->widthForStringUsingFontSize($title);
         $page->drawText($title, ($page->getWidth() - $titleLength) / 2, $this->lastPosition);
 
         $this->addLineBreak();
