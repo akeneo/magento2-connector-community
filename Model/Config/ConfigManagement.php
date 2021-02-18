@@ -626,7 +626,7 @@ class ConfigManagement
                 $this->lastPosition - 20
             );
 
-            // Draw the rightl line of the cell
+            // Draw the right line of the cell
             $this->page->drawLine(
                 self::INDENT_MULTISELECT + ($cellLength * $index) + $cellLength,
                 $this->lastPosition,
