@@ -351,7 +351,7 @@ class ConfigManagement
     protected function insertHeader(Zend_Pdf_Page $page)
     {
         /** @var string $title */
-        $title = __('Akeneo Connector for Magento 2 - Configuration export')->getText();
+        $title = (string) __('Akeneo Connector for Magento 2 - Configuration export');
         /** @var float $titleLength */
         $titleLength = $this->widthForStringUsingFontSize($title);
         $page->drawText($title, ($page->getWidth() - $titleLength) / 2, $this->lastPosition);
