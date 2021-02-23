@@ -289,6 +289,11 @@ class Config
      * @var string ATTRIBUTE_TYPES
      */
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
+    /**
+     * Attribute option code as admin label config path
+     *
+     * @var string ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL
+     */
     const ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL = 'akeneo_connector/attribute/option_code_as_admin_label';
     /**
      * Attribute filter updated mode
