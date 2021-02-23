@@ -18,6 +18,7 @@
                 <client_id>1_demo_client_id</client_id>
                 <client_secret>demo_secret</client_secret>
                 <pagination_size>100</pagination_size>
+                <edition>less_four_point_zero_point_sixty_two</edition>
             </akeneo_api>
             <products_filters>
                 <mode>standard</mode>
@@ -25,13 +26,18 @@
                 <completeness_value>100</completeness_value>
                 <status>1</status>
                 <updated_mode>SINCE LAST N DAYS</updated_mode>
+                <model_completeness_type>no_condition</model_completeness_type>
             </products_filters>
             <product>
                 <url_generation_enabled>1</url_generation_enabled>
-                <product_model_batch_size>500</product_model_batch_size>
-                <product_model_update_length>5000</product_model_update_length>
                 <activation>2</activation>
+                <association_related>SUBSTITUTION</association_related>
+                <association_upsell>UPSELL</association_upsell>
+                <association_crossell>X_SELL</association_crossell>
             </product>
+            <filter_attribute>
+                <filter_attribute_code_mode>0</filter_attribute_code_mode>
+            </filter_attribute>
             <category>
                 <is_active>1</is_active>
                 <include_in_menu>1</include_in_menu>

@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Helper\AttributeFilters;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
@@ -85,6 +86,12 @@ class Option extends Import
      */
     protected $attributeHelper;
     /**
+     * This variable contains an AttributeFilters
+     *
+     * @var AttributeFilters $attributeFilters
+     */
+    protected $attributeFilters;
+    /**
      * This variable contains a StoreHelper
      *
      * @var StoreHelper $storeHelper
@@ -120,6 +127,7 @@ class Option extends Import
      * @param ConfigHelper      $configHelper
      * @param Config            $eavConfig
      * @param AttributeHelper   $attributeHelper
+     * @param AttributeFilters  $attributeFilters
      * @param TypeListInterface $cacheTypeList
      * @param StoreHelper       $storeHelper
      * @param EavSetup          $eavSetup
@@ -136,6 +144,7 @@ class Option extends Import
         ConfigHelper $configHelper,
         Config $eavConfig,
         AttributeHelper $attributeHelper,
+        AttributeFilters $attributeFilters,
         TypeListInterface $cacheTypeList,
         StoreHelper $storeHelper,
         EavSetup $eavSetup,
@@ -143,14 +152,15 @@ class Option extends Import
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
 
-        $this->entitiesHelper  = $entitiesHelper;
-        $this->optionHelper    = $optionHelper;
-        $this->configHelper    = $configHelper;
-        $this->eavConfig       = $eavConfig;
-        $this->attributeHelper = $attributeHelper;
-        $this->cacheTypeList   = $cacheTypeList;
-        $this->storeHelper     = $storeHelper;
-        $this->eavSetup        = $eavSetup;
+        $this->entitiesHelper   = $entitiesHelper;
+        $this->optionHelper     = $optionHelper;
+        $this->configHelper     = $configHelper;
+        $this->eavConfig        = $eavConfig;
+        $this->attributeHelper  = $attributeHelper;
+        $this->attributeFilters = $attributeFilters;
+        $this->cacheTypeList    = $cacheTypeList;
+        $this->storeHelper      = $storeHelper;
+        $this->eavSetup         = $eavSetup;
     }
 
     /**
@@ -451,7 +461,11 @@ class Option extends Import
             if (!$this->akeneoClient) {
                 $this->akeneoClient = $this->getAkeneoClient();
             }
-            $this->attributes = $this->akeneoClient->getAttributeApi()->all();
+            /** @var string|int $paginationSize */
+            $paginationSize = $this->configHelper->getPaginationSize();
+            /** @var string[] $filters */
+            $filters          = $this->attributeFilters->getFilters();
+            $this->attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize, $filters);
         }
 
         return $this->attributes;

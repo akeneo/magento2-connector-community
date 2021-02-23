@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Console\Command;
 
+use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Framework\Data\Collection;
@@ -50,23 +51,32 @@ class AkeneoConnectorImportCommand extends Command
      * @var ImportRepositoryInterface $importRepository
      */
     protected $importRepository;
+    /**
+     * This variable contains a ConfigHelper
+     *
+     * @var ConfigHelper $configHelper
+     */
+    protected $configHelper;
 
     /**
-     * AkeneoConnectorImportCommand constructor.
+     * AkeneoConnectorImportCommand constructor
      *
      * @param ImportRepositoryInterface $importRepository
-     * @param State $appState
-     * @param null  $name
+     * @param State                     $appState
+     * @param ConfigHelper              $configHelper
+     * @param null                      $name
      */
     public function __construct(
         ImportRepositoryInterface $importRepository,
         State $appState,
+        ConfigHelper $configHelper,
         $name = null
     ) {
         parent::__construct($name);
 
         $this->appState         = $appState;
         $this->importRepository = $importRepository;
+        $this->configHelper     = $configHelper;
     }
 
     /**
@@ -154,6 +164,14 @@ class AkeneoConnectorImportCommand extends Command
         if (!$import) {
             /** @var Phrase $message */
             $message = __('Import code not found');
+            $this->displayError($message, $output);
+
+            return false;
+        }
+
+        if (!$this->configHelper->checkAkeneoApiCredentials()) {
+            /** @var Phrase $message */
+            $message = __('API credentials are missing. Please configure the connector and retry.');
             $this->displayError($message, $output);
 
             return false;

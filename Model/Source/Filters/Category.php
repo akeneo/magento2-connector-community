@@ -2,9 +2,11 @@
 
 namespace Akeneo\Connector\Model\Source\Filters;
 
+use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Framework\Option\ArrayInterface;
+use Psr\Log\LoggerInterface as Logger;
 use Akeneo\Connector\Helper\Authenticator;
 
 /**
@@ -25,61 +27,68 @@ class Category implements ArrayInterface
      * @var Authenticator $akeneoAuthenticator
      */
     protected $akeneoAuthenticator;
-
     /**
+     * Description $logger field
      *
-     *
-     * @var \Psr\Log\LoggerInterface $logger
+     * @var Logger $logger
      */
     protected $logger;
-
     /**
-     * This variable contains Categories options
+     * This variable contains a ConfigHelper
      *
-     * @var string[] $options
+     * @var ConfigHelper $configHelper
      */
-    protected $options = [];
+    protected $configHelper;
 
     /**
      * Category constructor
      *
-     * @param Authenticator            $akeneoAuthenticator
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param Authenticator $akeneoAuthenticator
+     * @param Logger        $logger
+     * @param ConfigHelper  $configHelper
      */
     public function __construct(
         Authenticator $akeneoAuthenticator,
-        \Psr\Log\LoggerInterface $logger
+        Logger $logger,
+        ConfigHelper $configHelper
     ) {
         $this->akeneoAuthenticator = $akeneoAuthenticator;
         $this->logger              = $logger;
-        $this->init();
+        $this->configHelper        = $configHelper;
     }
 
     /**
      * Initialize options
      *
-     * @return void
+     * @return ResourceCursorInterface|array
      */
-    public function init()
+    public function getCategories()
     {
+        /** @var array $categories */
+        $categories = [];
+
         try {
             /** @var AkeneoPimClientInterface $client */
             $client = $this->akeneoAuthenticator->getAkeneoApiClient();
             if (empty($client)) {
-                return;
+                return $categories;
             }
+            /** @var string|int $paginationSize */
+            $paginationSize = $this->configHelper->getPaginationSize();
             /** @var ResourceCursorInterface $categories */
-            $categories = $client->getCategoryApi()->all();
+            $akeneoCategories = $client->getCategoryApi()->all($paginationSize);
             /** @var mixed[] $category */
-            foreach ($categories as $category) {
+            foreach ($akeneoCategories as $category) {
                 if (!isset($category['code']) || isset($category['parent'])) {
                     continue;
                 }
-                $this->options[$category['code']] = $category['code'];
+                $categories[$category['code']] = $category['code'];
             }
         } catch (\Exception $exception) {
             $this->logger->warning($exception->getMessage());
         }
+
+        return $categories;
     }
 
     /**
@@ -89,6 +98,8 @@ class Category implements ArrayInterface
      */
     public function toOptionArray()
     {
+        /** @var array $categories */
+        $categories = $this->getCategories();
         /** @var array $optionArray */
         $optionArray = [];
 
@@ -96,7 +107,7 @@ class Category implements ArrayInterface
          * @var int    $optionValue
          * @var string $optionLabel
          */
-        foreach ($this->options as $optionValue => $optionLabel) {
+        foreach ($categories as $optionValue => $optionLabel) {
             $optionArray[] = [
                 'value' => $optionValue,
                 'label' => $optionLabel,

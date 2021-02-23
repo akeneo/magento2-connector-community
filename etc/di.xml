@@ -20,8 +20,6 @@
                 <item name="family" xsi:type="object">\Akeneo\Connector\Job\Family</item>
                 <item name="attribute" xsi:type="object">\Akeneo\Connector\Job\Attribute</item>
                 <item name="option" xsi:type="object">\Akeneo\Connector\Job\Option</item>
-                <item name="product_model" xsi:type="object">\Akeneo\Connector\Job\ProductModel</item>
-                <item name="family_variant" xsi:type="object">\Akeneo\Connector\Job\FamilyVariant</item>
                 <item name="product" xsi:type="object">\Akeneo\Connector\Job\Product</item>
             </argument>
         </arguments>
@@ -138,39 +136,6 @@
         </arguments>
     </type>
 
-    <type name="Akeneo\Connector\Job\FamilyVariant">
-        <arguments>
-            <argument name="data" xsi:type="array">
-                <item name="steps" xsi:type="array">
-                    <item name="1" xsi:type="array">
-                        <item name="method" xsi:type="string">createTable</item>
-                        <item name="comment" xsi:type="string">Create temporary table</item>
-                    </item>
-                    <item name="2" xsi:type="array">
-                        <item name="method" xsi:type="string">insertData</item>
-                        <item name="comment" xsi:type="string">Fill temporary table</item>
-                    </item>
-                    <item name="3" xsi:type="array">
-                        <item name="method" xsi:type="string">updateAxis</item>
-                        <item name="comment" xsi:type="string">Update Axis column</item>
-                    </item>
-                    <item name="4" xsi:type="array">
-                        <item name="method" xsi:type="string">updateProductModel</item>
-                        <item name="comment" xsi:type="string">Update Product Model</item>
-                    </item>
-                    <item name="5" xsi:type="array">
-                        <item name="method" xsi:type="string">dropTable</item>
-                        <item name="comment" xsi:type="string">Drop temporary table</item>
-                    </item>
-                    <item name="6" xsi:type="array">
-                        <item name="method" xsi:type="string">cleanCache</item>
-                        <item name="comment" xsi:type="string">Clean cache</item>
-                    </item>
-                </item>
-            </argument>
-        </arguments>
-    </type>
-
     <type name="Akeneo\Connector\Job\Attribute">
         <arguments>
             <argument name="data" xsi:type="array">
@@ -257,39 +222,6 @@
         </arguments>
     </type>
 
-    <type name="Akeneo\Connector\Job\ProductModel">
-        <arguments>
-            <argument name="data" xsi:type="array">
-                <item name="steps" xsi:type="array">
-                    <item name="1" xsi:type="array">
-                        <item name="method" xsi:type="string">createTable</item>
-                        <item name="comment" xsi:type="string">Create temporary table</item>
-                    </item>
-                    <item name="2" xsi:type="array">
-                        <item name="method" xsi:type="string">insertData</item>
-                        <item name="comment" xsi:type="string">Fill temporary table</item>
-                    </item>
-                    <item name="3" xsi:type="array">
-                        <item name="method" xsi:type="string">removeColumns</item>
-                        <item name="comment" xsi:type="string">Remove columns from product model table</item>
-                    </item>
-                    <item name="4" xsi:type="array">
-                        <item name="method" xsi:type="string">addColumns</item>
-                        <item name="comment" xsi:type="string">Add columns to product model table</item>
-                    </item>
-                    <item name="5" xsi:type="array">
-                        <item name="method" xsi:type="string">updateData</item>
-                        <item name="comment" xsi:type="string">Add or update data in product model table</item>
-                    </item>
-                    <item name="6" xsi:type="array">
-                        <item name="method" xsi:type="string">dropTable</item>
-                        <item name="comment" xsi:type="string">Drop temporary table</item>
-                    </item>
-                </item>
-            </argument>
-        </arguments>
-    </type>
-
     <type name="Akeneo\Connector\Job\Product">
         <arguments>
             <argument name="data" xsi:type="array">
@@ -303,78 +235,94 @@
                         <item name="comment" xsi:type="string">Fill temporary table</item>
                     </item>
                     <item name="3" xsi:type="array">
+                        <item name="method" xsi:type="string">productModelImport</item>
+                        <item name="comment" xsi:type="string">Product Model Import</item>
+                    </item>
+                    <item name="4" xsi:type="array">
+                        <item name="method" xsi:type="string">familyVariantImport</item>
+                        <item name="comment" xsi:type="string">Family Variant Import</item>
+                    </item>
+                    <item name="5" xsi:type="array">
                         <item name="method" xsi:type="string">addRequiredData</item>
                         <item name="comment" xsi:type="string">Add required data</item>
                     </item>
-                    <item name="4" xsi:type="array">
+                    <item name="6" xsi:type="array">
                         <item name="method" xsi:type="string">createConfigurable</item>
                         <item name="comment" xsi:type="string">Create configurables</item>
                     </item>
-                    <item name="5" xsi:type="array">
+                    <item name="7" xsi:type="array">
                         <item name="method" xsi:type="string">createMetricsOptions</item>
                         <item name="comment" xsi:type="string">Create Options for Variant Metrics Attributes</item>
                     </item>
-                    <item name="6" xsi:type="array">
+                    <item name="8" xsi:type="array">
                         <item name="method" xsi:type="string">checkEntities</item>
                         <item name="comment" xsi:type="string">Check already imported entities</item>
                     </item>
-                    <item name="7" xsi:type="array">
+                    <item name="9" xsi:type="array">
                         <item name="method" xsi:type="string">matchEntities</item>
                         <item name="comment" xsi:type="string">Match code with Magento ID</item>
                     </item>
-                    <item name="8" xsi:type="array">
+                    <item name="10" xsi:type="array">
                         <item name="method" xsi:type="string">updateAttributeSetId</item>
                         <item name="comment" xsi:type="string">Match family code with Magento ID</item>
                     </item>
-                    <item name="9" xsi:type="array">
+                    <item name="11" xsi:type="array">
                         <item name="method" xsi:type="string">updateOption</item>
                         <item name="comment" xsi:type="string">Update column values for options</item>
                     </item>
-                    <item name="10" xsi:type="array">
+                    <item name="12" xsi:type="array">
                         <item name="method" xsi:type="string">createEntities</item>
                         <item name="comment" xsi:type="string">Create or update product entities</item>
                     </item>
-                    <item name="11" xsi:type="array">
+                    <item name="13" xsi:type="array">
                         <item name="method" xsi:type="string">importFiles</item>
                         <item name="comment" xsi:type="string">Import file attributes</item>
                     </item>
-                    <item name="12" xsi:type="array">
+                    <item name="14" xsi:type="array">
                         <item name="method" xsi:type="string">setValues</item>
                         <item name="comment" xsi:type="string">Set values to attributes</item>
                     </item>
-                    <item name="13" xsi:type="array">
+                    <item name="15" xsi:type="array">
                         <item name="method" xsi:type="string">linkConfigurable</item>
                         <item name="comment" xsi:type="string">Link configurable with children</item>
                     </item>
-                    <item name="14" xsi:type="array">
+                    <item name="16" xsi:type="array">
+                        <item name="method" xsi:type="string">linkSimple</item>
+                        <item name="comment" xsi:type="string">Link simple products with configurable products</item>
+                    </item>
+                    <item name="17" xsi:type="array">
                         <item name="method" xsi:type="string">setWebsites</item>
                         <item name="comment" xsi:type="string">Set products to websites</item>
                     </item>
-                    <item name="15" xsi:type="array">
+                    <item name="18" xsi:type="array">
                         <item name="method" xsi:type="string">setCategories</item>
                         <item name="comment" xsi:type="string">Set products to categories</item>
                     </item>
-                    <item name="16" xsi:type="array">
+                    <item name="19" xsi:type="array">
                         <item name="method" xsi:type="string">initStock</item>
                         <item name="comment" xsi:type="string">Init stock</item>
                     </item>
-                    <item name="17" xsi:type="array">
+                    <item name="20" xsi:type="array">
                         <item name="method" xsi:type="string">setRelated</item>
                         <item name="comment" xsi:type="string">Update related, up-sell and cross-sell products</item>
                     </item>
-                    <item name="18" xsi:type="array">
+                    <item name="21" xsi:type="array">
+                        <item name="method" xsi:type="string">setGrouped</item>
+                        <item name="comment" xsi:type="string">Set grouped products relations</item>
+                    </item>
+                    <item name="22" xsi:type="array">
                         <item name="method" xsi:type="string">setUrlRewrite</item>
                         <item name="comment" xsi:type="string">Set Url Rewrite</item>
                     </item>
-                    <item name="19" xsi:type="array">
+                    <item name="23" xsi:type="array">
                         <item name="method" xsi:type="string">importMedia</item>
                         <item name="comment" xsi:type="string">Import image attributes</item>
                     </item>
-                    <item name="20" xsi:type="array">
+                    <item name="24" xsi:type="array">
                         <item name="method" xsi:type="string">dropTable</item>
                         <item name="comment" xsi:type="string">Drop temporary table</item>
                     </item>
-                    <item name="21" xsi:type="array">
+                    <item name="25" xsi:type="array">
                         <item name="method" xsi:type="string">cleanCache</item>
                         <item name="comment" xsi:type="string">Clean cache</item>
                     </item>

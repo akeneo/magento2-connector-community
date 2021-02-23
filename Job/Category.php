@@ -2,21 +2,22 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Helper\Authenticator;
+use Akeneo\Connector\Helper\CategoryFilters;
+use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Helper\Import\Entities;
+use Akeneo\Connector\Helper\Output as OutputHelper;
+use Akeneo\Connector\Helper\Store as StoreHelper;
+use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
-use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Connector\Helper\Output as OutputHelper;
-use Akeneo\Connector\Helper\Authenticator;
-use Akeneo\Connector\Helper\Import\Entities;
-use Akeneo\Connector\Helper\Store as StoreHelper;
-use Akeneo\Connector\Job\Import;
-use Magento\Framework\App\Cache\TypeListInterface;
-use Magento\Framework\Event\ManagerInterface;
-use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Catalog\Model\Category as CategoryModel;
-use Magento\Staging\Model\VersionManager;
 use Magento\CatalogUrlRewrite\Model\CategoryUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\CategoryUrlRewriteGenerator;
+use Magento\Framework\App\Cache\TypeListInterface;
+use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\Event\ManagerInterface;
+use Magento\Staging\Model\VersionManager;
 use Zend_Db_Expr as Expr;
 
 /**
@@ -83,20 +84,34 @@ class Category extends Import
      * @var CategoryUrlPathGenerator $categoryUrlPathGenerator
      */
     protected $categoryUrlPathGenerator;
+    /**
+     * Description $categoryFilters field
+     *
+     * @var CategoryFilters $categoryFilters
+     */
+    protected $categoryFilters;
+    /**
+     * Description $editionSource field
+     *
+     * @var Edition $editionSource
+     */
+    protected $editionSource;
 
     /**
      * Category constructor
      *
-     * @param OutputHelper $outputHelper
-     * @param ManagerInterface $eventManager
-     * @param Authenticator $authenticator
-     * @param TypeListInterface $cacheTypeList
-     * @param Entities $entitiesHelper
-     * @param StoreHelper $storeHelper
-     * @param ConfigHelper $configHelper
-     * @param CategoryModel $categoryModel
+     * @param OutputHelper             $outputHelper
+     * @param ManagerInterface         $eventManager
+     * @param Authenticator            $authenticator
+     * @param TypeListInterface        $cacheTypeList
+     * @param Entities                 $entitiesHelper
+     * @param StoreHelper              $storeHelper
+     * @param ConfigHelper             $configHelper
+     * @param CategoryModel            $categoryModel
      * @param CategoryUrlPathGenerator $categoryUrlPathGenerator
-     * @param array $data
+     * @param CategoryFilters          $categoryFilters
+     * @param Edition                  $editionSource
+     * @param array                    $data
      */
     public function __construct(
         OutputHelper $outputHelper,
@@ -108,16 +123,20 @@ class Category extends Import
         ConfigHelper $configHelper,
         CategoryModel $categoryModel,
         CategoryUrlPathGenerator $categoryUrlPathGenerator,
+        CategoryFilters $categoryFilters,
+        Edition $editionSource,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
 
-        $this->storeHelper    = $storeHelper;
-        $this->entitiesHelper = $entitiesHelper;
-        $this->cacheTypeList  = $cacheTypeList;
-        $this->configHelper   = $configHelper;
-        $this->categoryModel  = $categoryModel;
+        $this->storeHelper              = $storeHelper;
+        $this->entitiesHelper           = $entitiesHelper;
+        $this->cacheTypeList            = $cacheTypeList;
+        $this->configHelper             = $configHelper;
+        $this->categoryModel            = $categoryModel;
         $this->categoryUrlPathGenerator = $categoryUrlPathGenerator;
+        $this->categoryFilters          = $categoryFilters;
+        $this->editionSource            = $editionSource;
     }
 
     /**
@@ -127,10 +146,21 @@ class Category extends Import
      */
     public function createTable()
     {
+        if (!$this->categoryFilters->getCategoriesToImport()) {
+            $this->setMessage(__('No categories to import, check your category filter configuration'));
+            $this->stop(1);
+
+            return;
+        }
         /** @var PageInterface $families */
-        $categories = $this->akeneoClient->getCategoryApi()->listPerPage(1);
+        $categories = $this->akeneoClient->getCategoryApi()->listPerPage(
+            1,
+            false,
+            $this->categoryFilters->getParentFilters()
+        );
         /** @var array $category */
         $category = $categories->getItems();
+
         if (empty($category)) {
             $this->setMessage(__('No results retrieved from Akeneo'));
             $this->stop(1);
@@ -150,17 +180,62 @@ class Category extends Import
     {
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
+
+        /** @var string $edition */
+        $edition = $this->configHelper->getEdition();
+
         /** @var ResourceCursorInterface $categories */
-        $categories = $this->akeneoClient->getCategoryApi()->all($paginationSize);
+        $categories = [];
+        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY) {
+            /** @var ResourceCursorInterface $parentCategories */
+            $parentCategories = $this->akeneoClient->getCategoryApi()->all(
+                $paginationSize,
+                $this->categoryFilters->getParentFilters()
+            );
+
+            /** @var string[] $categoriesToImport */
+            $categoriesToImport = $this->categoryFilters->getCategoriesToImport();
+
+            if (count($categoriesToImport) != iterator_count($parentCategories)) {
+                /** @var string[] $editions */
+                $editions = $this->editionSource->toOptionArray();
+                $this->setMessage(
+                    __(
+                        'Wrong Akeneo version selected in the Akeneo Edition configuration field: %1',
+                        $editions[$edition]
+                    )
+                );
+                $this->stop(1);
+
+                return;
+            }
+
+            /** @var string[] $category */
+            foreach ($parentCategories as $category) {
+                $categories[] = $category;
+                /** @var ResourceCursorInterface $childCategories */
+                $childCategories = $this->akeneoClient->getCategoryApi()->all(
+                    $paginationSize,
+                    $this->categoryFilters->getChildFilters($category)
+                );
+                /** @var string[] $child */
+                foreach ($childCategories as $child) {
+                    $categories[] = $child;
+                }
+            }
+        } else {
+            $categories = $this->akeneoClient->getCategoryApi()->all($paginationSize);
+        }
+
         /** @var string $warning */
         $warning = '';
+        /** @var string[] $lang */
+        $lang = $this->storeHelper->getStores('lang');
         /**
-         * @var int $index
+         * @var int   $index
          * @var array $category
          */
         foreach ($categories as $index => $category) {
-            /** @var string[] $lang */
-            $lang = $this->storeHelper->getStores('lang');
             $warning = $this->checkLabelPerLocales($category, $lang, $warning);
 
             $this->entitiesHelper->insertDataFromApi($category, $this->getCode());
@@ -223,27 +298,39 @@ class Category extends Import
         /** @var string $tableName */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
 
-        $connection->addColumn($tmpTable, 'level', [
-            'type' => 'integer',
-            'length' => 11,
-            'default' => 0,
-            'COMMENT' => ' ',
-            'nullable' => false
-        ]);
-        $connection->addColumn($tmpTable, 'path', [
-            'type' => 'text',
-            'length' => 255,
-            'default' => '',
-            'COMMENT' => ' ',
-            'nullable' => false
-        ]);
-        $connection->addColumn($tmpTable, 'parent_id', [
-            'type' => 'integer',
-            'length' => 11,
-            'default' => 0,
-            'COMMENT' => ' ',
-            'nullable' => false
-        ]);
+        $connection->addColumn(
+            $tmpTable,
+            'level',
+            [
+                'type'     => 'integer',
+                'length'   => 11,
+                'default'  => 0,
+                'COMMENT'  => ' ',
+                'nullable' => false,
+            ]
+        );
+        $connection->addColumn(
+            $tmpTable,
+            'path',
+            [
+                'type'     => 'text',
+                'length'   => 255,
+                'default'  => '',
+                'COMMENT'  => ' ',
+                'nullable' => false,
+            ]
+        );
+        $connection->addColumn(
+            $tmpTable,
+            'parent_id',
+            [
+                'type'     => 'integer',
+                'length'   => 11,
+                'default'  => 0,
+                'COMMENT'  => ' ',
+                'nullable' => false,
+            ]
+        );
 
         /** @var array $values */
         $values = [
@@ -256,14 +343,16 @@ class Category extends Import
         /** @var int $depth */
         $depth = self::MAX_DEPTH;
         for ($i = 1; $i <= $depth; $i++) {
-            $connection->query('
+            $connection->query(
+                '
                 UPDATE `' . $tmpTable . '` c1
                 INNER JOIN `' . $tmpTable . '` c2 ON c2.`code` = c1.`parent`
                 SET c1.`level` = c2.`level` + 1,
                     c1.`path` = CONCAT(c2.`path`, "/", c1.`_entity_id`),
                     c1.`parent_id` = c2.`_entity_id`
                 WHERE c1.`level` <= c2.`level` - 1
-            ');
+            '
+            );
         }
     }
 
@@ -283,19 +372,35 @@ class Category extends Import
 
         /**
          * @var string $local
-         * @var array $affected
+         * @var array  $affected
          */
         foreach ($stores as $local => $affected) {
             /** @var array $keys */
             $keys = [];
             if ($connection->tableColumnExists($tmpTable, 'labels-' . $local)) {
-                $connection->addColumn($tmpTable, 'url_key-' . $local, [
-                    'type' => 'text',
-                    'length' => 255,
-                    'default' => '',
-                    'COMMENT' => ' ',
-                    'nullable' => false
-                ]);
+                $connection->addColumn(
+                    $tmpTable,
+                    'url_key-' . $local,
+                    [
+                        'type'     => 'text',
+                        'length'   => 255,
+                        'default'  => '',
+                        'COMMENT'  => ' ',
+                        'nullable' => false,
+                    ]
+                );
+
+                $connection->addColumn(
+                    $tmpTable,
+                    'url_path-' . $local,
+                    [
+                        'type'     => 'text',
+                        'length'   => 255,
+                        'default'  => '',
+                        'COMMENT'  => ' ',
+                        'nullable' => false,
+                    ]
+                );
 
                 $select = $connection->select()->from(
                     $tmpTable,
@@ -325,11 +430,25 @@ class Category extends Import
 
                     $keys[$row['parent_id']][] = $finalKey;
 
-                    $connection->update(
-                        $tmpTable,
-                        ['url_key-' . $local => $finalKey],
-                        ['_entity_id = ?' => $row['entity_id']]
+                    /** @var bool $isRoot */
+                    $isRoot = $row['parent_id'] <= CategoryModel::TREE_ROOT_ID;
+                    /** @var string $urlPathCol */
+                    $urlPathCol = $connection->quoteIdentifier('url_path-' . $local);
+
+                    /** @var Select $subSelect */
+                    $subSelect = $connection->select()->from(
+                        false,
+                        [
+                            'url_path-' . $local => $isRoot ? null : "CONCAT(t." . $urlPathCol . ", IF(t." . $urlPathCol . " = '','','/'), '" . $finalKey . "')",
+                            'url_key-' . $local  => "'$finalKey'",
+                        ]
+                    )->joinInner(['t' => $tmpTable], 'main.parent_id = t._entity_id', [])->where(
+                        'main._entity_id = ?',
+                        $row['entity_id']
                     );
+                    /** @var string $update */
+                    $update = $connection->updateFromSelect($subSelect, ['main' => $tmpTable]);
+                    $connection->query($update);
                 }
             }
         }
@@ -347,41 +466,41 @@ class Category extends Import
         /** @var string $tableName */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
 
-        $connection->addColumn($tmpTable, 'position', [
-            'type' => 'integer',
-            'length' => 11,
-            'default' => 0,
-            'COMMENT' => ' ',
-            'nullable' => false
-        ]);
+        $connection->addColumn(
+            $tmpTable,
+            'position',
+            [
+                'type'     => 'integer',
+                'length'   => 11,
+                'default'  => 0,
+                'COMMENT'  => ' ',
+                'nullable' => false,
+            ]
+        );
 
         /** @var \Zend_Db_Statement_Interface $query */
         $query = $connection->query(
-            $connection->select()
-                ->from(
-                    $tmpTable,
-                    [
-                        'entity_id' => '_entity_id',
-                        'parent_id' => 'parent_id',
-                    ]
-                )
+            $connection->select()->from(
+                $tmpTable,
+                [
+                    'entity_id' => '_entity_id',
+                    'parent_id' => 'parent_id',
+                ]
+            )
         );
 
         /** @var array $row */
         while (($row = $query->fetch())) {
             /** @var int $position */
             $position = $connection->fetchOne(
-                $connection->select()
-                    ->from(
-                        $tmpTable,
-                        ['position' => new Expr('MAX(`position`) + 1')]
-                    )
-                    ->where('parent_id = ?', $row['parent_id'])
-                    ->group('parent_id')
+                $connection->select()->from(
+                    $tmpTable,
+                    ['position' => new Expr('MAX(`position`) + 1')]
+                )->where('parent_id = ?', $row['parent_id'])->group('parent_id')
             );
             /** @var array $values */
             $values = [
-                'position' => $position
+                'position' => $position,
             ];
             $connection->update($tmpTable, $values, ['_entity_id = ?' => $row['entity_id']]);
         }
@@ -451,7 +570,7 @@ class Category extends Import
 
         /** @var array $values */
         $values = [
-            'created_at' => new Expr('now()')
+            'created_at' => new Expr('now()'),
         ];
         $connection->update($table, $values, 'created_at IS NULL');
 
@@ -501,7 +620,7 @@ class Category extends Import
 
         /**
          * @var string $local
-         * @var array $affected
+         * @var array  $affected
          */
         foreach ($stores as $local => $affected) {
             if (!$connection->tableColumnExists($tmpTable, 'labels-' . $local)) {
@@ -511,8 +630,9 @@ class Category extends Import
             foreach ($affected as $store) {
                 /** @var array $values */
                 $values = [
-                    'name'    => 'labels-' . $local,
-                    'url_key' => 'url_key-' . $local,
+                    'name'     => 'labels-' . $local,
+                    'url_key'  => 'url_key-' . $local,
+                    'url_path' => 'url_path-' . $local,
                 ];
                 $this->entitiesHelper->setValues(
                     $this->getCode(),
@@ -535,14 +655,16 @@ class Category extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
 
-        $connection->query('
+        $connection->query(
+            '
             UPDATE `' . $this->entitiesHelper->getTable('catalog_category_entity') . '` c SET `children_count` = (
                 SELECT COUNT(`parent_id`) FROM (
                     SELECT * FROM `' . $this->entitiesHelper->getTable('catalog_category_entity') . '`
                 ) tmp
                 WHERE tmp.`path` LIKE CONCAT(c.`path`,\'/%\')
             )
-        ');
+        '
+        );
     }
 
     /**
@@ -552,18 +674,26 @@ class Category extends Import
      */
     public function removeCategoriesByFilter()
     {
+        /** @var string $edition */
+        $edition = $this->configHelper->getEdition();
+
+        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY) {
+            return;
+        }
+
         /** @var string|string[] $filteredCategories */
         $filteredCategories = $this->configHelper->getCategoriesFilter();
         if (!$filteredCategories || empty($filteredCategories)) {
             $this->setMessage(
                 __('No category to ignore')
             );
+
             return;
         }
         /** @var string $tableName */
         $tableName = $this->entitiesHelper->getTableName($this->getCode());
         /** @var AdapterInterface $connection */
-        $connection = $this->entitiesHelper->getConnection();
+        $connection         = $this->entitiesHelper->getConnection();
         $filteredCategories = explode(',', $filteredCategories);
         /** @var mixed[]|null $categoriesToDelete */
         $categoriesToDelete = $connection->fetchAll(
@@ -573,6 +703,7 @@ class Category extends Import
             $this->setMessage(
                 __('No category found')
             );
+
             return;
         }
         foreach ($categoriesToDelete as $category) {
@@ -580,7 +711,7 @@ class Category extends Import
                 continue;
             }
             $connection->delete($tableName, ['path LIKE ?' => '%/' . $category['_entity_id'] . '/%']);
-            $connection->delete($tableName, ['path LIKE ?'   => '%/' . $category['_entity_id']]);
+            $connection->delete($tableName, ['path LIKE ?' => '%/' . $category['_entity_id']]);
         }
     }
 
@@ -600,7 +731,7 @@ class Category extends Import
 
         /**
          * @var string $local
-         * @var array $affected
+         * @var array  $affected
          */
         foreach ($stores as $local => $affected) {
             if (!$connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
@@ -616,18 +747,17 @@ class Category extends Import
                     continue;
                 }
                 /** @var \Magento\Framework\DB\Select $select */
-                $select = $connection->select()
-                    ->from(
-                        $tmpTable,
-                        [
-                            'entity_id' => '_entity_id',
-                            'url_key'   => 'url_key-' . $local,
-                            'url_path'  => 'path',
-                            'store_id'  => new Expr($store['store_id']),
-                            'parent_id' => 'parent_id',
-                            'level'     => 'level',
-                        ]
-                    );
+                $select = $connection->select()->from(
+                    $tmpTable,
+                    [
+                        'entity_id' => '_entity_id',
+                        'url_key'   => 'url_key-' . $local,
+                        'url_path'  => 'path',
+                        'store_id'  => new Expr($store['store_id']),
+                        'parent_id' => 'parent_id',
+                        'level'     => 'level',
+                    ]
+                );
 
                 /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
                 $query = $connection->query($select);
@@ -655,7 +785,10 @@ class Category extends Import
                     $exists = $connection->fetchOne(
                         $connection->select()
                             ->from($this->entitiesHelper->getTable('url_rewrite'), new Expr(1))
-                            ->where('entity_type = ?', CategoryUrlRewriteGenerator::ENTITY_TYPE)
+                            ->where(
+                                'entity_type = ?',
+                                CategoryUrlRewriteGenerator::ENTITY_TYPE
+                            )
                             ->where('request_path = ?', $requestPath)
                             ->where('store_id = ?', $category->getStoreId())
                             ->where('entity_id <> ?', $category->getEntityId())
@@ -677,14 +810,26 @@ class Category extends Import
                             ->where('entity_type = ?', CategoryUrlRewriteGenerator::ENTITY_TYPE)
                             ->where('entity_id = ?', $category->getEntityId())
                             ->where('store_id = ?', $category->getStoreId())
-                        );
+                    );
 
                     if ($rewriteId) {
-                        $connection->update(
-                            $this->entitiesHelper->getTable('url_rewrite'),
-                            ['request_path' => $requestPath],
-                            ['url_rewrite_id = ?' => $rewriteId]
-                        );
+                        try {
+                            $connection->update(
+                                $this->entitiesHelper->getTable('url_rewrite'),
+                                ['request_path' => $requestPath],
+                                ['url_rewrite_id = ?' => $rewriteId]
+                            );
+                        } catch (\Exception $e) {
+                            $this->setAdditionalMessage(
+                                __(
+                                    sprintf(
+                                        'Tried to update url_rewrite_id %s : request path (%s) already exists for the store_id.',
+                                        $rewriteId,
+                                        $requestPath
+                                    )
+                                )
+                            );
+                        }
                     } else {
                         /** @var array $data */
                         $data = [
@@ -694,7 +839,7 @@ class Category extends Import
                             'target_path'      => 'catalog/category/view/id/' . $category->getEntityId(),
                             'redirect_type'    => 0,
                             'store_id'         => $category->getStoreId(),
-                            'is_autogenerated' => 1
+                            'is_autogenerated' => 1,
                         ];
 
                         $connection->insertOnDuplicate(
@@ -728,7 +873,7 @@ class Category extends Import
         /** @var array $types */
         $types = [
             \Magento\Framework\App\Cache\Type\Block::TYPE_IDENTIFIER,
-            \Magento\PageCache\Model\Cache\Type::TYPE_IDENTIFIER
+            \Magento\PageCache\Model\Cache\Type::TYPE_IDENTIFIER,
         ];
 
         foreach ($types as $type) {

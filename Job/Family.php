@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Helper\FamilyFilters;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
@@ -18,7 +19,6 @@ use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Zend_Db_Expr as Expr;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
-use Akeneo\Connector\Job\Import;
 
 /**
  * Class Family
@@ -80,20 +80,27 @@ class Family extends Import
      * @var StoreHelper $storeHelper
      */
     protected $storeHelper;
+    /**
+     * Description $familyFilters field
+     *
+     * @var FamilyFilters $familyFilters
+     */
+    protected $familyFilters;
 
     /**
      * Family constructor
      *
-     * @param StoreHelper $storeHelper
-     * @param Entities $entitiesHelper
-     * @param ConfigHelper $configHelper
-     * @param OutputHelper $outputHelper
-     * @param ManagerInterface $eventManager
-     * @param Authenticator $authenticator
-     * @param SetFactory $attributeSetFactory
+     * @param StoreHelper       $storeHelper
+     * @param Entities          $entitiesHelper
+     * @param ConfigHelper      $configHelper
+     * @param OutputHelper      $outputHelper
+     * @param ManagerInterface  $eventManager
+     * @param Authenticator     $authenticator
+     * @param SetFactory        $attributeSetFactory
      * @param TypeListInterface $cacheTypeList
-     * @param Config $eavConfig
-     * @param array $data
+     * @param Config            $eavConfig
+     * @param FamilyFilters     $familyFilters
+     * @param array             $data
      */
     public function __construct(
         StoreHelper $storeHelper,
@@ -105,6 +112,7 @@ class Family extends Import
         SetFactory $attributeSetFactory,
         TypeListInterface $cacheTypeList,
         Config $eavConfig,
+        FamilyFilters $familyFilters,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
@@ -115,6 +123,7 @@ class Family extends Import
         $this->cacheTypeList       = $cacheTypeList;
         $this->eavConfig           = $eavConfig;
         $this->storeHelper         = $storeHelper;
+        $this->familyFilters       = $familyFilters;
     }
 
     /**
@@ -124,8 +133,10 @@ class Family extends Import
      */
     public function createTable()
     {
+        /** @var string[] $filters */
+        $filters = $this->familyFilters->getFilters();
         /** @var PageInterface $families */
-        $families = $this->akeneoClient->getFamilyApi()->listPerPage(1);
+        $families = $this->akeneoClient->getFamilyApi()->listPerPage(1, false, $filters);
         /** @var array $family */
         $family = $families->getItems();
 
@@ -146,19 +157,21 @@ class Family extends Import
      */
     public function insertData()
     {
+        /** @var string[] $filters */
+        $filters = $this->familyFilters->getFilters();
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
         /** @var ResourceCursorInterface $families */
-        $families = $this->akeneoClient->getFamilyApi()->all($paginationSize);
+        $families = $this->akeneoClient->getFamilyApi()->all($paginationSize, $filters);
         /** @var string $warning */
         $warning = '';
+        /** @var string[] $lang */
+        $lang = $this->storeHelper->getStores('lang');
         /**
-         * @var int $index
+         * @var int   $index
          * @var array $family
          */
         foreach ($families as $index => $family) {
-            /** @var string[] $lang */
-            $lang = $this->storeHelper->getStores('lang');
             $warning = $this->checkLabelPerLocales($family, $lang, $warning);
 
             $this->entitiesHelper->insertDataFromApi($family, $this->getCode());
@@ -216,52 +229,16 @@ class Family extends Import
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var string $label */
-        $label = 'labels-'.$this->configHelper->getDefaultLocale();
+        $label = 'labels-' . $this->configHelper->getDefaultLocale();
         /** @var string $productEntityTypeId */
         $productEntityTypeId = $this->eavConfig->getEntityType(ProductAttributeInterface::ENTITY_TYPE_CODE)
             ->getEntityTypeId();
 
         /** @var array $values */
-        $attributeToSelect = [
-            'attribute_set_name' => new Expr('CONCAT("Pim", " ", `' . $label . '`)'),
-            'family_code'        => 'code'
-        ];
-
-        /** @var Select $families */
-        $tmpFamilyNames = $connection->select()->from($tmpTable, $attributeToSelect);
-
-        /** @var \Zend_Db_Statement_Interface $query */
-        $query = $connection->query($tmpFamilyNames);
-
-        /** @var array $familyNames */
-        $familyNames = [];
-
-        /** @var array $row */
-        while (($row = $query->fetch())) {
-            /** @var string $familyName */
-            $familyName = $row['attribute_set_name'];
-
-            if (in_array($familyName, $familyNames)) {
-                /** @var string $familyCode */
-                $familyCode = $row['family_code'];
-
-                $connection->delete($tmpTable, ['code = ?' => $familyCode]);
-
-                $this->setAdditionalMessage(
-                    __('Family with code "%1" has the same label than another family in Akeneo and has been skipped from import', $familyCode)
-                );
-
-                continue;
-            }
-
-            $familyNames[] = $familyName;
-        }
-
-        /** @var array $values */
         $values = [
             'attribute_set_id'   => '_entity_id',
             'entity_type_id'     => new Expr($productEntityTypeId),
-            'attribute_set_name' => new Expr('CONCAT("Pim", " ", `' . $label . '`)'),
+            'attribute_set_name' => new Expr('CONCAT("Pim", " ", IFNULL(`' . $label . '`, ""), " (", `code`, ")")'),
             'sort_order'         => new Expr(1),
         ];
         /** @var Select $families */

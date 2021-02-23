@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Helper\AttributeFilters;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
@@ -76,6 +77,12 @@ class Attribute extends Import
      */
     protected $attributeHelper;
     /**
+     * This variable contains an AttributeFilters
+     *
+     * @var AttributeFilters $attributeFilters
+     */
+    protected $attributeFilters;
+    /**
      * This variable contains a TypeListInterface
      *
      * @var TypeListInterface $cacheTypeList
@@ -94,6 +101,12 @@ class Attribute extends Import
      */
     protected $eavSetup;
     /**
+     * This variable contains attribute filters
+     *
+     * @var mixed[] $filters
+     */
+    protected $filters;
+    /**
      * List of attributes to exclude from attribute type validation
      *
      * @var string[]
@@ -108,17 +121,18 @@ class Attribute extends Import
     /**
      * Attribute constructor
      *
-     * @param OutputHelper $outputHelper
-     * @param ManagerInterface $eventManager
-     * @param Authenticator $authenticator
-     * @param EntitiesHelper $entitiesHelper
-     * @param ConfigHelper $configHelper
-     * @param Config $eavConfig
-     * @param AttributeHelper $attributeHelper
+     * @param OutputHelper      $outputHelper
+     * @param ManagerInterface  $eventManager
+     * @param Authenticator     $authenticator
+     * @param EntitiesHelper    $entitiesHelper
+     * @param ConfigHelper      $configHelper
+     * @param Config            $eavConfig
+     * @param AttributeHelper   $attributeHelper
+     * @param AttributeFilters  $attributeFilters
      * @param TypeListInterface $cacheTypeList
-     * @param StoreHelper $storeHelper
-     * @param EavSetup $eavSetup
-     * @param array $data
+     * @param StoreHelper       $storeHelper
+     * @param EavSetup          $eavSetup
+     * @param array             $data
      */
     public function __construct(
         OutputHelper $outputHelper,
@@ -128,6 +142,7 @@ class Attribute extends Import
         ConfigHelper $configHelper,
         Config $eavConfig,
         AttributeHelper $attributeHelper,
+        AttributeFilters $attributeFilters,
         TypeListInterface $cacheTypeList,
         StoreHelper $storeHelper,
         EavSetup $eavSetup,
@@ -135,13 +150,14 @@ class Attribute extends Import
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $data);
 
-        $this->entitiesHelper  = $entitiesHelper;
-        $this->configHelper    = $configHelper;
-        $this->eavConfig       = $eavConfig;
-        $this->attributeHelper = $attributeHelper;
-        $this->cacheTypeList   = $cacheTypeList;
-        $this->storeHelper     = $storeHelper;
-        $this->eavSetup        = $eavSetup;
+        $this->entitiesHelper   = $entitiesHelper;
+        $this->configHelper     = $configHelper;
+        $this->eavConfig        = $eavConfig;
+        $this->attributeHelper  = $attributeHelper;
+        $this->attributeFilters = $attributeFilters;
+        $this->cacheTypeList    = $cacheTypeList;
+        $this->storeHelper      = $storeHelper;
+        $this->eavSetup         = $eavSetup;
     }
 
     /**
@@ -151,8 +167,10 @@ class Attribute extends Import
      */
     public function createTable()
     {
+        /** @var mixed[] $filters */
+        $filters = $this->getFilters();
         /** @var PageInterface $attributes */
-        $attributes = $this->akeneoClient->getAttributeApi()->listPerPage(1);
+        $attributes = $this->akeneoClient->getAttributeApi()->listPerPage(1, false, $filters);
         /** @var array $attribute */
         $attribute = $attributes->getItems();
         if (empty($attribute)) {
@@ -178,8 +196,10 @@ class Attribute extends Import
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
+        /** @var mixed[] $filters */
+        $filters = $this->getFilters();
         /** @var ResourceCursorInterface $attributes */
-        $attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize);
+        $attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize, $filters);
         /** @var [] $metricsSetting */
         $metricsSetting = $this->configHelper->getMetricsColumns(true);
 
@@ -188,6 +208,11 @@ class Attribute extends Import
          * @var array $attribute
          */
         foreach ($attributes as $index => $attribute) {
+            // If the attribute starts with a number, skip
+            if (ctype_digit(substr($attribute['code'], 0, 1))) {
+                $this->setAdditionalMessage(__('The attribute %1 was not imported because it starts with a number. Update it in Akeneo and retry.', $attribute['code']));
+                continue;
+            }
             /** @var string $attributeCode */
             $attributeCode     = $attribute['code'];
             $attribute['code'] = strtolower($attributeCode);
@@ -210,9 +235,17 @@ class Attribute extends Import
             __('%1 line(s) found', $index)
         );
 
-        /* Remove attribute without a admin store label */
+        /* Remove attribute without an admin store label */
         /** @var string $localeCode */
         $localeCode = $this->configHelper->getDefaultLocale();
+
+        if (!$connection->tableColumnExists($tmpTable, 'labels-' . $localeCode)) {
+            $this->setMessage(__('No attributes with label in the admin locale %1 found.', $localeCode));
+            $this->stop(1);
+
+            return;
+        }
+
         /** @var \Magento\Framework\DB\Select $select */
         $select = $connection->select()->from(
             $tmpTable,
@@ -720,5 +753,24 @@ class Attribute extends Import
             ->getEntityTypeId();
 
         return $productEntityTypeId;
+    }
+
+    /**
+     * Retrieve attribute filters
+     *
+     * @return mixed[]
+     */
+    protected function getFilters()
+    {
+        /** @var mixed[] $filters */
+        $filters = $this->attributeFilters->getFilters();
+        if (array_key_exists('error', $filters)) {
+            $this->setMessage($filters['error']);
+            $this->stop(true);
+        }
+
+        $this->filters = $filters;
+
+        return $this->filters;
     }
 }

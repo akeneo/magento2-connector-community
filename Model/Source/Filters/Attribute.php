@@ -2,24 +2,23 @@
 
 namespace Akeneo\Connector\Model\Source\Filters;
 
+use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
-use Magento\Framework\Option\ArrayInterface;
 use Psr\Log\LoggerInterface as Logger;
-use Akeneo\Connector\Helper\Authenticator;
+use Magento\Framework\Option\ArrayInterface;
 
 /**
- * Class Family
+ * Class Attribute
  *
- * @category  Class
- * @package   Akeneo\Connector\Model\Source\Filters
+ * @package   Class
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Family implements ArrayInterface
+class Attribute implements ArrayInterface
 {
     /**
      * This variable contains a mixed value
@@ -41,7 +40,7 @@ class Family implements ArrayInterface
     protected $configHelper;
 
     /**
-     * Family constructor
+     * Attribute constructor
      *
      * @param Authenticator $akeneoAuthenticator
      * @param Logger        $logger
@@ -62,35 +61,35 @@ class Family implements ArrayInterface
      *
      * @return ResourceCursorInterface|array
      */
-    public function getFamilies()
+    public function getAttributes()
     {
-        /** @var array $families */
-        $families = [];
+        /** @var array $attributes */
+        $attributes = [];
 
         try {
             /** @var AkeneoPimClientInterface $client */
             $client = $this->akeneoAuthenticator->getAkeneoApiClient();
 
             if (empty($client)) {
-                return $families;
+                return $attributes;
             }
 
             /** @var string|int $paginationSize */
             $paginationSize = $this->configHelper->getPaginationSize();
-            /** @var ResourceCursorInterface $families */
-            $akeneoFamilies = $client->getFamilyApi()->all($paginationSize);
-            /** @var mixed[] $family */
-            foreach ($akeneoFamilies as $family) {
-                if (!isset($family['code'])) {
+            /** @var ResourceCursorInterface $akeneoAttributes */
+            $akeneoAttributes = $client->getAttributeApi()->all($paginationSize);
+            /** @var mixed[] $attribute */
+            foreach ($akeneoAttributes as $attribute) {
+                if (!isset($attribute['code'])) {
                     continue;
                 }
-                $families[$family['code']] = $family['code'];
+                $attributes[$attribute['code']] = $attribute['code'];
             }
         } catch (\Exception $exception) {
             $this->logger->warning($exception->getMessage());
         }
 
-        return $families;
+        return $attributes;
     }
 
     /**
@@ -100,15 +99,15 @@ class Family implements ArrayInterface
      */
     public function toOptionArray()
     {
-        /** @var array $families */
-        $families = $this->getFamilies();
+        /** @var array $attributes */
+        $attributes = $this->getAttributes();
         /** @var array $optionArray */
         $optionArray = [];
         /**
          * @var int    $optionValue
          * @var string $optionLabel
          */
-        foreach ($families as $optionValue => $optionLabel) {
+        foreach ($attributes as $optionValue => $optionLabel) {
             $optionArray[] = [
                 'value' => $optionValue,
                 'label' => $optionLabel,
