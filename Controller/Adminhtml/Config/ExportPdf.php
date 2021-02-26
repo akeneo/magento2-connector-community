@@ -41,7 +41,7 @@ class ExportPdf extends Action
      *
      * @var string FILENAME
      */
-    const FILENAME = "Akeneo Connector - Configuration Export";
+    const FILENAME = "Akeneo Connector - Configuration Export.pdf";
 
     /**
      * ExportPdf constructor
