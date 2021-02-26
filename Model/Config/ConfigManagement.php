@@ -533,6 +533,7 @@ class ConfigManagement
         $font        = $this->page->getFont();
         $glyphs      = $this->page->getFont()->glyphNumbersForCharacters($characters);
         $widths      = $font->widthsForGlyphs($glyphs);
+        
         return (array_sum($widths) / $font->getUnitsPerEm()) * $this->page->getFontSize();
     }
 
