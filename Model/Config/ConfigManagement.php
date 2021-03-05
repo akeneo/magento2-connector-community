@@ -128,11 +128,11 @@ class ConfigManagement
      */
     const ARRAY_LINE_HEIGHT = 30;
     /**
-     * Footer start position for Y axis
+     * Bottom page border constant
      *
-     * @var int FOOTER_START_POSITION
+     * @var int BOTTOM_BORDER
      */
-    const FOOTER_START_POSITION = 70;
+    const BOTTOM_PAGE_BORDER = 20;
     /**
      * Description LOGO_PDF constant
      *
@@ -215,6 +215,8 @@ class ConfigManagement
 
         /** @var mixed[] $configs */
         $configs = $this->getAllAkeneoConfigs();
+        /** @var int $configsNumber */
+        $configsNumber = count($configs);
 
         /**
          * @var int      $index
@@ -270,6 +272,11 @@ class ConfigManagement
             }
 
             $this->page->drawText($value, 100, $this->lastPosition);
+
+            if($index === $configsNumber - 1) {
+                $this->addFooter();
+                continue;
+            }
 
             $this->addLineBreak();
         }
@@ -505,8 +512,8 @@ class ConfigManagement
         /** @var string $text2 */
         $text2 = "please follow this steps to contact our Support Team";
 
-        $this->page->drawText($text, self::INDENT_FOOTER, self::FOOTER_START_POSITION - self::LINE_BREAK);
-        $this->page->drawText($text2, self::INDENT_FOOTER, self::FOOTER_START_POSITION - (self::LINE_BREAK) * 2);
+        $this->page->drawText($text, self::INDENT_FOOTER, $this->lastPosition - self::LINE_BREAK);
+        $this->page->drawText($text2, self::INDENT_FOOTER, $this->lastPosition - (self::LINE_BREAK) * 2);
 
         $target     = Zend_Pdf_Action_URI::create(
             'https://help.akeneo.com/magento2-connector/v100/articles/download-connector.html#what-can-i-do-if-i-have-a-question-to-ask-a-bug-to-report-or-a-suggestion-to-make-about-the-connector'
@@ -590,8 +597,7 @@ class ConfigManagement
             $nextElementHeight = 0;
         }
 
-        if ($this->lastPosition <= self::FOOTER_START_POSITION || ($this->lastPosition - $nextElementHeight <= self::FOOTER_START_POSITION)) {
-            $this->addFooter();
+        if ($this->lastPosition <= self::BOTTOM_PAGE_BORDER || ($this->lastPosition - $nextElementHeight <= self::BOTTOM_PAGE_BORDER)) {
             $this->addNewPage();
         }
 
