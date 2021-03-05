@@ -296,6 +296,7 @@ class ConfigManagement
             $this->page->drawText($value, self::INDENT_TEXT, $this->lastPosition);
 
             if ($index === $configsNumber - 1) {
+                $this->addLineBreak(50, self::LINE_BREAK);
                 $this->addFooter();
                 continue;
             }
