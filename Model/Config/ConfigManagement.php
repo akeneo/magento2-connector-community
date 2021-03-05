@@ -16,6 +16,7 @@ use Magento\Framework\Module\Dir;
 use Magento\Framework\Module\Dir\Reader;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\View\Asset\Repository;
+use SimpleXMLElement;
 use Zend_Pdf;
 use Zend_Pdf_Action_URI;
 use Zend_Pdf_Annotation_Link;
