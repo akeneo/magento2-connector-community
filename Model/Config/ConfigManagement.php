@@ -6,6 +6,7 @@ namespace Akeneo\Connector\Model\Config;
 
 use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Website;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Model\Backend\Json;
 use Akeneo\Connector\Model\Source\Edition;
 use Magento\Config\Model\Config\Backend\Serialized\ArraySerialized;
 use Magento\Framework\App\Filesystem\DirectoryList;
@@ -255,30 +256,51 @@ class ConfigManagement
                 continue;
             }
 
-            if ($config['value'] && strpos($config['value'], ',')) {
+            if ($this->getSystemConfigAttribute($config['path'], 'backend_model') === Json::class) {
+                /** @var string $text */
+                $text = $config['value'];
+                /** @var string $cleanValue */
+                $cleanValue = preg_replace("/<br>|\n|\s+/", "", $text);
+                /** @var string[] $lines */
+                $lines = str_split($cleanValue, 89);
+
+                $this->page->drawText($value, self::INDENT_TEXT, $this->lastPosition);
+                $this->addLineBreak();
+                /** @var string $line */
+                foreach ($lines as $line) {
+                    $this->page->drawText($line, self::INDENT_TEXT, $this->lastPosition);
+                    $this->addLineBreak(self::LINE_BREAK);
+                }
+                continue;
+            }
+
+            if ($config['value'] && strpos($config['value'], ',') && !$this->getSystemConfigAttribute(
+                    $config['path'],
+                    'backend_model'
+                )) {
                 $this->page->drawText($value, self::INDENT_TEXT, $this->lastPosition);
                 $this->insertMultiselect($config['value']);
                 continue;
             }
 
             if (in_array($config['path'], self::HIDDEN_FIELDS) && $config['value']) {
-                $value .= '****';
+                $value .= self::PASSWORD_CHAR;
             } else {
                 $value .= $config['value'];
             }
 
             if ($config['path'] === ConfigHelper::AKENEO_API_EDITION) {
-                $value .= $this->getEdition();
+                $value = $label . ' : ' . $this->getEdition();
             }
 
-            $this->page->drawText($value, 100, $this->lastPosition);
+            $this->page->drawText($value, self::INDENT_TEXT, $this->lastPosition);
 
-            if($index === $configsNumber - 1) {
+            if ($index === $configsNumber - 1) {
                 $this->addFooter();
                 continue;
             }
 
-            $this->addLineBreak();
+            $this->addLineBreak(10);
         }
 
         return $this->pdf;
@@ -428,27 +450,14 @@ class ConfigManagement
     }
 
     /**
-     * Description getDirectory function
-     *
-     * @return string
-     */
-    protected function getDirectory()
-    {
-        return $this->moduleReader->getModuleDir(
-            Dir::MODULE_ETC_DIR,
-            'Akeneo_Connector'
-        );
-    }
-
-    /**
-     * Description getSystemFileContent function
+     * Description getSystemConfigAttribute function
      *
      * @param string $path
      * @param string $attributeName
      *
      * @return bool|string
      */
-    protected function getSystemConfigAttribute($path, $attributeName)
+    protected function getSystemConfigAttribute(string $path, string $attributeName)
     {
         /** @var string[] $path */
         $path = explode('/', $path);
@@ -508,15 +517,17 @@ class ConfigManagement
     protected function addFooter()
     {
         /** @var string $text */
-        $text = "If you want to report a bug, ask a question or have a suggestion to make on Akeneo Connector for Magento 2,";
+        $text = (string)__(
+            "If you want to report a bug, ask a question or have a suggestion to make on Akeneo Connector for Magento 2,"
+        );
         /** @var string $text2 */
-        $text2 = "please follow this steps to contact our Support Team";
+        $text2 = (string)__("please follow this steps to contact our Support Team");
 
         $this->page->drawText($text, self::INDENT_FOOTER, $this->lastPosition - self::LINE_BREAK);
         $this->page->drawText($text2, self::INDENT_FOOTER, $this->lastPosition - (self::LINE_BREAK) * 2);
 
         $target     = Zend_Pdf_Action_URI::create(
-            'https://help.akeneo.com/magento2-connector/v100/articles/download-connector.html#what-can-i-do-if-i-have-a-question-to-ask-a-bug-to-report-or-a-suggestion-to-make-about-the-connector'
+            self::DOCUMENTATION_LINK
         );
         $annotation = Zend_Pdf_Annotation_Link::create(
             127,
