@@ -7,11 +7,12 @@
     "magento/module-catalog": ">=100.0.1",
     "magento/module-eav": ">=100.0.1",
     "magento/module-store": ">=100.0.1",
-    "akeneo/api-php-client": "^3.0",
-    "php-http/guzzle6-adapter": "^1.1"
+    "akeneo/api-php-client": "^6.0",
+    "php-http/guzzle6-adapter": "^2.0",
+    "http-interop/http-factory-guzzle": "^1.0"
   },
   "type": "magento2-module",
-  "version": "101.0.0",
+  "version": "101.3.1",
   "license": [
     "OSL-3.0",
     "AFL-3.0"

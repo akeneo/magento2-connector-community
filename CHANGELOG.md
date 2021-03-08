@@ -160,3 +160,42 @@
 **Warning :** *After updating Akeneo Connector for Magento 2 to this version, make sure to check to following:*
 * *Remove the previously declared CRON jobs for old "Product Model" and "Family Variant" jobs*
 * *Audit and rework your previous customizations on the "Product Model", "Family Variant" and "Product" jobs, as this new version contains compatibility break changes*
+
+### Version 101.0.2 :
+* Add documentation link in the connector admin configuration page
+* Fix metric attribute unit missing test case
+
+### Version 101.1.0 :
+* Add new Akeneo Edition selector configuration (https://help.akeneo.com/magento2-connector/v100/articles/02-configure-PIM-API.html#configure-your-akeneo-edition)
+
+**Warning :** *After updating Akeneo Connector for Magento 2 to this version, make sure to configure the correct Akeneo Edition in your connector configuration*
+
+* Add category tree filtering from API for Akeneo version 4.0.62 or greater and Akeneo Serenity
+* Add family updated date filter in connector configuration for Akeneo version 4.0.62 or greater and Akeneo Serenity (https://help.akeneo.com/magento2-connector/v100/articles/10-configure-families.html#how-can-i-filter-my-families-during-import)
+
+### Version 101.1.1 :
+* Add attribute filtering by type from API in the admin configuration page for Akeneo version 4.0.62 or greater and Akeneo Serenity
+* Add attribute updated date filter in connector configuration for Akeneo version 4.0.62 or greater and Akeneo Serenity (https://help.akeneo.com/magento2-connector/v100/articles/11-filter-attributes.html)
+* Add attribute filter by code in connector configuration for Akeneo version 4.0.62 or greater and Akeneo Serenity (https://help.akeneo.com/magento2-connector/v100/articles/11-filter-attributes.html)
+* Fix category tree filtering when no categories are excluded for Akeneo version 4.0.62 or greater and Akeneo Serenity
+* Fix attribute job when no attribute is found with correct label
+* Fix metric option import when no option is found
+
+### Version 101.1.2 :
+* Fix image attribute import to fill the catalog_product_entity_media_gallery_value table
+
+### Version 101.2.0 :
+* Add grouped product management with quantity association (https://help.akeneo.com/magento2-connector/v100/articles/12-configure-grouped-products.html)
+* Add product association mapping in connector configuration (https://help.akeneo.com/magento2-connector/v100/articles/05-configure-products.html#configure-related-upsell-and-cross-sell-products)
+
+### Version 101.3.0 :
+* Upgrade Akeneo API PHP Client to version 6.0
+
+**Warning :** *After updating Akeneo Connector for Magento 2 to this version, make sure to update your composer dependencies*
+
+* Add Akeneo version 5.0 or greater in version selector
+
+### Version 101.3.1 :
+* Remove automatic scope filter that was added when using the product and product model Advanced Filter
+* Add Family code in Magento 2 attribute set label to prevent SQL insertion error when multiple family have the same label
+* Fix image attribute re-download check on wrong file path

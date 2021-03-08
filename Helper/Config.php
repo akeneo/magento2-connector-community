@@ -2,6 +2,8 @@
 
 namespace Akeneo\Connector\Helper;
 
+use Magento\Catalog\Model\Product\Link;
+use Akeneo\Connector\Model\Source\Edition;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Encryption\Encryptor;
@@ -65,6 +67,12 @@ class Config
      * @var string AKENEO_API_CLIENT_SECRET
      */
     const AKENEO_API_CLIENT_SECRET = 'akeneo_connector/akeneo_api/client_secret';
+    /**
+     * API edition config path
+     *
+     * @var string AKENEO_API_EDITION
+     */
+    const AKENEO_API_EDITION = 'akeneo_connector/akeneo_api/edition';
     /**
      * API pagination size config path
      *
@@ -282,15 +290,75 @@ class Config
      */
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     /**
+     * Attribute filter updated mode
+     *
+     * @var string ATTRIBUTE_FILTERS_UPDATED_MODE
+     */
+    const ATTRIBUTE_FILTERS_UPDATED_MODE = 'akeneo_connector/filter_attribute/updated_mode';
+    /**
+     * Attribute filter greater
+     *
+     * @var string ATTRIBUTE_FILTERS_UPDATED_GREATER
+     */
+    const ATTRIBUTE_FILTERS_UPDATED_GREATER = 'akeneo_connector/filter_attribute/updated_greater';
+    /**
+     * Attribute filter by code mode
+     *
+     * @var string ATTRIBUTE_FILTERS_BY_CODE_MODE
+     */
+    const ATTRIBUTE_FILTERS_BY_CODE_MODE = 'akeneo_connector/filter_attribute/filter_attribute_code_mode';
+    /**
+     * Attribute filter by code
+     *
+     * @var string ATTRIBUTE_FILTERS_BY_CODE
+     */
+    const ATTRIBUTE_FILTERS_BY_CODE = 'akeneo_connector/filter_attribute/filter_attribute_code';
+    /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_ASSOCIATION_RELATED
+     */
+    const PRODUCT_ASSOCIATION_RELATED = 'akeneo_connector/product/association_related';
+    /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_ASSOCIATION_UPSELL
+     */
+    const PRODUCT_ASSOCIATION_UPSELL = 'akeneo_connector/product/association_upsell';
+    /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_AKENEO_MASTER
+     */
+    const PRODUCT_ASSOCIATION_CROSSELL = 'akeneo_connector/product/association_crossell';
+    /**
      * Product activation flag config path
      *
      * @var string PRODUCT_ACTIVATION
      */
     const PRODUCT_ACTIVATION = 'akeneo_connector/product/activation';
     /**
+     * Grouped product families mapping path
+     *
+     * @var string GROUPED_PRODUCTS_FAMILIES_MAPPING
+     */
+    const GROUPED_PRODUCTS_FAMILIES_MAPPING = 'akeneo_connector/grouped_products/families_mapping';
+    /**
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
      */
     const PAGINATION_SIZE_DEFAULT_VALUE = 10;
+    /**
+     * Families filters updated mode config path
+     *
+     * @var string FAMILIES_FILTERS_UPDATED_MODE
+     */
+    const FAMILIES_FILTERS_UPDATED_MODE = 'akeneo_connector/families/updated_mode';
+    /**
+     * Families filters updated greater config path
+     *
+     * @var string FAMILIES_FILTERS_UPDATED_GREATER
+     */
+    const FAMILIES_FILTERS_UPDATED_GREATER = 'akeneo_connector/families/updated_greater';
     /**
      * This variable contains a Encryptor
      *
@@ -450,6 +518,16 @@ class Config
     }
 
     /**
+     * Get pim edition
+     *
+     * @return string
+     */
+    public function getEdition()
+    {
+        return $this->scopeConfig->getValue(self::AKENEO_API_EDITION);
+    }
+
+    /**
      * Retrieve the filter mode used
      *
      * @return string
@@ -585,6 +663,46 @@ class Config
     public function getUpdatedSinceFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_SINCE);
+    }
+
+    /**
+     * Retrieve attribute updated mode
+     *
+     * @return string
+     */
+    public function getAttributeUpdatedMode()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_UPDATED_MODE);
+    }
+
+    /**
+     * Retrieve the attribute updated after filter
+     *
+     * @return string
+     */
+    public function getAttributeUpdatedGreaterFilter()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_UPDATED_GREATER);
+    }
+
+    /**
+     * Retrieve the attribute filter by code mode
+     *
+     * @return bool
+     */
+    public function getAttributeFilterByCodeMode()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_BY_CODE_MODE);
+    }
+
+    /**
+     * Retrieve the attribute filter by code
+     *
+     * @return array
+     */
+    public function getAttributeFilterByCode()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_BY_CODE);
     }
 
     /**
@@ -1211,6 +1329,66 @@ class Config
     }
 
     /**
+     * Get all grouped families from the mapping
+     *
+     * @return string[]
+     */
+    public function getGroupedFamiliesToImport()
+    {
+        /** @var string $familiesSerialized */
+        $familiesSerialized = $this->scopeConfig->getValue(self::GROUPED_PRODUCTS_FAMILIES_MAPPING);
+        /** @var mixed[] $associations */
+        $associations = $this->serializer->unserialize($familiesSerialized);
+        /** @var string[] $families */
+        $families = [];
+        /** @var mixed[] $association */
+        foreach ($associations as $association) {
+            $families[] = $association['akeneo_grouped_family_code'];
+        }
+
+        return $families;
+    }
+
+    /**
+     * Get all families and their associations to import
+     *
+     * @return string[]
+     */
+    public function getGroupedAssociationsToImport()
+    {
+        /** @var string $associationsSerialized */
+        $associationsSerialized = $this->scopeConfig->getValue(self::GROUPED_PRODUCTS_FAMILIES_MAPPING);
+        /** @var string[] $associations */
+        $associations = $this->serializer->unserialize($associationsSerialized);
+
+        return $associations;
+    }
+
+    /**
+     * Description getGroupedAssociationsForFamily function
+     *
+     * @param string $family
+     *
+     * @return mixed[]
+     */
+    public function getGroupedAssociationsForFamily(string $family)
+    {
+        /** @var string[] $allAssociations */
+        $allAssociations = $this->getGroupedAssociationsToImport();
+        /** @var mixed[] $associations */
+        $associations = [];
+
+        /** @var string[] $association */
+        foreach ($allAssociations as $association) {
+            if ($association['akeneo_grouped_family_code'] === $family) {
+                $associations[] = $association;
+            }
+        }
+
+        return $associations;
+    }
+
+    /**
      * Returns default attribute-set id for given entity
      *
      * @param string $entity
@@ -1221,5 +1399,62 @@ class Config
     public function getDefaultAttributeSetId($entity)
     {
         return $this->eavConfig->getEntityType($entity)->getDefaultAttributeSetId();
+    }
+
+    /**
+     * Description getFamiliesUpdatedMode function
+     *
+     * @return string|null
+     */
+    public function getFamiliesUpdatedMode()
+    {
+        return $this->scopeConfig->getValue(self::FAMILIES_FILTERS_UPDATED_MODE);
+    }
+
+    /**
+     * Description getFamiliesUpdatedGreater function
+     *
+     * @return string|null
+     */
+    public function getFamiliesUpdatedGreater()
+    {
+        return $this->scopeConfig->getValue(self::FAMILIES_FILTERS_UPDATED_GREATER);
+    }
+
+    /**
+     * Get association types configuration array for product import
+     *
+     * @return string[]
+     */
+    public function getAssociationTypes()
+    {
+        /** @var string $relatedCode */
+        $relatedCode  = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_RELATED);
+        /** @var string $upsellCode */
+        $upsellCode   = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_UPSELL);
+        /** @var string $crossellCode */
+        $crossellCode = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_CROSSELL);
+        /** @var string[] $associationTypes */
+        $associationTypes = [];
+        if ($relatedCode) {
+            $associationTypes[Link::LINK_TYPE_RELATED] = [
+                $relatedCode . '-products',
+                $relatedCode . '-product_models',
+            ];
+        }
+        if ($upsellCode) {
+            $associationTypes[Link::LINK_TYPE_UPSELL] = [
+                $upsellCode . '-products',
+                $upsellCode . '-product_models',
+            ];
+        }
+        if ($crossellCode) {
+            $associationTypes[Link::LINK_TYPE_CROSSSELL] = [
+                $crossellCode . '-products',
+                $crossellCode . '-product_models',
+            ];
+        }
+
+        return $associationTypes;
     }
 }
