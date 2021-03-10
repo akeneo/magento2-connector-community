@@ -56,7 +56,7 @@ class AkeneoConnectorImportStepFinishObserver implements ObserverInterface
             return $this;
         }
 
-        if ($import->getStep() + 1 == $import->countSteps()) {
+        if ($import->getStep() + 1 == $import->countSteps() || ($import->isDone() && $import->getStatus() != false)) {
             $log->setStatus(ImportInterface::IMPORT_SUCCESS); // Success
             $this->logRepository->save($log);
         }
