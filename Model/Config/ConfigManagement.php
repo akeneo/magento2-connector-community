@@ -26,7 +26,9 @@ use Zend_Pdf_Annotation_Link;
 use Zend_Pdf_Canvas_Interface;
 use Zend_Pdf_Exception;
 use Zend_Pdf_Font;
+use Zend_Pdf_Image;
 use Zend_Pdf_Page;
+use Zend_Pdf_Resource_Image;
 use Zend_Pdf_Resource_Image_Png;
 
 /**
@@ -413,7 +415,8 @@ class ConfigManagement
         $asset = $this->assetRepository->createAsset($fileId, $params);
         /** @var string $imageFullPath */
         $imageFullPath = $asset->getSourceFile();
-        $image = \Zend_Pdf_Image::imageWithPath($imageFullPath);
+        /** @var Zend_Pdf_Resource_Image $image */
+        $image = Zend_Pdf_Image::imageWithPath($imageFullPath);
 
         /** @var mixed $imageWidth */
         $imageWidth = $image->getPixelWidth();
