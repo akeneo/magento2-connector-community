@@ -1394,7 +1394,7 @@ class Product extends JobImport
     public function importFiles()
     {
         if (!$this->configHelper->isFileImportEnabled()) {
-            $this->setStatus(false);
+            $this->setStatus(true);
             $this->setMessage(__('File import is not enabled'));
 
             return;
@@ -2990,7 +2990,7 @@ class Product extends JobImport
     public function importMedia()
     {
         if (!$this->configHelper->isMediaImportEnabled()) {
-            $this->setStatus(false);
+            $this->setStatus(true);
             $this->setMessage(__('Media import is not enabled'));
 
             return;
