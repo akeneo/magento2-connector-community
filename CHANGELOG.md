@@ -199,3 +199,7 @@
 * Remove automatic scope filter that was added when using the product and product model Advanced Filter
 * Add Family code in Magento 2 attribute set label to prevent SQL insertion error when multiple family have the same label
 * Fix image attribute re-download check on wrong file path
+
+### Version 101.3.2 :
+* Change job error status to success when no products are imported for a family
+* Update information warning messages color from red to orange
