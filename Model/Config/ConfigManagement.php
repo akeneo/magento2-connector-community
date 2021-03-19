@@ -686,6 +686,6 @@ class ConfigManagement
             );
         }
 
-        $this->addLineBreak(0, self::ARRAY_LINE_HEIGHT);
+        $this->addLineBreak(self::ARRAY_LINE_HEIGHT * 2, self::ARRAY_LINE_HEIGHT);
     }
 }
