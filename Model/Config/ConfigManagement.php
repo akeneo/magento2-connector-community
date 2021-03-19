@@ -29,7 +29,6 @@ use Zend_Pdf_Font;
 use Zend_Pdf_Image;
 use Zend_Pdf_Page;
 use Zend_Pdf_Resource_Image;
-use Zend_Pdf_Resource_Image_Png;
 
 /**
  * Class ConfigManagement
@@ -261,16 +260,20 @@ class ConfigManagement
                 continue;
             }
 
+            // Advanced filter field management
             if ($this->getSystemConfigAttribute($config['path'], 'backend_model') === Json::class) {
                 /** @var string $text */
                 $text = $config['value'];
                 /** @var string $cleanValue */
-                $cleanValue = preg_replace("/<br>|\n|\s+/", "", $text);
+                $cleanValue = preg_replace("/<br>|\n/", "", $text);
                 /** @var string[] $lines */
                 $lines = str_split($cleanValue, 89);
 
                 $this->page->drawText($value, self::INDENT_TEXT, $this->lastPosition);
-                $this->addLineBreak();
+                $this->addLineBreak(self::LINE_BREAK);
+                if(!$cleanValue) {
+                    continue;
+                }
                 /** @var string $line */
                 foreach ($lines as $line) {
                     $this->page->drawText($line, self::INDENT_TEXT, $this->lastPosition);
@@ -341,7 +344,7 @@ class ConfigManagement
         $valuesArray = explode(',', $values);
         /** @var string $value */
         foreach ($valuesArray as $value) {
-            $this->addLineBreak();
+            $this->addLineBreak(self::LINE_BREAK);
             $this->page->drawText('- ' . $value, self::INDENT_MULTISELECT, $this->lastPosition);
         }
 
@@ -367,7 +370,7 @@ class ConfigManagement
         /** @var float $cellLength */
         $cellLength = $rowLength / count($headers);
 
-        $this->addLineBreak();
+        $this->addLineBreak(self::ARRAY_LINE_HEIGHT);
         $this->addArrayRow($headers, $cellLength, $rowLength);
         // Footer detection
         $this->addLineBreak(self::ARRAY_LINE_HEIGHT, 0);
@@ -384,7 +387,7 @@ class ConfigManagement
             $this->addArrayRow($arrayValues, $cellLength, $rowLength);
         }
 
-        $this->addLineBreak();
+        $this->addLineBreak(self::ARRAY_LINE_HEIGHT);
     }
 
     /**
