@@ -265,13 +265,13 @@ class ConfigManagement
                 /** @var string $text */
                 $text = $config['value'];
                 /** @var string $cleanValue */
-                $cleanValue = preg_replace("/<br>|\n/", "", $text);
+                $cleanValue = preg_replace("/<br>|\n|\r|\r?|\s\s+/", "", $text);
                 /** @var string[] $lines */
                 $lines = str_split($cleanValue, 89);
 
                 $this->page->drawText($value, self::INDENT_TEXT, $this->lastPosition);
                 $this->addLineBreak(self::LINE_BREAK);
-                if(!$cleanValue) {
+                if (!$cleanValue) {
                     continue;
                 }
                 /** @var string $line */
