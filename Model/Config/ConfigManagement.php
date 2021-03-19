@@ -247,7 +247,7 @@ class ConfigManagement
                 $firstElement = reset($configValueUnserialized);
 
                 if (!$firstElement) {
-                    $this->addLineBreak();
+                    $this->addLineBreak(self::LINE_BREAK);
                     continue;
                 }
                 /** @var string[] $firstElementKeys */
@@ -309,7 +309,7 @@ class ConfigManagement
                 continue;
             }
 
-            $this->addLineBreak(10);
+            $this->addLineBreak(self::LINE_BREAK);
         }
 
         return $this->pdf;
