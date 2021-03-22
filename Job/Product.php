@@ -3121,20 +3121,21 @@ class Product extends JobImport
                 $connection->insertOnDuplicate($galleryEntityTable, $data, array_keys($data));
 
                 // Get potential record_id from gallery value table
-                /** @var Select $select */
-                $select          = $connection->select()->from($galleryValueTable)->where('value_id = ?', $valueId)->where(
-                    'store_id = ?',
-                    0
-                )->where($columnIdentifier . ' = ?', $row[$columnIdentifier]);
-                $databaseRecords = $connection->fetchAll($select);
+                /** @var int $databaseRecords */
+                $databaseRecords = $connection->fetchOne(
+                    $connection->select()->from($galleryValueTable, [new Expr('MAX(`record_id`)')])->where(
+                        'value_id = ?',
+                        $valueId
+                    )->where(
+                        'store_id = ?',
+                        0
+                    )->where($columnIdentifier . ' = ?', $row[$columnIdentifier])
+                );
+
                 /** @var int $recordId */
                 $recordId = 0;
                 if (!empty($databaseRecords)) {
-                    foreach ($databaseRecords as $databaseRecord) {
-                        if (isset($databaseRecord['record_id']) && $databaseRecord['record_id'] > $recordId) {
-                            $recordId = $databaseRecord['record_id'];
-                        }
-                    }
+                    $recordId = $databaseRecords;
                 }
 
                 /** @var array $data */
