@@ -1922,7 +1922,7 @@ class Product extends JobImport
                 continue;
             }
 
-            if(!isset($row['parent']) && $row['_type_id'] === 'simple') {
+            if (!isset($row['parent']) && $row['_type_id'] === 'simple') {
                 // Check if relations exists for this product and delete the relations
                 $connection->delete($productRelationTable, ['child_id = ?' => $row['_entity_id']]);
                 $connection->delete($productSuperLinkTable, ['product_id = ?' => $row['_entity_id']]);
