@@ -310,14 +310,16 @@ class ConfigManagement
     /**
      * Description setPageStyle function
      *
+     * @param string $font
+     *
      * @return void
      * @throws Zend_Pdf_Exception
      */
-    protected function setPageStyle()
+    protected function setPageStyle(string $font = Zend_Pdf_Font::FONT_HELVETICA)
     {
         $style = new \Zend_Pdf_Style();
         $style->setLineColor(new \Zend_Pdf_Color_Rgb(0, 0, 0));
-        $font = Zend_Pdf_Font::fontWithName(Zend_Pdf_Font::FONT_HELVETICA);
+        $font = Zend_Pdf_Font::fontWithName($font);
         $style->setFont($font, 10);
         $this->page->setStyle($style);
     }
@@ -526,12 +528,13 @@ class ConfigManagement
      */
     protected function addFooter()
     {
+        $this->setPageStyle(Zend_Pdf_Font::FONT_HELVETICA_OBLIQUE);
         /** @var string $text */
         $text = (string)__(
             "If you want to report a bug, ask a question or have a suggestion to make on Akeneo Connector for Magento 2,"
         );
         /** @var string $text2 */
-        $text2 = (string)__("please contact our Support Team");
+        $text2 = (string)__("please contact our Support Team.");
 
         $this->page->drawText($text, self::INDENT_FOOTER, $this->lastPosition - self::LINE_BREAK);
         $this->page->drawText($text2, self::INDENT_FOOTER, $this->lastPosition - (self::LINE_BREAK) * 2);
