@@ -432,7 +432,7 @@ class ConfigManagement
         // Display Logo
         $page->drawImage($image, $x1, $this->lastPosition - $imageHeigth, $x2, $this->lastPosition);
 
-        $this->addLineBreak(0, $imageHeigth);
+        $this->addLineBreak(0, $imageHeigth + self::LINE_BREAK);
     }
 
     /**
