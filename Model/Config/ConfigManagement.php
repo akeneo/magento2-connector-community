@@ -21,8 +21,6 @@ use Magento\Framework\View\Asset\File;
 use Magento\Framework\View\Asset\Repository;
 use SimpleXMLElement;
 use Zend_Pdf;
-use Zend_Pdf_Action_URI;
-use Zend_Pdf_Annotation_Link;
 use Zend_Pdf_Canvas_Interface;
 use Zend_Pdf_Exception;
 use Zend_Pdf_Font;
@@ -143,12 +141,6 @@ class ConfigManagement
      * @var string LOGO_PDF
      */
     const LOGO_PDF = 'Akeneo_Connector::images/logo.jpg';
-    /**
-     * Description DOCUMENTATION_LINK constant
-     *
-     * @var string DOCUMENTATION_LINK
-     */
-    const DOCUMENTATION_LINK = 'https://help.akeneo.com/magento2-connector/v100/articles/download-connector.html#what-can-i-do-if-i-have-a-question-to-ask-a-bug-to-report-or-a-suggestion-to-make-about-the-connector';
     /**
      * Description PASSWORD_CHAR constant
      *
@@ -539,22 +531,10 @@ class ConfigManagement
             "If you want to report a bug, ask a question or have a suggestion to make on Akeneo Connector for Magento 2,"
         );
         /** @var string $text2 */
-        $text2 = (string)__("please follow this steps to contact our Support Team");
+        $text2 = (string)__("please contact our Support Team");
 
         $this->page->drawText($text, self::INDENT_FOOTER, $this->lastPosition - self::LINE_BREAK);
         $this->page->drawText($text2, self::INDENT_FOOTER, $this->lastPosition - (self::LINE_BREAK) * 2);
-
-        $target     = Zend_Pdf_Action_URI::create(
-            self::DOCUMENTATION_LINK
-        );
-        $annotation = Zend_Pdf_Annotation_Link::create(
-            127,
-            $this->lastPosition - 30,
-            155,
-            $this->lastPosition - 30,
-            $target
-        );
-        $this->page->attachAnnotation($annotation);
     }
 
     /**
