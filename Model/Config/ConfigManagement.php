@@ -148,11 +148,17 @@ class ConfigManagement
      */
     const PASSWORD_CHAR = '****';
     /**
-     * Position in Y axis of the last element
+     * Position on Y axis of the last element
      *
      * @var float $lastPosition
      */
     protected $lastPosition = 0;
+    /**
+     * Position on X axis of the last element (Only used for print label and value in different fonts)
+     *
+     * @var int $lastPositionX
+     */
+    protected $lastPositionX = 0;
     /**
      * Current PDF object
      *
@@ -226,12 +232,16 @@ class ConfigManagement
                 continue;
             }
             /** @var string $value */
-            $value = $label . ' : ';
+            $label .= ' : ';
+            // Set bold font for the field label
+            $this->setPageStyle(Zend_Pdf_Font::FONT_HELVETICA_BOLD);
+            $this->page->drawText($label, self::INDENT_TEXT, $this->lastPosition);
+            $this->lastPositionX = self::INDENT_TEXT + $this->widthForStringUsingFontSize($label);
+            // Reset font for values
+            $this->setPageStyle();
 
             // Manage serialized attribute
             if ($this->getSystemConfigAttribute($config['path'], 'backend_model') === ArraySerialized::class) {
-                $this->page->drawText($value, self::INDENT_TEXT, $this->lastPosition);
-
                 // Get array labels
                 /** @var string[] $configValueUnserialized */
                 $configValueUnserialized = $this->serializer->unserialize($config['value']);
@@ -261,7 +271,6 @@ class ConfigManagement
                 /** @var string[] $lines */
                 $lines = str_split($cleanValue, 89);
 
-                $this->page->drawText($value, self::INDENT_TEXT, $this->lastPosition);
                 $this->addLineBreak(self::LINE_BREAK);
                 if (!$cleanValue) {
                     continue;
@@ -278,22 +287,21 @@ class ConfigManagement
                     $config['path'],
                     'backend_model'
                 )) {
-                $this->page->drawText($value, self::INDENT_TEXT, $this->lastPosition);
                 $this->insertMultiselect($config['value']);
                 continue;
             }
 
             if (in_array($config['path'], self::HIDDEN_FIELDS) && $config['value']) {
-                $value .= self::PASSWORD_CHAR;
+                $value = self::PASSWORD_CHAR;
             } else {
-                $value .= $config['value'];
+                $value = $config['value'];
             }
 
             if ($config['path'] === ConfigHelper::AKENEO_API_EDITION) {
-                $value = $label . ' : ' . $this->getEdition();
+                $value = $this->getEdition();
             }
 
-            $this->page->drawText($value, self::INDENT_TEXT, $this->lastPosition);
+            $this->page->drawText($value, $this->lastPositionX, $this->lastPosition);
 
             if ($index === $configsNumber - 1) {
                 $this->addLineBreak(50, self::LINE_BREAK);
