@@ -119,6 +119,8 @@ class CategoryFilters
             $categoriesToImport = $allParentCategories;
         }
 
+        $categoriesToImport = array_map('strval', $categoriesToImport);
+
         return $categoriesToImport;
     }
 
