@@ -3205,11 +3205,11 @@ class Product extends JobImport
                         /** @var array $data */
                         $data = [
                             'value_id'        => $valueId,
-                            'store_id'        => 0,
+                            'store_id'        => $store['store_id'],
                             $columnIdentifier => $row[$columnIdentifier],
                             'label'           => '',
                             'position'        => 0,
-                            'disabled'        => 0,
+                            'disabled'        => $disabled,
                         ];
 
                         if ($recordId != 0) {
@@ -3227,7 +3227,7 @@ class Product extends JobImport
                             /** @var array $data */
                             $data = [
                                 'attribute_id'    => $column['attribute'],
-                                'store_id'        => 0,
+                                'store_id'        => $store['store_id'],
                                 $columnIdentifier => $row[$columnIdentifier],
                                 'value'           => $file,
                             ];
