@@ -1493,7 +1493,9 @@ class Product extends JobImport
                 if (!$this->configHelper->mediaFileExists($filePath)) {
                     /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$attribute]);
-                    $this->configHelper->saveMediaFile($filePath, $binary);
+                    /** @var string $fileContents */
+                    $fileContents = $binary->getBody()->getContents();
+                    $this->configHelper->saveMediaFile($filePath, $fileContents);
                 }
 
                 // Change the Akeneo file path to Magento file path
