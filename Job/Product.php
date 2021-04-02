@@ -79,6 +79,12 @@ class Product extends JobImport
      */
     const CATALOG_PRODUCT_ENTITY_TABLE_NAME = 'catalog_product_entity';
     /**
+     * Description SUFFIX_SEPARATOR constant
+     *
+     * @var string SUFFIX_SEPARATOR
+     */
+    const SUFFIX_SEPARATOR = '-';
+    /**
      * This variable contains a string value
      *
      * @var string $code
@@ -3022,12 +3028,29 @@ class Product extends JobImport
             $columnIdentifier => '_entity_id',
             'sku'             => 'identifier',
         ];
+
+        $stores = $this->storeHelper->getAllStores();
+        /** @var string[] $dataToImport */
+        $dataToImport = [];
         foreach ($gallery as $image) {
             if (!$connection->tableColumnExists($tmpTable, strtolower($image))) {
                 $this->setMessage(__('Info: No value found in the current batch for the attribute %1', $image));
                 continue;
             }
             $data[$image] = strtolower($image);
+            $dataToImport[$image] = 'all';
+        }
+        /** @var string $image */
+        foreach($gallery as $image) {
+            foreach ($stores as $suffix => $storeData) {
+                if ($connection->tableColumnExists(
+                    $tmpTable,
+                    strtolower($image) . self::SUFFIX_SEPARATOR . $suffix
+                )) {
+                    $data[$image . self::SUFFIX_SEPARATOR . $suffix]         = strtolower($image) . self::SUFFIX_SEPARATOR . $suffix;
+                    $dataToImport[strtolower($image) . self::SUFFIX_SEPARATOR . $suffix] = $suffix;
+                }
+            }
         }
 
         /** @var bool $rowIdExists */
@@ -3057,11 +3080,19 @@ class Product extends JobImport
         /** @var string $productImageTable */
         $productImageTable = $this->entitiesHelper->getTable('catalog_product_entity_varchar');
 
+        // Clear values for all images
+        $connection->delete(
+            $galleryValueTable
+        );
+
         /** @var array $row */
         while (($row = $query->fetch())) {
             /** @var array $files */
             $files = [];
-            foreach ($gallery as $image) {
+            /**
+             * @var string $image
+             * @var string $suffix */
+            foreach ($dataToImport as $image => $suffix) {
                 if (!isset($row[$image])) {
                     continue;
                 }
@@ -3119,54 +3150,90 @@ class Product extends JobImport
                     $columnIdentifier => $row[$columnIdentifier],
                 ];
                 $connection->insertOnDuplicate($galleryEntityTable, $data, array_keys($data));
+                /**
+                 * @var string $storeSuffix
+                 * @var mixed[] $storeArray
+                 */
+                foreach($stores as $storeSuffix => $storeArray) {
+                    foreach ($storeArray as $store) {
+                        $disabled = 0;
+                        if ($suffix !== 'all') {
+                            /** @var int $disabled */
+                            $disabled = 1;
+                            /** @var bool $storeIsInEnabledStores */
+                            $storeIsInEnabledStores = false;
+                            if ($suffix !== $storeSuffix) {
+                                // Disable image for this store, only if this store is not in enabled stores list
+                                /** @var mixed[] $enabledStores */
+                                foreach ($stores[$suffix] as $enabledStores) {
+                                    if ($enabledStores['store_code'] === $store['store_code']) {
+                                        $storeIsInEnabledStores = true;
+                                    }
+                                }
 
-                // Get potential record_id from gallery value table
-                /** @var Select $select */
-                $select          = $connection->select()->from($galleryValueTable)->where('value_id = ?', $valueId)->where(
-                    'store_id = ?',
-                    0
-                )->where($columnIdentifier . ' = ?', $row[$columnIdentifier]);
-                $databaseRecords = $connection->fetchAll($select);
-                /** @var int $recordId */
-                $recordId = 0;
-                if (!empty($databaseRecords)) {
-                    foreach ($databaseRecords as $databaseRecord) {
-                        if (isset($databaseRecord['record_id']) && $databaseRecord['record_id'] > $recordId) {
-                            $recordId = $databaseRecord['record_id'];
+                                if ($storeIsInEnabledStores) {
+                                    continue;
+                                }
+                            }
+
+                            if ($suffix === $storeSuffix) {
+                                $disabled = 0;
+                            }
+                        }
+
+                        // Get potential record_id from gallery value table
+                        /** @var Select $select */
+                        $select          = $connection->select()
+                            ->from($galleryValueTable)
+                            ->where('value_id = ?', $valueId)
+                            ->where(
+                                'store_id = ?',
+                                0
+                            )
+                            ->where($columnIdentifier . ' = ?', $row[$columnIdentifier]);
+                        $databaseRecords = $connection->fetchAll($select);
+                        /** @var int $recordId */
+                        $recordId = 0;
+                        if (!empty($databaseRecords)) {
+                            foreach ($databaseRecords as $databaseRecord) {
+                                if (isset($databaseRecord['record_id']) && $databaseRecord['record_id'] > $recordId) {
+                                    $recordId = $databaseRecord['record_id'];
+                                }
+                            }
+                        }
+
+                        /** @var array $data */
+                        $data = [
+                            'value_id'        => $valueId,
+                            'store_id'        => 0,
+                            $columnIdentifier => $row[$columnIdentifier],
+                            'label'           => '',
+                            'position'        => 0,
+                            'disabled'        => 0,
+                        ];
+
+                        if ($recordId != 0) {
+                            $data['record_id'] = $recordId;
+                        }
+                        $connection->insertOnDuplicate($galleryValueTable, $data, array_keys($data));
+
+                        /** @var array $columns */
+                        $columns = $this->configHelper->getMediaImportImagesColumns();
+
+                        foreach ($columns as $column) {
+                            if ($column['column'] !== $image) {
+                                continue;
+                            }
+                            /** @var array $data */
+                            $data = [
+                                'attribute_id'    => $column['attribute'],
+                                'store_id'        => 0,
+                                $columnIdentifier => $row[$columnIdentifier],
+                                'value'           => $file,
+                            ];
+                            $connection->insertOnDuplicate($productImageTable, $data, array_keys($data));
                         }
                     }
-                }
-
-                /** @var array $data */
-                $data = [
-                    'value_id'        => $valueId,
-                    'store_id'        => 0,
-                    $columnIdentifier => $row[$columnIdentifier],
-                    'label'           => '',
-                    'position'        => 0,
-                    'disabled'        => 0,
-                ];
-
-                if ($recordId != 0) {
-                    $data['record_id'] = $recordId;
-                }
-                $connection->insertOnDuplicate($galleryValueTable, $data, array_keys($data));
-
-                /** @var array $columns */
-                $columns = $this->configHelper->getMediaImportImagesColumns();
-
-                foreach ($columns as $column) {
-                    if ($column['column'] !== $image) {
-                        continue;
-                    }
-                    /** @var array $data */
-                    $data = [
-                        'attribute_id'    => $column['attribute'],
-                        'store_id'        => 0,
-                        $columnIdentifier => $row[$columnIdentifier],
-                        'value'           => $file,
-                    ];
-                    $connection->insertOnDuplicate($productImageTable, $data, array_keys($data));
                 }
 
                 $files[] = $file;
