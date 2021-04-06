@@ -15,6 +15,8 @@ use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Job\Import as JobImport;
 use Akeneo\Connector\Job\Option as JobOption;
+use Akeneo\Connector\Logger\Handler\ProductHandler;
+use Akeneo\Connector\Logger\ProductLogger;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
 use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Connector\Model\Source\Filters\Mode;
@@ -242,10 +244,24 @@ class Product extends JobImport
      * @var StoreManagerInterface $storeManager
      */
     protected $storeManager;
+    /**
+     * This variable contains a logger
+     *
+     * @var ProductLogger $logger
+     */
+    protected $logger;
+    /**
+     * This variable contains a handler
+     *
+     * @var ProductHandler $handler
+     */
+    protected $handler;
 
     /**
      * Product constructor.
      *
+     * @param ProductLogger           $logger
+     * @param ProductHandler          $handler
      * @param OutputHelper            $outputHelper
      * @param ManagerInterface        $eventManager
      * @param Authenticator           $authenticator
@@ -269,6 +285,8 @@ class Product extends JobImport
      * @param array                   $data
      */
     public function __construct(
+        ProductLogger $logger,
+        ProductHandler $handler,
         OutputHelper $outputHelper,
         ManagerInterface $eventManager,
         Authenticator $authenticator,
@@ -291,9 +309,10 @@ class Product extends JobImport
         StoreManagerInterface $storeManager,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $data);
 
-        $this->entitiesHelper          = $entitiesHelper;
+        $this->logger                  = $logger;
+        $this->handler                 = $handler;
         $this->configHelper            = $configHelper;
         $this->productModelHelper      = $productModel;
         $this->familyVariantHelper     = $familyVariant;
@@ -319,8 +338,13 @@ class Product extends JobImport
      */
     public function createTable()
     {
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+        }
+        
         if (empty($this->configHelper->getMappedChannels())) {
-            $this->setMessage(__('No website/channel mapped. Please check your configurations.'));
+            $this->setMessage(__('No website/channel mapped. Please check your configurations.'), $this->logger);
             $this->stop(true);
 
             return;
@@ -341,7 +365,7 @@ class Product extends JobImport
             );
 
             if (!$isFamilyImported) {
-                $this->setMessage(__('The family %1 is not imported yet, please run Family import.', $this->getFamily()));
+                $this->setMessage(__('The family %1 is not imported yet, please run Family import.', $this->getFamily()), $this->logger);
                 $this->stop(true);
 
                 return;
@@ -365,7 +389,7 @@ class Product extends JobImport
         if (empty($products)) {
             // No product were found and we're in a grouped family, we don't import product models for it, so we stop the import
             if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
-                $this->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()))->stop();
+                $this->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()), $this->logger)->stop();
 
                 return;
             }
@@ -384,7 +408,7 @@ class Product extends JobImport
             }
 
             if (empty($productModels)) {
-                $this->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()))->stop();
+                $this->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()), $this->logger)->stop();
 
                 return;
             }
@@ -392,7 +416,7 @@ class Product extends JobImport
             $this->entitiesHelper->createTmpTableFromApi($productModel, $this->getCode());
             $this->entitiesHelper->createTmpTableFromApi($productModel, 'product_model');
             $this->setMessage(
-                __('No product found for family: %1 but product model found, process with import', $this->getFamily())
+                __('No product found for family: %1 but product model found, process with import', $this->getFamily()), $this->logger
             );
 
             return;
@@ -404,7 +428,7 @@ class Product extends JobImport
 
             /** @var string $message */
             $message = __('Family imported in this batch: %1', $this->getFamily());
-            $this->setMessage($message);
+            $this->setMessage($message, $this->logger);
         }
     }
 
@@ -495,7 +519,7 @@ class Product extends JobImport
                 $result = $this->entitiesHelper->insertDataFromApi($product, $this->getCode());
 
                 if (!$result) {
-                    $this->setMessage('Could not insert Product data in temp table');
+                    $this->setMessage('Could not insert Product data in temp table', $this->logger);
                     $this->stop(true);
 
                     return;
@@ -539,13 +563,16 @@ class Product extends JobImport
         }
 
         if (empty($index)) {
-            $this->setMessage('No Product data to insert in temp table');
+            $this->setMessage('No Product data to insert in temp table', $this->logger);
             $this->stop(true);
 
             return;
         }
 
-        $this->setMessage(__('%1 line(s) found', $index));
+        $this->setMessage(__('%1 line(s) found', $index), $this->logger);
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logImportedEntities($this->logger, false, 'identifier');
+        }
     }
 
     /**
@@ -899,7 +926,7 @@ class Product extends JobImport
         }
 
         if (!$connection->isTableExists($this->entitiesHelper->getTableName($this->jobOption->getCode()))) {
-            $this->setMessage(__('No metric option to import'));
+            $this->setMessage(__('No metric option to import'), $this->logger);
 
             return;
         }
@@ -953,7 +980,7 @@ class Product extends JobImport
         }
         if (!$groupColumn) {
             $this->setStatus(false);
-            $this->setMessage(__('Columns groups or parent not found'));
+            $this->setMessage(__('Columns groups or parent not found'), $this->logger);
 
             return;
         }
@@ -1178,7 +1205,7 @@ class Product extends JobImport
 
         if (!empty($duplicates)) {
             $this->setMessage(
-                __('Duplicates sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1', join(', ', $duplicates))
+                __('Duplicates sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1', join(', ', $duplicates)), $this->logger
             );
             $this->stop(true);
 
@@ -1207,7 +1234,7 @@ class Product extends JobImport
 
         if (!$connection->tableColumnExists($tmpTable, 'family')) {
             $this->setStatus(false);
-            $this->setMessage(__('Column family is missing'));
+            $this->setMessage(__('Column family is missing'), $this->logger);
 
             return;
         }
@@ -1225,7 +1252,7 @@ class Product extends JobImport
         );
         if ($noFamily) {
             $this->setStatus(false);
-            $this->setMessage(__('Warning: %1 product(s) without family. Please try to import families.', $noFamily));
+            $this->setMessage(__('Warning: %1 product(s) without family. Please try to import families.', $noFamily), $this->logger);
         }
 
         $connection->update(
@@ -1395,7 +1422,7 @@ class Product extends JobImport
     {
         if (!$this->configHelper->isFileImportEnabled()) {
             $this->setStatus(true);
-            $this->setMessage(__('File import is not enabled'));
+            $this->setMessage(__('File import is not enabled'), $this->logger);
 
             return;
         }
@@ -1416,7 +1443,7 @@ class Product extends JobImport
 
         if (empty($attributesMapped)) {
             $this->setStatus(false);
-            $this->setMessage(__('Akeneo Files Attributes is empty'));
+            $this->setMessage(__('Akeneo Files Attributes is empty'), $this->logger);
 
             return;
         }
@@ -1727,6 +1754,10 @@ class Product extends JobImport
                 AdapterInterface::INSERT_ON_DUPLICATE
             );
         }
+
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logImportedEntities($this->logger, true, 'identifier');
+        }
     }
 
     /**
@@ -1770,7 +1801,7 @@ class Product extends JobImport
         }
         if (!$groupColumn) {
             $this->setStatus(false);
-            $this->setMessage(__('Columns groups or parent not found'));
+            $this->setMessage(__('Columns groups or parent not found'), $this->logger);
 
             return;
         }
@@ -2058,7 +2089,7 @@ class Product extends JobImport
 
                                 if ($websiteMatch === false && $option['label'] != ' ') {
                                     $this->setAdditionalMessage(
-                                        __('Warning: The option %1 is not a website code.', $optionApiAttribute['code'])
+                                        __('Warning: The option %1 is not a website code.', $optionApiAttribute['code']), $this->logger
                                     );
                                 }
                             }
@@ -2128,16 +2159,16 @@ class Product extends JobImport
 
                                 if ($websiteSet === false) {
                                     $optionLabel = $attribute->getSource()->getOptionText($associatedWebsite);
-                                    $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.', $row['identifier'], $optionLabel));
+                                    $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.', $row['identifier'], $optionLabel), $this->logger);
                                 }
                             }
                         } else {
-                            $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has no associated website in the custom attribute.', $row['identifier']));
+                            $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has no associated website in the custom attribute.', $row['identifier']), $this->logger);
                         }
                     }
                 }
             } else {
-                $this->setAdditionalMessage(__('Warning: The website attribute code given does not match any Magento attribute.'));
+                $this->setAdditionalMessage(__('Warning: The website attribute code given does not match any Magento attribute.'), $this->logger);
             }
         } else {
             /** @var array $websites */
@@ -2186,7 +2217,7 @@ class Product extends JobImport
 
         if (!$connection->tableColumnExists($tmpTable, 'categories')) {
             $this->setStatus(false);
-            $this->setMessage(__('Column categories not found'));
+            $this->setMessage(__('Column categories not found'), $this->logger);
 
             return;
         }
@@ -2503,11 +2534,11 @@ class Product extends JobImport
                         __(
                             'The family %1 was mapped to an empty association, please check your configuration',
                             $this->getFamily()
-                        )
+                        ), $this->logger
                     );
                 } else {
                     $this->setAdditionalMessage(
-                        __('The grouped product association %1 has not been imported', $familyAssociation['akeneo_quantity_association'])
+                        __('The grouped product association %1 has not been imported', $familyAssociation['akeneo_quantity_association']), $this->logger
                     );
                 }
                 unset($associationsCurrentFamily[$key]);
@@ -2542,7 +2573,7 @@ class Product extends JobImport
                     __(
                         'The grouped product with identifier %1 does not exist in magento, links will not be imported',
                         $row['identifier']
-                    )
+                    ), $this->logger
                 );
                 continue;
             }
@@ -2574,7 +2605,7 @@ class Product extends JobImport
                             'The grouped product %1 is linked to the product(s) %2 but they are not simple product(s). The association has been skipped.',
                             $row['identifier'],
                             $skuModels
-                        )
+                        ), $this->logger
                     );
                 }
 
@@ -2585,7 +2616,7 @@ class Product extends JobImport
                             'The grouped product with identifier %1 does not have values for its grouped association %2',
                             $row['identifier'],
                             $familyAssociation['akeneo_quantity_association']
-                        )
+                        ), $this->logger
                     );
 
                     continue;
@@ -2603,7 +2634,7 @@ class Product extends JobImport
                             __(
                                 'The association %1 is not a quantified association, please check your configuration',
                                 $familyAssociation['akeneo_quantity_association']
-                            )
+                            ), $this->logger
                         );
 
                         $badAssociationFlag = true;
@@ -2622,7 +2653,7 @@ class Product extends JobImport
                                 'The grouped product %1 is linked to the product %2 but it does not exist in Magento. The association has been skipped.',
                                 $row['identifier'],
                                 $productInfo['identifier']
-                            )
+                            ), $this->logger
                         );
                         continue;
                     }
@@ -2652,7 +2683,7 @@ class Product extends JobImport
                                 'The grouped product %1 is linked to the product %2 but it is not a simple product. The association has been skipped.',
                                 $row['identifier'],
                                 $productInfo['identifier']
-                            )
+                            ), $this->logger
                         );
                         continue;
                     }
@@ -2733,7 +2764,7 @@ class Product extends JobImport
         if (!$this->configHelper->isUrlGenerationEnabled()) {
             $this->setStatus(false);
             $this->setMessage(
-                __('Url rewrite generation is not enabled')
+                __('Url rewrite generation is not enabled'), $this->logger
             );
 
             return;
@@ -2922,7 +2953,7 @@ class Product extends JobImport
                                             $rewriteId,
                                             $requestPath
                                         )
-                                    )
+                                    ), $this->logger
                                 );
                             }
                         } else {
@@ -2991,7 +3022,7 @@ class Product extends JobImport
     {
         if (!$this->configHelper->isMediaImportEnabled()) {
             $this->setStatus(true);
-            $this->setMessage(__('Media import is not enabled'));
+            $this->setMessage(__('Media import is not enabled'), $this->logger);
 
             return;
         }
@@ -3005,7 +3036,7 @@ class Product extends JobImport
 
         if (empty($gallery)) {
             $this->setStatus(false);
-            $this->setMessage(__('Akeneo Images Attributes is empty'));
+            $this->setMessage(__('Akeneo Images Attributes is empty'), $this->logger);
 
             return;
         }
@@ -3024,7 +3055,7 @@ class Product extends JobImport
         ];
         foreach ($gallery as $image) {
             if (!$connection->tableColumnExists($tmpTable, strtolower($image))) {
-                $this->setMessage(__('Info: No value found in the current batch for the attribute %1', $image));
+                $this->setMessage(__('Info: No value found in the current batch for the attribute %1', $image), $this->logger);
                 continue;
             }
             $data[$image] = strtolower($image);
@@ -3214,7 +3245,7 @@ class Product extends JobImport
             $this->cacheTypeList->cleanType($type);
         }
 
-        $this->setMessage(__('Cache cleaned for: %1', join(', ', $types)));
+        $this->setMessage(__('Cache cleaned for: %1', join(', ', $types)), $this->logger);
     }
 
     /**
@@ -3229,7 +3260,7 @@ class Product extends JobImport
         /** @var mixed[] $filters */
         $filters = $this->productFilters->getFilters($family, $isProductModel);
         if (array_key_exists('error', $filters)) {
-            $this->setMessage($filters['error']);
+            $this->setMessage($filters['error'], $this->logger);
             $this->stop(true);
         }
 
@@ -3436,7 +3467,7 @@ class Product extends JobImport
             }
             if (is_float($associationData[1])) {
                 $this->setAdditionalMessage(
-                    __('The product %1 has a decimal value in its association, skipped', $productIdentifier)
+                    __('The product %1 has a decimal value in its association, skipped', $productIdentifier), $this->logger
                 );
 
                 continue;

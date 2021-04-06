@@ -3,6 +3,8 @@
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Helper\AttributeFilters;
+use Akeneo\Connector\Logger\Handler\OptionHandler;
+use Akeneo\Connector\Logger\OptionLogger;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
@@ -56,12 +58,6 @@ class Option extends Import
      */
     protected $akeneoClient;
     /**
-     * This variable contains an EntitiesHelper
-     *
-     * @var EntitiesHelper $entitiesHelper
-     */
-    protected $entitiesHelper;
-    /**
      * This variable contains an OptionHelper
      *
      * @var OptionHelper $optionHelper
@@ -104,6 +100,18 @@ class Option extends Import
      */
     protected $eavSetup;
     /**
+     * This variable contains a logger
+     *
+     * @var OptionLogger $logger
+     */
+    protected $logger;
+    /**
+     * This variable contains a handler
+     *
+     * @var OptionHandler $handler
+     */
+    protected $handler;
+    /**
      * This variable contains a TypeListInterface
      *
      * @var TypeListInterface $cacheTypeList
@@ -119,6 +127,8 @@ class Option extends Import
     /**
      * Option constructor
      *
+     * @param OptionLogger      $logger
+     * @param OptionHandler     $handler
      * @param OutputHelper      $outputHelper
      * @param ManagerInterface  $eventManager
      * @param Authenticator     $authenticator
@@ -136,6 +146,8 @@ class Option extends Import
      * @throws LocalizedException
      */
     public function __construct(
+        OptionLogger $logger,
+        OptionHandler $handler,
         OutputHelper $outputHelper,
         ManagerInterface $eventManager,
         Authenticator $authenticator,
@@ -150,9 +162,10 @@ class Option extends Import
         EavSetup $eavSetup,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $data);
 
-        $this->entitiesHelper   = $entitiesHelper;
+        $this->logger           = $logger;
+        $this->handler          = $handler;
         $this->optionHelper     = $optionHelper;
         $this->configHelper     = $configHelper;
         $this->eavConfig        = $eavConfig;
@@ -170,6 +183,10 @@ class Option extends Import
      */
     public function createTable()
     {
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+        }
         /** @var PageInterface $attributes */
         $attributes = $this->getAllAttributes();
         /** @var bool $hasOptions */
@@ -192,7 +209,7 @@ class Option extends Import
             }
         }
         if ($hasOptions === false) {
-            $this->setMessage(__('No options found'));
+            $this->setMessage(__('No options found'), $this->logger);
             $this->stop();
 
             return;
@@ -200,7 +217,7 @@ class Option extends Import
         /** @var array $option */
         $option = $options->getItems();
         if (empty($option)) {
-            $this->setMessage(__('No results from Akeneo'));
+            $this->setMessage(__('No results from Akeneo'), $this->logger);
             $this->stop(1);
 
             return;
@@ -233,8 +250,12 @@ class Option extends Import
             }
         }
         $this->setMessage(
-            __('%1 line(s) found', $lines)
+            __('%1 line(s) found', $lines), $this->logger
         );
+
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logImportedEntities($this->logger);
+        }
 
         /* Remove option without an admin store label */
         /** @var string $localeCode */
@@ -260,7 +281,7 @@ class Option extends Import
                         $row['code'],
                         $row['attribute'],
                         $localeCode
-                    )
+                    ), $this->logger
                 );
             }
         }
@@ -298,6 +319,9 @@ class Option extends Import
     public function matchEntities()
     {
         $this->optionHelper->matchEntity('code', 'eav_attribute_option', 'option_id', $this->getCode(), 'attribute');
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logImportedEntities($this->logger, true);
+        }
     }
 
     /**
@@ -413,7 +437,7 @@ class Option extends Import
         }
 
         $this->setMessage(
-            __('Cache cleaned for: %1', join(', ', $types))
+            __('Cache cleaned for: %1', join(', ', $types)), $this->logger
         );
     }
 

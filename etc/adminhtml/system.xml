@@ -457,6 +457,14 @@ For example :<br/>
                     <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_five,serenity</field>
                 </depends>
             </group>
+            <group id="advanced" translate="label" sortOrder="70" showInDefault="1">
+                <label>Advanced</label>
+                <field id="advanced_log" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Advanced Loging</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Activating advanced log may slow down the imports. Temporary tables won't be deleted at the end of their imports. Logs will be placed in var/log/akeneo_connector</comment>
+                </field>
+            </group>
         </section>
     </system>
 </config>

@@ -2,13 +2,16 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Helper\Import\Entities;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Magento\Framework\DataObject;
+use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Phrase;
 use Akeneo\Connector\Api\Data\ImportInterface;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Output as OutputHelper;
+use Zend_Db_Statement_Exception;
 
 /**
  * Class Import
@@ -106,27 +109,35 @@ abstract class Import extends DataObject implements ImportInterface
      * @var bool $setFromAdmin
      */
     protected $setFromAdmin;
+    /**
+     * This variable contains an EntitiesHelper
+     *
+     * @var Entities $entitiesHelper
+     */
+    protected $entitiesHelper;
 
     /**
      * Import constructor.
      *
-     * @param OutputHelper $outputHelper
+     * @param OutputHelper     $outputHelper
      * @param ManagerInterface $eventManager
-     * @param Authenticator $authenticator
-     * @param array $data
+     * @param Authenticator    $authenticator
+     * @param array            $data
      */
     public function __construct(
         OutputHelper $outputHelper,
         ManagerInterface $eventManager,
         Authenticator $authenticator,
+        Entities $entitiesHelper,
         array $data = []
     ) {
         parent::__construct($data);
 
-        $this->authenticator = $authenticator;
-        $this->outputHelper = $outputHelper;
-        $this->eventManager = $eventManager;
-        $this->step         = 0;
+        $this->authenticator  = $authenticator;
+        $this->outputHelper   = $outputHelper;
+        $this->eventManager   = $eventManager;
+        $this->entitiesHelper = $entitiesHelper;
+        $this->step           = 0;
         $this->setFromAdmin = false;
         $this->initStatus();
         $this->initSteps();
@@ -290,12 +301,16 @@ abstract class Import extends DataObject implements ImportInterface
      * Set import message
      *
      * @param string|Phrase $message
+     * @param Logger|null   $logger
      *
      * @return Import
      */
-    public function setMessage($message)
+    public function setMessage($message, $logger = null)
     {
         $this->message = $message;
+        if ($logger) {
+            $this->logger->addDebug($message);
+        }
 
         return $this;
     }
@@ -303,13 +318,17 @@ abstract class Import extends DataObject implements ImportInterface
     /**
      * Set additional message during import
      *
-     * @param $message
+     * @param string|Phrase $message
+     * @param Logger|null   $logger
      *
      * @return $this
      */
-    public function setAdditionalMessage($message)
+    public function setAdditionalMessage($message, $logger = null)
     {
         $this->message = $this->getMessageWithoutPrefix() . $this->getEndOfLine() . $message;
+        if ($logger) {
+            $this->logger->addDebug($message);
+        }
 
         return $this;
     }
@@ -625,7 +644,7 @@ abstract class Import extends DataObject implements ImportInterface
      *
      * @return void
      */
-    public function displayMessages($messages) {
+    public function displayMessages($messages, $logger) {
         /** @var string[] $importMessages */
         foreach ($messages as $importMessages) {
             if (!empty($importMessages)) {
@@ -633,13 +652,43 @@ abstract class Import extends DataObject implements ImportInterface
                 foreach ($importMessages as $message) {
                     if (isset($message['message'], $message['status'])) {
                         if ($message['status'] == false) {
-                            $this->setMessage($message['message']);
+                            $this->setMessage($message['message'], $logger);
                             $this->setStatus(false);
                         } else {
-                            $this->setAdditionalMessage($message['message']);
+                            $this->setAdditionalMessage($message['message'], $logger);
                         }
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Log Imported entities
+     *
+     * @return void
+     * @throws Zend_Db_Statement_Exception
+     */
+    public function logImportedEntities($logger = null, $newEntities = false, $identifierColumn = 'code')
+    {
+        if ($logger) {
+            /** @var AdapterInterface $connection */
+            $connection = $this->entitiesHelper->getConnection();
+            /** @var string $tmpTable */
+            $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+            if (!$newEntities) {
+                /** @var \Magento\Framework\DB\Select $selectExistingEntities */
+                $selectImportedEntities = $connection->select()->from($tmpTable, $identifierColumn);
+                /** @var string[] $existingEntities */
+                $existingEntities = array_column($connection->query($selectImportedEntities)->fetchAll(), $identifierColumn);
+                $logger->addDebug(__('Imported entities : %1', implode(',', $existingEntities)));
+            }
+            if ($newEntities) {
+                /** @var \Magento\Framework\DB\Select $selectExistingEntities */
+                $selectImportedEntities = $connection->select()->from($tmpTable, $identifierColumn)->where('_is_new = ?', '1');
+                /** @var string[] $importeNewEntities */
+                $importeNewEntities = array_column($connection->query($selectImportedEntities)->fetchAll(), $identifierColumn);
+                $logger->addDebug(__('Imported new entities : %1', implode(',', $importeNewEntities)));
             }
         }
     }
