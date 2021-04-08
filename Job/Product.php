@@ -979,7 +979,7 @@ class Product extends JobImport
             '_type_id'           => new Expr('"configurable"'),
             '_options_container' => new Expr('"container1"'),
             '_axis'              => 'v.axis',
-            'family'             => 'v.family',
+            'family'             => $connection->tableColumnExists($productModelTable, 'family') ? 'v.family' : 'e.family',
             'categories'         => 'v.categories',
         ];
 
