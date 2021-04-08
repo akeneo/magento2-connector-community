@@ -3183,14 +3183,10 @@ class Product extends JobImport
 
                         // Get potential record_id from gallery value table
                         /** @var Select $select */
-                        $select          = $connection->select()
-                            ->from($galleryValueTable)
-                            ->where('value_id = ?', $valueId)
-                            ->where(
-                                'store_id = ?',
-                                0
-                            )
-                            ->where($columnIdentifier . ' = ?', $row[$columnIdentifier]);
+                        $select          = $connection->select()->from($galleryValueTable)->where('value_id = ?', $valueId)->where(
+                            'store_id = ?',
+                            $store['store_id']
+                        )->where($columnIdentifier . ' = ?', $row[$columnIdentifier]);
                         $databaseRecords = $connection->fetchAll($select);
                         /** @var int $recordId */
                         $recordId = 0;
