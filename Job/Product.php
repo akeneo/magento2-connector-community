@@ -3029,6 +3029,7 @@ class Product extends JobImport
             'sku'             => 'identifier',
         ];
 
+        /** @var mixed[] $stores */
         $stores = $this->storeHelper->getAllStores();
         /** @var string[] $dataToImport */
         $dataToImport = [];
@@ -3042,6 +3043,10 @@ class Product extends JobImport
         }
         /** @var string $image */
         foreach($gallery as $image) {
+            /**
+             * @var string  $suffix
+             * @var mixed[] $storeData
+             */
             foreach ($stores as $suffix => $storeData) {
                 if ($connection->tableColumnExists(
                     $tmpTable,
@@ -3155,6 +3160,7 @@ class Product extends JobImport
                  * @var mixed[] $storeArray
                  */
                 foreach($stores as $storeSuffix => $storeArray) {
+                    /** @var mixed[] $store */
                     foreach ($storeArray as $store) {
                         $disabled = 0;
                         if ($suffix !== 'all') {
@@ -3198,7 +3204,7 @@ class Product extends JobImport
                             }
                         }
 
-                        /** @var array $data */
+                        /** @var string[] $data */
                         $data = [
                             'value_id'        => $valueId,
                             'store_id'        => $store['store_id'],
@@ -3220,7 +3226,7 @@ class Product extends JobImport
                             if ($column['column'] !== $image) {
                                 continue;
                             }
-                            /** @var array $data */
+                            /** @var string[] $data */
                             $data = [
                                 'attribute_id'    => $column['attribute'],
                                 'store_id'        => $store['store_id'],
