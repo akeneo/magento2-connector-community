@@ -979,7 +979,7 @@ class Product extends JobImport
             '_type_id'           => new Expr('"configurable"'),
             '_options_container' => new Expr('"container1"'),
             '_axis'              => 'v.axis',
-            'family'             => 'v.family',
+            'family'             => $connection->tableColumnExists($productModelTable, 'family') ? 'v.family' : 'e.family',
             'categories'         => 'v.categories',
         ];
 
@@ -1938,8 +1938,8 @@ class Product extends JobImport
         /** @var string $productSuperLinkTable */
         $productSuperLinkTable = $this->entitiesHelper->getTable('catalog_product_super_link');
 
-        /** @var Select $select */
-        $select = $connection->select()->from($tmpTable, ['_entity_id', 'parent'])->where('parent IS NOT NULL');
+        /** @var \Magento\Framework\DB\Select $select */
+        $select = $connection->select()->from($tmpTable, ['_entity_id', 'parent', '_type_id']);
 
         /** @var string $pKeyColumn */
         $pKeyColumn = 'entity_id';
@@ -1954,8 +1954,14 @@ class Product extends JobImport
 
         /** @var array $row */
         while (($row = $query->fetch())) {
-            if (!isset($row['parent']) || !isset($row['_entity_id'])) {
+            if ((!isset($row['parent']) && $row['_type_id'] !== 'simple') || !isset($row['_entity_id'])) {
                 continue;
+            }
+
+            if (!isset($row['parent']) && $row['_type_id'] === 'simple') {
+                // Check if relations exists for this product and delete the relations
+                $connection->delete($productRelationTable, ['child_id = ?' => $row['_entity_id']]);
+                $connection->delete($productSuperLinkTable, ['product_id = ?' => $row['_entity_id']]);
             }
 
             /** @var string $productModelEntityId */
@@ -1969,41 +1975,27 @@ class Product extends JobImport
                 $valuesRelations = [];
                 /** @var string[] $valuesSuperLink */
                 $valuesSuperLink = [];
-                // Check for relations and add them if they don't exist
-                /** @var bool $hasRelation */
-                $hasRelation = (bool)$connection->fetchOne(
-                    $connection->select()->from($productRelationTable, [new Expr(1)])->where(
-                        'parent_id = ?',
-                        $productModelEntityId
-                    )->where('child_id = ?', $row['_entity_id'])->limit(1)
-                );
 
-                if (!$hasRelation) {
-                    $valuesRelations[] = [
-                        'parent_id' => $productModelEntityId,
-                        'child_id'  => $row['_entity_id'],
-                    ];
+                // Delete relation for this child before insertion
+                $connection->delete($productRelationTable, ['child_id = ?' => $row['_entity_id']]);
 
-                    $connection->insertOnDuplicate($productRelationTable, $valuesRelations, []);
-                }
+                // Insert the relation for the child
+                $valuesRelations[] = [
+                    'parent_id' => $productModelEntityId,
+                    'child_id'  => $row['_entity_id'],
+                ];
+
+                $connection->insertOnDuplicate($productRelationTable, $valuesRelations, []);
 
                 // Do the same for super links
-                /** @var bool $hasSuperLink */
-                $hasSuperLink = (bool)$connection->fetchOne(
-                    $connection->select()->from($productSuperLinkTable, [new Expr(1)])->where(
-                        'parent_id = ?',
-                        $productModelEntityId
-                    )->where('product_id = ?', $row['_entity_id'])->limit(1)
-                );
+                $connection->delete($productSuperLinkTable, ['product_id = ?' => $row['_entity_id']]);
 
-                if (!$hasSuperLink) {
-                    $valuesSuperLink[] = [
-                        'product_id' => $row['_entity_id'],
-                        'parent_id'  => $productModelEntityId,
-                    ];
+                $valuesSuperLink[] = [
+                    'product_id' => $row['_entity_id'],
+                    'parent_id'  => $productModelEntityId,
+                ];
 
-                    $connection->insertOnDuplicate($productSuperLinkTable, $valuesSuperLink, []);
-                }
+                $connection->insertOnDuplicate($productSuperLinkTable, $valuesSuperLink, []);
             }
         }
     }
@@ -3123,20 +3115,21 @@ class Product extends JobImport
                 $connection->insertOnDuplicate($galleryEntityTable, $data, array_keys($data));
 
                 // Get potential record_id from gallery value table
-                /** @var Select $select */
-                $select          = $connection->select()->from($galleryValueTable)->where('value_id = ?', $valueId)->where(
-                    'store_id = ?',
-                    0
-                )->where($columnIdentifier . ' = ?', $row[$columnIdentifier]);
-                $databaseRecords = $connection->fetchAll($select);
+                /** @var int $databaseRecords */
+                $databaseRecords = $connection->fetchOne(
+                    $connection->select()->from($galleryValueTable, [new Expr('MAX(`record_id`)')])->where(
+                        'value_id = ?',
+                        $valueId
+                    )->where(
+                        'store_id = ?',
+                        0
+                    )->where($columnIdentifier . ' = ?', $row[$columnIdentifier])
+                );
+
                 /** @var int $recordId */
                 $recordId = 0;
                 if (!empty($databaseRecords)) {
-                    foreach ($databaseRecords as $databaseRecord) {
-                        if (isset($databaseRecord['record_id']) && $databaseRecord['record_id'] > $recordId) {
-                            $recordId = $databaseRecord['record_id'];
-                        }
-                    }
+                    $recordId = $databaseRecords;
                 }
 
                 /** @var array $data */
