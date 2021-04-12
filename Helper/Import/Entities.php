@@ -4,6 +4,7 @@ namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Exception;
+use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Framework\App\DeploymentConfig;
@@ -642,8 +643,10 @@ class Entities
         $catalogAttribute = $this->getTable('catalog_eav_attribute');
         /** @var string $eavAttribute */
         $eavAttribute = $this->getTable('eav_attribute');
+        /** @var int $entityTypeId */
+        $entityTypeId = $this->configHelper->getEntityTypeId(ProductAttributeInterface::ENTITY_TYPE_CODE);
         /** @var Select $select */
-        $select = $connection->select()->from(['a' => $eavAttribute], ['attribute_code'])->joinInner(['c' => $catalogAttribute], 'c.attribute_id = a.attribute_id', ['is_global']);
+        $select = $connection->select()->from(['a' => $eavAttribute], ['attribute_code'])->where('entitiy_type_id = ?', $entityTypeId)->joinInner(['c' => $catalogAttribute], 'c.attribute_id = a.attribute_id', ['is_global']);
 
         /** @var string[] $attributeScopes */
         $attributeScopes = $connection->fetchPairs($select);
