@@ -728,6 +728,10 @@ class Category extends Import
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var array $stores */
         $stores = $this->storeHelper->getStores('lang');
+        /** @var mixed[] $categoryPath */
+        $categoryPath = $this->getCategoryPath();
+        /** @var mixed[] $rootCatAndStore */
+        $rootCatAndStore = $this->getRootCategoriesAndStores();
 
         /**
          * @var string $local
@@ -767,6 +771,15 @@ class Category extends Import
                     /** @var CategoryModel $category */
                     $category = $this->categoryModel;
                     $category->setData($row);
+
+                    if (!$this->isCategoryIsInStore(
+                        $rootCatAndStore,
+                        $categoryPath,
+                        $store['store_id'],
+                        $category->getId()
+                    )) {
+                        continue;
+                    }
 
                     /** @var string $urlPath */
                     $urlPath = $this->categoryUrlPathGenerator->getUrlPath($category);
@@ -851,6 +864,74 @@ class Category extends Import
                 }
             }
         }
+    }
+
+    /**
+     * Return array of store and his root category
+     * [store_id => root_category_id]
+     *
+     * @return string[]
+     */
+    protected function getRootCategoriesAndStores()
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+
+        /** @var string $select */
+        $select = $connection->select()->from(
+            ['s' => $connection->getTableName('store')],
+            ['store_id', 'g.root_category_id']
+        )->join(
+            ['g' => $connection->getTableName('store_group')],
+            "s.group_id = g.group_id",
+            []
+        );
+
+        return $connection->fetchPairs($select);
+    }
+
+    /**
+     * Return category path with entity array
+     * [entity_id => path]
+     *
+     * @return string[]
+     */
+    protected function getCategoryPath()
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+
+        /** @var string $select */
+        $select = $connection->select()->from(
+            ['c' => $connection->getTableName('catalog_category_entity')],
+            ['entity_id', 'path']
+        );
+
+        return $connection->fetchPairs($select);
+    }
+
+    /**
+     * return true if current category is present on current store
+     *
+     * @param array $rootCategoriesAndStores
+     * @param array $categoriesPath
+     * @param int   $storeId
+     * @param int   $categoryId
+     *
+     * @return bool
+     */
+    protected function isCategoryIsInStore(
+        array $rootCategoriesAndStores,
+        array $categoriesPath,
+        $storeId,
+        $categoryId
+    ) {
+        /** @var string $rootCategoryId */
+        $currentRootCategoryId = $rootCategoriesAndStores[$storeId];
+        /** @var string[] $currentCategoryPath */
+        $currentCategoryPath = explode('/', $categoriesPath[$categoryId]);
+
+        return in_array($currentRootCategoryId, $currentCategoryPath, false);
     }
 
     /**
