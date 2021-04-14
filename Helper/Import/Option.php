@@ -4,6 +4,7 @@ namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Import\Entities;
+use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Framework\App\DeploymentConfig;
 use Magento\Framework\App\ResourceConnection;
@@ -80,6 +81,8 @@ class Option extends Entities
         /** @var string[] $existingEntities */
         $existingEntities = $connection->query($select)->fetchAll();
         $existingEntities = array_column($existingEntities, 'entity_id');
+        /** @var int $entityTypeId */
+        $entityTypeId = $this->configHelper->getEntityTypeId(ProductAttributeInterface::ENTITY_TYPE_CODE);
 
         // Get all entities that are being imported and already present in Magento
         $select = $connection->select()->from(
@@ -94,7 +97,7 @@ class Option extends Entities
         )->joinInner(
             ['a' => 'eav_attribute'],
             'o.`attribute_id` = a.`attribute_id` AND t.`attribute` = a.`attribute_code`'
-        )->where('e.store_id = ?', 0);
+        )->where('e.store_id = ?', 0)->where('a.entity_type_id', $entityTypeId);
         /** @var string $query */
         $query = $connection->query($select);
         /* Use new error-free separator */
