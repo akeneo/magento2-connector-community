@@ -210,3 +210,6 @@
 * Fix category tree import with numeric code
 * Fix category URL rewrite generation on useless stores causing "-X" added to category URLs
 * Fix download of file attribute failing since last client upgrade
+
+### Version 101.3.4 :
+* Fix attribute requests condition on "entity_type_id" in order to prevent MYSQL errors during option import
