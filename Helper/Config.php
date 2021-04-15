@@ -38,6 +38,13 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 class Config
 {
     /**
+     * Enable Product if Exist Image
+     *
+     * @var string AKENEO_EXTENDED_ENABLING
+     */
+    const AKENEO_EXTENDED_ENABLING = 'enabling_product/general/enable';
+
+    /**
      * API URL config path
      *
      * @var string AKENEO_API_BASE_URL
@@ -446,6 +453,16 @@ class Config
         $this->catalogInventoryConfiguration = $catalogInventoryConfiguration;
         $this->mediaDirectory                = $filesystem->getDirectoryWrite(DirectoryList::MEDIA);
         $this->scopeConfig                   = $scopeConfig;
+    }
+
+    /**
+     * Enable Product if Exist Image
+     *
+     * @return string
+     */
+    public function getAkeneoExtendedEnabling()
+    {
+        return $this->scopeConfig->getValue(self::AKENEO_EXTENDED_ENABLING);
     }
 
     /**

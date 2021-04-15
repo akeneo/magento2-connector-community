@@ -200,6 +200,20 @@ class ProductModel
              * @var array $productModel
              */
             foreach ($productModels as $productModel) {
+                
+                if($this->configHelper->getAkeneoExtendedEnabling()) {
+                    $product['status'] = 2;
+                    $product['enabled'] = 0;
+                    if(isset($product["values"]["image_1"])) {
+                        if(isset($product["values"]["image_1"][0])){
+                            if(isset($product["values"]["image_1"][0]["data"])){
+                                $product['enabled'] = 1;
+                                $product['status'] = 1;
+                            }
+                        }
+                    }
+                }
+
                 /** @var string $attributeMetric */
                 foreach ($attributeMetrics as $attributeMetric) {
                     if (!isset($productModel['values'][$attributeMetric])) {

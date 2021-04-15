@@ -490,6 +490,17 @@ class Product extends JobImport
                         $product['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
                     }
                 }
+                
+                if($this->configHelper->getAkeneoExtendedEnabling()) {
+                    $productModel['status'] = 2;
+                    if(isset($productModel['values']['image_1'])) {
+                        if(isset($productModel['values']['image_1'][0])){
+                            if(isset($productModel['values']['image_1'][0]['data'])){
+                                $productModel['status'] = 1;
+                            }
+                        }
+                    }
+                }
 
                 /** @var bool $result */
                 $result = $this->entitiesHelper->insertDataFromApi($product, $this->getCode());
