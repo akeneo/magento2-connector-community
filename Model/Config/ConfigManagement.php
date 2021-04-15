@@ -124,6 +124,30 @@ class ConfigManagement
      */
     const INDENT_TEXT = 100;
     /**
+     * Indentation for group title
+     *
+     * @var int INDENT_GROUP
+     */
+    const INDENT_GROUP = 70;
+    /**
+     * Indentation for table
+     *
+     * @var int INDENT_TABLE
+     */
+    const INDENT_TABLE = self::INDENT_TEXT;
+    /**
+     * Default font size
+     *
+     * @param string DEFAULT_FONT_SIZE
+     */
+    const DEFAULT_FONT_SIZE = 10;
+    /**
+     * Table font size
+     *
+     * @param string TABLE_FONT_SIZE
+     */
+    const TABLE_FONT_SIZE = 10;
+    /**
      * Array line Height
      *
      * @var int ARRAY_LINE_HEIGHT
@@ -147,6 +171,18 @@ class ConfigManagement
      * @var string PASSWORD_CHAR
      */
     const PASSWORD_CHAR = '****';
+    /**
+     * Array key to get group in SystemConfigAttribute
+     *
+     * @var string ATTRIBUTE_GROUP_ARRAY_KEY
+     */
+    const SYSTEM_ATTRIBUTE_GROUP_ARRAY_KEY = 'group';
+    /**
+     * Array key to get value in SystemConfigAttribute
+     *
+     * @var string SYSTEM_ATTRIBUTE_VALUE_ARRAY_KEY
+     */
+    const SYSTEM_ATTRIBUTE_VALUE_ARRAY_KEY = 'value';
     /**
      * Position on Y axis of the last element
      *
@@ -220,28 +256,38 @@ class ConfigManagement
         $configs = $this->getAllAkeneoConfigs();
         /** @var int $configsNumber */
         $configsNumber = count($configs);
+        $group         = '';
 
         /**
          * @var int      $index
          * @var string[] $config
          */
         foreach ($configs as $index => $config) {
-            /** @var string $label */
-            $label = $this->getSystemConfigAttribute($config['path'], 'label');
+            /** @var string[] $labelAndGroup */
+            $labelAndGroup = $this->getSystemConfigAttribute($config['path'], 'label');
+            $label         = $labelAndGroup[self::SYSTEM_ATTRIBUTE_VALUE_ARRAY_KEY];
             if (!$label) {
                 continue;
             }
+
+            $currentGroup = (string)$labelAndGroup[self::SYSTEM_ATTRIBUTE_GROUP_ARRAY_KEY];
+            if ($group !== $currentGroup) {
+                $this->drawBoldText($currentGroup, self::INDENT_GROUP, $this->lastPosition);
+                $this->addLineBreak(self::LINE_BREAK);
+                $group = $currentGroup;
+            }
+
             /** @var string $value */
             $label .= ' : ';
             // Set bold font for the field label
-            $this->setPageStyle(Zend_Pdf_Font::FONT_HELVETICA_BOLD);
-            $this->page->drawText($label, self::INDENT_TEXT, $this->lastPosition);
-            $this->lastPositionX = self::INDENT_TEXT + $this->widthForStringUsingFontSize($label);
-            // Reset font for values
-            $this->setPageStyle();
+            $this->drawBoldText($label, self::INDENT_TEXT, $this->lastPosition);
 
             // Manage serialized attribute
-            if ($this->getSystemConfigAttribute($config['path'], 'backend_model') === ArraySerialized::class) {
+            /** @var string[] $backendModelAttribute */
+            $backendModelAttribute = $this->getSystemConfigAttribute($config['path'], 'backend_model');
+            /** @var string $backendModelAttributeValue */
+            $backendModelAttributeValue = (string)$backendModelAttribute[self::SYSTEM_ATTRIBUTE_VALUE_ARRAY_KEY];
+            if ($backendModelAttributeValue === ArraySerialized::class) {
                 // Get array labels
                 /** @var string[] $configValueUnserialized */
                 $configValueUnserialized = $this->serializer->unserialize($config['value']);
@@ -263,7 +309,7 @@ class ConfigManagement
             }
 
             // Advanced filter field management
-            if ($this->getSystemConfigAttribute($config['path'], 'backend_model') === Json::class) {
+            if ($backendModelAttributeValue === Json::class) {
                 /** @var string $text */
                 $text = $config['value'];
                 /** @var string $cleanValue */
@@ -283,10 +329,7 @@ class ConfigManagement
                 continue;
             }
 
-            if ($config['value'] && strpos($config['value'], ',') && !$this->getSystemConfigAttribute(
-                    $config['path'],
-                    'backend_model'
-                )) {
+            if ($config['value'] && strpos($config['value'], ',') && !$backendModelAttributeValue) {
                 $this->insertMultiselect($config['value']);
                 continue;
             }
@@ -319,17 +362,38 @@ class ConfigManagement
      * Description setPageStyle function
      *
      * @param string $font
+     * @param float  $fontSize
      *
      * @return void
      * @throws Zend_Pdf_Exception
      */
-    protected function setPageStyle(string $font = Zend_Pdf_Font::FONT_HELVETICA)
-    {
+    protected function setPageStyle(
+        string $font = Zend_Pdf_Font::FONT_HELVETICA,
+        float $fontSize = self::DEFAULT_FONT_SIZE
+    ) {
         $style = new \Zend_Pdf_Style();
         $style->setLineColor(new \Zend_Pdf_Color_Rgb(0, 0, 0));
         $font = Zend_Pdf_Font::fontWithName($font);
-        $style->setFont($font, 10);
+        $style->setFont($font, $fontSize);
         $this->page->setStyle($style);
+    }
+
+    /**
+     * Description drawBoldText function
+     *
+     * @param string $value
+     * @param float  $x
+     * @param float  $y
+     *
+     * @return void
+     * @throws Zend_Pdf_Exception
+     */
+    protected function drawBoldText(string $value, float $x, float $y)
+    {
+        $this->setPageStyle(Zend_Pdf_Font::FONT_HELVETICA_BOLD);
+        $this->page->drawText($value, $x, $y);
+        $this->lastPositionX = self::INDENT_TEXT + $this->widthForStringUsingFontSize($value);
+        $this->setPageStyle();
     }
 
     /**
@@ -364,6 +428,7 @@ class ConfigManagement
      */
     protected function insertSerializedArray(array $values, array $headers)
     {
+        $this->setPageStyle(Zend_Pdf_Font::FONT_HELVETICA, self::TABLE_FONT_SIZE);
         /** @var float $maxLengthValue */
         $maxLengthValue = $this->getMaxLengthValue($values);
 
@@ -390,6 +455,7 @@ class ConfigManagement
         }
 
         $this->addLineBreak(self::ARRAY_LINE_HEIGHT);
+        $this->setPageStyle();
     }
 
     /**
@@ -440,14 +506,18 @@ class ConfigManagement
     /**
      * Description addNewPage function
      *
+     * @param string $font
+     *
      * @return void
      * @throws Zend_Pdf_Exception
      */
-    protected function addNewPage()
+    protected function addNewPage(string $font = Zend_Pdf_Font::FONT_HELVETICA)
     {
+        /** @var float $currentFontSize */
+        $currentFontSize    = $this->page ? $this->page->getFontSize() : self::DEFAULT_FONT_SIZE;
         $this->page         = $this->pdf->newPage(Zend_Pdf_Page::SIZE_A4);
         $this->pdf->pages[] = $this->page;
-        $this->setPageStyle();
+        $this->setPageStyle($font, $currentFontSize);
 
         $this->lastPosition = $this->page->getHeight() - self::LINE_BREAK;
 
@@ -475,7 +545,7 @@ class ConfigManagement
      * @param string $path
      * @param string $attributeName
      *
-     * @return bool|string
+     * @return string[]
      */
     protected function getSystemConfigAttribute(string $path, string $attributeName)
     {
@@ -490,6 +560,8 @@ class ConfigManagement
         $xml = simplexml_load_file($etcDir . '/adminhtml/system.xml');
         /** @var string $label */
         $label = '';
+        /** @var string $attributeGroup */
+        $attributeGroup = '';
 
         /** @var SimpleXMLElement $group */
         foreach ($xml->{'system'}->{'section'}->{'group'} as $group) {
@@ -497,16 +569,20 @@ class ConfigManagement
             $attributes = $group->attributes();
             if ((string)$attributes['id'] === $path[1]) {
                 foreach ($group->{'field'} as $field) {
-                    /** @var string[] $attributes */
+                    /** @var string[] $attributexs */
                     $attributes = $field->attributes();
                     if ((string)$attributes['id'] === $path[2]) {
-                        $label = $field->{$attributeName};
+                        $label          = $field->{$attributeName};
+                        $attributeGroup = $group->{'label'};
                     }
                 }
             }
         }
 
-        return (string)$label;
+        return [
+            'group' => $attributeGroup,
+            'value' => $label,
+        ];
     }
 
     /**
@@ -523,7 +599,7 @@ class ConfigManagement
             [
                 'ccd' => 'core_config_data',
             ]
-        )->where('path like ?', '%akeneo%');
+        )->where('path like ?', '%akeneo_connector%')->order('path');
 
         return $connection->fetchAll($select);
     }
@@ -645,9 +721,9 @@ class ConfigManagement
     ) {
         /** @var Zend_Pdf_Canvas_Interface $line */
         $this->page->drawRectangle(
-            self::INDENT_MULTISELECT,
+            self::INDENT_TABLE,
             $this->lastPosition,
-            self::INDENT_MULTISELECT + $rowLength,
+            self::INDENT_TABLE + $rowLength,
             $this->lastPosition - self::ARRAY_LINE_HEIGHT,
             Zend_Pdf_Page::SHAPE_DRAW_STROKE
         );
@@ -664,15 +740,15 @@ class ConfigManagement
 
             $this->page->drawText(
                 $value,
-                self::INDENT_MULTISELECT + $indentValueCell,
+                self::INDENT_TABLE + $indentValueCell,
                 $this->lastPosition - 20
             );
 
             // Draw the right line of the cell
             $this->page->drawLine(
-                self::INDENT_MULTISELECT + ($cellLength * $index) + $cellLength,
+                self::INDENT_TABLE + ($cellLength * $index) + $cellLength,
                 $this->lastPosition,
-                self::INDENT_MULTISELECT + ($cellLength * $index) + $cellLength,
+                self::INDENT_TABLE + ($cellLength * $index) + $cellLength,
                 $this->lastPosition - self::ARRAY_LINE_HEIGHT
             );
         }
