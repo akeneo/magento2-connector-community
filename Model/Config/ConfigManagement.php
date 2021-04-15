@@ -599,7 +599,7 @@ class ConfigManagement
             [
                 'ccd' => 'core_config_data',
             ]
-        )->where('path like ?', '%akeneo_connector%')->order('path');
+        )->where('path like ?', '%akeneo_connector%')->order('path ASC');
 
         return $connection->fetchAll($select);
     }
