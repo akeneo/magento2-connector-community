@@ -467,7 +467,7 @@ class Attribute extends Import
                 $connection->select()->from(
                     $this->entitiesHelper->getTable('eav_attribute'),
                     ['frontend_input']
-                )->where('attribute_code = ?', $row['code'])
+                )->where('attribute_code = ?', $row['code'])->where('entity_type_id = ?', $this->getEntityTypeId())
             );
             /** @var bool $skipAttribute */
             $skipAttribute = false;
