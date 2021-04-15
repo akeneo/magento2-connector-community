@@ -265,11 +265,12 @@ class ConfigManagement
         foreach ($configs as $index => $config) {
             /** @var string[] $labelAndGroup */
             $labelAndGroup = $this->getSystemConfigAttribute($config['path'], 'label');
-            $label         = $labelAndGroup[self::SYSTEM_ATTRIBUTE_VALUE_ARRAY_KEY];
+            /** @var string $label */
+            $label = (string)$labelAndGroup[self::SYSTEM_ATTRIBUTE_VALUE_ARRAY_KEY];
             if (!$label) {
                 continue;
             }
-
+            /** @var string $currentGroup */
             $currentGroup = (string)$labelAndGroup[self::SYSTEM_ATTRIBUTE_GROUP_ARRAY_KEY];
             if ($group !== $currentGroup) {
                 $this->drawBoldText($currentGroup, self::INDENT_GROUP, $this->lastPosition);
@@ -277,7 +278,6 @@ class ConfigManagement
                 $group = $currentGroup;
             }
 
-            /** @var string $value */
             $label .= ' : ';
             // Set bold font for the field label
             $this->drawBoldText($label, self::INDENT_TEXT, $this->lastPosition);
