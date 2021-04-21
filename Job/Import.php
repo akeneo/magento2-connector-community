@@ -663,12 +663,6 @@ abstract class Import extends DataObject implements ImportInterface
         }
     }
 
-    /**
-     * Log Imported entities
-     *
-     * @return void
-     * @throws Zend_Db_Statement_Exception
-     */
     public function logImportedEntities($logger = null, $newEntities = false, $identifierColumn = 'code')
     {
         if ($logger) {
@@ -676,20 +670,22 @@ abstract class Import extends DataObject implements ImportInterface
             $connection = $this->entitiesHelper->getConnection();
             /** @var string $tmpTable */
             $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
-            if (!$newEntities) {
-                /** @var \Magento\Framework\DB\Select $selectExistingEntities */
-                $selectImportedEntities = $connection->select()->from($tmpTable, $identifierColumn);
-                /** @var string[] $existingEntities */
-                $existingEntities = array_column($connection->query($selectImportedEntities)->fetchAll(), $identifierColumn);
-                $logger->addDebug(__('Imported entities : %1', implode(',', $existingEntities)));
-            }
+            /** @var \Magento\Framework\DB\Select $selectExistingEntities */
+            $selectImportedEntities = $connection->select()->from($tmpTable, $identifierColumn);
             if ($newEntities) {
-                /** @var \Magento\Framework\DB\Select $selectExistingEntities */
-                $selectImportedEntities = $connection->select()->from($tmpTable, $identifierColumn)->where('_is_new = ?', '1');
-                /** @var string[] $importeNewEntities */
-                $importeNewEntities = array_column($connection->query($selectImportedEntities)->fetchAll(), $identifierColumn);
-                $logger->addDebug(__('Imported new entities : %1', implode(',', $importeNewEntities)));
+                $selectImportedEntities = $selectImportedEntities->where('_is_new = ?', '1');
             }
+            /** @var string[] $existingEntities */
+            $existingEntities = array_column(
+                $connection->query($selectImportedEntities)->fetchAll(),
+                $identifierColumn
+            );
+            if ($newEntities) {
+                $logger->addDebug(__('Imported new entities : %1', implode(',', $existingEntities)));
+
+                return;
+            }
+            $logger->addDebug(__('Imported entities : %1', implode(',', $existingEntities)));
         }
     }
 }

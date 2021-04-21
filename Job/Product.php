@@ -374,6 +374,9 @@ class Product extends JobImport
 
         /** @var mixed[] $filters */
         $filters = $this->getFilters($this->getFamily());
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logger->addDebug(__('Product API call Filters : ') . print_r($filters, true));
+        }
 
         foreach ($filters as $filter) {
             /** @var PageInterface $products */

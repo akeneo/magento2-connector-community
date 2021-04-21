@@ -180,12 +180,13 @@ class Attribute extends Import
      */
     public function createTable()
     {
+        /** @var mixed[] $filters */
+        $filters = $this->getFilters();
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
             $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->logger->addDebug(__('Attribute API call Filters : ') . print_r($filters, true));
         }
-        /** @var mixed[] $filters */
-        $filters = $this->getFilters();
         /** @var PageInterface $attributes */
         $attributes = $this->akeneoClient->getAttributeApi()->listPerPage(1, false, $filters);
         /** @var array $attribute */

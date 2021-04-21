@@ -188,7 +188,7 @@ class Option extends Import
             $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
         }
         /** @var PageInterface $attributes */
-        $attributes = $this->getAllAttributes();
+        $attributes = $this->getAllAttributes(true);
         /** @var bool $hasOptions */
         $hasOptions = false;
         /** @var array $attribute */
@@ -470,9 +470,11 @@ class Option extends Import
     /**
      * Get all attributes from the API
      *
+     * @param bool $logging
+     *
      * @return ResourceCursorInterface|mixed
      */
-    public function getAllAttributes()
+    public function getAllAttributes($logging = false)
     {
         if (!$this->attributes) {
             if (!$this->akeneoClient) {
@@ -482,6 +484,9 @@ class Option extends Import
             $paginationSize = $this->configHelper->getPaginationSize();
             /** @var string[] $filters */
             $filters          = $this->attributeFilters->getFilters();
+            if ($this->configHelper->isAdvancedLogActivated() && $logging) {
+                $this->logger->addDebug(__('Attribute API call Filters : ') . print_r($filters, true));
+            }
             $this->attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize, $filters);
         }
 

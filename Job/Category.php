@@ -162,6 +162,7 @@ class Category extends Import
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
             $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->logger->addDebug(__('Category API call Filters : ') . print_r($this->categoryFilters->getParentFilters(), true));
         }
         if (!$this->categoryFilters->getCategoriesToImport()) {
             $this->setMessage(__('No categories to import, check your category filter configuration'), $this->logger);
