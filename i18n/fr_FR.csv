@@ -168,3 +168,6 @@ The attribute %1 was not imported because it starts with a number. Update it in 
 "If you want to report a bug, ask a question or have a suggestion to make on Akeneo Connector for Magento 2,","Si vous voulez signaler un bug, poser une question ou avoir une suggestion sur le Connecteur Akeneo pour Magento 2,"
 "please follow this steps to contact our Support Team","veuillez suivre ces étapes pour contacter notre équipe d'assistance"
 "Export your configuration","Exporter votre configuration"
+"Empty","Vide"
+"Yes","Oui"
+"No","Non"

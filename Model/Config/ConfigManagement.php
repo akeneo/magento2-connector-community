@@ -100,6 +100,20 @@ class ConfigManagement
         ConfigHelper::AKENEO_API_CLIENT_SECRET,
     ];
     /**
+     * Fields which not be included into the boolean management (Yes/No value)
+     *
+     * @var string[] BYPASS_BOOLEAN_FIELDS
+     */
+    const BYPASS_BOOLEAN_FIELDS = [
+        ConfigHelper::PRODUCT_TAX_CLASS,
+        ConfigHelper::PAGINATION_SIZE_DEFAULT_VALUE,
+        ConfigHelper::PRODUCTS_FILTERS_UPDATED_SINCE,
+        ConfigHelper::PRODUCT_WEBSITE_ATTRIBUTE,
+        ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING,
+        ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES,
+        ConfigHelper::PRODUCTS_FILTERS_STATUS,
+    ];
+    /**
      * Description LINE_BREAK constant
      *
      * @var int LINE_BREAK
@@ -128,7 +142,7 @@ class ConfigManagement
      *
      * @var int INDENT_GROUP
      */
-    const INDENT_GROUP = 70;
+    const INDENT_GROUP = 80;
     /**
      * Indentation for table
      *
@@ -273,7 +287,7 @@ class ConfigManagement
             /** @var string $currentGroup */
             $currentGroup = (string)$labelAndGroup[self::SYSTEM_ATTRIBUTE_GROUP_ARRAY_KEY];
             if ($group !== $currentGroup) {
-                $this->drawBoldText($currentGroup, self::INDENT_GROUP, $this->lastPosition);
+                $this->drawBoldText('- ' . $currentGroup, self::INDENT_GROUP, $this->lastPosition);
                 $this->addLineBreak(self::LINE_BREAK);
                 $group = $currentGroup;
             }
@@ -295,6 +309,12 @@ class ConfigManagement
                 $firstElement = reset($configValueUnserialized);
 
                 if (!$firstElement) {
+                    $value = $this->renderValue('', $config['path']);
+                    $this->page->drawText(
+                        $value,
+                        $this->lastPositionX,
+                        $this->lastPosition
+                    );
                     $this->addLineBreak(self::LINE_BREAK);
                     continue;
                 }
@@ -303,7 +323,8 @@ class ConfigManagement
 
                 $this->insertSerializedArray(
                     $configValueUnserialized,
-                    $firstElementKeys
+                    $firstElementKeys,
+                    $config['path']
                 );
                 continue;
             }
@@ -317,12 +338,21 @@ class ConfigManagement
                 /** @var string[] $lines */
                 $lines = str_split($cleanValue, 89);
 
-                $this->addLineBreak(self::LINE_BREAK);
                 if (!$cleanValue) {
+                    $value = $this->renderValue('', $config['path']);
+                    $this->page->drawText(
+                        $value,
+                        $this->lastPositionX,
+                        $this->lastPosition
+                    );
+                    $this->addLineBreak(self::LINE_BREAK);
                     continue;
                 }
+                $this->addLineBreak(self::LINE_BREAK);
+
                 /** @var string $line */
                 foreach ($lines as $line) {
+                    $line = $this->renderValue($line, $config['path']);
                     $this->page->drawText($line, self::INDENT_TEXT, $this->lastPosition);
                     $this->addLineBreak(self::LINE_BREAK);
                 }
@@ -330,7 +360,7 @@ class ConfigManagement
             }
 
             if ($config['value'] && strpos($config['value'], ',') && !$backendModelAttributeValue) {
-                $this->insertMultiselect($config['value']);
+                $this->insertMultiselect($config['value'], $config['path']);
                 continue;
             }
 
@@ -344,6 +374,7 @@ class ConfigManagement
                 $value = $this->getEdition();
             }
 
+            $value = $this->renderValue((string)$value, $config['path']);
             $this->page->drawText($value, $this->lastPositionX, $this->lastPosition);
 
             if ($index === $configsNumber - 1) {
@@ -404,13 +435,14 @@ class ConfigManagement
      * @return void
      * @throws Zend_Pdf_Exception
      */
-    protected function insertMultiselect($values)
+    protected function insertMultiselect($values, string $field)
     {
         /** @var string[] $valuesArray */
         $valuesArray = explode(',', $values);
         /** @var string $value */
         foreach ($valuesArray as $value) {
             $this->addLineBreak(self::LINE_BREAK);
+            $value = $this->renderValue($value, $field);
             $this->page->drawText('- ' . $value, self::INDENT_MULTISELECT, $this->lastPosition);
         }
 
@@ -426,7 +458,7 @@ class ConfigManagement
      * @return void
      * @throws Zend_Pdf_Exception
      */
-    protected function insertSerializedArray(array $values, array $headers)
+    protected function insertSerializedArray(array $values, array $headers, string $field)
     {
         $this->setPageStyle(Zend_Pdf_Font::FONT_HELVETICA, self::TABLE_FONT_SIZE);
         /** @var float $maxLengthValue */
@@ -438,7 +470,7 @@ class ConfigManagement
         $cellLength = $rowLength / count($headers);
 
         $this->addLineBreak(self::ARRAY_LINE_HEIGHT);
-        $this->addArrayRow($headers, $cellLength, $rowLength);
+        $this->addArrayRow($headers, $cellLength, $rowLength, $field);
         // Footer detection
         $this->addLineBreak(self::ARRAY_LINE_HEIGHT, 0);
 
@@ -451,7 +483,7 @@ class ConfigManagement
             foreach ($value as $attribute) {
                 $arrayValues[] = $attribute;
             }
-            $this->addArrayRow($arrayValues, $cellLength, $rowLength);
+            $this->addArrayRow($arrayValues, $cellLength, $rowLength, $field);
         }
 
         $this->addLineBreak(self::ARRAY_LINE_HEIGHT);
@@ -717,7 +749,8 @@ class ConfigManagement
     protected function addArrayRow(
         array $values,
         float $cellLength,
-        float $rowLength
+        float $rowLength,
+        string $field
     ) {
         /** @var Zend_Pdf_Canvas_Interface $line */
         $this->page->drawRectangle(
@@ -733,6 +766,8 @@ class ConfigManagement
          * @var string $value
          */
         foreach ($values as $index => $value) {
+            $value = $this->renderValue($value, $field);
+
             /** @var float $indentValueCell */
             $indentValueCell = ($cellLength * $index) + ($cellLength - $this->widthForStringUsingFontSize(
                         $value
@@ -754,5 +789,43 @@ class ConfigManagement
         }
 
         $this->addLineBreak(self::ARRAY_LINE_HEIGHT * 2, self::ARRAY_LINE_HEIGHT);
+    }
+
+    /**
+     * Description manageBooleanValue function
+     *
+     * @param string $value
+     * @param bool   $bypassBoolean
+     *
+     * @return string
+     */
+    protected function manageBooleanValue(string $value, bool $bypassBoolean)
+    {
+        if ($bypassBoolean && is_numeric($value) && preg_match("/^[0|1]$/", $value)) {
+            if (preg_match("/^[1]$/", $value)) {
+                return (string)__('Yes');
+            } else {
+                return (string)__('No');
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * Description renderValue function
+     *
+     * @param string $value
+     * @param string $field
+     *
+     * @return string
+     */
+    protected function renderValue(string $value, string $field)
+    {
+        if (!$value && !is_numeric($value)) {
+            return (string)__('Empty');
+        }
+
+        return $this->manageBooleanValue($value, !in_array($field, self::BYPASS_BOOLEAN_FIELDS));
     }
 }
