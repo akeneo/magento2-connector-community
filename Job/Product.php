@@ -3096,7 +3096,8 @@ class Product extends JobImport
             $files = [];
             /**
              * @var string $image
-             * @var string $suffix */
+             * @var string $suffix
+             */
             foreach ($dataToImport as $image => $suffix) {
                 if (!isset($row[$image])) {
                     continue;
@@ -3156,10 +3157,10 @@ class Product extends JobImport
                 ];
                 $connection->insertOnDuplicate($galleryEntityTable, $data, array_keys($data));
                 /**
-                 * @var string $storeSuffix
+                 * @var string  $storeSuffix
                  * @var mixed[] $storeArray
                  */
-                foreach($stores as $storeSuffix => $storeArray) {
+                foreach ($stores as $storeSuffix => $storeArray) {
                     /** @var mixed[] $store */
                     foreach ($storeArray as $store) {
                         $disabled = 0;
