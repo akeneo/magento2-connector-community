@@ -106,13 +106,12 @@ class ConfigManagement
      */
     const BYPASS_BOOLEAN_FIELDS = [
         ConfigHelper::PRODUCT_TAX_CLASS,
-        ConfigHelper::AKENEO_API_PAGINATION_SIZE,
         ConfigHelper::PRODUCTS_FILTERS_UPDATED_SINCE,
         ConfigHelper::PRODUCT_WEBSITE_ATTRIBUTE,
         ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING,
         ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES,
         ConfigHelper::PRODUCTS_FILTERS_STATUS,
-        ConfigHelper::PRODUCT_ASSET_GALLERY
+        ConfigHelper::PRODUCT_ASSET_GALLERY,
     ];
     /**
      * Description LINE_BREAK constant
@@ -192,6 +191,12 @@ class ConfigManagement
      * @var string ATTRIBUTE_GROUP_ARRAY_KEY
      */
     const SYSTEM_ATTRIBUTE_GROUP_ARRAY_KEY = 'group';
+    /**
+     * Field type text
+     *
+     * @var string FIELD_TYPE_TEXT
+     */
+    const FIELD_TYPE_TEXT = 'TEXT';
     /**
      * Array key to get value in SystemConfigAttribute
      *
@@ -375,7 +380,7 @@ class ConfigManagement
                 $value = $this->getEdition();
             }
 
-            $value = $this->renderValue((string)$value, $config['path']);
+            $value = $this->renderValue((string)$value, $config['path'], self::FIELD_TYPE_TEXT);
             $this->page->drawText($value, $this->lastPositionX, $this->lastPosition);
 
             if ($index === $configsNumber - 1) {
@@ -802,7 +807,7 @@ class ConfigManagement
      */
     protected function manageBooleanValue(string $value, bool $bypassBoolean)
     {
-        if ($bypassBoolean && is_numeric($value) && preg_match("/^[0|1]$/", $value)) {
+        if (!$bypassBoolean && is_numeric($value) && preg_match("/^[0|1]$/", $value)) {
             if (preg_match("/^[1]$/", $value)) {
                 return (string)__('Yes');
             } else {
@@ -816,17 +821,21 @@ class ConfigManagement
     /**
      * Description renderValue function
      *
-     * @param string $value
-     * @param string $field
+     * @param string      $value
+     * @param string      $field
+     * @param null|string $fieldType
      *
      * @return string
      */
-    protected function renderValue(string $value, string $field)
+    protected function renderValue(string $value, string $field, $fieldType = null)
     {
         if (!$value && !is_numeric($value)) {
             return (string)__('Empty');
         }
 
-        return $this->manageBooleanValue($value, !in_array($field, self::BYPASS_BOOLEAN_FIELDS));
+        /** @var bool $bypass */
+        $bypass = in_array($field, self::BYPASS_BOOLEAN_FIELDS) || $fieldType === self::FIELD_TYPE_TEXT;
+
+        return $this->manageBooleanValue($value, $bypass);
     }
 }
