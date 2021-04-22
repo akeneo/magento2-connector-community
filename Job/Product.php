@@ -3035,27 +3035,30 @@ class Product extends JobImport
         $dataToImport = [];
         foreach ($gallery as $image) {
             if (!$connection->tableColumnExists($tmpTable, strtolower($image))) {
-                $this->setMessage(__('Info: No value found in the current batch for the attribute %1', $image));
-                continue;
-            }
-            $data[$image] = strtolower($image);
-            $dataToImport[$image] = 'all';
-        }
-        /** @var string $image */
-        foreach($gallery as $image) {
-            /**
-             * @var string  $suffix
-             * @var mixed[] $storeData
-             */
-            foreach ($stores as $suffix => $storeData) {
-                if ($connection->tableColumnExists(
-                    $tmpTable,
-                    strtolower($image) . self::SUFFIX_SEPARATOR . $suffix
-                )) {
-                    $data[$image . self::SUFFIX_SEPARATOR . $suffix]         = strtolower($image) . self::SUFFIX_SEPARATOR . $suffix;
+                // If not exist, check for each store if the field exist
+                /**
+                 * @var string  $suffix
+                 * @var mixed[] $storeData
+                 */
+                foreach ($stores as $suffix => $storeData) {
+                    if (!$connection->tableColumnExists(
+                        $tmpTable,
+                        strtolower($image) . self::SUFFIX_SEPARATOR . $suffix
+                    )) {
+                        $this->setMessage(__('Info: No value found in the current batch for the attribute %1', $image));
+                        continue;
+                    }
+                    $data[$image . self::SUFFIX_SEPARATOR . $suffix] = strtolower(
+                                                                           $image
+                                                                       ) . self::SUFFIX_SEPARATOR . $suffix;
+
                     $dataToImport[strtolower($image) . self::SUFFIX_SEPARATOR . $suffix] = $suffix;
                 }
+                continue;
             }
+
+            $data[$image] = strtolower($image);
+            $dataToImport[$image] = null;
         }
 
         /** @var bool $rowIdExists */
@@ -3084,11 +3087,6 @@ class Product extends JobImport
         $galleryValueTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery_value');
         /** @var string $productImageTable */
         $productImageTable = $this->entitiesHelper->getTable('catalog_product_entity_varchar');
-
-        // Clear values for all images
-        $connection->delete(
-            $galleryValueTable
-        );
 
         /** @var array $row */
         while (($row = $query->fetch())) {
@@ -3164,12 +3162,12 @@ class Product extends JobImport
                     /** @var mixed[] $store */
                     foreach ($storeArray as $store) {
                         $disabled = 0;
-                        if ($suffix !== 'all') {
-                            /** @var int $disabled */
-                            $disabled = 1;
+                        if ($suffix) {
                             /** @var bool $storeIsInEnabledStores */
                             $storeIsInEnabledStores = false;
                             if ($suffix !== $storeSuffix) {
+                                /** @var int $disabled */
+                                $disabled = 1;
                                 // Disable image for this store, only if this store is not in enabled stores list
                                 /** @var mixed[] $enabledStores */
                                 foreach ($stores[$suffix] as $enabledStores) {
@@ -3182,27 +3180,23 @@ class Product extends JobImport
                                     continue;
                                 }
                             }
-
-                            if ($suffix === $storeSuffix) {
-                                $disabled = 0;
-                            }
                         }
 
                         // Get potential record_id from gallery value table
-                        /** @var Select $select */
-                        $select          = $connection->select()->from($galleryValueTable)->where('value_id = ?', $valueId)->where(
-                            'store_id = ?',
-                            $store['store_id']
-                        )->where($columnIdentifier . ' = ?', $row[$columnIdentifier]);
-                        $databaseRecords = $connection->fetchAll($select);
+                        /** @var int $databaseRecords */
+                        $databaseRecords = $connection->fetchOne(
+                            $connection->select()->from($galleryValueTable, [new Expr('MAX(`record_id`)')])->where(
+                                'value_id = ?',
+                                $valueId
+                            )->where(
+                                'store_id = ?',
+                                $store['store_id']
+                            )->where($columnIdentifier . ' = ?', $row[$columnIdentifier])
+                        );
                         /** @var int $recordId */
                         $recordId = 0;
                         if (!empty($databaseRecords)) {
-                            foreach ($databaseRecords as $databaseRecord) {
-                                if (isset($databaseRecord['record_id']) && $databaseRecord['record_id'] > $recordId) {
-                                    $recordId = $databaseRecord['record_id'];
-                                }
-                            }
+                            $recordId = $databaseRecords;
                         }
 
                         /** @var string[] $data */
@@ -3247,6 +3241,15 @@ class Product extends JobImport
 
             $connection->delete(
                 $galleryEntityTable,
+                [
+                    'value_id IN (?)'          => $cleaner,
+                    $columnIdentifier . ' = ?' => $row[$columnIdentifier],
+                ]
+            );
+
+            // Delete old value association with the imported product
+            $connection->delete(
+                $galleryValueTable,
                 [
                     'value_id IN (?)'          => $cleaner,
                     $columnIdentifier . ' = ?' => $row[$columnIdentifier],
