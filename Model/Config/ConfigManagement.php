@@ -106,12 +106,13 @@ class ConfigManagement
      */
     const BYPASS_BOOLEAN_FIELDS = [
         ConfigHelper::PRODUCT_TAX_CLASS,
-        ConfigHelper::PAGINATION_SIZE_DEFAULT_VALUE,
+        ConfigHelper::AKENEO_API_PAGINATION_SIZE,
         ConfigHelper::PRODUCTS_FILTERS_UPDATED_SINCE,
         ConfigHelper::PRODUCT_WEBSITE_ATTRIBUTE,
         ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING,
         ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES,
         ConfigHelper::PRODUCTS_FILTERS_STATUS,
+        ConfigHelper::PRODUCT_ASSET_GALLERY
     ];
     /**
      * Description LINE_BREAK constant
