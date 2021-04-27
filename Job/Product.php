@@ -149,12 +149,6 @@ class Product extends JobImport
      */
     protected $entitiesHelper;
     /**
-     * This variable contains a ConfigHelper
-     *
-     * @var ConfigHelper $configHelper
-     */
-    protected $configHelper;
-    /**
      * This variable contains a ProductModel
      *
      * @var ProductModel $productModelHelper
@@ -309,11 +303,10 @@ class Product extends JobImport
         StoreManagerInterface $storeManager,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
 
         $this->logger                  = $logger;
         $this->handler                 = $handler;
-        $this->configHelper            = $configHelper;
         $this->productModelHelper      = $productModel;
         $this->familyVariantHelper     = $familyVariant;
         $this->eavConfig               = $eavConfig;

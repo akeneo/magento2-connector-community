@@ -55,12 +55,6 @@ class Attribute extends Import
      */
     protected $name = 'Attribute';
     /**
-     * This variable contains a ConfigHelper
-     *
-     * @var ConfigHelper $configHelper
-     */
-    protected $configHelper;
-    /**
      * This variable contains a Config
      *
      * @var Config $eavConfig
@@ -160,11 +154,10 @@ class Attribute extends Import
         EavSetup $eavSetup,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
 
-        $this->logger                  = $logger;
-        $this->handler                 = $handler;
-        $this->configHelper     = $configHelper;
+        $this->logger           = $logger;
+        $this->handler          = $handler;
         $this->eavConfig        = $eavConfig;
         $this->attributeHelper  = $attributeHelper;
         $this->attributeFilters = $attributeFilters;

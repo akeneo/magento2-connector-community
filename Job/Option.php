@@ -64,12 +64,6 @@ class Option extends Import
      */
     protected $optionHelper;
     /**
-     * This variable contains a ConfigHelper
-     *
-     * @var ConfigHelper $configHelper
-     */
-    protected $configHelper;
-    /**
      * This variable contains a Config
      *
      * @var Config $eavConfig
@@ -162,12 +156,11 @@ class Option extends Import
         EavSetup $eavSetup,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
 
         $this->logger           = $logger;
         $this->handler          = $handler;
         $this->optionHelper     = $optionHelper;
-        $this->configHelper     = $configHelper;
         $this->eavConfig        = $eavConfig;
         $this->attributeHelper  = $attributeHelper;
         $this->attributeFilters = $attributeFilters;

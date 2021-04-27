@@ -47,12 +47,6 @@ class Family extends Import
      */
     protected $name = 'Family';
     /**
-     * This variable contains a ConfigHelper
-     *
-     * @var ConfigHelper $configHelper
-     */
-    protected $configHelper;
-    /**
      * This variable contains a SetFactory
      *
      * @var SetFactory $attributeSetFactory
@@ -127,11 +121,10 @@ class Family extends Import
         FamilyFilters $familyFilters,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
 
         $this->logger              = $logger;
         $this->handler             = $handler;
-        $this->configHelper        = $configHelper;
         $this->attributeSetFactory = $attributeSetFactory;
         $this->cacheTypeList       = $cacheTypeList;
         $this->eavConfig           = $eavConfig;

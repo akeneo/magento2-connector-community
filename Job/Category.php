@@ -63,12 +63,6 @@ class Category extends Import
      */
     protected $storeHelper;
     /**
-     * This variable contains a ConfigHelper
-     *
-     * @var ConfigHelper $configHelper
-     */
-    protected $configHelper;
-    /**
      * This variable contains CategoryModel
      *
      * @var CategoryModel $categoryModel
@@ -139,13 +133,12 @@ class Category extends Import
         Edition $editionSource,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
 
         $this->storeHelper              = $storeHelper;
         $this->logger                   = $logger;
         $this->handler                  = $handler;
         $this->cacheTypeList            = $cacheTypeList;
-        $this->configHelper             = $configHelper;
         $this->categoryModel            = $categoryModel;
         $this->categoryUrlPathGenerator = $categoryUrlPathGenerator;
         $this->categoryFilters          = $categoryFilters;

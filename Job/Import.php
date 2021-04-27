@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Helper\Config;
 use Akeneo\Connector\Helper\Import\Entities;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Magento\Framework\DataObject;
@@ -68,6 +69,12 @@ abstract class Import extends DataObject implements ImportInterface
      */
     protected $outputHelper;
     /**
+     * This variable contains a Config
+     *
+     * @var Config $configHelper
+     */
+    protected $configHelper;
+    /**
      * This variable contains an Authenticator
      *
      * @var mixed $authenticator
@@ -122,6 +129,8 @@ abstract class Import extends DataObject implements ImportInterface
      * @param OutputHelper     $outputHelper
      * @param ManagerInterface $eventManager
      * @param Authenticator    $authenticator
+     * @param Entities         $entitiesHelper
+     * @param Config           $configHelper
      * @param array            $data
      */
     public function __construct(
@@ -129,6 +138,7 @@ abstract class Import extends DataObject implements ImportInterface
         ManagerInterface $eventManager,
         Authenticator $authenticator,
         Entities $entitiesHelper,
+        Config $configHelper,
         array $data = []
     ) {
         parent::__construct($data);
@@ -137,6 +147,7 @@ abstract class Import extends DataObject implements ImportInterface
         $this->outputHelper   = $outputHelper;
         $this->eventManager   = $eventManager;
         $this->entitiesHelper = $entitiesHelper;
+        $this->configHelper   = $configHelper;
         $this->step           = 0;
         $this->setFromAdmin = false;
         $this->initStatus();
@@ -308,7 +319,7 @@ abstract class Import extends DataObject implements ImportInterface
     public function setMessage($message, $logger = null)
     {
         $this->message = $message;
-        if ($logger) {
+        if ($logger && $this->configHelper->isAdvancedLogActivated()) {
             $this->logger->addDebug($message);
         }
 
@@ -326,7 +337,7 @@ abstract class Import extends DataObject implements ImportInterface
     public function setAdditionalMessage($message, $logger = null)
     {
         $this->message = $this->getMessageWithoutPrefix() . $this->getEndOfLine() . $message;
-        if ($logger) {
+        if ($logger && $this->configHelper->isAdvancedLogActivated()) {
             $this->logger->addDebug($message);
         }
 
