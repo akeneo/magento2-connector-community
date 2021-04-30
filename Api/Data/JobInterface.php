@@ -16,13 +16,45 @@ namespace Akeneo\Connector\Api\Data;
 interface JobInterface
 {
     /**
-     * Constants for keys of data array.
+     * Job entity id
+     *
+     * @var string ENTITY_ID
      */
     const ENTITY_ID = 'entity_id';
+    /**
+     * Job code
+     *
+     * @var string CODE
+     */
     const CODE = 'code';
+    /**
+     * Job status
+     *
+     * @var string STATUS
+     */
     const STATUS = 'status';
+    /**
+     * Scheduled run date
+     *
+     * @var string SCHEDULED_AT
+     */
     const SCHEDULED_AT = 'scheduled_at';
+    /**
+     * Last executed date
+     *
+     * @var string LAST_EXECUTED_DATE
+     */
     const LAST_EXECUTED_DATE = 'last_executed_date';
+    /**
+     * Last success date
+     *
+     * @var string LAST_SUCCESS_DATE
+     */
     const LAST_SUCCESS_DATE = 'last_success_date';
+    /**
+     * Execution job order
+     *
+     * @var string ORDER
+     */
     const ORDER = 'order';
 }
