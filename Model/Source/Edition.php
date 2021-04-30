@@ -48,7 +48,7 @@ class Edition implements ArrayInterface
     /**
      * Version Growth constant
      *
-     * @var string SERENITY
+     * @var string GROWTH
      */
     const GROWTH = 'growth';
 
