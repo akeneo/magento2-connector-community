@@ -179,19 +179,19 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 'scheduled_at',
                 Table::TYPE_DATETIME,
                 null,
-                ['nullable' => false],
+                ['nullable' => true],
                 'Date scheduled to launch the job'
             )->addColumn(
                 'last_executed_date',
                 Table::TYPE_DATETIME,
                 null,
-                ['nullable' => false],
+                ['nullable' => true],
                 'Last executed date'
             )->addColumn(
                 'last_success_date',
                 Table::TYPE_DATETIME,
                 null,
-                ['nullable' => false],
+                ['nullable' => true],
                 'Last date the job was executed correctly'
             )->addColumn(
                 'order',
@@ -200,8 +200,6 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 ['nullable' => false],
                 'Job order to priorize launch'
             )->setComment('Akeneo Connector Job');
-
-            $installer->getConnection()->createTable($table);
         }
 
         $installer->endSetup();
