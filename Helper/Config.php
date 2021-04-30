@@ -347,6 +347,12 @@ class Config
      */
     const FAMILIES_FILTERS_UPDATED_GREATER = 'akeneo_connector/families/updated_greater';
     /**
+     * Asset PIM attributes mapping config path
+     *
+     * @var string PRODUCT_ASSET_GALLERY
+     */
+    const PRODUCT_ASSET_GALLERY = 'akeneo_connector/product/asset_gallery';
+    /**
      * This variable contains a Encryptor
      *
      * @var Encryptor $encryptor

@@ -111,6 +111,7 @@ class ConfigManagement
         ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING,
         ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES,
         ConfigHelper::PRODUCTS_FILTERS_STATUS,
+        ConfigHelper::PRODUCT_ASSET_GALLERY,
     ];
     /**
      * Description LINE_BREAK constant
@@ -379,7 +380,15 @@ class ConfigManagement
                 $value = $this->getEdition();
             }
 
-            $value = $this->renderValue((string)$value, $config['path'], self::FIELD_TYPE_TEXT);
+            /** @var string $attribute */
+            $attribute = $this->getSystemConfigAttribute($config['path'], 'source_model');
+            /** @var string $type */
+            $type = self::FIELD_TYPE_TEXT;
+
+            if ($attribute) {
+                $type = $attribute;
+            }
+            $value = $this->renderValue((string)$value, $config['path'], $type);
             $this->page->drawText($value, $this->lastPositionX, $this->lastPosition);
 
             if ($index === $configsNumber - 1) {
@@ -834,6 +843,22 @@ class ConfigManagement
 
         /** @var bool $bypass */
         $bypass = in_array($field, self::BYPASS_BOOLEAN_FIELDS) || $fieldType === self::FIELD_TYPE_TEXT;
+        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/io-debug.log');
+        $logger = new \Zend\Log\Logger();
+        $logger->addWriter($writer);
+        $logger->info("bypass");
+        $logger->info($bypass);
+        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/io-debug.log');
+        $logger = new \Zend\Log\Logger();
+        $logger->addWriter($writer);
+        $logger->info("value");
+        $logger->info($value);
+        $logger->info("&value");
+        $logger->info(is_numeric($value));
+        $logger->info(preg_match("/^[0|1]$/", $value));
+        $logger->info($field);
+        $logger->info($fieldType);
+        $logger->info("ffrefre");
 
         return $this->manageBooleanValue($value, $bypass);
     }
