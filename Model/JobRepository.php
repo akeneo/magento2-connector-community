@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Akeneo\Connector\Model;
 
 use Akeneo\Connector\Api\Data\JobInterface;
-use Akeneo\Connector\Api\Data\LogInterface;
 use Akeneo\Connector\Api\JobRepositoryInterface;
-use Akeneo\Connector\Model\Job;
 use Akeneo\Connector\Model\ResourceModel\Job as JobResourceModel;
 use Magento\Framework\Exception\AlreadyExistsException;
 
@@ -23,7 +21,7 @@ use Magento\Framework\Exception\AlreadyExistsException;
 class JobRepository implements JobRepositoryInterface
 {
     /**
-     * This variable contains a LogResourceModel
+     * This variable contains a JobResourceModel
      *
      * @var JobResourceModel $jobResourceModel
      */
@@ -38,8 +36,8 @@ class JobRepository implements JobRepositoryInterface
     /**
      * JobRepository constructor
      *
-     * @param \Akeneo\Connector\Model\JobFactory        $jobFactory
-     * @param \Akeneo\Connector\Model\ResourceModel\Job $jobResourceModel
+     * @param JobFactory       $jobFactory
+     * @param JobResourceModel $jobResourceModel
      */
     public function __construct(JobFactory $jobFactory, JobResourceModel $jobResourceModel)
     {
@@ -60,11 +58,11 @@ class JobRepository implements JobRepositoryInterface
         $job = $this->jobFactory->create();
         $this->jobResourceModel->load($job, $id);
 
-        return $log;
+        return $job;
     }
 
     /**
-     * Description getByIdentifier function
+     * Description getByCode function
      *
      * @param string $code
      *
