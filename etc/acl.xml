@@ -32,6 +32,7 @@
                             <resource id="Akeneo_Connector::import_product" title="Products" sortOrder="70" />
                         </resource>
                         <resource id="Akeneo_Connector::akeneo_connector_log" title="Log" sortOrder="20" />
+                        <resource id="Akeneo_Connector::configuration" title="Configuration" sortOrder="30" />
                     </resource>
                 </resource>
             </resource>
