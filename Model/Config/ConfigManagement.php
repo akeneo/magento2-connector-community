@@ -843,22 +843,6 @@ class ConfigManagement
 
         /** @var bool $bypass */
         $bypass = in_array($field, self::BYPASS_BOOLEAN_FIELDS) || $fieldType === self::FIELD_TYPE_TEXT;
-        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/io-debug.log');
-        $logger = new \Zend\Log\Logger();
-        $logger->addWriter($writer);
-        $logger->info("bypass");
-        $logger->info($bypass);
-        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/io-debug.log');
-        $logger = new \Zend\Log\Logger();
-        $logger->addWriter($writer);
-        $logger->info("value");
-        $logger->info($value);
-        $logger->info("&value");
-        $logger->info(is_numeric($value));
-        $logger->info(preg_match("/^[0|1]$/", $value));
-        $logger->info($field);
-        $logger->info($fieldType);
-        $logger->info("ffrefre");
 
         return $this->manageBooleanValue($value, $bypass);
     }
