@@ -349,4 +349,70 @@
             <argument name="importRepository" xsi:type="object">Akeneo\Connector\Api\ImportRepositoryInterface\Proxy</argument>
         </arguments>
     </type>
+
+    <type name="Akeneo\Connector\Logger\Handler\AttributeHandler">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+    <type name="Akeneo\Connector\Logger\AttributeLogger">
+        <arguments>
+            <argument name="name" xsi:type="string">akeneoConnectorAttributeLogger</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">Akeneo\Connector\Logger\Handler\AttributeHandler</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Akeneo\Connector\Logger\Handler\CategoryHandler">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+    <type name="Akeneo\Connector\Logger\CategoryLogger">
+        <arguments>
+            <argument name="name" xsi:type="string">akeneoConnectorCategoryLogger</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">Akeneo\Connector\Logger\Handler\CategoryHandler</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Akeneo\Connector\Logger\Handler\FamilyHandler">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+    <type name="Akeneo\Connector\Logger\FamilyLogger">
+        <arguments>
+            <argument name="name" xsi:type="string">akeneoConnectorFamilyLogger</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">Akeneo\Connector\Logger\Handler\FamilyHandler</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Akeneo\Connector\Logger\Handler\OptionHandler">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+    <type name="Akeneo\Connector\Logger\OptionLogger">
+        <arguments>
+            <argument name="name" xsi:type="string">akeneoConnectorOptionLogger</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">Akeneo\Connector\Logger\Handler\OptionHandler</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Akeneo\Connector\Logger\Handler\ProductHandler">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+    <type name="Akeneo\Connector\Logger\ProductLogger">
+        <arguments>
+            <argument name="name" xsi:type="string">akeneoConnectorProductLogger</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">Akeneo\Connector\Logger\Handler\ProductHandler</item>
+            </argument>
+        </arguments>
+    </type>
 </config>
