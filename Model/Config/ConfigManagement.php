@@ -111,7 +111,6 @@ class ConfigManagement
         ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING,
         ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES,
         ConfigHelper::PRODUCTS_FILTERS_STATUS,
-        ConfigHelper::PRODUCT_ASSET_GALLERY,
     ];
     /**
      * Description LINE_BREAK constant
