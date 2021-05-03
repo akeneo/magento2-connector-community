@@ -26,6 +26,10 @@
                     <label>Documentation link</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\DocumentationLink</frontend_model>
                 </field>
+                <field id="export_config_pdf" translate="label" type="button" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Export your configuration</label>
+                    <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\ExportPdf</frontend_model>
+                </field>
             </group>
             <group id="akeneo_api" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Akeneo API Configuration</label>
