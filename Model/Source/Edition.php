@@ -45,6 +45,12 @@ class Edition implements ArrayInterface
      * @var string SERENITY
      */
     const SERENITY = 'serenity';
+    /**
+     * Version Growth constant
+     *
+     * @var string GROWTH
+     */
+    const GROWTH = 'growth';
 
     /**
      * Return array of options for the filter mode
@@ -59,6 +65,7 @@ class Edition implements ArrayInterface
             self::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO => __('4.0.62 or greater'),
             self::GREATER_OR_FIVE => __('5.0 or greater'),
             self::SERENITY => __('Serenity Edition'),
+            self::GROWTH => __('Growth Edition'),
         ];
     }
 }
