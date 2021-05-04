@@ -333,14 +333,12 @@ class Product extends JobImport
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
         }
         
         if (empty($this->configHelper->getMappedChannels())) {
-            $this->setMessage(__('No website/channel mapped. Please check your configurations.'), $this->logger);
+            $this->setAdditionalMessage(__('No website/channel mapped. Please check your configurations.'), $this->logger);
             $this->stop(true);
-            if ($this->configHelper->isAdvancedLogActivated()) {
-                $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            }
 
             return;
         }
@@ -360,11 +358,8 @@ class Product extends JobImport
             );
 
             if (!$isFamilyImported) {
-                $this->setMessage(__('The family %1 is not imported yet, please run Family import.', $this->getFamily()), $this->logger);
+                $this->setAdditionalMessage(__('The family %1 is not imported yet, please run Family import.', $this->getFamily()), $this->logger);
                 $this->stop(true);
-                if ($this->configHelper->isAdvancedLogActivated()) {
-                    $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-                }
 
                 return;
             }
@@ -390,10 +385,7 @@ class Product extends JobImport
         if (empty($products)) {
             // No product were found and we're in a grouped family, we don't import product models for it, so we stop the import
             if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
-                $this->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()), $this->logger)->stop();
-                if ($this->configHelper->isAdvancedLogActivated()) {
-                    $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-                }
+                $this->setAdditionalMessage(__('No results from Akeneo for the family: %1', $this->getFamily()), $this->logger)->stop();
 
                 return;
             }
@@ -412,22 +404,16 @@ class Product extends JobImport
             }
 
             if (empty($productModels)) {
-                $this->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()), $this->logger)->stop();
-                if ($this->configHelper->isAdvancedLogActivated()) {
-                    $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-                }
+                $this->setAdditionalMessage(__('No results from Akeneo for the family: %1', $this->getFamily()), $this->logger)->stop();
 
                 return;
             }
             $productModel = reset($productModels);
             $this->entitiesHelper->createTmpTableFromApi($productModel, $this->getCode());
             $this->entitiesHelper->createTmpTableFromApi($productModel, 'product_model');
-            $this->setMessage(
+            $this->setAdditionalMessage(
                 __('No product found for family: %1 but product model found, process with import', $this->getFamily()), $this->logger
             );
-            if ($this->configHelper->isAdvancedLogActivated()) {
-                $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            }
 
             return;
         } else {
@@ -438,10 +424,7 @@ class Product extends JobImport
 
             /** @var string $message */
             $message = __('Family imported in this batch: %1', $this->getFamily());
-            $this->setMessage($message, $this->logger);
-            if ($this->configHelper->isAdvancedLogActivated()) {
-                $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            }
+            $this->setAdditionalMessage($message, $this->logger);
         }
     }
 
