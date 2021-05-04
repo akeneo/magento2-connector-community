@@ -655,7 +655,7 @@ abstract class Import extends DataObject implements ImportInterface
      *
      * @return void
      */
-    public function displayMessages($messages, $logger) {
+    public function displayMessages($messages, $logger = null) {
         /** @var string[] $importMessages */
         foreach ($messages as $importMessages) {
             if (!empty($importMessages)) {
