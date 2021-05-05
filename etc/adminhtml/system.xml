@@ -27,7 +27,7 @@
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\DocumentationLink</frontend_model>
                 </field>
                 <field id="export_config_pdf" translate="label" type="button" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Export your configuration</label>
+                    <label>Export Akeneo Connector configuration</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\ExportPdf</frontend_model>
                 </field>
             </group>
