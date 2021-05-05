@@ -3242,34 +3242,32 @@ class Product extends JobImport
     {
         /** @var mixed[] $filters */
         $filters = $this->getFilters($family, true);
-        /** bool|string[] $modelCompletenessFilter */
-        $modelCompletenessFilter = false;
         /** @var string $mode */
         $mode = $this->configHelper->getFilterMode();
         if ($mode == Mode::STANDARD) {
+            /** bool|string[] $modelCompletenessFilter */
             $modelCompletenessFilter = $this->getModelCompletenessFilter();
-        }
-
-        /**
-         * @var string $key
-         * @var string[Ø] $filter
-         */
-        foreach ($filters as $key => $filter) {
-            if (isset($filter['search'])) {
-                if (isset($filter['search']['enabled'])) {
-                    unset($filters[$key]['search']['enabled']);
-                }
-                if (isset($filter['search']['group'])) {
-                    unset($filters[$key]['search']['group']);
-                }
-                if (isset($filter['search']['parent'])) {
-                    unset($filters[$key]['search']['parent']);
-                }
-                if (isset($filter['search']['completeness'])) {
-                    unset($filters[$key]['search']['completeness']);
-                }
-                if ($modelCompletenessFilter) {
-                    $filters[$key]['search']['completeness'] = $modelCompletenessFilter;
+            /**
+             * @var string $key
+             * @var string[Ø] $filter
+             */
+            foreach ($filters as $key => $filter) {
+                if (isset($filter['search'])) {
+                    if (isset($filter['search']['enabled'])) {
+                        unset($filters[$key]['search']['enabled']);
+                    }
+                    if (isset($filter['search']['group'])) {
+                        unset($filters[$key]['search']['group']);
+                    }
+                    if (isset($filter['search']['parent'])) {
+                        unset($filters[$key]['search']['parent']);
+                    }
+                    if (isset($filter['search']['completeness'])) {
+                        unset($filters[$key]['search']['completeness']);
+                    }
+                    if ($modelCompletenessFilter) {
+                        $filters[$key]['search']['completeness'] = $modelCompletenessFilter;
+                    }
                 }
             }
         }
