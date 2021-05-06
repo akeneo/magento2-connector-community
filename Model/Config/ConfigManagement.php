@@ -373,7 +373,7 @@ class ConfigManagement
                 continue;
             }
 
-            if ($config['value'] && strpos($config['value'], ',') && !$backendModelAttributeValue) {
+            if ($config['value'] && strpos($config['value'], ',') !== false && !$backendModelAttributeValue) {
                 $this->insertMultiselect($config['value'], $config['path']);
                 continue;
             }
