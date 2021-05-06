@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+
+<!--
+/**
+ * @author    Agence Dn'D <contact@dnd.fr>
+ * @copyright 2019 Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @link      https://www.dnd.fr/
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Akeneo Connector Import</title>
+        <css src="Akeneo_Connector::css/style.css"/>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="Magento\Backend\Block\Widget\Grid" name="adminhtml.akeneo_connector.job.container.container.grid" as="grid">
+                <arguments>
+                    <argument name="id" xsi:type="string">jobGrid</argument>
+                    <argument name="dataSource" xsi:type="object">Akeneo\Connector\Model\ResourceModel\Job\Collection</argument>
+                    <argument name="default_sort" xsi:type="string">entity_id</argument>
+                    <argument name="default_dir" xsi:type="string">ASC</argument>
+                </arguments>
+                <block class="Magento\Backend\Block\Widget\Grid\ColumnSet" name="adminhtml.akeneo_connector.job.container.container.grid.columnSet" as="grid.columnSet">
+                    <arguments>
+                        <argument name="id" xsi:type="string">jobGrid</argument>
+                        <argument name="rowUrl" xsi:type="array">
+                            <item name="path" xsi:type="string">*/*/view</item>
+                            <item name="extraParamsTemplate" xsi:type="array">
+                                <item name="log_id" xsi:type="string">getId</item>
+                            </item>
+                        </argument>
+                    </arguments>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="identifier">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Job ID</argument>
+                            <argument name="index" xsi:type="string">entity_id</argument>
+                        </arguments>
+                    </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="code">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Code</argument>
+                            <argument name="index" xsi:type="string">code</argument>
+                        </arguments>
+                    </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="status">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Status</argument>
+                            <argument name="getter" xsi:type="string">getStatus</argument>
+                            <argument name="index" xsi:type="string">status</argument>
+                            <argument name="renderer" xsi:type="string">Akeneo\Connector\Block\Adminhtml\Grid\Column\Renderer\Status</argument>
+                            <argument name="options" model="Akeneo\Connector\Model\Source\Status" xsi:type="options"/>
+                            <argument name="type" xsi:type="string">options</argument>
+                        </arguments>
+                    </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="scheduled_at">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Scheduled At</argument>
+                            <argument name="index" xsi:type="string">created_at</argument>
+                            <argument name="type" xsi:type="string">datetime</argument>
+                        </arguments>
+                    </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="last_executed_date">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Last executed date</argument>
+                            <argument name="index" xsi:type="string">created_at</argument>
+                            <argument name="type" xsi:type="string">datetime</argument>
+                        </arguments>
+                    </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="last_success_date">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Last success date</argument>
+                            <argument name="index" xsi:type="string">created_at</argument>
+                            <argument name="type" xsi:type="string">datetime</argument>
+                        </arguments>
+                    </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="order">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Order</argument>
+                            <argument name="index" xsi:type="string">order</argument>
+                        </arguments>
+                    </block>
+                </block>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

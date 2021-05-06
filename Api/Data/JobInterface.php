@@ -16,6 +16,36 @@ namespace Akeneo\Connector\Api\Data;
 interface JobInterface
 {
     /**
+     * Succes status
+     *
+     * @var int JOB_SUCCESS
+     */
+    const JOB_SUCCESS = 1;
+    /**
+     * Error status
+     *
+     * @var int JOB_ERROR
+     */
+    const JOB_ERROR = 2;
+    /**
+     * Processing status
+     *
+     * @var int JOB_PROCESSING
+     */
+    const JOB_PROCESSING = 3;
+    /**
+     * Scheduled status
+     *
+     * @var int JOB_SCHEDULED
+     */
+    const JOB_SCHEDULED = 4;
+    /**
+     * Pending status
+     *
+     * @var int JOB_PENDING
+     */
+    const JOB_PENDING = 5;
+    /**
      * Job entity id
      *
      * @var string ENTITY_ID
