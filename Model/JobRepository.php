@@ -76,34 +76,4 @@ class JobRepository implements JobRepositoryInterface
 
         return $job;
     }
-
-    /**
-     * Description save function
-     *
-     * @param JobInterface $job
-     *
-     * @return JobRepository
-     * @throws AlreadyExistsException
-     */
-    public function save(JobInterface $job)
-    {
-        $this->jobResourceModel->save($job);
-
-        return $this;
-    }
-
-    /**
-     * Description delete function
-     *
-     * @param JobInterface $job
-     *
-     * @return JobRepository
-     * @throws Exception
-     */
-    public function delete(JobInterface $job)
-    {
-        $this->jobResourceModel->delete($job);
-
-        return $this;
-    }
 }

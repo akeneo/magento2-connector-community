@@ -2,8 +2,6 @@
 
 namespace Akeneo\Connector\Api;
 
-use Akeneo\Connector\Api\Data\JobInterface;
-
 /**
  * Interface JobRepositoryInterface
  *
@@ -33,22 +31,4 @@ interface JobRepositoryInterface
      * @return \Akeneo\Connector\Api\Data\JobInterface
      */
     public function getByCode($code);
-
-    /**
-     * Save job object
-     *
-     * @param \Akeneo\Connector\Api\Data\JobInterface $job
-     *
-     * @return $this
-     */
-    public function save(\Akeneo\Connector\Api\Data\JobInterface $job);
-
-    /**
-     * Delete a job object
-     *
-     * @param \Akeneo\Connector\Api\Data\JobInterface $job
-     *
-     * @return $this
-     */
-    public function delete(\Akeneo\Connector\Api\Data\JobInterface $job);
 }
