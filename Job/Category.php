@@ -8,6 +8,8 @@ use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Import\Entities;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
+use Akeneo\Connector\Logger\CategoryLogger;
+use Akeneo\Connector\Logger\Handler\CategoryHandler;
 use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
@@ -55,23 +57,11 @@ class Category extends Import
      */
     protected $cacheTypeList;
     /**
-     * This variable contains an Entities
-     *
-     * @var Entities $entitiesHelper
-     */
-    protected $entitiesHelper;
-    /**
      * This variable contains a StoreHelper
      *
      * @var StoreHelper $storeHelper
      */
     protected $storeHelper;
-    /**
-     * This variable contains a ConfigHelper
-     *
-     * @var ConfigHelper $configHelper
-     */
-    protected $configHelper;
     /**
      * This variable contains CategoryModel
      *
@@ -84,6 +74,18 @@ class Category extends Import
      * @var CategoryUrlPathGenerator $categoryUrlPathGenerator
      */
     protected $categoryUrlPathGenerator;
+    /**
+     * This variable contains a logger
+     *
+     * @var CategoryLogger $logger
+     */
+    protected $logger;
+    /**
+     * This variable contains a handler
+     *
+     * @var CategoryHandler $handler
+     */
+    protected $handler;
     /**
      * Description $categoryFilters field
      *
@@ -100,6 +102,8 @@ class Category extends Import
     /**
      * Category constructor
      *
+     * @param CategoryLogger           $logger
+     * @param CategoryHandler          $handler
      * @param OutputHelper             $outputHelper
      * @param ManagerInterface         $eventManager
      * @param Authenticator            $authenticator
@@ -114,6 +118,8 @@ class Category extends Import
      * @param array                    $data
      */
     public function __construct(
+        CategoryLogger $logger,
+        CategoryHandler $handler,
         OutputHelper $outputHelper,
         ManagerInterface $eventManager,
         Authenticator $authenticator,
@@ -127,12 +133,12 @@ class Category extends Import
         Edition $editionSource,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
 
         $this->storeHelper              = $storeHelper;
-        $this->entitiesHelper           = $entitiesHelper;
+        $this->logger                   = $logger;
+        $this->handler                  = $handler;
         $this->cacheTypeList            = $cacheTypeList;
-        $this->configHelper             = $configHelper;
         $this->categoryModel            = $categoryModel;
         $this->categoryUrlPathGenerator = $categoryUrlPathGenerator;
         $this->categoryFilters          = $categoryFilters;
@@ -146,8 +152,13 @@ class Category extends Import
      */
     public function createTable()
     {
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->logger->addDebug(__('Category API call Filters : ') . print_r($this->categoryFilters->getParentFilters(), true));
+        }
         if (!$this->categoryFilters->getCategoriesToImport()) {
-            $this->setMessage(__('No categories to import, check your category filter configuration'));
+            $this->setMessage(__('No categories to import, check your category filter configuration'), $this->logger);
             $this->stop(1);
 
             return;
@@ -162,7 +173,7 @@ class Category extends Import
         $category = $categories->getItems();
 
         if (empty($category)) {
-            $this->setMessage(__('No results retrieved from Akeneo'));
+            $this->setMessage(__('No results retrieved from Akeneo'), $this->logger);
             $this->stop(1);
 
             return;
@@ -186,7 +197,7 @@ class Category extends Import
 
         /** @var ResourceCursorInterface $categories */
         $categories = [];
-        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY) {
+        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY || $edition === Edition::GROWTH) {
             /** @var ResourceCursorInterface $parentCategories */
             $parentCategories = $this->akeneoClient->getCategoryApi()->all(
                 $paginationSize,
@@ -203,7 +214,7 @@ class Category extends Import
                     __(
                         'Wrong Akeneo version selected in the Akeneo Edition configuration field: %1',
                         $editions[$edition]
-                    )
+                    ), $this->logger
                 );
                 $this->stop(1);
 
@@ -243,8 +254,12 @@ class Category extends Import
         $index++;
 
         $this->setMessage(
-            __('%1 line(s) found. %2', $index, $warning)
+            __('%1 line(s) found. %2', $index, $warning), $this->logger
         );
+
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logImportedEntities($this->logger);
+        }
     }
 
     /**
@@ -643,6 +658,10 @@ class Category extends Import
                 );
             }
         }
+
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logImportedEntities($this->logger, true);
+        }
     }
 
     /**
@@ -677,7 +696,7 @@ class Category extends Import
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
 
-        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY) {
+        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY || $edition === Edition::GROWTH) {
             return;
         }
 
@@ -685,7 +704,7 @@ class Category extends Import
         $filteredCategories = $this->configHelper->getCategoriesFilter();
         if (!$filteredCategories || empty($filteredCategories)) {
             $this->setMessage(
-                __('No category to ignore')
+                __('No category to ignore'), $this->logger
             );
 
             return;
@@ -701,7 +720,7 @@ class Category extends Import
         );
         if (!$categoriesToDelete) {
             $this->setMessage(
-                __('No category found')
+                __('No category found'), $this->logger
             );
 
             return;
@@ -840,7 +859,7 @@ class Category extends Import
                                         $rewriteId,
                                         $requestPath
                                     )
-                                )
+                                ), $this->logger
                             );
                         }
                     } else {
@@ -962,7 +981,7 @@ class Category extends Import
         }
 
         $this->setMessage(
-            __('Cache cleaned for: %1', join(', ', $types))
+            __('Cache cleaned for: %1', join(', ', $types)), $this->logger
         );
     }
 }
