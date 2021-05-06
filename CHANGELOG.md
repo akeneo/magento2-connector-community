@@ -213,3 +213,9 @@
 
 ### Version 101.3.4 :
 * Fix attribute requests condition on "entity_type_id" in order to prevent MYSQL errors during option import
+
+### Version 101.3.5 :
+* Fix completeness in advanced filter mode for product model not being applied
+* Add export Akeneo Connector configuration button in the admin configuration page
+* Add advanced filter mode in configuration (https://help.akeneo.com/magento2-connector/articles/13-advanced-loging.html)
+* Add Akeneo Growth Edition in Akeneo Edition selector configuration (https://help.akeneo.com/magento2-connector/articles/02-configure-PIM-API.html#configure-your-akeneo-edition)
