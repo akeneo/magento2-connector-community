@@ -335,7 +335,7 @@ class Product extends JobImport
             $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
             $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
         }
-        
+
         if (empty($this->configHelper->getMappedChannels())) {
             $this->setAdditionalMessage(__('No website/channel mapped. Please check your configurations.'), $this->logger);
             $this->stop(true);
@@ -3028,7 +3028,7 @@ class Product extends JobImport
         $gallery = $this->configHelper->getMediaImportGalleryColumns();
 
         if (empty($gallery)) {
-            $this->setStatus(false);
+            $this->setStatus(true);
             $this->setMessage(__('Akeneo Images Attributes is empty'), $this->logger);
 
             return;
@@ -3080,6 +3080,8 @@ class Product extends JobImport
         $galleryValueTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery_value');
         /** @var string $productImageTable */
         $productImageTable = $this->entitiesHelper->getTable('catalog_product_entity_varchar');
+        /** @var string[] $medias */
+        $medias = [];
 
         /** @var array $row */
         while (($row = $query->fetch())) {
@@ -3094,10 +3096,11 @@ class Product extends JobImport
                     continue;
                 }
 
-                /** @var array $media */
-                $media = $this->akeneoClient->getProductMediaFileApi()->get($row[$image]);
+                if (!isset($medias[$row[$image]])) {
+                    $medias[$row[$image]] = $this->akeneoClient->getProductMediaFileApi()->get($row[$image]);
+                }
                 /** @var string $name */
-                $name = $this->entitiesHelper->formatMediaName(basename($media['code']));
+                $name = $this->entitiesHelper->formatMediaName(basename($medias[$row[$image]]['code']));
                 /** @var string $filePath */
                 $filePath = $this->configHelper->getMediaFullPath($name);
                 /** @var bool|string[] $databaseRecords */
