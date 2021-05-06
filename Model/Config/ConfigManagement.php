@@ -484,7 +484,7 @@ class ConfigManagement
     {
         $this->setPageStyle(Zend_Pdf_Font::FONT_HELVETICA, self::TABLE_FONT_SIZE);
         // Load attributes code by attributes id
-        $values = $this->loadAttributeIds($values, $field);
+        $values = $this->loadAttributeCode($values, $field);
         /** @var float $maxLengthValue */
         $maxLengthValue = $this->getMaxLengthValue($values);
 
@@ -515,14 +515,14 @@ class ConfigManagement
     }
 
     /**
-     * Description loadAttributeIds function
+     * Description loadAttributeCode function
      *
      * @param mixed[] $values
      * @param string  $field
      *
      * @return mixed[]
      */
-    protected function loadAttributeIds(array $values, string $field)
+    protected function loadAttributeCode(array $values, string $field)
     {
         foreach ($values as $index => $value) {
             foreach ($value as $key => $attribute) {
