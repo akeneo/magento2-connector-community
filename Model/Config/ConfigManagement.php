@@ -9,6 +9,7 @@ use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Model\Backend\Json;
 use Akeneo\Connector\Model\Source\Edition;
 use Magento\Config\Model\Config\Backend\Serialized\ArraySerialized;
+use Magento\Eav\Model\Entity\Attribute;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\ResourceConnection;
@@ -226,6 +227,12 @@ class ConfigManagement
      * @var Zend_Pdf_Page $page
      */
     protected $page;
+    /**
+     * Description $attributeModel field
+     *
+     * @var Attribute $attributeModel
+     */
+    protected $attributeModel;
 
     /**
      * ConfigManagement constructor
@@ -247,7 +254,8 @@ class ConfigManagement
         Repository $assetRepository,
         DirectoryList $directoryList,
         SerializerInterface $serializer,
-        Website $websiteFormField
+        Website $websiteFormField,
+        Attribute $attributeModel
     ) {
         $this->resourceConnection = $resourceConnection;
         $this->sourceEdition      = $sourceEdition;
@@ -258,6 +266,7 @@ class ConfigManagement
         $this->serializer         = $serializer;
         $this->websiteFormField   = $websiteFormField;
         $this->assetRepository    = $assetRepository;
+        $this->attributeModel     = $attributeModel;
     }
 
     /**
@@ -474,6 +483,8 @@ class ConfigManagement
     protected function insertSerializedArray(array $values, array $headers, string $field)
     {
         $this->setPageStyle(Zend_Pdf_Font::FONT_HELVETICA, self::TABLE_FONT_SIZE);
+        // Load attributes code by attributes id
+        $values = $this->loadAttributeIds($values, $field);
         /** @var float $maxLengthValue */
         $maxLengthValue = $this->getMaxLengthValue($values);
 
@@ -501,6 +512,29 @@ class ConfigManagement
 
         $this->addLineBreak(self::ARRAY_LINE_HEIGHT);
         $this->setPageStyle();
+    }
+
+    /**
+     * Description loadAttributeIds function
+     *
+     * @param mixed[] $values
+     * @param string  $field
+     *
+     * @return mixed[]
+     */
+    protected function loadAttributeIds(array $values, string $field)
+    {
+        foreach ($values as $index => $value) {
+            foreach ($value as $key => $attribute) {
+                if ($field === ConfigHelper::PRODUCT_MEDIA_IMAGES && $key === 'attribute') {
+                    /** @var Attribute $attributeObject */
+                    $attributeEntity      = $this->attributeModel->load($attribute);
+                    $values[$index][$key] = $attributeEntity->getAttributeCode();
+                }
+            }
+        }
+
+        return $values;
     }
 
     /**
