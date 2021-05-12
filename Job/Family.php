@@ -3,6 +3,8 @@
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Helper\FamilyFilters;
+use Akeneo\Connector\Logger\FamilyLogger;
+use Akeneo\Connector\Logger\Handler\FamilyHandler;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
@@ -45,18 +47,6 @@ class Family extends Import
      */
     protected $name = 'Family';
     /**
-     * This variable contains an EntitiesHelper
-     *
-     * @var Entities $entitiesHelper
-     */
-    protected $entitiesHelper;
-    /**
-     * This variable contains a ConfigHelper
-     *
-     * @var ConfigHelper $configHelper
-     */
-    protected $configHelper;
-    /**
      * This variable contains a SetFactory
      *
      * @var SetFactory $attributeSetFactory
@@ -81,6 +71,18 @@ class Family extends Import
      */
     protected $storeHelper;
     /**
+     * This variable contains a logger
+     *
+     * @var FamilyLogger $logger
+     */
+    protected $logger;
+    /**
+     * This variable contains a handler
+     *
+     * @var FamilyHandler $handler
+     */
+    protected $handler;
+    /**
      * Description $familyFilters field
      *
      * @var FamilyFilters $familyFilters
@@ -90,6 +92,8 @@ class Family extends Import
     /**
      * Family constructor
      *
+     * @param FamilyLogger      $logger
+     * @param FamilyHandler     $handler
      * @param StoreHelper       $storeHelper
      * @param Entities          $entitiesHelper
      * @param ConfigHelper      $configHelper
@@ -103,6 +107,8 @@ class Family extends Import
      * @param array             $data
      */
     public function __construct(
+        FamilyLogger $logger,
+        FamilyHandler $handler,
         StoreHelper $storeHelper,
         Entities $entitiesHelper,
         ConfigHelper $configHelper,
@@ -115,10 +121,10 @@ class Family extends Import
         FamilyFilters $familyFilters,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
 
-        $this->configHelper        = $configHelper;
-        $this->entitiesHelper      = $entitiesHelper;
+        $this->logger              = $logger;
+        $this->handler             = $handler;
         $this->attributeSetFactory = $attributeSetFactory;
         $this->cacheTypeList       = $cacheTypeList;
         $this->eavConfig           = $eavConfig;
@@ -135,13 +141,18 @@ class Family extends Import
     {
         /** @var string[] $filters */
         $filters = $this->familyFilters->getFilters();
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->logger->addDebug(__('Family API call Filters : ') . print_r($filters, true));
+        }
         /** @var PageInterface $families */
         $families = $this->akeneoClient->getFamilyApi()->listPerPage(1, false, $filters);
         /** @var array $family */
         $family = $families->getItems();
 
         if (empty($family)) {
-            $this->setMessage(__('No results retrieved from Akeneo'));
+            $this->setMessage(__('No results retrieved from Akeneo'), $this->logger);
             $this->stop(1);
 
             return;
@@ -179,8 +190,12 @@ class Family extends Import
         $index++;
 
         $this->setMessage(
-            __('%1 line(s) found. %2', $index, $warning)
+            __('%1 line(s) found. %2', $index, $warning), $this->logger
         );
+
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logImportedEntities($this->logger);
+        }
     }
 
     /**
@@ -205,6 +220,10 @@ class Family extends Import
             $akeneoConnectorTable,
             ['import = ?' => 'family', 'entity_id NOT IN (?)' => $existingEntities]
         );
+
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logImportedEntities($this->logger, true);
+        }
     }
 
     /**
@@ -235,49 +254,10 @@ class Family extends Import
             ->getEntityTypeId();
 
         /** @var array $values */
-        $attributeToSelect = [
-            'attribute_set_name' => new Expr('CONCAT("Pim", " ", `' . $label . '`)'),
-            'family_code'        => 'code',
-        ];
-
-        /** @var Select $families */
-        $tmpFamilyNames = $connection->select()->from($tmpTable, $attributeToSelect);
-
-        /** @var \Zend_Db_Statement_Interface $query */
-        $query = $connection->query($tmpFamilyNames);
-
-        /** @var array $familyNames */
-        $familyNames = [];
-
-        /** @var array $row */
-        while (($row = $query->fetch())) {
-            /** @var string $familyName */
-            $familyName = $row['attribute_set_name'];
-
-            if (in_array($familyName, $familyNames)) {
-                /** @var string $familyCode */
-                $familyCode = $row['family_code'];
-
-                $connection->delete($tmpTable, ['code = ?' => $familyCode]);
-
-                $this->setAdditionalMessage(
-                    __(
-                        'Family with code "%1" has the same label than another family in Akeneo and has been skipped from import',
-                        $familyCode
-                    )
-                );
-
-                continue;
-            }
-
-            $familyNames[] = $familyName;
-        }
-
-        /** @var array $values */
         $values = [
             'attribute_set_id'   => '_entity_id',
             'entity_type_id'     => new Expr($productEntityTypeId),
-            'attribute_set_name' => new Expr('CONCAT("Pim", " ", `' . $label . '`)'),
+            'attribute_set_name' => new Expr('CONCAT("Pim", " ", IFNULL(`' . $label . '`, ""), " (", `code`, ")")'),
             'sort_order'         => new Expr(1),
         ];
         /** @var Select $families */
@@ -367,7 +347,7 @@ class Family extends Import
         }
 
         $this->setMessage(
-            __('%1 family(ies) initialized', $count)
+            __('%1 family(ies) initialized', $count), $this->logger
         );
     }
 
@@ -399,7 +379,7 @@ class Family extends Import
         }
 
         $this->setMessage(
-            __('Cache cleaned for: %1', join(', ', $types))
+            __('Cache cleaned for: %1', join(', ', $types)), $this->logger
         );
     }
 }

@@ -15,7 +15,10 @@ use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Job\Import as JobImport;
 use Akeneo\Connector\Job\Option as JobOption;
+use Akeneo\Connector\Logger\Handler\ProductHandler;
+use Akeneo\Connector\Logger\ProductLogger;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
+use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Connector\Model\Source\Filters\Mode;
 use Akeneo\Connector\Model\Source\Filters\ModelCompleteness;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
@@ -35,6 +38,7 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
+use Magento\Framework\DB\Statement\Pdo\Mysql;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Exception\LocalizedException;
@@ -71,6 +75,12 @@ class Product extends JobImport
      */
     const CONFIGURABLE_INSERTION_MAX_SIZE = 500;
     /**
+     * Description CATALOG_PRODUCT_ENTITY_TABLE_NAME constant
+     *
+     * @var string CATALOG_PRODUCT_ENTITY_TABLE_NAME
+     */
+    const CATALOG_PRODUCT_ENTITY_TABLE_NAME = 'catalog_product_entity';
+    /**
      * This variable contains a string value
      *
      * @var string $code
@@ -94,26 +104,7 @@ class Product extends JobImport
      * @var string $name
      */
     protected $name = 'Product';
-    
-    /**
-     * Akeneo default association types, reformatted as column names
-     *
-     * @var string[] $associationTypes
-     */
-    protected $associationTypes = [
-        Link::LINK_TYPE_RELATED   => [
-            'SUBSTITUTION-products',
-            'SUBSTITUTION-product_models',
-        ],
-        Link::LINK_TYPE_UPSELL    => [
-            'UPSELL-products',
-            'UPSELL-product_models',
-        ],
-        Link::LINK_TYPE_CROSSSELL => [
-            'X_SELL-products',
-            'X_SELL-product_models',
-        ],
-    ];
+
     /**
      * list of allowed type_id that can be imported
      *
@@ -157,12 +148,6 @@ class Product extends JobImport
      * @var ProductImportHelper $entitiesHelper
      */
     protected $entitiesHelper;
-    /**
-     * This variable contains a ConfigHelper
-     *
-     * @var ConfigHelper $configHelper
-     */
-    protected $configHelper;
     /**
      * This variable contains a ProductModel
      *
@@ -253,10 +238,24 @@ class Product extends JobImport
      * @var StoreManagerInterface $storeManager
      */
     protected $storeManager;
+    /**
+     * This variable contains a logger
+     *
+     * @var ProductLogger $logger
+     */
+    protected $logger;
+    /**
+     * This variable contains a handler
+     *
+     * @var ProductHandler $handler
+     */
+    protected $handler;
 
     /**
      * Product constructor.
      *
+     * @param ProductLogger           $logger
+     * @param ProductHandler          $handler
      * @param OutputHelper            $outputHelper
      * @param ManagerInterface        $eventManager
      * @param Authenticator           $authenticator
@@ -280,6 +279,8 @@ class Product extends JobImport
      * @param array                   $data
      */
     public function __construct(
+        ProductLogger $logger,
+        ProductHandler $handler,
         OutputHelper $outputHelper,
         ManagerInterface $eventManager,
         Authenticator $authenticator,
@@ -302,10 +303,10 @@ class Product extends JobImport
         StoreManagerInterface $storeManager,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
 
-        $this->entitiesHelper          = $entitiesHelper;
-        $this->configHelper            = $configHelper;
+        $this->logger                  = $logger;
+        $this->handler                 = $handler;
         $this->productModelHelper      = $productModel;
         $this->familyVariantHelper     = $familyVariant;
         $this->eavConfig               = $eavConfig;
@@ -330,8 +331,13 @@ class Product extends JobImport
      */
     public function createTable()
     {
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+        }
+        
         if (empty($this->configHelper->getMappedChannels())) {
-            $this->setMessage(__('No website/channel mapped. Please check your configurations.'));
+            $this->setAdditionalMessage(__('No website/channel mapped. Please check your configurations.'), $this->logger);
             $this->stop(true);
 
             return;
@@ -352,7 +358,7 @@ class Product extends JobImport
             );
 
             if (!$isFamilyImported) {
-                $this->setMessage(__('The family %1 is not imported yet, please run Family import.', $this->getFamily()));
+                $this->setAdditionalMessage(__('The family %1 is not imported yet, please run Family import.', $this->getFamily()), $this->logger);
                 $this->stop(true);
 
                 return;
@@ -361,6 +367,9 @@ class Product extends JobImport
 
         /** @var mixed[] $filters */
         $filters = $this->getFilters($this->getFamily());
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logger->addDebug(__('Product API call Filters : ') . print_r($filters, true));
+        }
 
         foreach ($filters as $filter) {
             /** @var PageInterface $products */
@@ -374,6 +383,13 @@ class Product extends JobImport
         }
 
         if (empty($products)) {
+            // No product were found and we're in a grouped family, we don't import product models for it, so we stop the import
+            if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+                $this->setAdditionalMessage(__('No results from Akeneo for the family: %1', $this->getFamily()), $this->logger)->stop();
+
+                return;
+            }
+
             /** @var mixed[] $modelFilters */
             $modelFilters = $this->getProductModelFilters($this->getFamily());
             foreach ($modelFilters as $filter) {
@@ -388,16 +404,15 @@ class Product extends JobImport
             }
 
             if (empty($productModels)) {
-                $this->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()));
-                $this->stop(true);
+                $this->setAdditionalMessage(__('No results from Akeneo for the family: %1', $this->getFamily()), $this->logger)->stop();
 
                 return;
             }
             $productModel = reset($productModels);
             $this->entitiesHelper->createTmpTableFromApi($productModel, $this->getCode());
             $this->entitiesHelper->createTmpTableFromApi($productModel, 'product_model');
-            $this->setMessage(
-                __('No product found for family: %1 but product model found, process with import', $this->getFamily())
+            $this->setAdditionalMessage(
+                __('No product found for family: %1 but product model found, process with import', $this->getFamily()), $this->logger
             );
 
             return;
@@ -409,7 +424,7 @@ class Product extends JobImport
 
             /** @var string $message */
             $message = __('Family imported in this batch: %1', $this->getFamily());
-            $this->setMessage($message);
+            $this->setAdditionalMessage($message, $this->logger);
         }
     }
 
@@ -438,7 +453,7 @@ class Product extends JobImport
         if ($connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
             return;
         }
-        
+
         /** @var mixed[] $filter */
         foreach ($filters as $filter) {
             /** @var ResourceCursorInterface $products */
@@ -459,7 +474,7 @@ class Product extends JobImport
                     foreach ($product['values'][$attributeMetric] as $key => $metric) {
                         /** @var string|float $amount */
                         $amount = $metric['data']['amount'];
-                        if ($amount != NULL) {
+                        if ($amount != null) {
                             $amount = floatval($amount);
                         }
 
@@ -500,7 +515,7 @@ class Product extends JobImport
                 $result = $this->entitiesHelper->insertDataFromApi($product, $this->getCode());
 
                 if (!$result) {
-                    $this->setMessage('Could not insert Product data in temp table');
+                    $this->setMessage('Could not insert Product data in temp table', $this->logger);
                     $this->stop(true);
 
                     return;
@@ -544,13 +559,16 @@ class Product extends JobImport
         }
 
         if (empty($index)) {
-            $this->setMessage('No Product data to insert in temp table');
+            $this->setMessage('No Product data to insert in temp table', $this->logger);
             $this->stop(true);
 
             return;
         }
 
-        $this->setMessage(__('%1 line(s) found', $index));
+        $this->setMessage(__('%1 line(s) found', $index), $this->logger);
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logImportedEntities($this->logger, false, 'identifier');
+        }
     }
 
     /**
@@ -561,15 +579,22 @@ class Product extends JobImport
      */
     public function productModelImport()
     {
+        if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            return;
+        }
+
         /** @var string[] $messages */
         $messages = [];
         /** @var mixed[] $filters */
         $filters = $this->getProductModelFilters($this->getFamily());
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logger->addDebug(__('Product Model API call Filters : ') . print_r($filters, true));
+        }
         /** @var mixed[] $step */
         $step = $this->productModelHelper->createTable($this->akeneoClient, $filters);
         $messages[] = $step;
         if (array_keys(array_column($step, 'status'), false)) {
-            $this->displayMessages($messages);
+            $this->displayMessages($messages, $this->logger);
 
             return;
         }
@@ -578,14 +603,14 @@ class Product extends JobImport
         $step = $this->productModelHelper->insertData($this->akeneoClient, $filters);
         $messages[] = $step;
         if (array_keys(array_column($step, 'status'), false)) {
-            $this->displayMessages($messages);
+            $this->displayMessages($messages, $this->logger);
 
             return;
         }
         // Add missing columns from product models in product tmp table
         $this->productModelHelper->addColumns($this->getCode());
 
-        $this->displayMessages($messages);
+        $this->displayMessages($messages, $this->logger);
     }
 
     /**
@@ -595,6 +620,10 @@ class Product extends JobImport
      */
     public function familyVariantImport()
     {
+        if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            return;
+        }
+
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         if ($connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
@@ -605,7 +634,7 @@ class Product extends JobImport
             $step       = $this->familyVariantHelper->createTable($this->akeneoClient, $this->getFamily());
             $messages[] = $step;
             if (array_keys(array_column($step, 'status'), false)) {
-                $this->displayMessages($messages);
+                $this->displayMessages($messages, $this->logger);
 
                 return;
             }
@@ -613,14 +642,14 @@ class Product extends JobImport
             $step       = $this->familyVariantHelper->insertData($this->akeneoClient, $this->getFamily());
             $messages[] = $step;
             if (array_keys(array_column($step, 'status'), false)) {
-                $this->displayMessages($messages);
+                $this->displayMessages($messages, $this->logger);
 
                 return;
             }
             $this->familyVariantHelper->updateAxis();
             $this->familyVariantHelper->updateProductModel();
             $this->familyVariantHelper->dropTable();
-            $this->displayMessages($messages);
+            $this->displayMessages($messages, $this->logger);
         }
     }
 
@@ -661,17 +690,34 @@ class Product extends JobImport
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
 
-        $connection->addColumn(
-            $tmpTable,
-            '_type_id',
-            [
-                'type'     => 'text',
-                'length'   => 255,
-                'default'  => 'simple',
-                'COMMENT'  => ' ',
-                'nullable' => false,
-            ]
-        );
+        /** @var string $edition */
+        $edition = $this->configHelper->getEdition();
+        // If family is grouped, create grouped products
+        if (($edition === Edition::SERENITY || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::GROWTH) && $this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            $connection->addColumn(
+                $tmpTable,
+                '_type_id',
+                [
+                    'type'     => 'text',
+                    'length'   => 255,
+                    'default'  => 'grouped',
+                    'COMMENT'  => ' ',
+                    'nullable' => false,
+                ]
+            );
+        } else {
+            $connection->addColumn(
+                $tmpTable,
+                '_type_id',
+                [
+                    'type'     => 'text',
+                    'length'   => 255,
+                    'default'  => 'simple',
+                    'COMMENT'  => ' ',
+                    'nullable' => false,
+                ]
+            );
+        }
         $connection->addColumn(
             $tmpTable,
             '_options_container',
@@ -879,7 +925,7 @@ class Product extends JobImport
         }
 
         if (!$connection->isTableExists($this->entitiesHelper->getTableName($this->jobOption->getCode()))) {
-            $this->setMessage(__('No metric option to import'));
+            $this->setMessage(__('No metric option to import'), $this->logger);
 
             return;
         }
@@ -898,6 +944,10 @@ class Product extends JobImport
      */
     public function createConfigurable()
     {
+        if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            return;
+        }
+
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
@@ -929,7 +979,7 @@ class Product extends JobImport
         }
         if (!$groupColumn) {
             $this->setStatus(false);
-            $this->setMessage(__('Columns groups or parent not found'));
+            $this->setMessage(__('Columns groups or parent not found'), $this->logger);
 
             return;
         }
@@ -948,15 +998,15 @@ class Product extends JobImport
                 $connection->updateFromSelect($select, ['e' => $tmpTable])
             );
         }
-        
+
         /** @var array $data */
         $data = [
             'identifier'         => 'v.code',
             '_type_id'           => new Expr('"configurable"'),
             '_options_container' => new Expr('"container1"'),
             '_axis'              => 'v.axis',
-            'family'             => 'v.family',
-            'categories'         => 'v.categories'
+            'family'             => $connection->tableColumnExists($productModelTable, 'family') ? 'v.family' : 'e.family',
+            'categories'         => 'v.categories',
         ];
 
         if ($this->configHelper->isUrlGenerationEnabled()) {
@@ -971,17 +1021,19 @@ class Product extends JobImport
             }
         }
 
+        /** @var string[] $associationTypes */
+        $associationTypes = $this->configHelper->getAssociationTypes();
         /** @var string[] $associationNames */
-        foreach ($this->associationTypes as $associationNames) {
+        foreach ($associationTypes as $associationNames) {
             if (empty($associationNames)) {
                 continue;
             }
             /** @var string $associationName */
             foreach ($associationNames as $associationName) {
                 if (!empty($associationName) && $connection->tableColumnExists(
-                        $productModelTable,
-                        $associationName
-                    ) && $connection->tableColumnExists($tmpTable, $associationName)) {
+                    $productModelTable,
+                    $associationName
+                ) && $connection->tableColumnExists($tmpTable, $associationName)) {
                     $data[$associationName] = sprintf('v.%s', $associationName);
                 }
             }
@@ -1075,7 +1127,7 @@ class Product extends JobImport
         /** @var Select $configurable */
         $configurable = $connection->select()
             ->from(['v' => $productModelTable], $data)
-            ->joinLeft(['e' => $tmpTable],'v.code = ' . 'e.' . $groupColumn, [])
+            ->joinLeft(['e' => $tmpTable], 'v.code = ' . 'e.' . $groupColumn, [])
             ->where('v.parent IS NULL')
             ->group('v.code');
 
@@ -1087,8 +1139,8 @@ class Product extends JobImport
         // Update _children column if possible
         /** @var Select $childList */
         $childList = $connection->select()
-            ->from(['v' => $productModelTable] , ['v.identifier', '_children' => new Expr('GROUP_CONCAT(e.identifier SEPARATOR ",")')])
-            ->joinInner(['e' => $tmpTable],'v.code = ' . 'e.' . $groupColumn, [])
+            ->from(['v' => $productModelTable], ['v.identifier', '_children' => new Expr('GROUP_CONCAT(e.identifier SEPARATOR ",")')])
+            ->joinInner(['e' => $tmpTable], 'v.code = ' . 'e.' . $groupColumn, [])
             ->group('v.identifier');
 
         /** @var string $queryChilds */
@@ -1121,8 +1173,8 @@ class Product extends JobImport
         /** @var string $akeneoConnectorTable */
         $akeneoConnectorTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         /** @var string $entityTable */
-        $entityTable = $this->entitiesHelper->getTable('catalog_product_entity');
-        /** @var \Magento\Framework\DB\Select $selectExistingEntities */
+        $entityTable = $this->entitiesHelper->getTable(self::CATALOG_PRODUCT_ENTITY_TABLE_NAME);
+        /** @var Select $selectExistingEntities */
         $selectExistingEntities = $connection->select()->from($entityTable, 'entity_id');
         /** @var string[] $existingEntities */
         $existingEntities = array_column($connection->query($selectExistingEntities)->fetchAll(), 'entity_id');
@@ -1152,7 +1204,7 @@ class Product extends JobImport
 
         if (!empty($duplicates)) {
             $this->setMessage(
-                __('Duplicates sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1', join(', ', $duplicates))
+                __('Duplicates sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1', join(', ', $duplicates)), $this->logger
             );
             $this->stop(true);
 
@@ -1181,7 +1233,7 @@ class Product extends JobImport
 
         if (!$connection->tableColumnExists($tmpTable, 'family')) {
             $this->setStatus(false);
-            $this->setMessage(__('Column family is missing'));
+            $this->setMessage(__('Column family is missing'), $this->logger);
 
             return;
         }
@@ -1199,7 +1251,7 @@ class Product extends JobImport
         );
         if ($noFamily) {
             $this->setStatus(false);
-            $this->setMessage(__('Warning: %1 product(s) without family. Please try to import families.', $noFamily));
+            $this->setMessage(__('Warning: %1 product(s) without family. Please try to import families.', $noFamily), $this->logger);
         }
 
         $connection->update(
@@ -1264,8 +1316,8 @@ class Product extends JobImport
             //in case of multiselect
             /** @var string $conditionJoin */
             $conditionJoin = "IF ( locate(',', `" . $column . "`) > 0 , " . new Expr(
-                    "FIND_IN_SET(`c1`.`code`,`p`.`" . $column ."`) > 0"
-                ) . ", `p`.`" . $column . "` = `c1`.`code` )";
+                "FIND_IN_SET(`c1`.`code`,`p`.`" . $column . "`) > 0"
+            ) . ", `p`.`" . $column . "` = `c1`.`code` )";
 
             /** @var Select $select */
             $select = $connection->select()->from(
@@ -1368,8 +1420,8 @@ class Product extends JobImport
     public function importFiles()
     {
         if (!$this->configHelper->isFileImportEnabled()) {
-            $this->setStatus(false);
-            $this->setMessage(__('File import is not enabled'));
+            $this->setStatus(true);
+            $this->setMessage(__('File import is not enabled'), $this->logger);
 
             return;
         }
@@ -1390,7 +1442,7 @@ class Product extends JobImport
 
         if (empty($attributesMapped)) {
             $this->setStatus(false);
-            $this->setMessage(__('Akeneo Files Attributes is empty'));
+            $this->setMessage(__('Akeneo Files Attributes is empty'), $this->logger);
 
             return;
         }
@@ -1439,7 +1491,7 @@ class Product extends JobImport
         if ($rowIdExists) {
             $this->entities->addJoinForContentStaging($select, []);
         }
-        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+        /** @var Mysql $query */
         $query = $connection->query($select);
 
         /** @var array $row */
@@ -1467,7 +1519,9 @@ class Product extends JobImport
                 if (!$this->configHelper->mediaFileExists($filePath)) {
                     /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$attribute]);
-                    $this->configHelper->saveMediaFile($filePath, $binary);
+                    /** @var string $fileContents */
+                    $fileContents = $binary->getBody()->getContents();
+                    $this->configHelper->saveMediaFile($filePath, $fileContents);
                 }
 
                 // Change the Akeneo file path to Magento file path
@@ -1701,6 +1755,10 @@ class Product extends JobImport
                 AdapterInterface::INSERT_ON_DUPLICATE
             );
         }
+
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logImportedEntities($this->logger, true, 'identifier');
+        }
     }
 
     /**
@@ -1712,6 +1770,10 @@ class Product extends JobImport
      */
     public function linkConfigurable()
     {
+        if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            return;
+        }
+
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
@@ -1740,7 +1802,7 @@ class Product extends JobImport
         }
         if (!$groupColumn) {
             $this->setStatus(false);
-            $this->setMessage(__('Columns groups or parent not found'));
+            $this->setMessage(__('Columns groups or parent not found'), $this->logger);
 
             return;
         }
@@ -1833,7 +1895,7 @@ class Product extends JobImport
                         'value'                      => '',
                     ];
                 }
-                
+
                 $connection->insertOnDuplicate($productSuperAttrLabelTable, $valuesLabels, []);
 
                 if (!isset($row['_children'])) {
@@ -1891,6 +1953,10 @@ class Product extends JobImport
      */
     public function linkSimple()
     {
+        if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            return;
+        }
+
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
@@ -1903,7 +1969,7 @@ class Product extends JobImport
         $productSuperLinkTable = $this->entitiesHelper->getTable('catalog_product_super_link');
 
         /** @var \Magento\Framework\DB\Select $select */
-        $select = $connection->select()->from($tmpTable, ['_entity_id', 'parent'])->where('parent IS NOT NULL');
+        $select = $connection->select()->from($tmpTable, ['_entity_id', 'parent', '_type_id']);
 
         /** @var string $pKeyColumn */
         $pKeyColumn = 'entity_id';
@@ -1913,13 +1979,19 @@ class Product extends JobImport
             $pKeyColumn = 'row_id';
         }
 
-        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+        /** @var Mysql $query */
         $query = $connection->query($select);
 
         /** @var array $row */
         while (($row = $query->fetch())) {
-            if (!isset($row['parent']) || !isset($row['_entity_id'])) {
+            if ((!isset($row['parent']) && $row['_type_id'] !== 'simple') || !isset($row['_entity_id'])) {
                 continue;
+            }
+
+            if (!isset($row['parent']) && $row['_type_id'] === 'simple') {
+                // Check if relations exists for this product and delete the relations
+                $connection->delete($productRelationTable, ['child_id = ?' => $row['_entity_id']]);
+                $connection->delete($productSuperLinkTable, ['product_id = ?' => $row['_entity_id']]);
             }
 
             /** @var string $productModelEntityId */
@@ -1933,41 +2005,27 @@ class Product extends JobImport
                 $valuesRelations = [];
                 /** @var string[] $valuesSuperLink */
                 $valuesSuperLink = [];
-                // Check for relations and add them if they don't exist
-                /** @var bool $hasRelation */
-                $hasRelation = (bool)$connection->fetchOne(
-                    $connection->select()->from($productRelationTable, [new Expr(1)])->where(
-                        'parent_id = ?',
-                        $productModelEntityId
-                    )->where('child_id = ?', $row['_entity_id'])->limit(1)
-                );
 
-                if (!$hasRelation) {
-                    $valuesRelations[] = [
-                        'parent_id' => $productModelEntityId,
-                        'child_id'  => $row['_entity_id'],
-                    ];
+                // Delete relation for this child before insertion
+                $connection->delete($productRelationTable, ['child_id = ?' => $row['_entity_id']]);
 
-                    $connection->insertOnDuplicate($productRelationTable, $valuesRelations, []);
-                }
+                // Insert the relation for the child
+                $valuesRelations[] = [
+                    'parent_id' => $productModelEntityId,
+                    'child_id'  => $row['_entity_id'],
+                ];
+
+                $connection->insertOnDuplicate($productRelationTable, $valuesRelations, []);
 
                 // Do the same for super links
-                /** @var bool $hasSuperLink */
-                $hasSuperLink = (bool)$connection->fetchOne(
-                    $connection->select()->from($productSuperLinkTable, [new Expr(1)])->where(
-                        'parent_id = ?',
-                        $productModelEntityId
-                    )->where('product_id = ?', $row['_entity_id'])->limit(1)
-                );
+                $connection->delete($productSuperLinkTable, ['product_id = ?' => $row['_entity_id']]);
 
-                if (!$hasSuperLink) {
-                    $valuesSuperLink[] = [
-                        'product_id' => $row['_entity_id'],
-                        'parent_id'  => $productModelEntityId,
-                    ];
+                $valuesSuperLink[] = [
+                    'product_id' => $row['_entity_id'],
+                    'parent_id'  => $productModelEntityId,
+                ];
 
-                    $connection->insertOnDuplicate($productSuperLinkTable, $valuesSuperLink, []);
-                }
+                $connection->insertOnDuplicate($productSuperLinkTable, $valuesSuperLink, []);
             }
         }
     }
@@ -2024,7 +2082,7 @@ class Product extends JobImport
 
                                 if ($websiteMatch === false && $option['label'] != ' ') {
                                     $this->setAdditionalMessage(
-                                        __('Warning: The option %1 is not a website code.', $optionApiAttribute['code'])
+                                        __('Warning: The option %1 is not a website code.', $optionApiAttribute['code']), $this->logger
                                     );
                                 }
                             }
@@ -2033,7 +2091,7 @@ class Product extends JobImport
                 }
 
                 if ($connection->tableColumnExists($tmpTable, $websiteAttribute)) {
-                    /** @var \Magento\Framework\DB\Select $select */
+                    /** @var Select $select */
                     $select = $connection->select()->from(
                         $tmpTable,
                         [
@@ -2042,7 +2100,7 @@ class Product extends JobImport
                             'associated_website' => $websiteAttribute,
                         ]
                     );
-                    /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+                    /** @var Mysql $query */
                     $query = $connection->query($select);
                     /** @var array $row */
                     while (($row = $query->fetch())) {
@@ -2094,16 +2152,16 @@ class Product extends JobImport
 
                                 if ($websiteSet === false) {
                                     $optionLabel = $attribute->getSource()->getOptionText($associatedWebsite);
-                                    $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.', $row['identifier'], $optionLabel));
+                                    $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.', $row['identifier'], $optionLabel), $this->logger);
                                 }
                             }
                         } else {
-                            $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has no associated website in the custom attribute.', $row['identifier']));
+                            $this->setAdditionalMessage(__('Warning: The product with Akeneo id %1 has no associated website in the custom attribute.', $row['identifier']), $this->logger);
                         }
                     }
                 }
             } else {
-                $this->setAdditionalMessage(__('Warning: The website attribute code given does not match any Magento attribute.'));
+                $this->setAdditionalMessage(__('Warning: The website attribute code given does not match any Magento attribute.'), $this->logger);
             }
         } else {
             /** @var array $websites */
@@ -2152,7 +2210,7 @@ class Product extends JobImport
 
         if (!$connection->tableColumnExists($tmpTable, 'categories')) {
             $this->setStatus(false);
-            $this->setMessage(__('Column categories not found'));
+            $this->setMessage(__('Column categories not found'), $this->logger);
 
             return;
         }
@@ -2190,7 +2248,7 @@ class Product extends JobImport
             )
             ->joinInner(
                 ['p' => $tmpTable],
-                $this->entitiesHelper->getTable('catalog_category_product').'.product_id = `p`.`_entity_id`',
+                $this->entitiesHelper->getTable('catalog_category_product') . '.product_id = `p`.`_entity_id`',
                 [
                     'category_id' => 'c.entity_id',
                     'product_id'  => 'p._entity_id',
@@ -2270,19 +2328,6 @@ class Product extends JobImport
         /** @var string $columnIdentifier */
         $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($productsTable);
 
-        /** @var int $linkType */
-        /** @var string[] $associationNames */
-        foreach ($this->associationTypes as $linkType => $associationNames) {
-            if (empty($associationNames)) {
-                continue;
-            }
-            /** @var string $associationName */
-            foreach ($associationNames as $associationName) {
-                if (!empty($associationName) && $connection->tableColumnExists($tmpTable, $associationName)) {
-                    $related[$linkType][] = sprintf('`d`.`%s`', $associationName);
-                }
-            }
-        }
         /** @var array $values */
         $values = ['product_id' => '_entity_id'];
 
@@ -2291,12 +2336,35 @@ class Product extends JobImport
         if ($rowIdExists) {
             $values['product_id'] = 'p.row_id';
         }
-        /** @var \Magento\Framework\DB\Select $productIds */
+        /** @var Select $productIds */
         $productIds = $connection->select()->from($tmpTable, $values);
 
         if ($rowIdExists) {
             $this->entities->addJoinForContentStaging($productIds, []);
         }
+
+        /** @var string[] $associationTypes */
+        $associationTypes = $this->configHelper->getAssociationTypes();
+        /** @var int $linkType */
+        /** @var string[] $associationNames */
+        foreach ($associationTypes as $linkType => $associationNames) {
+            if (empty($associationNames)) {
+                continue;
+            }
+
+            /* Remove old link */
+            $connection->delete(
+                $linkTable,
+                ['link_type_id = ?' => $linkType, 'product_id IN (?)' => $productIds]
+            );
+            /** @var string $associationName */
+            foreach ($associationNames as $associationName) {
+                if (!empty($associationName) && $connection->tableColumnExists($tmpTable, $associationName)) {
+                    $related[$linkType][] = sprintf('`d`.`%s`', $associationName);
+                }
+            }
+        }
+
         /**
          * @var int      $typeId
          * @var string[] $columns
@@ -2317,7 +2385,7 @@ class Product extends JobImport
             }
             /** @var string $concat */
             $concat = sprintf('CONCAT_WS(",", %s)', implode(', ', $columns));
-            /** @var \Magento\Framework\DB\Select $select */
+            /** @var Select $select */
             $select = $connection->select()->from(['c' => $entitiesTable], [])->joinInner(
                 ['d' => $tmpTable],
                 sprintf('FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"', $concat, $this->getCode()),
@@ -2329,12 +2397,6 @@ class Product extends JobImport
             } else {
                 $select->joinInner(['e' => $productsTable], sprintf('c.entity_id = e.%s', $columnIdentifier), []);
             }
-
-            /* Remove old link */
-            $connection->delete(
-                $linkTable,
-                ['link_type_id = ?' => $typeId, 'product_id IN (?)' => $productIds]
-            );
 
             /* Insert new link */
             $connection->query(
@@ -2367,6 +2429,323 @@ class Product extends JobImport
     }
 
     /**
+     * Update or set grouped products relations
+     *
+     * @return void
+     * @throws \Zend_Db_Exception
+     */
+    public function setGrouped()
+    {
+        /** @var string $edition */
+        $edition = $this->configHelper->getEdition();
+        // Is family is not grouped or edition not Serenity, skip
+        if (($edition != Edition::SERENITY && $edition != Edition::GROWTH && $edition != Edition::GREATER_OR_FIVE) || !$this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            return;
+        }
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        /** @var string $entitiesTable */
+        $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
+        /** @var string $productsEntityTable */
+        $productsEntityTable = $this->entitiesHelper->getTable(self::CATALOG_PRODUCT_ENTITY_TABLE_NAME);
+        /** @var string $productsRelationTable */
+        $productsRelationTable = $this->entitiesHelper->getTable('catalog_product_relation');
+        /** @var string $productsLinkTable */
+        $productsLinkTable = $this->entitiesHelper->getTable('catalog_product_link');
+        /** @var string $productsLinkAttributeTable */
+        $productsLinkAttributeTable = $this->entitiesHelper->getTable('catalog_product_link_attribute');
+        /** @var string $productsLinkAttributeDecimalTable */
+        $productsLinkAttributeDecimalTable = $this->entitiesHelper->getTable('catalog_product_link_attribute_decimal');
+        /** @var string $productsLinkAttributeIntTable */
+        $productsLinkAttributeIntTable = $this->entitiesHelper->getTable('catalog_product_link_attribute_int');
+        /** @var string $productsLinkTypeTable */
+        $productsLinkTypeTable = $this->entitiesHelper->getTable('catalog_product_link_type');
+        /** @var string $columnIdentifier */
+        $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($productsEntityTable);
+        // Product link attribute with code 'super'
+        /** @var Select $selectSuperId */
+        $selectSuperLinkType = $connection->select()->from($productsLinkTypeTable)->where('code = ?', 'super');
+        /** @var mixed[] $attributeSuperLinkType */
+        $attributeSuperLinkType = $connection->query($selectSuperLinkType)->fetch();
+        /** @var string $selectProductLinkAttributeQty */
+        $selectProductLinkAttributeQty = $connection->select()->from($productsLinkAttributeTable)->where(
+            'product_link_attribute_code = ?',
+            'qty'
+        )->where(
+            'link_type_id = ?',
+            $attributeSuperLinkType['link_type_id']
+        );
+        /** @var mixed[] $productLinkAttributeQty */
+        $productLinkAttributeQty = $connection->query($selectProductLinkAttributeQty)->fetch();
+        /** @var string $selectProductLinkAttributePosition */
+        $selectProductLinkAttributeQty = $connection->select()->from($productsLinkAttributeTable)->where(
+            'product_link_attribute_code = ?',
+            'position'
+        )->where(
+            'link_type_id = ?',
+            $attributeSuperLinkType['link_type_id']
+        );
+        /** @var mixed[] $productLinkAttributePosition */
+        $productLinkAttributePosition = $connection->query($selectProductLinkAttributeQty)->fetch();
+
+        /** @var mixed[] $associationsCurrentFamily */
+        $associationsCurrentFamily = $this->configHelper->getGroupedAssociationsForFamily($this->getFamily());
+
+        /** @var string $entityIdFieldName */
+        $entityIdFieldName = '_entity_id';
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productsEntityTable);
+        if ($rowIdExists) {
+            $entityIdFieldName = 'p.row_id';
+        }
+
+        /** @var string[] $associationSelect */
+        $associationSelect = [
+            'identifier' => 'identifier',
+            'entity_id'  => $entityIdFieldName,
+        ];
+
+        /**
+         * @var int      $key
+         * @var string[] $familyAssociation
+         */
+        foreach ($associationsCurrentFamily as $key => $familyAssociation) {
+            /** @var string $associationColumnName */
+            $associationColumnName = $familyAssociation['akeneo_quantity_association'] . '-products';
+            /** @var string $associationColumnNameModels */
+            $associationColumnNameModels = $familyAssociation['akeneo_quantity_association'] . '-product_models';
+            if ($connection->tableColumnExists($tmpTable, $associationColumnName)) {
+                $associationSelect[$familyAssociation['akeneo_quantity_association']] = $associationColumnName;
+                if ($connection->tableColumnExists($tmpTable, $associationColumnNameModels)) {
+                    $associationSelect[$familyAssociation['akeneo_quantity_association'] . '-models'] = $associationColumnNameModels;
+                }
+            } else {
+                if ($familyAssociation['akeneo_quantity_association'] === "") {
+                    $this->setAdditionalMessage(
+                        __(
+                            'The family %1 was mapped to an empty association, please check your configuration',
+                            $this->getFamily()
+                        ), $this->logger
+                    );
+                } else {
+                    $this->setAdditionalMessage(
+                        __('The grouped product association %1 has not been imported', $familyAssociation['akeneo_quantity_association']), $this->logger
+                    );
+                }
+                unset($associationsCurrentFamily[$key]);
+            }
+        }
+
+        /** @var \Magento\Framework\DB\Select $select */
+        $select = $connection->select()->from(
+            $tmpTable,
+            $associationSelect
+        );
+
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStaging($select, []);
+        }
+
+        $query  = $connection->query($select);
+
+        /** @var bool $badAssociationFlag */
+        $badAssociationFlag = false;
+        /** @var array $row */
+        while (($row = $query->fetch())) {
+            // Delete links for the product in catalog_product_link table
+            $connection->delete(
+                $productsLinkTable,
+                ['product_id = ?' => $row['entity_id'], 'link_type_id = ?' => $attributeSuperLinkType['link_type_id']]
+            );
+
+            // Verify if the product exist in catalog_product_entity
+            if (!$this->productExistInMagento($row['identifier'])) {
+                $this->setAdditionalMessage(
+                    __(
+                        'The grouped product with identifier %1 does not exist in magento, links will not be imported',
+                        $row['identifier']
+                    ), $this->logger
+                );
+                continue;
+            }
+
+            // Initialize position
+            /** @var int $position */
+            $position = 0;
+
+            /** @var string[] $familyAssociation */
+            foreach ($associationsCurrentFamily as $familyAssociation) {
+                if (isset($row[$familyAssociation['akeneo_quantity_association'] . '-models'])) {
+                    /** @var string[] $skuModels */
+                    $skuModels = [];
+                    /** @var string[] $associationData */
+                    $associationData = explode(
+                        ',',
+                        $row[$familyAssociation['akeneo_quantity_association'] . '-models']
+                    );
+                    /** @var string $association */
+                    foreach ($associationData as $association) {
+                        /** @var string[] $modelAssociation */
+                        $modelAssociation = explode(';', $association);
+                        $skuModels[] = $modelAssociation[0];
+                    }
+                    $skuModels = implode(', ', $skuModels);
+
+                    $this->setAdditionalMessage(
+                        __(
+                            'The grouped product %1 is linked to the product(s) %2 but they are not simple product(s). The association has been skipped.',
+                            $row['identifier'],
+                            $skuModels
+                        ), $this->logger
+                    );
+                }
+
+                $affectedProductIds[] = $row['entity_id'];
+                if ($row[$familyAssociation['akeneo_quantity_association']] == null) {
+                    $this->setAdditionalMessage(
+                        __(
+                            'The grouped product with identifier %1 does not have values for its grouped association %2',
+                            $row['identifier'],
+                            $familyAssociation['akeneo_quantity_association']
+                        ), $this->logger
+                    );
+
+                    continue;
+                }
+                /** @var string[] $associationProductInfo */
+                $associationProductInfo = $this->formatGroupedAssociationData(
+                    $row[$familyAssociation['akeneo_quantity_association']],
+                    $row['identifier']
+                );
+
+                // Check if the assoication was correctly formated
+                if ($associationProductInfo === false) {
+                    if ($badAssociationFlag === false) {
+                        $this->setAdditionalMessage(
+                            __(
+                                'The association %1 is not a quantified association, please check your configuration',
+                                $familyAssociation['akeneo_quantity_association']
+                            ), $this->logger
+                        );
+
+                        $badAssociationFlag = true;
+                    }
+
+                    continue;
+                }
+
+                /** @var string[] $productInfo */
+                foreach ($associationProductInfo as $productInfo) {
+
+                    // Verify if the product exist in catalog_product_entity
+                    if (!$this->productExistInMagento($productInfo['identifier'])) {
+                        $this->setAdditionalMessage(
+                            __(
+                                'The grouped product %1 is linked to the product %2 but it does not exist in Magento. The association has been skipped.',
+                                $row['identifier'],
+                                $productInfo['identifier']
+                            ), $this->logger
+                        );
+                        continue;
+                    }
+
+                    /** @var string[] $linkedProductEntityId */
+                    $linkedProductEntityId = $connection->query(
+                        $connection->select()->from($entitiesTable, 'entity_id')->where(
+                            'code = ?',
+                            $productInfo['identifier']
+                        )->where(
+                            'import = ?',
+                            'product'
+                        )
+                    )->fetch();
+
+                    /** @var string[] $linkedProductType */
+                    $linkedProductType = $connection->query(
+                        $connection->select()->from($productsEntityTable, 'type_id')->where(
+                            'entity_id = ?',
+                            $linkedProductEntityId['entity_id']
+                        )
+                    )->fetch();
+
+                    if ($linkedProductType['type_id'] != 'simple') {
+                        $this->setAdditionalMessage(
+                            __(
+                                'The grouped product %1 is linked to the product %2 but it is not a simple product. The association has been skipped.',
+                                $row['identifier'],
+                                $productInfo['identifier']
+                            ), $this->logger
+                        );
+                        continue;
+                    }
+
+                    // Start the inserts in the different tables
+
+                    // Insert in catalog_product_link
+                    /** @var string[] $linkedProduct */
+                    $linkedProduct = [
+                        'product_id'        => $row['entity_id'],
+                        'linked_product_id' => $linkedProductEntityId['entity_id'],
+                        'link_type_id'      => $attributeSuperLinkType['link_type_id'],
+                    ];
+
+                    $connection->insertOnDuplicate(
+                        $productsLinkTable,
+                        $linkedProduct,
+                        array_keys($linkedProduct)
+                    );
+
+                    // Get the id of the created link
+                    /** @var string[] $linkId */
+                    $linkId = $connection->query(
+                        $connection->select()->from($productsLinkTable, 'link_id')->where(
+                            'product_id = ?',
+                            $row['entity_id']
+                        )->where(
+                            'linked_product_id = ?',
+                            $linkedProductEntityId['entity_id']
+                        )->where(
+                            'link_type_id = ?',
+                            $attributeSuperLinkType['link_type_id']
+                        )
+                    )->fetch();
+
+                    // Insert in catalog_product_link_attribute_int
+                    $linkedProduct = [
+                        'product_link_attribute_id' => $productLinkAttributePosition['product_link_attribute_id'],
+                        'link_id'                   => $linkId['link_id'],
+                        'value'                     => $position,
+                    ];
+
+                    $connection->insertOnDuplicate(
+                        $productsLinkAttributeIntTable,
+                        $linkedProduct,
+                        array_keys($linkedProduct)
+                    );
+
+                    // Increment position
+                    $position = $position + 1;
+
+                    // Insert in catalog_product_link_attribute_decimal
+                    $linkedProduct = [
+                        'product_link_attribute_id' => $productLinkAttributeQty['product_link_attribute_id'],
+                        'link_id'                   => $linkId['link_id'],
+                        'value'                     => $productInfo['quantity'],
+                    ];
+
+                    $connection->insertOnDuplicate(
+                        $productsLinkAttributeDecimalTable,
+                        $linkedProduct,
+                        array_keys($linkedProduct)
+                    );
+                }
+            }
+        }
+    }
+
+    /**
      * Set Url Rewrite
      *
      * @return void
@@ -2378,7 +2757,7 @@ class Product extends JobImport
         if (!$this->configHelper->isUrlGenerationEnabled()) {
             $this->setStatus(false);
             $this->setMessage(
-                __('Url rewrite generation is not enabled')
+                __('Url rewrite generation is not enabled'), $this->logger
             );
 
             return;
@@ -2422,7 +2801,7 @@ class Product extends JobImport
                 if (!$store['store_id']) {
                     continue;
                 }
-                /** @var \Magento\Framework\DB\Select $select */
+                /** @var Select $select */
                 $select = $connection->select()->from(
                     $tmpTable,
                     [
@@ -2433,7 +2812,7 @@ class Product extends JobImport
                     ]
                 );
 
-                /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+                /** @var Mysql $query */
                 $query = $connection->query($select);
 
                 /** @var array $row */
@@ -2443,7 +2822,7 @@ class Product extends JobImport
                     $product->setData($row);
 
                     if (isset($store['website_id'])) {
-                        /** @var \Magento\Framework\DB\Select $selectIsInWebsite */
+                        /** @var Select $selectIsInWebsite */
                         $selectIsInWebsite = $connection->select()->from(
                             $this->entitiesHelper->getTable('catalog_product_website'),
                             [
@@ -2453,7 +2832,7 @@ class Product extends JobImport
                             'product_id = ?',
                             $product->getEntityId()
                         );
-                        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $queryIsInWebsite */
+                        /** @var Mysql $queryIsInWebsite */
                         $queryIsInWebsite = $connection->query($selectIsInWebsite);
                         /** @var string[] $isInWebsite */
                         $isInWebsite = $queryIsInWebsite->fetchAll();
@@ -2567,7 +2946,7 @@ class Product extends JobImport
                                             $rewriteId,
                                             $requestPath
                                         )
-                                    )
+                                    ), $this->logger
                                 );
                             }
                         } else {
@@ -2635,8 +3014,8 @@ class Product extends JobImport
     public function importMedia()
     {
         if (!$this->configHelper->isMediaImportEnabled()) {
-            $this->setStatus(false);
-            $this->setMessage(__('Media import is not enabled'));
+            $this->setStatus(true);
+            $this->setMessage(__('Media import is not enabled'), $this->logger);
 
             return;
         }
@@ -2650,7 +3029,7 @@ class Product extends JobImport
 
         if (empty($gallery)) {
             $this->setStatus(false);
-            $this->setMessage(__('Akeneo Images Attributes is empty'));
+            $this->setMessage(__('Akeneo Images Attributes is empty'), $this->logger);
 
             return;
         }
@@ -2669,7 +3048,7 @@ class Product extends JobImport
         ];
         foreach ($gallery as $image) {
             if (!$connection->tableColumnExists($tmpTable, strtolower($image))) {
-                $this->setMessage(__('Info: No value found in the current batch for the attribute %1', $image));
+                $this->setMessage(__('Info: No value found in the current batch for the attribute %1', $image), $this->logger);
                 continue;
             }
             $data[$image] = strtolower($image);
@@ -2688,7 +3067,7 @@ class Product extends JobImport
             $this->entities->addJoinForContentStaging($select, []);
         }
 
-        /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+        /** @var Mysql $query */
         $query = $connection->query($select);
 
         /** @var \Magento\Catalog\Model\ResourceModel\Eav\Attribute $galleryAttribute */
@@ -2724,10 +3103,12 @@ class Product extends JobImport
                 /** @var bool|string[] $databaseRecords */
                 $databaseRecords = false;
 
-                if (!$this->configHelper->mediaFileExists($name)) {
+                if (!$this->configHelper->mediaFileExists($filePath)) {
                     /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
-                    $this->configHelper->saveMediaFile($filePath, $binary);
+                    /** @var string $imageContent */
+                    $imageContent = $binary->getBody()->getContents();
+                    $this->configHelper->saveMediaFile($filePath, $imageContent);
                 }
 
                 /** @var string $file */
@@ -2764,20 +3145,21 @@ class Product extends JobImport
                 $connection->insertOnDuplicate($galleryEntityTable, $data, array_keys($data));
 
                 // Get potential record_id from gallery value table
-                /** @var Select $select */
-                $select          = $connection->select()->from($galleryValueTable)->where('value_id = ?', $valueId)->where(
-                    'store_id = ?',
-                    0
-                )->where($columnIdentifier . ' = ?', $row[$columnIdentifier]);
-                $databaseRecords = $connection->fetchAll($select);
+                /** @var int $databaseRecords */
+                $databaseRecords = $connection->fetchOne(
+                    $connection->select()->from($galleryValueTable, [new Expr('MAX(`record_id`)')])->where(
+                        'value_id = ?',
+                        $valueId
+                    )->where(
+                        'store_id = ?',
+                        0
+                    )->where($columnIdentifier . ' = ?', $row[$columnIdentifier])
+                );
+
                 /** @var int $recordId */
                 $recordId = 0;
                 if (!empty($databaseRecords)) {
-                    foreach ($databaseRecords as $databaseRecord) {
-                        if (isset($databaseRecord['record_id']) && $databaseRecord['record_id'] > $recordId) {
-                            $recordId = $databaseRecord['record_id'];
-                        }
-                    }
+                    $recordId = $databaseRecords;
                 }
 
                 /** @var array $data */
@@ -2815,7 +3197,7 @@ class Product extends JobImport
                 $files[] = $file;
             }
 
-            /** @var \Magento\Framework\DB\Select $cleaner */
+            /** @var Select $cleaner */
             $cleaner = $connection->select()->from($galleryTable, ['value_id'])->where('value NOT IN (?)', $files);
 
             $connection->delete(
@@ -2857,7 +3239,7 @@ class Product extends JobImport
             $this->cacheTypeList->cleanType($type);
         }
 
-        $this->setMessage(__('Cache cleaned for: %1', join(', ', $types)));
+        $this->setMessage(__('Cache cleaned for: %1', join(', ', $types)), $this->logger);
     }
 
     /**
@@ -2872,7 +3254,7 @@ class Product extends JobImport
         /** @var mixed[] $filters */
         $filters = $this->productFilters->getFilters($family, $isProductModel);
         if (array_key_exists('error', $filters)) {
-            $this->setMessage($filters['error']);
+            $this->setMessage($filters['error'], $this->logger);
             $this->stop(true);
         }
 
@@ -2890,41 +3272,38 @@ class Product extends JobImport
     {
         /** @var mixed[] $filters */
         $filters = $this->getFilters($family, true);
-        /** bool|string[] $modelCompletenessFilter */
-        $modelCompletenessFilter = false;
         /** @var string $mode */
         $mode = $this->configHelper->getFilterMode();
         if ($mode == Mode::STANDARD) {
+            /** bool|string[] $modelCompletenessFilter */
             $modelCompletenessFilter = $this->getModelCompletenessFilter();
-        }
-
-        /**
-         * @var string $key
-         * @var string[Ø] $filter
-         */
-        foreach ($filters as $key => $filter) {
-            if (isset($filter['search'])) {
-                if (isset($filter['search']['enabled'])) {
-                    unset($filters[$key]['search']['enabled']);
-                }
-                if (isset($filter['search']['group'])) {
-                    unset($filters[$key]['search']['group']);
-                }
-                if (isset($filter['search']['parent'])) {
-                    unset($filters[$key]['search']['parent']);
-                }
-                if (isset($filter['search']['completeness'])) {
-                    unset($filters[$key]['search']['completeness']);
-                }
-                if ($modelCompletenessFilter) {
-                    $filters[$key]['search']['completeness'] = $modelCompletenessFilter;
+            /**
+             * @var string $key
+             * @var string[Ø] $filter
+             */
+            foreach ($filters as $key => $filter) {
+                if (isset($filter['search'])) {
+                    if (isset($filter['search']['enabled'])) {
+                        unset($filters[$key]['search']['enabled']);
+                    }
+                    if (isset($filter['search']['group'])) {
+                        unset($filters[$key]['search']['group']);
+                    }
+                    if (isset($filter['search']['parent'])) {
+                        unset($filters[$key]['search']['parent']);
+                    }
+                    if (isset($filter['search']['completeness'])) {
+                        unset($filters[$key]['search']['completeness']);
+                    }
+                    if ($modelCompletenessFilter) {
+                        $filters[$key]['search']['completeness'] = $modelCompletenessFilter;
+                    }
                 }
             }
         }
 
         return $filters;
     }
-
 
     /**
      * Get product models completeness filter
@@ -2963,12 +3342,13 @@ class Product extends JobImport
                 return [];
             }
         }
-        /** @var string|int $paginationSize */
-        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var string[] $families */
         $families = [];
+        /** @var string|int $paginationSize */
+        $paginationSize = $this->configHelper->getPaginationSize();
         /** @var string[] $apiFamilies */
         $apiFamilies = $this->akeneoClient->getFamilyApi()->all($paginationSize);
+
         /** @var mixed[] $family */
         foreach ($apiFamilies as $family) {
             if (!isset($family['code'])) {
@@ -2976,6 +3356,25 @@ class Product extends JobImport
             }
             $families[] = $family['code'];
         }
+
+        // If we are in serenity mode, place the mapped grouped families to the end of the imports
+        /** @var string $edition */
+        $edition = $this->configHelper->getEdition();
+        if ($edition === Edition::SERENITY || $edition === Edition::GROWTH || $edition === Edition::GREATER_OR_FIVE) {
+            /** @var string[] $groupedFamiliesToImport */
+            $groupedFamiliesToImport = $this->configHelper->getGroupedFamiliesToImport();
+            /**
+             * @var int    $key
+             * @var string $family
+             */
+            foreach ($families as $key => $family) {
+                if (in_array($family, $groupedFamiliesToImport)) {
+                    unset($families[$key]);
+                    $families[] = $family;
+                }
+            }
+        }
+
         /** @var string $mode */
         $mode = $this->configHelper->getFilterMode();
         if ($mode == Mode::ADVANCED) {
@@ -3033,5 +3432,70 @@ class Product extends JobImport
     public function getFamily()
     {
         return $this->family;
+    }
+
+    /**
+     * Format grouped association string into an array
+     *
+     * @param string $productAssociationData
+     *
+     * @return void
+     */
+    public function formatGroupedAssociationData($productAssociationData, $productIdentifier)
+    {
+        /** @var string[] $productAssociations */
+        $productAssociations = explode(',', $productAssociationData);
+        /** @var string[] $formatedAssociations */
+        $formatedAssociations = [];
+        /**
+         * @var int    $key
+         * @var string $association
+         */
+        foreach ($productAssociations as $key => $association) {
+            /** @var string[] $associationData */
+            $associationData = explode(';', $association);
+            if (!isset($associationData[1])) {
+                return false;
+            }
+            if (is_float($associationData[1])) {
+                $this->setAdditionalMessage(
+                    __('The product %1 has a decimal value in its association, skipped', $productIdentifier), $this->logger
+                );
+
+                continue;
+            }
+            $formatedAssociations[$key]['identifier'] = $associationData[0];
+            $formatedAssociations[$key]['quantity'] = $associationData[1];
+        }
+
+        return $formatedAssociations;
+    }
+
+    /**
+     * Description productExistInMagento function
+     *
+     * @param string $sku
+     *
+     * @return bool
+     * @throws Zend_Db_Statement_Exception
+     */
+    public function productExistInMagento(string $sku)
+    {
+        /** @var string $productsEntityTable */
+        $productsEntityTable = $this->entitiesHelper->getTable(self::CATALOG_PRODUCT_ENTITY_TABLE_NAME);
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var Select $productExistenceSelect */
+        $productExistenceSelect = $connection->select()->from($productsEntityTable, 'sku')->where('sku = ?', $sku);
+        /** @var Mysql $query */
+        $query = $connection->query($productExistenceSelect);
+        /** @var mixed[] $magentoProduct */
+        $magentoProduct = $query->fetch();
+
+        if (is_array($magentoProduct) && count($magentoProduct) > 0) {
+            return true;
+        }
+
+        return false;
     }
 }

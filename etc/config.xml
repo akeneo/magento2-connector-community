@@ -31,6 +31,9 @@
             <product>
                 <url_generation_enabled>1</url_generation_enabled>
                 <activation>2</activation>
+                <association_related>SUBSTITUTION</association_related>
+                <association_upsell>UPSELL</association_upsell>
+                <association_crossell>X_SELL</association_crossell>
             </product>
             <filter_attribute>
                 <filter_attribute_code_mode>0</filter_attribute_code_mode>
@@ -40,6 +43,9 @@
                 <include_in_menu>1</include_in_menu>
                 <is_anchor>1</is_anchor>
             </category>
+            <advanced>
+                <advanced_log>0</advanced_log>
+            </advanced>
         </akeneo_connector>
     </default>
 </config>

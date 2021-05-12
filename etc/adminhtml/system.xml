@@ -291,7 +291,7 @@ For example :<br/>
                     </depends>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,serenity</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity,growth</field>
                 </depends>
             </group>
             <group id="attribute" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -333,7 +333,7 @@ For example :<br/>
                     <can_be_empty>1</can_be_empty>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,serenity</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity,growth</field>
                 </depends>
             </group>
             <group id="product" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -387,11 +387,24 @@ For example :<br/>
                         ]]>
                     </comment>
                 </field>
-                <field id="media_enabled" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="association_related" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0"
+                        showInStore="0">
+                    <label>Akeneo association code for Related products</label>
+                </field>
+                <field id="association_upsell" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="0"
+                        showInStore="0">
+                    <label>Akeneo association code for Upsell products</label>
+                </field>
+                <field id="association_crossell" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="0"
+                        showInStore="0">
+                    <label>Akeneo association code for Cross-sell products</label>
+                    <comment>Note: Quantified associations cannot be mapped with Cross-sell / Related / Upsell</comment>
+                </field>
+                <field id="media_enabled" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Import Image Attributes</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="media_gallery" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="media_gallery" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Akeneo Images Attributes</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Gallery</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -400,7 +413,7 @@ For example :<br/>
                         <field id="media_enabled">1</field>
                     </depends>
                 </field>
-                <field id="media_images" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="media_images" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Product Images Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Image</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -409,12 +422,12 @@ For example :<br/>
                         <field id="media_enabled">1</field>
                     </depends>
                 </field>
-                <field id="file_enabled" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="file_enabled" translate="label" type="select" sortOrder="110" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Import File Attributes</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>All files will be downloaded in the 'pub/media/akeneo_connector/media_files' folder.</comment>
                 </field>
-                <field id="file_attribute" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="file_attribute" translate="label" type="text" sortOrder="120" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Akeneo File Attributes</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\File</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -422,7 +435,7 @@ For example :<br/>
                         <![CDATA[List all PIM file attributes you want to download when 'Import File Attributes' is enabled.<br />The path of each file will be imported to the corresponding product text attribute.<br />If 'Import File Attributes' is disabled, it won't override previously imported values from your file attributes in this field.]]>
                     </comment>
                 </field>
-                <field id="akeneo_master" translate="label" type="select" sortOrder="95" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="akeneo_master" translate="label" type="select" sortOrder="130" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Does Akeneo data override content staging</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>
@@ -431,9 +444,29 @@ For example :<br/>
                         <strong>No</strong> - Akeneo will only update the "base" version of the scheduled products.]]>
                     </comment>
                 </field>
-                <field id="url_generation_enabled" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="url_generation_enabled" translate="label" type="select" sortOrder="140" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Regenerate url rewrites</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+            </group>
+            <group id="grouped_products" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Grouped products</label>
+                <field id="families_mapping" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Grouped product families and quantity association mapping</label>
+                    <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Grouped</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <comment><![CDATA[Map each grouped family from Akeneo to its corresponding quantified association.<br />Please make sure to only map quantified association.]]></comment>
+                </field>
+                <depends>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_five,serenity,growth</field>
+                </depends>
+            </group>
+            <group id="advanced" translate="label" sortOrder="70" showInDefault="1">
+                <label>Advanced</label>
+                <field id="advanced_log" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Advanced Loging</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Activating advanced log may slow down the imports. Temporary tables won't be deleted at the end of their imports. Logs will be placed in var/log/akeneo_connector</comment>
                 </field>
             </group>
         </section>
