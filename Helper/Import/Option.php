@@ -84,7 +84,7 @@ class Option extends Entities
         /** @var int $entityTypeId */
         $entityTypeId = $this->configHelper->getEntityTypeId(ProductAttributeInterface::ENTITY_TYPE_CODE);
 
-        if($connection->tableColumnExists($tableName, 't.labels-' . $localeCode)) {
+        if ($connection->tableColumnExists($tableName, 't.labels-' . $localeCode)) {
             // Get all entities that are being imported and already present in Magento
             $select = $connection->select()->from(
                 ['t' => $tableName],
