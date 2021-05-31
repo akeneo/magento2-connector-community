@@ -2755,7 +2755,7 @@ class Product extends JobImport
     public function setUrlRewrite()
     {
         if (!$this->configHelper->isUrlGenerationEnabled()) {
-            $this->setStatus(false);
+            $this->setStatus(true);
             $this->setMessage(
                 __('Url rewrite generation is not enabled'), $this->logger
             );
