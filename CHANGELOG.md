@@ -219,3 +219,9 @@
 * Add export Akeneo Connector configuration button in the admin configuration page
 * Add advanced filter mode in configuration (https://help.akeneo.com/magento2-connector/articles/13-advanced-loging.html)
 * Add Akeneo Growth Edition in Akeneo Edition selector configuration (https://help.akeneo.com/magento2-connector/articles/02-configure-PIM-API.html#configure-your-akeneo-edition)
+
+### Version 101.3.6 :
+* Optimize image import by storing result from API calls
+* Fix error message on metric option creation when no value was found for an entire locale
+* Fix export PDF generation for image configuration and strpos strict testing
+* Update URL rewrite warning message color
