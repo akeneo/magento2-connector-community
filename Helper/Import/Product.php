@@ -396,75 +396,17 @@ class Product extends Entities
             }
         }
 
-        /* Update entity_id column from akeneo_connector_entities table */
-        $connection->query(
-            '
-            UPDATE `' . $tableName . '` t
-            SET `_entity_id` = (
-                SELECT `entity_id` FROM `' . $akeneoConnectorTable . '` c
-                WHERE ' . ($prefix ? 'CONCAT(t.`' . $prefix . '`, "_", t.`' . $pimKey . '`)' : 't.`' . $pimKey . '`') . ' = c.`code`
-                    AND c.`import` = "' . $import . '"
-            )
-        '
-        );
-
-        /** @var string $mysqlVersion */
-        $mysqlVersion = $this->getMysqlVersion();
-        if (substr($mysqlVersion, 0, 1) == '8') {
-            $connection->query('SET @@SESSION.information_schema_stats_expiry = 0;');
-        }
-
-        /* Set entity_id for new entities */
-        /** @var string $query */
-        $query = $connection->query('SHOW TABLE STATUS LIKE "' . $entityTable . '"');
-        /** @var mixed $row */
-        $row = $query->fetch();
-
-        $connection->query('SET @id = ' . (int)$row['Auto_increment']);
-        /** @var array $values */
-        $values = [
-            '_entity_id' => new Expr('@id := @id + 1'),
-            '_is_new'    => new Expr('1'),
-        ];
-        $connection->update($tableName, $values, '_entity_id IS NULL');
-
-        /* Update akeneo_connector_entities table with code and new entity_id */
-        /** @var Select $select */
-        $select = $connection->select()->from(
+        $this->setAkeneoConnectorEntityIds(
+            $connection,
             $tableName,
-            [
-                'import'    => new Expr("'" . $import . "'"),
-                'code'      => $prefix ? new Expr('CONCAT(`' . $prefix . '`, "_", `' . $pimKey . '`)') : $pimKey,
-                'entity_id' => '_entity_id',
-            ]
-        )->where('_is_new = ?', 1);
-
-        $connection->query(
-            $connection->insertFromSelect($select, $akeneoConnectorTable, ['import', 'code', 'entity_id'], 2)
+            $akeneoConnectorTable,
+            $entityTable,
+            $entityKey,
+            $prefix,
+            $pimKey,
+            $import,
+            '_'
         );
-
-        /* Update entity table auto increment */
-        /** @var string $count */
-        $count = $connection->fetchOne(
-            $connection->select()->from($tableName, [new Expr('COUNT(*)')])->where('_is_new = ?', 1)
-        );
-        if ($count) {
-            /** @var string $maxCode */
-            $maxCode = $connection->fetchOne(
-                $connection->select()->from($akeneoConnectorTable, new Expr('MAX(`entity_id`)'))->where(
-                    'import = ?',
-                    $import
-                )
-            );
-            /** @var string $maxEntity */
-            $maxEntity = $connection->fetchOne(
-                $connection->select()->from($entityTable, new Expr('MAX(`' . $entityKey . '`)'))
-            );
-
-            $connection->query(
-                'ALTER TABLE `' . $entityTable . '` AUTO_INCREMENT = ' . (max((int)$maxCode, (int)$maxEntity) + 1)
-            );
-        }
 
         return $this;
     }
