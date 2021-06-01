@@ -14,14 +14,14 @@
 ?>
 <div class="akeneo-connector-uploader">
   <div class="akeneo-connector-step">
-    <h2><?php echo __('Select import type:') ?></h2>
+    <h2><?= $block->escapeHtml(__('Select import type:')) ?></h2>
     <div class="akeneo-connector-types">
         <?php $collection = $block->getCollection() ?>
         <?php /** @var mixed $import */ ?>
         <?php foreach ($collection as $import): ?>
             <?php if ($block->isAllowed($import->getCode())): ?>
-            <div class="import-type" onclick="Akeneo_Connector.type('<?php echo $import->getCode() ?>', this)">
-                <?php echo $import->getName() ?>
+            <div class="import-type" onclick="Akeneo_Connector.type('<?= /* @noEscape */ $import->getCode() ?>', this)">
+                <?= /* @noEscape */ $import->getName() ?>
             </div>
             <?php endif; ?>
         <?php endforeach; ?>
@@ -30,21 +30,21 @@
   <div class="akeneo-connector-step step-last">
     <button type="button" class="primary" onclick="launch()">
             <span class="ui-button-text">
-                <span><?php echo __('Import') ?></span>
+                <span><?= $block->escapeHtml(__('Import')) ?></span>
             </span>
     </button>
   </div>
 </div>
 
 <ul class="akeneo-connector-console">
-  <li class="selected"><?php echo __('Waiting for import...') ?></li>
+  <li class="selected"><?= $block->escapeHtml(__('Waiting for import...')) ?></li>
 </ul>
 
 <script>
 require(
     ["Akeneo_Connector/js/akeneo_connector"],
     function (akeneoConnector) {
-      akeneoConnector.init('<?php echo $runUrl; ?>', '<?php echo $runProductUrl; ?>', '.akeneo-connector-console');
+      akeneoConnector.init('<?= /* @noEscape */ $runUrl; ?>', '<?= /* @noEscape */ $runProductUrl; ?>', '.akeneo-connector-console');
       window.Akeneo_Connector = akeneoConnector;
     }
 );
