@@ -3,6 +3,8 @@
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Helper\AttributeFilters;
+use Akeneo\Connector\Logger\AttributeLogger;
+use Akeneo\Connector\Logger\Handler\AttributeHandler;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
@@ -53,18 +55,6 @@ class Attribute extends Import
      */
     protected $name = 'Attribute';
     /**
-     * This variable contains an EntitiesHelper
-     *
-     * @var EntitiesHelper $entitiesHelper
-     */
-    protected $entitiesHelper;
-    /**
-     * This variable contains a ConfigHelper
-     *
-     * @var ConfigHelper $configHelper
-     */
-    protected $configHelper;
-    /**
      * This variable contains a Config
      *
      * @var Config $eavConfig
@@ -95,6 +85,18 @@ class Attribute extends Import
      */
     protected $storeHelper;
     /**
+     * This variable contains a logger
+     *
+     * @var AttributeLogger $logger
+     */
+    protected $logger;
+    /**
+     * This variable contains a handler
+     *
+     * @var AttributeHandler $handler
+     */
+    protected $handler;
+    /**
      * This variable contains an EavSetup
      *
      * @var EavSetup $eavSetup
@@ -121,6 +123,8 @@ class Attribute extends Import
     /**
      * Attribute constructor
      *
+     * @param AttributeLogger   $logger
+     * @param AttributeHandler  $handler
      * @param OutputHelper      $outputHelper
      * @param ManagerInterface  $eventManager
      * @param Authenticator     $authenticator
@@ -135,6 +139,8 @@ class Attribute extends Import
      * @param array             $data
      */
     public function __construct(
+        AttributeLogger $logger,
+        AttributeHandler $handler,
         OutputHelper $outputHelper,
         ManagerInterface $eventManager,
         Authenticator $authenticator,
@@ -148,10 +154,10 @@ class Attribute extends Import
         EavSetup $eavSetup,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
 
-        $this->entitiesHelper   = $entitiesHelper;
-        $this->configHelper     = $configHelper;
+        $this->logger           = $logger;
+        $this->handler          = $handler;
         $this->eavConfig        = $eavConfig;
         $this->attributeHelper  = $attributeHelper;
         $this->attributeFilters = $attributeFilters;
@@ -169,12 +175,17 @@ class Attribute extends Import
     {
         /** @var mixed[] $filters */
         $filters = $this->getFilters();
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->logger->addDebug(__('Attribute API call Filters : ') . print_r($filters, true));
+        }
         /** @var PageInterface $attributes */
         $attributes = $this->akeneoClient->getAttributeApi()->listPerPage(1, false, $filters);
         /** @var array $attribute */
         $attribute = $attributes->getItems();
         if (empty($attribute)) {
-            $this->setMessage(__('No results from Akeneo'));
+            $this->setMessage(__('No results from Akeneo'), $this->logger);
             $this->stop(1);
 
             return;
@@ -210,7 +221,7 @@ class Attribute extends Import
         foreach ($attributes as $index => $attribute) {
             // If the attribute starts with a number, skip
             if (ctype_digit(substr($attribute['code'], 0, 1))) {
-                $this->setAdditionalMessage(__('The attribute %1 was not imported because it starts with a number. Update it in Akeneo and retry.', $attribute['code']));
+                $this->setAdditionalMessage(__('The attribute %1 was not imported because it starts with a number. Update it in Akeneo and retry.', $attribute['code']), $this->logger);
                 continue;
             }
             /** @var string $attributeCode */
@@ -222,7 +233,7 @@ class Attribute extends Import
                     $metricsSetting
                 )) {
                 if ($attribute['scopable'] || $attribute['localizable']) {
-                    $this->setAdditionalMessage(__('Attribute %1 is scopable or localizable please change configuration at Stores > Configuration > Catalog > Akeneo Connector > Products > Metrics management.', $attributeCode));
+                    $this->setAdditionalMessage(__('Attribute %1 is scopable or localizable please change configuration at Stores > Configuration > Catalog > Akeneo Connector > Products > Metrics management.', $attributeCode), $this->logger);
                     continue;
                 }
                 $attribute['type'] .= '_select';
@@ -235,12 +246,16 @@ class Attribute extends Import
             __('%1 line(s) found', $index)
         );
 
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logImportedEntities($this->logger);
+        }
+
         /* Remove attribute without an admin store label */
         /** @var string $localeCode */
         $localeCode = $this->configHelper->getDefaultLocale();
 
         if (!$connection->tableColumnExists($tmpTable, 'labels-' . $localeCode)) {
-            $this->setMessage(__('No attributes with label in the admin locale %1 found.', $localeCode));
+            $this->setMessage(__('No attributes with label in the admin locale %1 found.', $localeCode), $this->logger);
             $this->stop(1);
 
             return;
@@ -265,7 +280,7 @@ class Attribute extends Import
                         'The attribute %1 was not imported because it did not have a translation in admin store language : %2',
                         $row['code'],
                         $localeCode
-                    )
+                    ), $this->logger
                 );
                 $connection->delete($tmpTable, ['code = ?' => $row['code']]);
             }
@@ -325,6 +340,9 @@ class Attribute extends Import
         );
 
         $this->entitiesHelper->matchEntity('code', 'eav_attribute', 'attribute_id', $this->getCode());
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logImportedEntities($this->logger, true);
+        }
     }
 
     /**
@@ -443,7 +461,7 @@ class Attribute extends Import
                 $connection->select()->from(
                     $this->entitiesHelper->getTable('eav_attribute'),
                     ['frontend_input']
-                )->where('attribute_code = ?', $row['code'])
+                )->where('attribute_code = ?', $row['code'])->where('entity_type_id = ?', $this->getEntityTypeId())
             );
             /** @var bool $skipAttribute */
             $skipAttribute = false;
@@ -464,7 +482,7 @@ class Attribute extends Import
             if ($skipAttribute === true) {
                 /** @var string $message */
                 $message = __('The attribute %1 was skipped because its type is not the same between Akeneo and Magento. Please delete it in Magento and try a new import', $row['code']);
-                $this->setAdditionalMessage($message);
+                $this->setAdditionalMessage($message, $this->logger);
 
                 continue;
             }
@@ -737,7 +755,7 @@ class Attribute extends Import
         }
 
         $this->setMessage(
-            __('Cache cleaned for: %1', join(', ', $types))
+            __('Cache cleaned for: %1', join(', ', $types)), $this->logger
         );
     }
 
@@ -765,7 +783,7 @@ class Attribute extends Import
         /** @var mixed[] $filters */
         $filters = $this->attributeFilters->getFilters();
         if (array_key_exists('error', $filters)) {
-            $this->setMessage($filters['error']);
+            $this->setMessage($filters['error'], $this->logger);
             $this->stop(true);
         }
 
