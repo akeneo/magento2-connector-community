@@ -23,7 +23,7 @@ class JobExecutor implements JobExecutorInterface
      *
      * @param string $code
      *
-     * @return \Magento\Framework\Phrase|null
+     * @return Phrase|null
      */
     public function execute(string $code): ?Phrase
     {

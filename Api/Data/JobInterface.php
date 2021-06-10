@@ -87,4 +87,10 @@ interface JobInterface
      * @var string ORDER
      */
     const ORDER = 'order';
+    /**
+     * Job PHP class
+     *
+     * @var string JOB_CLASS
+     */
+    const JOB_CLASS = 'job_class';
 }

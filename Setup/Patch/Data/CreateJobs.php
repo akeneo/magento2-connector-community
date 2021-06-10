@@ -6,6 +6,11 @@ namespace Akeneo\Connector\Setup\Patch\Data;
 
 use Akeneo\Connector\Api\Data\JobInterface;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Job\Attribute;
+use Akeneo\Connector\Job\Category;
+use Akeneo\Connector\Job\Family;
+use Akeneo\Connector\Job\Option;
+use Akeneo\Connector\Job\Product;
 use Akeneo\Connector\Model\Job;
 use Akeneo\Connector\Model\JobFactory;
 use Akeneo\Connector\Model\JobRepository;
@@ -33,13 +38,13 @@ class CreateJobs implements DataPatchInterface
     /**
      * Description $jobRepository field
      *
-     * @var \Akeneo\Connector\Model\JobRepository $jobRepository
+     * @var JobRepository $jobRepository
      */
     protected $jobRepository;
     /**
      * Description $jobRepository field
      *
-     * @var \Akeneo\Connector\Model\JobFactory $jobFactory
+     * @var JobFactory $jobFactory
      */
     protected $jobFactory;
     /**
@@ -48,19 +53,19 @@ class CreateJobs implements DataPatchInterface
      * @var string[] JOBS_CODES
      */
     const JOBS_CODES = [
-        'category',
-        'family',
-        'attribute',
-        'option',
-        'product',
+        'category'  => Category::class,
+        'family'    => Family::class,
+        'attribute' => Attribute::class,
+        'option'    => Option::class,
+        'product'   => Product::class,
     ];
 
     /**
      * CreateJobs constructor
      *
-     * @param \Magento\Framework\Setup\ModuleDataSetupInterface $dataSetup
-     * @param \Akeneo\Connector\Model\JobRepository             $jobRepository
-     * @param \Akeneo\Connector\Model\JobFactory                $jobFactory
+     * @param ModuleDataSetupInterface $dataSetup
+     * @param JobRepository            $jobRepository
+     * @param JobFactory               $jobFactory
      */
     public function __construct(
         ModuleDataSetupInterface $dataSetup,
@@ -75,24 +80,26 @@ class CreateJobs implements DataPatchInterface
     /**
      * Description apply function
      *
-     * @return \Akeneo\Connector\Setup\Patch\Data\CreateJobs
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @return CreateJobs
+     * @throws AlreadyExistsException
      */
     public function apply()
     {
         $this->moduleDataSetup->startSetup();
-
+        $index = 0;
         /**
-         * @var int    $index
          * @var string $code
+         * @var string $class
          */
-        foreach (self::JOBS_CODES as $index => $code) {
+        foreach (self::JOBS_CODES as $code => $class) {
             /** @var Job $job */
             $job = $this->jobFactory->create();
             $job->setCode($code);
             $job->setOrder($index);
             $job->setStatus(JobInterface::JOB_PENDING);
+            $job->setJobClass($class);
             $this->jobRepository->save($job);
+            $index++;
         }
 
         $this->moduleDataSetup->endSetup();

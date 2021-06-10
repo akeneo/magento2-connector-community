@@ -121,6 +121,16 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
     }
 
     /**
+     * Description getJobClass function
+     *
+     * @return string|null
+     */
+    public function getJobClass()
+    {
+        return $this->getData(self::JOB_CLASS);
+    }
+
+    /**
      * Set ID
      *
      * @param int $id
@@ -202,5 +212,17 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
     public function setOrder($order)
     {
         return $this->setData(self::ORDER, $order);
+    }
+
+    /**
+     * Description setJobClass function
+     *
+     * @param $class
+     *
+     * @return Job
+     */
+    public function setJobClass($class)
+    {
+        return $this->setData(self::JOB_CLASS, $class);
     }
 }
