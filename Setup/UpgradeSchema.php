@@ -153,6 +153,23 @@ class UpgradeSchema implements UpgradeSchemaInterface
         }
 
         if (version_compare($context->getVersion(), '1.0.4', '<')) {
+            /** @var string $config */
+            $config = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_ASSET_GALLERY_MEDIA);
+            if ($config != false) {
+                /** @var array $media */
+                $media = $this->serializer->unserialize($config);
+                /**
+                 * @var int      $key
+                 * @var string[] $assetConfig
+                 */
+                foreach ($media as $key => $assetConfig) {
+                    $media[$key]['main_media_attribute'] = "";
+                }
+                $this->resourceConfig->saveConfig(ConfigHelper::PRODUCT_ASSET_GALLERY_MEDIA, json_encode($media));
+            }
+        }
+
+        if (version_compare($context->getVersion(), '1.0.5', '<')) {
             /**
              * Create table 'akeneo_connector_job'
              */
@@ -194,12 +211,20 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 ['nullable' => true],
                 'Last date the job was executed correctly'
             )->addColumn(
+                'job_class',
+                Table::TYPE_TEXT,
+                255,
+                ['nullable' => false],
+                'Job import class'
+            )->addColumn(
                 'order',
                 Table::TYPE_INTEGER,
                 null,
                 ['nullable' => false],
                 'Job order to priorize launch'
             )->setComment('Akeneo Connector Job');
+
+            $installer->getConnection()->createTable($table);
         }
 
         $installer->endSetup();
