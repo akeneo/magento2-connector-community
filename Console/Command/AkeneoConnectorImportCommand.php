@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Console\Command;
 
+use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
@@ -34,12 +35,6 @@ class AkeneoConnectorImportCommand extends Command
      */
     const IMPORT_CODE = 'code';
     /**
-     * This constant contains a string
-     *
-     * @var string IMPORT_CODE_PRODUCT
-     */
-    const IMPORT_CODE_PRODUCT = 'product';
-    /**
      * This variable contains a State
      *
      * @var State $appState
@@ -52,14 +47,14 @@ class AkeneoConnectorImportCommand extends Command
      */
     protected $importRepository;
     /**
-     * This variable contains a ConfigHelper
+     * Description $jobExecutor field
      *
-     * @var ConfigHelper $configHelper
+     * @var JobExecutor $jobExecutor
      */
-    protected $configHelper;
+    protected $jobExecutor;
 
     /**
-     * AkeneoConnectorImportCommand constructor
+     * AkeneoConnectorImportCommand constructor.
      *
      * @param ImportRepositoryInterface $importRepository
      * @param State                     $appState
@@ -70,6 +65,7 @@ class AkeneoConnectorImportCommand extends Command
         ImportRepositoryInterface $importRepository,
         State $appState,
         ConfigHelper $configHelper,
+        JobExecutor $jobExecutor,
         $name = null
     ) {
         parent::__construct($name);
@@ -77,6 +73,7 @@ class AkeneoConnectorImportCommand extends Command
         $this->appState         = $appState;
         $this->importRepository = $importRepository;
         $this->configHelper     = $configHelper;
+        $this->jobExecutor      = $jobExecutor;
     }
 
     /**
@@ -110,142 +107,8 @@ class AkeneoConnectorImportCommand extends Command
         if (!$code) {
             $this->usage($output);
         } else {
-            $this->checkEntities($code, $output);
+            $this->jobExecutor->execute($code);
         }
-    }
-
-    /**
-     * Check if multiple entities have been specified
-     * in the command line
-     *
-     * @param string $code
-     * @param OutputInterface $output
-     *
-     * @return void
-     */
-    protected function checkEntities(string $code, OutputInterface $output)
-    {
-        /** @var string[] $entities */
-        $entities = explode(',', $code);
-        if (count($entities) > 1) {
-            $this->multiImport($entities, $output);
-        } else {
-            $this->import($code, $output);
-        }
-    }
-
-    /**
-     * Run import for multiple entities
-     *
-     * @param array $entities
-     * @param OutputInterface $output
-     *
-     * @return void
-     */
-    protected function multiImport(array $entities, OutputInterface $output)
-    {
-        foreach ($entities as $entity) {
-            $this->import($entity, $output);
-        }
-    }
-
-    /**
-     * Run import
-     *
-     * @param string          $code
-     * @param OutputInterface $output
-     *
-     * @return bool
-     */
-    protected function import(string $code, OutputInterface $output)
-    {
-        /** @var Import $import */
-        $import = $this->importRepository->getByCode($code);
-        if (!$import) {
-            /** @var Phrase $message */
-            $message = __('Import code not found');
-            $this->displayError($message, $output);
-
-            return false;
-        }
-
-        if (!$this->configHelper->checkAkeneoApiCredentials()) {
-            /** @var Phrase $message */
-            $message = __('API credentials are missing. Please configure the connector and retry.');
-            $this->displayError($message, $output);
-
-            return false;
-        }
-
-        // If product import, run the import once per family
-        /** @var array $productFamiliesToImport */
-        $productFamiliesToImport = [];
-        if ($code == self::IMPORT_CODE_PRODUCT) {
-            $productFamiliesToImport = $import->getFamiliesToImport();
-
-            if (!count($productFamiliesToImport)) {
-                $message = __('No family to import');
-                $this->displayError($message, $output);
-
-                return false;
-            }
-
-            foreach ($productFamiliesToImport as $family) {
-                $this->runImport($import, $output, $family);
-                $import->setIdentifier(null);
-            }
-
-            return true;
-        }
-
-        // Run the import normaly
-        $this->runImport($import, $output);
-
-        return true;
-    }
-
-    /**
-     * Run the import
-     *
-     * @param Import     $import
-     * @param OutputInterface     $output
-     * @param null|string $family
-     *
-     * @return void
-     */
-    protected function runImport(Import $import, OutputInterface $output, $family = null) {
-        try {
-            $import->setStep(0);
-            if ($family) {
-                $import->setFamily($family);
-            }
-
-            while ($import->canExecute()) {
-                /** @var string $comment */
-                $comment = $import->getComment();
-                $this->displayInfo($comment, $output);
-
-                $import->execute();
-
-                /** @var string $message */
-                $message = $import->getMessage();
-                if (!$import->getStatus()) {
-                    $this->displayError($message, $output);
-                } else {
-                    $this->displayComment($message, $output);
-                }
-
-                if ($import->isDone()) {
-                    break;
-                }
-            }
-        } catch (\Exception $exception) {
-            /** @var string $message */
-            $message = $exception->getMessage();
-            $this->displayError($message, $output);
-        }
-
-        return true;
     }
 
     /**
