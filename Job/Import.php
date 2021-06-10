@@ -3,6 +3,7 @@
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
+use Akeneo\PimEnterprise\ApiClient\AkeneoPimEnterpriseClientInterface;
 use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Phrase;
@@ -41,65 +42,11 @@ abstract class Import extends DataObject implements ImportInterface
      */
     protected $identifier;
     /**
-     * This variable contains a boolean
-     *
-     * @var bool $status
-     */
-    protected $status;
-    /**
-     * This variable contains an int value
-     *
-     * @var int $step
-     */
-    protected $step;
-    /**
-     * This variable contains an array
-     *
-     * @var array $steps
-     */
-    protected $steps;
-    /**
-     * This variable contains an OutputHelper
-     *
-     * @var OutputHelper $outputHelper
-     */
-    protected $outputHelper;
-    /**
-     * This variable contains an Authenticator
-     *
-     * @var mixed $authenticator
-     */
-    protected $authenticator;
-    /**
-     * This variable contains a mixed value
-     *
-     * @var ManagerInterface $eventManager
-     */
-    protected $eventManager;
-    /**
-     * This variable contains a AkeneoPimClientInterface
-     *
-     * @var AkeneoPimClientInterface $akeneoClient
-     */
-    protected $akeneoClient;
-    /**
      * This variable contains a string or Phrase value
      *
      * @var string|Phrase $comment
      */
     protected $comment;
-    /**
-     * This variable contains a string or Phrase value
-     *
-     * @var string|Phrase $message
-     */
-    protected $message;
-    /**
-     * This variable contains a bool value
-     *
-     * @var bool $continue
-     */
-    protected $continue;
     /**
      * This variable contains a bool value
      *
@@ -128,38 +75,6 @@ abstract class Import extends DataObject implements ImportInterface
         $this->eventManager = $eventManager;
         $this->step         = 0;
         $this->setFromAdmin = false;
-        $this->initStatus();
-        $this->initSteps();
-    }
-
-    /**
-     * Load steps
-     *
-     * @return void
-     */
-    public function initSteps()
-    {
-        /** @var array $steps */
-        $steps = [];
-        if ($this->getData('steps')) {
-            $steps = $this->getData('steps');
-        }
-
-        $this->steps = array_merge(
-            [
-                [
-                    'method'  => 'beforeImport',
-                    'comment' => 'Start import',
-                ],
-            ],
-            $steps,
-            [
-                [
-                    'method'  => 'afterImport',
-                    'comment' => 'Import complete',
-                ],
-            ]
-        );
     }
 
     /**
@@ -235,30 +150,6 @@ abstract class Import extends DataObject implements ImportInterface
     }
 
     /**
-     * Set current step index
-     *
-     * @param int $step
-     *
-     * @return Import
-     */
-    public function setStep($step)
-    {
-        $this->step = $step;
-
-        return $this;
-    }
-
-    /**
-     * Get current step index
-     *
-     * @return int
-     */
-    public function getStep()
-    {
-        return $this->step;
-    }
-
-    /**
      * Get end of line for command line or console
      *
      * @return string
@@ -282,20 +173,6 @@ abstract class Import extends DataObject implements ImportInterface
     public function setComment($comment)
     {
         $this->comment = $comment;
-
-        return $this;
-    }
-
-    /**
-     * Set import message
-     *
-     * @param string|Phrase $message
-     *
-     * @return Import
-     */
-    public function setMessage($message)
-    {
-        $this->message = $message;
 
         return $this;
     }
@@ -338,31 +215,6 @@ abstract class Import extends DataObject implements ImportInterface
         return $this->status;
     }
 
-    /**
-     * Set continue
-     *
-     * @param bool $continue
-     *
-     * @return Import
-     */
-    public function setContinue($continue)
-    {
-        $this->continue = $continue;
-
-        return $this;
-    }
-
-    /**
-     * Get the prefixed comment
-     *
-     * @return string
-     */
-    public function getComment()
-    {
-        return isset($this->steps[$this->getStep()]['comment']) ?
-            $this->outputHelper->getPrefix() . $this->steps[$this->getStep()]['comment'] :
-            $this->outputHelper->getPrefix() . get_class($this) . '::' . $this->getMethod();
-    }
 
     /**
      * Return current message with the timestamp prefix
@@ -405,81 +257,6 @@ abstract class Import extends DataObject implements ImportInterface
         $this->setStatus(true);
         $this->setContinue(true);
         $this->setMessage(__('completed'));
-    }
-
-    /**
-     * Function called to run import
-     * This function will get the right method to call
-     *
-     * @return array
-     */
-    public function execute()
-    {
-        if (!$this->canExecute() || !isset($this->steps[$this->step])) {
-            return $this->outputHelper->getImportAlreadyRunningResponse();
-        };
-
-        /** @var string $method */
-        $method = $this->getMethod();
-        if (!method_exists($this, $method)) {
-            $this->stop(true);
-
-            return $this->outputHelper->getNoImportFoundResponse();
-        }
-
-        if (!$this->akeneoClient) {
-            $this->akeneoClient = $this->getAkeneoClient();
-        }
-
-        if (!$this->akeneoClient) {
-            return $this->outputHelper->getApiConnectionError();
-        }
-
-        $this->eventManager->dispatch('akeneo_connector_import_step_start', ['import' => $this]);
-        $this->eventManager->dispatch(
-            'akeneo_connector_import_step_start_'.strtolower($this->getCode()),
-            ['import' => $this]
-        );
-        $this->initStatus();
-
-        try {
-            $this->{$method}();
-        } catch (\Exception $exception) {
-            $this->stop(true);
-            $this->setMessage($exception->getMessage());
-        }
-
-        $this->eventManager->dispatch('akeneo_connector_import_step_finish', ['import' => $this]);
-        $this->eventManager->dispatch(
-            'akeneo_connector_import_step_finish_'.strtolower($this->getCode()),
-            ['import' => $this]
-        );
-
-        return $this->getResponse();
-    }
-
-    /**
-     * Count steps
-     *
-     * @return int
-     */
-    public function countSteps()
-    {
-        return count($this->steps);
-    }
-
-    /**
-     * Check if import may be processed (Not already running, ...)
-     *
-     * @return bool
-     */
-    public function canExecute()
-    {
-        if ($this->step < 0 || $this->step > $this->countSteps()) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -540,21 +317,6 @@ abstract class Import extends DataObject implements ImportInterface
     }
 
     /**
-     * Stop the import (no step will be processed after)
-     *
-     * @param bool $error
-     *
-     * @return void
-     */
-    public function stop($error = false)
-    {
-        $this->continue = false;
-        if ($error == true) {
-            $this->setStatus(false);
-        }
-    }
-
-    /**
      * Description hasError function
      *
      * @return bool
@@ -601,23 +363,8 @@ abstract class Import extends DataObject implements ImportInterface
         return $response;
     }
 
-    /**
-     * Get Akeneo Client instance
-     *
-     * @return AkeneoPimEnterpriseClientInterface|false
-     */
-    public function getAkeneoClient()
-    {
-        try {
-            /** @var AkeneoPimEnterpriseClientInterface|false $akeneoClient */
-            $akeneoClient = $this->authenticator->getAkeneoApiClient();
-        } catch (\Exception $e) {
-            $akeneoClient = false;
-        }
 
-        return $akeneoClient;
-    }
-    
+
     /**
      * Display messages from import
      *
