@@ -77,6 +77,39 @@ class AkeneoConnectorImportCommand extends Command
     }
 
     /**
+     * Check if multiple entities have been specified
+     * in the command line
+     *
+     * @param string $code
+     *
+     * @return void
+     */
+    protected function checkEntities(string $code)
+    {
+        /** @var string[] $entities */
+        $entities = explode(',', $code);
+        if (count($entities) > 1) {
+            $this->multiImport($entities);
+        } else {
+            $this->import($code);
+        }
+    }
+
+    /**
+     * Run import for multiple entities
+     *
+     * @param array $entities
+     *
+     * @return void
+     */
+    protected function multiImport(array $entities)
+    {
+        foreach ($entities as $entity) {
+            $this->import($entity);
+        }
+    }
+
+    /**
      * {@inheritdoc}
      */
     protected function configure()
