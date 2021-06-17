@@ -150,18 +150,6 @@ class JobExecutor implements JobExecutorInterface
     }
 
     /**
-     * Description execute function
-     *
-     * @param string $code
-     *
-     * @return \Magento\Framework\Phrase|null
-     */
-    public function execute(string $code): ?Phrase
-    {
-        $this->checkEntities($code);
-    }
-
-    /**
      * Load steps
      *
      * @return void
@@ -216,46 +204,13 @@ class JobExecutor implements JobExecutorInterface
     }
 
     /**
-     * Check if multiple entities have been specified
-     * in the command line
-     *
-     * @param string $code
-     *
-     * @return void
-     */
-    protected function checkEntities(string $code)
-    {
-        /** @var string[] $entities */
-        $entities = explode(',', $code);
-        if (count($entities) > 1) {
-            $this->multiImport($entities);
-        } else {
-            $this->import($code);
-        }
-    }
-
-    /**
-     * Run import for multiple entities
-     *
-     * @param array $entities
-     *
-     * @return void
-     */
-    protected function multiImport(array $entities)
-    {
-        foreach ($entities as $entity) {
-            $this->import($entity);
-        }
-    }
-
-    /**
      * Run import
      *
      * @param string $code
      *
      * @return bool
      */
-    protected function import(string $code)
+    public function execute(string $code)
     {
         /** @var Job $job */
         $job = $this->jobRepository->getByCode($code);
@@ -263,7 +218,7 @@ class JobExecutor implements JobExecutorInterface
             /** @var Phrase $message */
             $message = __('Job code not found');
 
-            ////$this->displayError($message, $output);
+            //$this->displayError($message, $output);
 
             return false;
         }
@@ -274,12 +229,10 @@ class JobExecutor implements JobExecutorInterface
             /** @var Phrase $message */
             $message = __('API credentials are missing. Please configure the connector and retry.');
 
-            ////$this->displayError($message, $output);
+            //$this->displayError($message, $output);
 
             return false;
         }
-
-        $this->setJobStatus(JobInterface::JOB_PROCESSING);
 
         // If product import, run the import once per family
         /** @var array $productFamiliesToImport */
@@ -435,7 +388,7 @@ class JobExecutor implements JobExecutorInterface
         );
         $this->eventManager->dispatch(
             'akeneo_connector_import_step_start_' . strtolower($this->currentJob->getCode()),
-            ['import' => $this]
+            ['import' => $this->currentJobClass]
         );
 
         $this->initStatus();
@@ -712,5 +665,35 @@ class JobExecutor implements JobExecutorInterface
     public function afterImport()
     {
         $this->setMessage(__('Import ID : %1', $this->identifier))->stop();
+    }
+
+    /**
+     * Description beforeRun function
+     *
+     * @return void
+     * @throws AlreadyExistsException
+     */
+    public function beforeRun()
+    {
+        $this->eventManager->dispatch(
+            'akeneo_connector_import_start',
+            ['import' => $this->currentJobClass, 'executor' => $this]
+        );
+        $this->setJobStatus(JobInterface::JOB_PROCESSING);
+    }
+
+    /**
+     * Description afterRun function
+     *
+     * @return void
+     * @throws AlreadyExistsException
+     */
+    public function afterRun()
+    {
+        $this->eventManager->dispatch(
+            'akeneo_connector_import_finish_' . strtolower($this->currentJob->getCode()),
+            ['import' => $this]
+        );
+        $this->setJobStatus(JobInterface::JOB_SUCCESS);
     }
 }
