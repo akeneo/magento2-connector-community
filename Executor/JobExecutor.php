@@ -249,7 +249,7 @@ class JobExecutor implements JobExecutorInterface
             }
 
             foreach ($productFamiliesToImport as $family) {
-                $this->runImport($family);
+                $this->run($family);
                 //$import->setIdentifier(null);
             }
 
@@ -257,7 +257,7 @@ class JobExecutor implements JobExecutorInterface
         }
 
         // Run the import normaly
-        $this->runImport();
+        $this->run();
 
         return true;
     }
@@ -268,8 +268,9 @@ class JobExecutor implements JobExecutorInterface
      * @param null $family
      *
      * @return bool
+     * @throws AlreadyExistsException
      */
-    protected function runImport($family = null)
+    protected function run($family = null)
     {
         try {
             $this->initSteps();
@@ -281,53 +282,16 @@ class JobExecutor implements JobExecutorInterface
             while ($this->canExecute()) {
                 /** @var string $comment */
                 $comment = $this->getComment();
-                //$this->displayInfo($comment);
                 $this->executeStep();
 
                 /** @var string $message */
                 $message = $this->getMessage();
-                if (!$this->getStatus()) {
-                    //$this->displayError($message, $output);
-                } else {
-                    //$this->displayComment($message, $output);
-                }
-
-                if ($this->isDone()) {
-                    $this->setJobStatus(JobInterface::JOB_PROCESSING);
-                    break;
-                }
             }
         } catch (\Exception $exception) {
-            /** @var string $message */
-            $message = $exception->getMessage();
-            //$this->displayError($message, $output);
+            $this->afterRun();
         }
 
         return true;
-    }
-
-    /**
-     * Description isDone function
-     *
-     * @return bool
-     */
-    public function isDone()
-    {
-        if ($this->continue) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Get import status
-     *
-     * @return bool
-     */
-    public function getStatus()
-    {
-        return $this->status;
     }
 
     /**
@@ -358,7 +322,7 @@ class JobExecutor implements JobExecutorInterface
      * Function called to run import
      * This function will get the right method to call
      *
-     * @return array
+     * @return void
      */
     public function executeStep()
     {
@@ -370,6 +334,8 @@ class JobExecutor implements JobExecutorInterface
         $method = $this->getMethod();
         if (!method_exists($this->currentJobClass, $method)) {
             $this->stop(true);
+
+            $this->afterRun();
 
             return $this->outputHelper->getNoImportFoundResponse();
         }
@@ -405,8 +371,6 @@ class JobExecutor implements JobExecutorInterface
             'akeneo_connector_import_step_finish_' . strtolower($this->currentJob->getCode()),
             ['import' => $this]
         );
-
-        return $this->getResponse();
     }
 
     /**
@@ -417,35 +381,6 @@ class JobExecutor implements JobExecutorInterface
     public function getMethod()
     {
         return isset($this->steps[$this->getStep()]['method']) ? $this->steps[$this->getStep()]['method'] : null;
-    }
-
-    /**
-     * Format data to response structure
-     *
-     * @return array
-     */
-    protected function getResponse()
-    {
-        /** @var array $response */
-        $response = [
-            'continue'   => $this->continue,
-            'identifier' => $this->currentJob->getCode(),
-            'status'     => $this->getStatus(),
-        ];
-
-        if ($this->getComment()) {
-            $response['comment'] = $this->getComment();
-        }
-
-        if ($this->message) {
-            $response['message'] = $this->getMessage();
-        }
-
-        if (!$this->isDone()) {
-            $response['next'] = $this->nextStep()->getComment();
-        }
-
-        return $response;
     }
 
     /**
@@ -542,57 +477,6 @@ class JobExecutor implements JobExecutorInterface
     }
 
     /**
-     * Display info in console
-     *
-     * @param string          $message
-     * @param OutputInterface $output
-     *
-     * @return void
-     */
-    public function displayInfo(string $message, OutputInterface $output)
-    {
-        if (!empty($message)) {
-            /** @var string $coloredMessage */
-            $coloredMessage = '<info>' . $message . '</info>';
-            $output->writeln($coloredMessage);
-        }
-    }
-
-    /**
-     * Display comment in console
-     *
-     * @param string          $message
-     * @param OutputInterface $output
-     *
-     * @return void
-     */
-    public function displayComment(string $message, OutputInterface $output)
-    {
-        if (!empty($message)) {
-            /** @var string $coloredMessage */
-            $coloredMessage = '<comment>' . $message . '</comment>';
-            $output->writeln($coloredMessage);
-        }
-    }
-
-    /**
-     * Display error in console
-     *
-     * @param string          $message
-     * @param OutputInterface $output
-     *
-     * @return void
-     */
-    public function displayError(string $message, OutputInterface $output)
-    {
-        if (!empty($message)) {
-            /** @var string $coloredMessage */
-            $coloredMessage = '<error>' . $message . '</error>';
-            $output->writeln($coloredMessage);
-        }
-    }
-
-    /**
      * Set import message
      *
      * @param string|Phrase $message
@@ -602,20 +486,6 @@ class JobExecutor implements JobExecutorInterface
     public function setMessage($message)
     {
         $this->message = $message;
-
-        return $this;
-    }
-
-    /**
-     * Set import status
-     *
-     * @param $status
-     *
-     * @return JobExecutor
-     */
-    public function setStatus($status)
-    {
-        $this->status = $status;
 
         return $this;
     }
@@ -688,12 +558,14 @@ class JobExecutor implements JobExecutorInterface
      * @return void
      * @throws AlreadyExistsException
      */
-    public function afterRun()
+    public function afterRun($error = null)
     {
-        $this->eventManager->dispatch(
-            'akeneo_connector_import_finish_' . strtolower($this->currentJob->getCode()),
-            ['import' => $this]
-        );
+        if ($error === null) {
+            $this->eventManager->dispatch(
+                'akeneo_connector_import_finish_' . strtolower($this->currentJob->getCode()),
+                ['import' => $this]
+            );
+        }
         $this->setJobStatus(JobInterface::JOB_SUCCESS);
     }
 }
