@@ -212,6 +212,15 @@ class JobExecutor implements JobExecutorInterface
      */
     public function execute(string $code)
     {
+        if (!$this->configHelper->checkAkeneoApiCredentials()) {
+            /** @var Phrase $message */
+            $message = __('API credentials are missing. Please configure the connector and retry.');
+
+            //$this->displayError($message, $output);
+
+            return false;
+        }
+
         /** @var Job $job */
         $job = $this->jobRepository->getByCode($code);
         if (!$job) {
@@ -224,15 +233,6 @@ class JobExecutor implements JobExecutorInterface
         }
         $this->currentJob      = $job;
         $this->currentJobClass = $this->processClassFactory->create($job->getJobClass());
-
-        if (!$this->configHelper->checkAkeneoApiCredentials()) {
-            /** @var Phrase $message */
-            $message = __('API credentials are missing. Please configure the connector and retry.');
-
-            //$this->displayError($message, $output);
-
-            return false;
-        }
 
         // If product import, run the import once per family
         /** @var array $productFamiliesToImport */
