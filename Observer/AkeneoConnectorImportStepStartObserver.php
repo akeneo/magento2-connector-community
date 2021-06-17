@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Observer;
 
+use Akeneo\Connector\Executor\JobExecutor;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer;
 use Akeneo\Connector\Api\Data\ImportInterface;
@@ -38,14 +39,14 @@ class AkeneoConnectorImportStepStartObserver implements ObserverInterface
     /**
      * AkeneoConnectorImportStepStartObserver constructor
      *
-     * @param LogFactory $logFactory
+     * @param LogFactory             $logFactory
      * @param LogRepositoryInterface $logRepository
      */
     public function __construct(
         LogFactory $logFactory,
         LogRepositoryInterface $logRepository
     ) {
-        $this->logFactory = $logFactory;
+        $this->logFactory    = $logFactory;
         $this->logRepository = $logRepository;
     }
 
@@ -60,8 +61,9 @@ class AkeneoConnectorImportStepStartObserver implements ObserverInterface
     {
         /** @var Import $import */
         $import = $observer->getEvent()->getImport();
-
-        if ($import->getStep() == 0) {
+        /** @var JobExecutor $executor */
+        $executor = $observer->getEvent()->getExecutor();
+        if ($executor->getStep() == 0) {
             /** @var LogModel $log */
             $log = $this->logFactory->create();
             $log->setIdentifier($import->getIdentifier());
@@ -76,11 +78,11 @@ class AkeneoConnectorImportStepStartObserver implements ObserverInterface
         if ($log->hasData()) {
             $log->addStep(
                 [
-                    'log_id' => $log->getId(),
+                    'log_id'     => $log->getId(),
                     'identifier' => $import->getIdentifier(),
-                    'number' => $import->getStep(),
-                    'method' => $import->getMethod(),
-                    'message' => $import->getComment(),
+                    'number'     => $executor->getStep(),
+                    'method'     => $executor->getMethod(),
+                    'message'    => $executor->getComment(),
                 ]
             );
         }

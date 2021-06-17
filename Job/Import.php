@@ -53,14 +53,20 @@ abstract class Import extends DataObject implements ImportInterface
      * @var bool $setFromAdmin
      */
     protected $setFromAdmin;
+    /**
+     * This variable contains a AkeneoPimEnterpriseClientInterface
+     *
+     * @var AkeneoPimClientInterface|AkeneoPimEnterpriseClientInterface $akeneoClient
+     */
+    protected $akeneoClient;
 
     /**
      * Import constructor.
      *
-     * @param OutputHelper $outputHelper
+     * @param OutputHelper     $outputHelper
      * @param ManagerInterface $eventManager
-     * @param Authenticator $authenticator
-     * @param array $data
+     * @param Authenticator    $authenticator
+     * @param array            $data
      */
     public function __construct(
         OutputHelper $outputHelper,
@@ -71,10 +77,9 @@ abstract class Import extends DataObject implements ImportInterface
         parent::__construct($data);
 
         $this->authenticator = $authenticator;
-        $this->outputHelper = $outputHelper;
-        $this->eventManager = $eventManager;
-        $this->step         = 0;
-        $this->setFromAdmin = false;
+        $this->outputHelper  = $outputHelper;
+        $this->eventManager  = $eventManager;
+        $this->setFromAdmin  = false;
     }
 
     /**
@@ -215,7 +220,6 @@ abstract class Import extends DataObject implements ImportInterface
         return $this->status;
     }
 
-
     /**
      * Return current message with the timestamp prefix
      *
@@ -223,7 +227,7 @@ abstract class Import extends DataObject implements ImportInterface
      */
     public function getMessage()
     {
-        return (string)$this->outputHelper->getPrefix().$this->message;
+        return (string)$this->outputHelper->getPrefix() . $this->message;
     }
 
     /**
@@ -234,17 +238,6 @@ abstract class Import extends DataObject implements ImportInterface
     public function getMessageWithoutPrefix()
     {
         return (string)$this->message;
-    }
-
-    /**
-     * Get method to execute
-     *
-     * @return string
-     */
-    public function getMethod()
-    {
-        return isset($this->steps[$this->getStep()]['method']) ?
-            $this->steps[$this->getStep()]['method'] : null;
     }
 
     /**
@@ -294,7 +287,12 @@ abstract class Import extends DataObject implements ImportInterface
     public function beforeImport()
     {
         if ($this->akeneoClient === false) {
-            $this->setMessage(__('Could not start the import %s, check that your API credentials are correctly configured', $this->getCode()));
+            $this->setMessage(
+                __(
+                    'Could not start the import %s, check that your API credentials are correctly configured',
+                    $this->getCode()
+                )
+            );
             $this->stop(1);
 
             return;
@@ -317,37 +315,11 @@ abstract class Import extends DataObject implements ImportInterface
     }
 
     /**
-     * Description hasError function
-     *
-     * @return bool
-     */
-    public function isDone()
-    {
-        if ($this->continue) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Increment the step
-     *
-     * @return Import
-     */
-    public function nextStep()
-    {
-        $this->step += 1;
-
-        return $this;
-    }
-
-    /**
      * Check if all locales labels exists
      *
      * @param string[] $entity
      * @param string[] $lang
-     * @param string $response
+     * @param string   $response
      *
      * @return string
      */
@@ -360,10 +332,9 @@ abstract class Import extends DataObject implements ImportInterface
                 $response .= __("Label for '%1' in %2 is missing. ", $entity['code'], $locale);
             }
         }
+
         return $response;
     }
-
-
 
     /**
      * Display messages from import
@@ -372,7 +343,8 @@ abstract class Import extends DataObject implements ImportInterface
      *
      * @return void
      */
-    public function displayMessages($messages) {
+    public function displayMessages($messages)
+    {
         /** @var string[] $importMessages */
         foreach ($messages as $importMessages) {
             if (!empty($importMessages)) {

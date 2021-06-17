@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Executor;
 
+use Akeneo\Connector\Api\Data\JobInterface;
 use Akeneo\Connector\Api\JobExecutorInterface;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
@@ -16,6 +17,7 @@ use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\PimEnterprise\ApiClient\AkeneoPimEnterpriseClientInterface;
 use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Phrase;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -157,10 +159,6 @@ class JobExecutor implements JobExecutorInterface
     public function execute(string $code): ?Phrase
     {
         $this->checkEntities($code);
-
-        //$processor = $this->processClassFactory->create($jobType);
-
-        //$this->jobRepository->save($job);
     }
 
     /**
@@ -281,6 +279,8 @@ class JobExecutor implements JobExecutorInterface
             return false;
         }
 
+        $this->setJobStatus(JobInterface::JOB_PROCESSING);
+
         // If product import, run the import once per family
         /** @var array $productFamiliesToImport */
         $productFamiliesToImport = [];
@@ -329,7 +329,6 @@ class JobExecutor implements JobExecutorInterface
                 /** @var string $comment */
                 $comment = $this->getComment();
                 //$this->displayInfo($comment);
-
                 $this->executeStep();
 
                 /** @var string $message */
@@ -341,6 +340,7 @@ class JobExecutor implements JobExecutorInterface
                 }
 
                 if ($this->isDone()) {
+                    $this->setJobStatus(JobInterface::JOB_PROCESSING);
                     break;
                 }
             }
@@ -429,11 +429,15 @@ class JobExecutor implements JobExecutorInterface
             return $this->outputHelper->getApiConnectionError();
         }
 
-        $this->eventManager->dispatch('akeneo_connector_import_step_start', ['import' => $this->currentJobClass]);
+        $this->eventManager->dispatch(
+            'akeneo_connector_import_step_start',
+            ['import' => $this->currentJobClass, 'executor' => $this]
+        );
         $this->eventManager->dispatch(
             'akeneo_connector_import_step_start_' . strtolower($this->currentJob->getCode()),
             ['import' => $this]
         );
+
         $this->initStatus();
 
         try {
@@ -504,7 +508,7 @@ class JobExecutor implements JobExecutorInterface
     /**
      * Increment the step
      *
-     * @return Import
+     * @return JobExecutor
      */
     public function nextStep()
     {
@@ -661,5 +665,52 @@ class JobExecutor implements JobExecutorInterface
         $this->status = $status;
 
         return $this;
+    }
+
+    /**
+     * Description setJobStatus function
+     *
+     * @param int $status
+     *
+     * @return void
+     * @throws AlreadyExistsException
+     */
+    public function setJobStatus(int $status)
+    {
+        $this->currentJob->setStatus($status);
+        $this->jobRepository->save($this->currentJob);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function beforeImport()
+    {
+        if ($this->akeneoClient === false) {
+            $this->setMessage(
+                __(
+                    'Could not start the import %s, check that your API credentials are correctly configured',
+                    $this->currentJob->getCode()
+                )
+            );
+            $this->stop(1);
+
+            return;
+        }
+
+        /** @var string $identifier */
+        $identifier = $this->getIdentifier();
+
+        $this->setMessage(__('Import ID : %1', $identifier));
+    }
+
+    /**
+     * Function called after any step
+     *
+     * @return void
+     */
+    public function afterImport()
+    {
+        $this->setMessage(__('Import ID : %1', $this->identifier))->stop();
     }
 }
