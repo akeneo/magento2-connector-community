@@ -162,18 +162,6 @@ abstract class Import extends DataObject implements ImportInterface
     }
 
     /**
-     * Init status, continue and message
-     *
-     * @return void
-     */
-    public function initStatus()
-    {
-        $this->setStatus(true);
-        $this->setContinue(true);
-        $this->setMessage(__('completed'));
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function beforeImport()
