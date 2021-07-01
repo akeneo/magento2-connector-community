@@ -105,7 +105,7 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
      *
      * @return string|null
      */
-    public function getLastSuccesDate()
+    public function getLastSuccessDate()
     {
         return $this->getData(self::LAST_SUCCESS_DATE);
     }

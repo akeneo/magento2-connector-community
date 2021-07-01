@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\PimEnterprise\ApiClient\AkeneoPimEnterpriseClientInterface;
 use Magento\Framework\DataObject;
@@ -59,6 +60,12 @@ abstract class Import extends DataObject implements ImportInterface
      * @var AkeneoPimClientInterface|AkeneoPimEnterpriseClientInterface $akeneoClient
      */
     protected $akeneoClient;
+    /**
+     * Current jobExecutor
+     *
+     * @var JobExecutor $jobExecutor
+     */
+    protected $jobExecutor;
 
     /**
      * Import constructor.
@@ -155,92 +162,6 @@ abstract class Import extends DataObject implements ImportInterface
     }
 
     /**
-     * Get end of line for command line or console
-     *
-     * @return string
-     */
-    public function getEndOfLine()
-    {
-        if ($this->getSetFromAdmin() === false) {
-            return PHP_EOL;
-        }
-
-        return '</br>';
-    }
-
-    /**
-     * Set import comment
-     *
-     * @param string|Phrase $comment
-     *
-     * @return Import
-     */
-    public function setComment($comment)
-    {
-        $this->comment = $comment;
-
-        return $this;
-    }
-
-    /**
-     * Set additional message during import
-     *
-     * @param $message
-     *
-     * @return $this
-     */
-    public function setAdditionalMessage($message)
-    {
-        $this->message = $this->getMessageWithoutPrefix() . $this->getEndOfLine() . $message;
-
-        return $this;
-    }
-
-    /**
-     * Set import status
-     *
-     * @param $status
-     *
-     * @return Import
-     */
-    public function setStatus($status)
-    {
-        $this->status = $status;
-
-        return $this;
-    }
-
-    /**
-     * Get import status
-     *
-     * @return bool
-     */
-    public function getStatus()
-    {
-        return $this->status;
-    }
-
-    /**
-     * Return current message with the timestamp prefix
-     *
-     * @return string
-     */
-    public function getMessage()
-    {
-        return (string)$this->outputHelper->getPrefix() . $this->message;
-    }
-
-    /**
-     * Return current message with the timestamp prefix
-     *
-     * @return string
-     */
-    public function getMessageWithoutPrefix()
-    {
-        return (string)$this->message;
-    }
-
-    /**
      * Init status, continue and message
      *
      * @return void
@@ -250,35 +171,6 @@ abstract class Import extends DataObject implements ImportInterface
         $this->setStatus(true);
         $this->setContinue(true);
         $this->setMessage(__('completed'));
-    }
-
-    /**
-     * Format data to response structure
-     *
-     * @return array
-     */
-    protected function getResponse()
-    {
-        /** @var array $response */
-        $response = [
-            'continue'   => $this->continue,
-            'identifier' => $this->getIdentifier(),
-            'status'     => $this->getStatus(),
-        ];
-
-        if ($this->getComment()) {
-            $response['comment'] = $this->getComment();
-        }
-
-        if ($this->message) {
-            $response['message'] = $this->getMessage();
-        }
-
-        if (!$this->isDone()) {
-            $response['next'] = $this->nextStep()->getComment();
-        }
-
-        return $response;
     }
 
     /**
@@ -301,7 +193,7 @@ abstract class Import extends DataObject implements ImportInterface
         /** @var string $identifier */
         $identifier = $this->getIdentifier();
 
-        $this->setMessage(__('Import ID : %1', $identifier));
+        $this->jobExecutor->setMessage((__('Import ID : %1', $identifier));
     }
 
     /**
@@ -311,7 +203,7 @@ abstract class Import extends DataObject implements ImportInterface
      */
     public function afterImport()
     {
-        $this->setMessage(__('Import ID : %1', $this->identifier))->stop();
+        $this->jobExecutor->setMessage(__('Import ID : %1', $this->jobExecutor->getCurrentJob()->getCode()))->stop();
     }
 
     /**
@@ -336,30 +228,9 @@ abstract class Import extends DataObject implements ImportInterface
         return $response;
     }
 
-    /**
-     * Display messages from import
-     *
-     * @param $messages
-     *
-     * @return void
-     */
-    public function displayMessages($messages)
+    public function setJobExecutor(JobExecutor $jobExecutor)
     {
-        /** @var string[] $importMessages */
-        foreach ($messages as $importMessages) {
-            if (!empty($importMessages)) {
-                /** @var string[] $message */
-                foreach ($importMessages as $message) {
-                    if (isset($message['message'], $message['status'])) {
-                        if ($message['status'] == false) {
-                            $this->setMessage($message['message']);
-                            $this->setStatus(false);
-                        } else {
-                            $this->setAdditionalMessage($message['message']);
-                        }
-                    }
-                }
-            }
-        }
+        $this->jobExecutor = $jobExecutor;
+        $this->akeneoClient = $jobExecutor->getAkeneoClient();
     }
 }

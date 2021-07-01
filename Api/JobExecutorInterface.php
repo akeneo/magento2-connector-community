@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Api;
 
-use Magento\Framework\Phrase;
-
 /**
  * Interface JobExecutor
  *
@@ -22,7 +20,7 @@ interface JobExecutorInterface
      *
      * @param string $code
      *
-     * @return Phrase|null
+     * @return bool
      */
-    public function execute(string $code): ?Phrase;
+    public function execute(string $code);
 }

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Akeneo\Connector\Executor;
 
 use Akeneo\Connector\Api\Data\JobInterface;
@@ -122,6 +120,12 @@ class JobExecutor implements JobExecutorInterface
      * @var \Akeneo\Connector\Helper\Authenticator $authenticator
      */
     protected $authenticator;
+    /**
+     * Description $identifier field
+     *
+     * @var string $identifier
+     */
+    protected $identifier;
 
     /**
      * JobExecutor constructor
@@ -204,11 +208,12 @@ class JobExecutor implements JobExecutorInterface
     }
 
     /**
-     * Run import
+     * Description execute function
      *
      * @param string $code
      *
      * @return bool
+     * @throws AlreadyExistsException
      */
     public function execute(string $code)
     {
@@ -233,6 +238,7 @@ class JobExecutor implements JobExecutorInterface
         }
         $this->currentJob      = $job;
         $this->currentJobClass = $this->processClassFactory->create($job->getJobClass());
+        $this->currentJobClass->setJobExecutor($this);
 
         // If product import, run the import once per family
         /** @var array $productFamiliesToImport */
@@ -256,8 +262,10 @@ class JobExecutor implements JobExecutorInterface
             return true;
         }
 
-        // Run the import normaly
+        // Run the import normally
+        $this->beforeRun();
         $this->run();
+        $this->afterRun();
 
         return true;
     }
@@ -305,6 +313,16 @@ class JobExecutor implements JobExecutorInterface
     }
 
     /**
+     * Description getCurrentJob function
+     *
+     * @return JobInterface
+     */
+    public function getCurrentJob()
+    {
+        return $this->currentJob;
+    }
+
+    /**
      * Check if import may be processed (Not already running, ...)
      *
      * @return bool
@@ -328,14 +346,11 @@ class JobExecutor implements JobExecutorInterface
     {
         if (!$this->canExecute() || !isset($this->steps[$this->step])) {
             return $this->outputHelper->getImportAlreadyRunningResponse();
-        };
-
+        }
         /** @var string $method */
         $method = $this->getMethod();
         if (!method_exists($this->currentJobClass, $method)) {
-            $this->stop(true);
-
-            $this->afterRun();
+            $this->afterRun(true);
 
             return $this->outputHelper->getNoImportFoundResponse();
         }
@@ -350,11 +365,11 @@ class JobExecutor implements JobExecutorInterface
 
         $this->eventManager->dispatch(
             'akeneo_connector_import_step_start',
-            ['import' => $this->currentJobClass, 'executor' => $this]
+            ['executor' => $this]
         );
         $this->eventManager->dispatch(
             'akeneo_connector_import_step_start_' . strtolower($this->currentJob->getCode()),
-            ['import' => $this->currentJobClass]
+            ['executor' => $this]
         );
 
         $this->initStatus();
@@ -362,15 +377,17 @@ class JobExecutor implements JobExecutorInterface
         try {
             $this->currentJobClass->{$method}();
         } catch (\Exception $exception) {
-            $this->stop(true);
+            $this->afterRun(true);
             $this->setMessage($exception->getMessage());
         }
 
-        $this->eventManager->dispatch('akeneo_connector_import_step_finish', ['import' => $this->currentJobClass]);
+        $this->eventManager->dispatch('akeneo_connector_import_step_finish', ['executor' => $this]);
         $this->eventManager->dispatch(
             'akeneo_connector_import_step_finish_' . strtolower($this->currentJob->getCode()),
-            ['import' => $this]
+            ['executor' => $this]
         );
+
+        $this->nextStep();
     }
 
     /**
@@ -381,16 +398,6 @@ class JobExecutor implements JobExecutorInterface
     public function getMethod()
     {
         return isset($this->steps[$this->getStep()]['method']) ? $this->steps[$this->getStep()]['method'] : null;
-    }
-
-    /**
-     * Return current message with the timestamp prefix
-     *
-     * @return string
-     */
-    public function getMessage()
-    {
-        return (string)$this->outputHelper->getPrefix() . $this->message;
     }
 
     /**
@@ -425,7 +432,6 @@ class JobExecutor implements JobExecutorInterface
      */
     public function initStatus()
     {
-        $this->setStatus(true);
         $this->setContinue(true);
         $this->setMessage(__('completed'));
     }
@@ -442,21 +448,6 @@ class JobExecutor implements JobExecutorInterface
         $this->continue = $continue;
 
         return $this;
-    }
-
-    /**
-     * Stop the import (no step will be processed after)
-     *
-     * @param bool $error
-     *
-     * @return void
-     */
-    public function stop($error = false)
-    {
-        $this->continue = false;
-        if ($error == true) {
-            $this->setStatus(false);
-        }
     }
 
     /**
@@ -516,7 +507,7 @@ class JobExecutor implements JobExecutorInterface
                     $this->currentJob->getCode()
                 )
             );
-            $this->stop(1);
+            $this->afterRun(1);
 
             return;
         }
@@ -534,7 +525,7 @@ class JobExecutor implements JobExecutorInterface
      */
     public function afterImport()
     {
-        $this->setMessage(__('Import ID : %1', $this->identifier))->stop();
+        $this->setMessage(__('Import ID : %1', $this->currentJob->getCode()))->afterRun();
     }
 
     /**
@@ -560,12 +551,134 @@ class JobExecutor implements JobExecutorInterface
      */
     public function afterRun($error = null)
     {
+        if ($error) {
+            $this->continue = false;
+            $this->setJobStatus(JobInterface::JOB_ERROR);
+        }
+
         if ($error === null) {
             $this->eventManager->dispatch(
                 'akeneo_connector_import_finish_' . strtolower($this->currentJob->getCode()),
                 ['import' => $this]
             );
+            $this->setJobStatus(JobInterface::JOB_SUCCESS);
         }
-        $this->setJobStatus(JobInterface::JOB_SUCCESS);
+    }
+
+    /**
+     * Description isDone function
+     *
+     * @return bool
+     */
+    public function isDone()
+    {
+        if ($this->continue) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Return current message with the timestamp prefix
+     *
+     * @return string
+     */
+    public function getMessage()
+    {
+        return (string)$this->outputHelper->getPrefix() . $this->message;
+    }
+
+    /**
+     * Return current message with the timestamp prefix
+     *
+     * @return string
+     */
+    public function getMessageWithoutPrefix()
+    {
+        return (string)$this->message;
+    }
+
+    /**
+     * Display messages from import
+     *
+     * @param $messages
+     *
+     * @return void
+     */
+    public function displayMessages($messages)
+    {
+        /** @var string[] $importMessages */
+        foreach ($messages as $importMessages) {
+            if (!empty($importMessages)) {
+                /** @var string[] $message */
+                foreach ($importMessages as $message) {
+                    if (isset($message['message'], $message['status'])) {
+                        if ($message['status'] == false) {
+                            $this->setMessage($message['message']);
+                            $this->setStatus(false);
+                        } else {
+                            $this->setAdditionalMessage($message['message']);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Set additional message during import
+     *
+     * @param $message
+     *
+     * @return $this
+     */
+    public function setAdditionalMessage($message)
+    {
+        $this->message = $this->getMessageWithoutPrefix() . $this->getEndOfLine() . $message;
+
+        return $this;
+    }
+
+    /**
+     * Get end of line for command line or console
+     *
+     * @return string
+     */
+    public function getEndOfLine()
+    {
+        if ($this->getSetFromAdmin() === false) {
+            return PHP_EOL;
+        }
+
+        return '</br>';
+    }
+
+    /**
+     * Set import identifier
+     *
+     * @param string $identifier
+     *
+     * @return JobExecutorInterface
+     */
+    public function setIdentifier($identifier)
+    {
+        $this->identifier = $identifier;
+
+        return $this;
+    }
+
+    /**
+     * Get import identifier
+     *
+     * @return string
+     */
+    public function getIdentifier()
+    {
+        if (!$this->identifier) {
+            $this->setIdentifier(uniqid());
+        }
+
+        return $this->identifier;
     }
 }

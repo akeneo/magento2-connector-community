@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Observer;
 
+use Akeneo\Connector\Api\Data\JobInterface;
 use Akeneo\Connector\Executor\JobExecutor;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer;
@@ -59,27 +60,24 @@ class AkeneoConnectorImportStepStartObserver implements ObserverInterface
      */
     public function execute(Observer $observer)
     {
-        /** @var Import $import */
-        $import = $observer->getEvent()->getImport();
         /** @var JobExecutor $executor */
         $executor = $observer->getEvent()->getExecutor();
         if ($executor->getStep() == 0) {
             /** @var LogModel $log */
             $log = $this->logFactory->create();
-            $log->setIdentifier($import->getIdentifier());
-            $log->setCode($import->getCode());
-            $log->setName($import->getName());
-            $log->setStatus(ImportInterface::IMPORT_PROCESSING); // processing
+            $log->setIdentifier($executor->getCurrentJob()->getCode());
+            $log->setCode($executor->getCurrentJob()->getCode());
+            $log->setStatus(JobInterface::JOB_PROCESSING); // processing
             $this->logRepository->save($log);
         } else {
-            $log = $this->logRepository->getByIdentifier($import->getIdentifier());
+            $log = $this->logRepository->getByIdentifier($executor->getCurrentJob()->getCode());
         }
 
         if ($log->hasData()) {
             $log->addStep(
                 [
                     'log_id'     => $log->getId(),
-                    'identifier' => $import->getIdentifier(),
+                    'identifier' => $executor->getIdentifier(),
                     'number'     => $executor->getStep(),
                     'method'     => $executor->getMethod(),
                     'message'    => $executor->getComment(),

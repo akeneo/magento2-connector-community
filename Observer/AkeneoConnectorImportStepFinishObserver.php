@@ -2,6 +2,8 @@
 
 namespace Akeneo\Connector\Observer;
 
+use Akeneo\Connector\Api\Data\JobInterface;
+use Akeneo\Connector\Api\JobExecutorInterface;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer;
 use Akeneo\Connector\Api\Data\ImportInterface;
@@ -47,34 +49,36 @@ class AkeneoConnectorImportStepFinishObserver implements ObserverInterface
      */
     public function execute(Observer $observer)
     {
-        /** @var $import ImportInterface */
-        $import = $observer->getEvent()->getImport();
+        /** @var JobExecutorInterface $executor */
+        $executor   = $observer->getEvent()->getExecutor();
+        $currentJob = $executor->getCurrentJob();
         /** @var LogInterface $log */
-        $log = $this->logRepository->getByIdentifier($import->getIdentifier());
+        $log = $this->logRepository->getByIdentifier($executor->getIdentifier());
 
         if (!$log->hasData()) {
             return $this;
         }
 
-        if ($import->getStep() + 1 == $import->countSteps() || ($import->isDone() && $import->getStatus() != false)) {
+        if ($executor->getStep() + 1 == $executor->countSteps() || ($executor->isDone() && $currentJob->getStatus(
+                ) != JobInterface::JOB_ERROR)) {
             $log->setStatus(ImportInterface::IMPORT_SUCCESS); // Success
             $this->logRepository->save($log);
         }
 
-        if ($import->isDone() && !$import->getStatus()) {
+        if ($executor->isDone() && $currentJob->getStatus() === JobInterface::JOB_ERROR) {
             $log->setStatus(ImportInterface::IMPORT_ERROR); // Error
             $this->logRepository->save($log);
         }
 
         $log->addStep(
             [
-                'log_id' => $log->getId(),
-                'identifier' => $import->getIdentifier(),
-                'number' => $import->getStep(),
-                'method' => $import->getMethod(),
-                'message' => $import->getMessage(),
-                'continue' => $import->isDone() ? 0 : 1,
-                'status' => $import->getStatus() ? 1 : 0,
+                'log_id'     => $log->getId(),
+                'identifier' => $currentJob->getCode(),
+                'number'     => $executor->getStep(),
+                'method'     => $executor->getMethod(),
+                'message'    => $executor->getMessage(),
+                'continue'   => $executor->isDone() ? 0 : 1,
+                'status'     => $currentJob->getStatus() === JobInterface::JOB_ERROR ? 1 : 0,
             ]
         );
 
