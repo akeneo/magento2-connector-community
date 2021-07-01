@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Api;
 
+use Symfony\Component\Console\Output\OutputInterface;
+
 /**
  * Interface JobExecutor
  *
@@ -22,5 +24,5 @@ interface JobExecutorInterface
      *
      * @return bool
      */
-    public function execute(string $code);
+    public function execute(string $code, ?OutputInterface $output);
 }

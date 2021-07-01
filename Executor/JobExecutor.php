@@ -79,6 +79,12 @@ class JobExecutor implements JobExecutorInterface
      */
     protected $currentJobClass;
     /**
+     * This variable contains a bool value
+     *
+     * @var bool $setFromAdmin
+     */
+    protected $setFromAdmin;
+    /**
      * This variable contains a AkeneoPimEnterpriseClientInterface
      *
      * @var AkeneoPimClientInterface|AkeneoPimEnterpriseClientInterface $akeneoClient
@@ -126,6 +132,12 @@ class JobExecutor implements JobExecutorInterface
      * @var string $identifier
      */
     protected $identifier;
+    /**
+     * Description $output field
+     *
+     * @var OutputInterface|null $output
+     */
+    protected $output;
 
     /**
      * JobExecutor constructor
@@ -215,7 +227,7 @@ class JobExecutor implements JobExecutorInterface
      * @return bool
      * @throws AlreadyExistsException
      */
-    public function execute(string $code)
+    public function execute(string $code, ?OutputInterface $output = null)
     {
         if (!$this->configHelper->checkAkeneoApiCredentials()) {
             /** @var Phrase $message */
@@ -225,6 +237,8 @@ class JobExecutor implements JobExecutorInterface
 
             return false;
         }
+
+        $this->output = $output;
 
         /** @var Job $job */
         $job = $this->jobRepository->getByCode($code);
@@ -290,10 +304,17 @@ class JobExecutor implements JobExecutorInterface
             while ($this->canExecute()) {
                 /** @var string $comment */
                 $comment = $this->getComment();
+                $this->displayInfo($comment);
+
                 $this->executeStep();
 
                 /** @var string $message */
                 $message = $this->getMessage();
+                if ($this->currentJob->getStatus() == JobInterface::JOB_ERROR) {
+                    $this->displayError($message);
+                } else {
+                    $this->displayComment($message);
+                }
             }
         } catch (\Exception $exception) {
             $this->afterRun();
@@ -329,7 +350,7 @@ class JobExecutor implements JobExecutorInterface
      */
     public function canExecute()
     {
-        if ($this->step < 0 || $this->step > $this->countSteps()) {
+        if ($this->step < 0 || $this->step > $this->countSteps() - 1) {
             return false;
         }
 
@@ -496,39 +517,6 @@ class JobExecutor implements JobExecutorInterface
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function beforeImport()
-    {
-        if ($this->akeneoClient === false) {
-            $this->setMessage(
-                __(
-                    'Could not start the import %s, check that your API credentials are correctly configured',
-                    $this->currentJob->getCode()
-                )
-            );
-            $this->afterRun(1);
-
-            return;
-        }
-
-        /** @var string $identifier */
-        $identifier = $this->getIdentifier();
-
-        $this->setMessage(__('Import ID : %1', $identifier));
-    }
-
-    /**
-     * Function called after any step
-     *
-     * @return void
-     */
-    public function afterImport()
-    {
-        $this->setMessage(__('Import ID : %1', $this->currentJob->getCode()))->afterRun();
-    }
-
-    /**
      * Description beforeRun function
      *
      * @return void
@@ -680,5 +668,80 @@ class JobExecutor implements JobExecutorInterface
         }
 
         return $this->identifier;
+    }
+
+    /**
+     * Set set from admin
+     *
+     * @param $value
+     *
+     * @return $this
+     */
+    public function setSetFromAdmin($value)
+    {
+        $this->setFromAdmin = $value;
+
+        return $this;
+    }
+
+    /**
+     * Get set from admin
+     *
+     * @return bool
+     */
+    public function getSetFromAdmin()
+    {
+        return $this->setFromAdmin;
+    }
+
+    /**
+     * Display comment in console
+     *
+     * @param string          $message
+     * @param OutputInterface $output
+     *
+     * @return void
+     */
+    public function displayComment(string $message)
+    {
+        if (!empty($message) && $this->output) {
+            /** @var string $coloredMessage */
+            $coloredMessage = '<comment>' . $message . '</comment>';
+            $this->output->writeln($coloredMessage);
+        }
+    }
+
+    /**
+     * Display error in console
+     *
+     * @param string          $message
+     * @param OutputInterface $output
+     *
+     * @return void
+     */
+    public function displayError(string $message)
+    {
+        if (!empty($message) && $this->output) {
+            /** @var string $coloredMessage */
+            $coloredMessage = '<error>' . $message . '</error>';
+            $this->output->writeln($coloredMessage);
+        }
+    }
+
+    /**
+     * Display info in console
+     *
+     * @param string          $message
+     * @param OutputInterface $output
+     *
+     * @return void
+     */
+    public function displayInfo(string $message)
+    {
+        if (!empty($message)) {
+            /** @var string $coloredMessage */
+            $coloredMessage = '<info>' . $message . '</info>';
+            $this->output->writeln($coloredMessage);
+        }
     }
 }

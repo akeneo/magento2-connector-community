@@ -140,7 +140,7 @@ class AkeneoConnectorImportCommand extends Command
         if (!$code) {
             $this->usage($output);
         } else {
-            $this->jobExecutor->execute($code);
+            $this->jobExecutor->execute($code, $output);
         }
     }
 

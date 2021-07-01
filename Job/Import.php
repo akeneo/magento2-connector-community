@@ -49,12 +49,6 @@ abstract class Import extends DataObject implements ImportInterface
      */
     protected $comment;
     /**
-     * This variable contains a bool value
-     *
-     * @var bool $setFromAdmin
-     */
-    protected $setFromAdmin;
-    /**
      * This variable contains a AkeneoPimEnterpriseClientInterface
      *
      * @var AkeneoPimClientInterface|AkeneoPimEnterpriseClientInterface $akeneoClient
@@ -138,30 +132,6 @@ abstract class Import extends DataObject implements ImportInterface
     }
 
     /**
-     * Set set from admin
-     *
-     * @param $value
-     *
-     * @return $this
-     */
-    public function setSetFromAdmin($value)
-    {
-        $this->setFromAdmin = $value;
-
-        return $this;
-    }
-
-    /**
-     * Get set from admin
-     *
-     * @return bool
-     */
-    public function getSetFromAdmin()
-    {
-        return $this->setFromAdmin;
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function beforeImport()
@@ -179,9 +149,9 @@ abstract class Import extends DataObject implements ImportInterface
         }
 
         /** @var string $identifier */
-        $identifier = $this->getIdentifier();
+        $identifier = $this->jobExecutor->getIdentifier();
 
-        $this->jobExecutor->setMessage((__('Import ID : %1', $identifier));
+        $this->jobExecutor->setMessage(__('Import ID : %1', $identifier));
     }
 
     /**
@@ -191,7 +161,7 @@ abstract class Import extends DataObject implements ImportInterface
      */
     public function afterImport()
     {
-        $this->jobExecutor->setMessage(__('Import ID : %1', $this->jobExecutor->getCurrentJob()->getCode()))->stop();
+        $this->jobExecutor->setMessage(__('Import ID : %1', $this->jobExecutor->getIdentifier()))->afterRun()
     }
 
     /**

@@ -833,7 +833,7 @@ class Category extends Import
                                 ['url_rewrite_id = ?' => $rewriteId]
                             );
                         } catch (\Exception $e) {
-                            $this->setAdditionalMessage(
+                            $this->jobExecutor->setAdditionalMessage(
                                 __(
                                     sprintf(
                                         'Tried to update url_rewrite_id %s : request path (%s) already exists for the store_id.',
