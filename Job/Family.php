@@ -141,7 +141,7 @@ class Family extends Import
         $family = $families->getItems();
 
         if (empty($family)) {
-            $this->setMessage(__('No results retrieved from Akeneo'));
+            $this->jobExecutor->setMessage(__('No results retrieved from Akeneo'));
             $this->stop(1);
 
             return;
@@ -178,7 +178,7 @@ class Family extends Import
         }
         $index++;
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('%1 line(s) found. %2', $index, $warning)
         );
     }
@@ -327,7 +327,7 @@ class Family extends Import
             $count++;
         }
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('%1 family(ies) initialized', $count)
         );
     }
@@ -359,7 +359,7 @@ class Family extends Import
             $this->cacheTypeList->cleanType($type);
         }
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('Cache cleaned for: %1', join(', ', $types))
         );
     }

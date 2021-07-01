@@ -2,8 +2,10 @@
 
 namespace Akeneo\Connector\Console\Command;
 
+use Akeneo\Connector\Api\Data\JobInterface;
 use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Model\JobRepository;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Framework\Data\Collection;
@@ -41,17 +43,17 @@ class AkeneoConnectorImportCommand extends Command
      */
     protected $appState;
     /**
-     * This variable contains a ImportRepositoryInterface
-     *
-     * @var ImportRepositoryInterface $importRepository
-     */
-    protected $importRepository;
-    /**
      * Description $jobExecutor field
      *
      * @var JobExecutor $jobExecutor
      */
     protected $jobExecutor;
+    /**
+     * Description $jobRepository field
+     *
+     * @var JobRepository $jobRepository
+     */
+    protected $jobRepository;
 
     /**
      * AkeneoConnectorImportCommand constructor.
@@ -66,6 +68,7 @@ class AkeneoConnectorImportCommand extends Command
         State $appState,
         ConfigHelper $configHelper,
         JobExecutor $jobExecutor,
+        JobRepository $jobRepository,
         $name = null
     ) {
         parent::__construct($name);
@@ -74,6 +77,7 @@ class AkeneoConnectorImportCommand extends Command
         $this->importRepository = $importRepository;
         $this->configHelper     = $configHelper;
         $this->jobExecutor      = $jobExecutor;
+        $this->jobRepository    = $jobRepository;
     }
 
     /**
@@ -153,8 +157,8 @@ class AkeneoConnectorImportCommand extends Command
      */
     protected function usage(OutputInterface $output)
     {
-        /** @var Collection $imports */
-        $imports = $this->importRepository->getList();
+        /** @var Collection $jobs */
+        $jobs = $this->jobRepository->getList();
 
         // Options
         $this->displayComment(__('Options:'), $output);
@@ -163,17 +167,17 @@ class AkeneoConnectorImportCommand extends Command
 
         // Codes
         $this->displayComment(__('Available codes:'), $output);
-        /** @var Import $import */
-        foreach ($imports as $import) {
-            $this->displayInfo($import->getCode(), $output);
+        /** @var JobInterface $job */
+        foreach ($jobs as $job) {
+            $this->displayInfo($job->getCode(), $output);
         }
         $output->writeln('');
 
         // Example
-        /** @var Import $import */
-        $import = $imports->getFirstItem();
+        /** @var JobInterface $job */
+        $job = $jobs->getFirstItem();
         /** @var string $code */
-        $code = $import->getCode();
+        $code = $job->getCode();
         if ($code) {
             $this->displayComment(__('Example:'), $output);
             $this->displayInfo(__('akeneo-connector:import --code=%1', $code), $output);

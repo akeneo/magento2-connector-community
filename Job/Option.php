@@ -192,7 +192,7 @@ class Option extends Import
             }
         }
         if ($hasOptions === false) {
-            $this->setMessage(__('No options found'));
+            $this->jobExecutor->setMessage(__('No options found'));
             $this->stop();
 
             return;
@@ -200,7 +200,7 @@ class Option extends Import
         /** @var array $option */
         $option = $options->getItems();
         if (empty($option)) {
-            $this->setMessage(__('No results from Akeneo'));
+            $this->jobExecutor->setMessage(__('No results from Akeneo'));
             $this->stop(1);
 
             return;
@@ -232,7 +232,7 @@ class Option extends Import
                 $lines += $this->processAttributeOption($attribute['code'], $paginationSize);
             }
         }
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('%1 line(s) found', $lines)
         );
 
@@ -254,7 +254,7 @@ class Option extends Import
         while (($row = $query->fetch())) {
             if (!isset($row['label']) || $row['label'] === null) {
                 $connection->delete($tmpTable, ['code = ?' => $row['code'], 'attribute = ?' => $row['attribute']]);
-                $this->setAdditionalMessage(
+                $this->jobExecutor->setAdditionalMessage(
                     __(
                         'The option %1 from attribute %2 was not imported because it did not have a translation in admin store language : %3',
                         $row['code'],
@@ -412,7 +412,7 @@ class Option extends Import
             $this->cacheTypeList->cleanType($type);
         }
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('Cache cleaned for: %1', join(', ', $types))
         );
     }

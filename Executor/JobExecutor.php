@@ -13,6 +13,7 @@ use Akeneo\Connector\Model\JobRepository;
 use Akeneo\Connector\Model\Processor\ProcessClassFactory;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\PimEnterprise\ApiClient\AkeneoPimEnterpriseClientInterface;
+use Exception;
 use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Exception\AlreadyExistsException;
@@ -233,7 +234,7 @@ class JobExecutor implements JobExecutorInterface
             /** @var Phrase $message */
             $message = __('API credentials are missing. Please configure the connector and retry.');
 
-            //$this->displayError($message, $output);
+            $this->displayError($message);
 
             return false;
         }
@@ -246,7 +247,7 @@ class JobExecutor implements JobExecutorInterface
             /** @var Phrase $message */
             $message = __('Job code not found');
 
-            //$this->displayError($message, $output);
+            $this->displayError($message);
 
             return false;
         }
@@ -263,7 +264,7 @@ class JobExecutor implements JobExecutorInterface
             if (!count($productFamiliesToImport)) {
                 $message = __('No family to import');
 
-                ////$this->displayError($message, $output);
+                $this->displayError($message);
 
                 return false;
             }
@@ -316,7 +317,7 @@ class JobExecutor implements JobExecutorInterface
                     $this->displayComment($message);
                 }
             }
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->afterRun();
         }
 
@@ -397,7 +398,7 @@ class JobExecutor implements JobExecutorInterface
 
         try {
             $this->currentJobClass->{$method}();
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->afterRun(true);
             $this->setMessage($exception->getMessage());
         }
@@ -481,7 +482,7 @@ class JobExecutor implements JobExecutorInterface
         try {
             /** @var AkeneoPimEnterpriseClientInterface|false $akeneoClient */
             $akeneoClient = $this->authenticator->getAkeneoApiClient();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $akeneoClient = false;
         }
 

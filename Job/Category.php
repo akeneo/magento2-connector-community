@@ -147,7 +147,7 @@ class Category extends Import
     public function createTable()
     {
         if (!$this->categoryFilters->getCategoriesToImport()) {
-            $this->setMessage(__('No categories to import, check your category filter configuration'));
+            $this->jobExecutor->setMessage(__('No categories to import, check your category filter configuration'));
             $this->stop(1);
 
             return;
@@ -162,7 +162,7 @@ class Category extends Import
         $category = $categories->getItems();
 
         if (empty($category)) {
-            $this->setMessage(__('No results retrieved from Akeneo'));
+            $this->jobExecutor->setMessage(__('No results retrieved from Akeneo'));
             $this->stop(1);
 
             return;
@@ -199,7 +199,7 @@ class Category extends Import
             if (count($categoriesToImport) != iterator_count($parentCategories)) {
                 /** @var string[] $editions */
                 $editions = $this->editionSource->toOptionArray();
-                $this->setMessage(
+                $this->jobExecutor->setMessage(
                     __(
                         'Wrong Akeneo version selected in the Akeneo Edition configuration field: %1',
                         $editions[$edition]
@@ -242,7 +242,7 @@ class Category extends Import
         }
         $index++;
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('%1 line(s) found. %2', $index, $warning)
         );
     }
@@ -684,7 +684,7 @@ class Category extends Import
         /** @var string|string[] $filteredCategories */
         $filteredCategories = $this->configHelper->getCategoriesFilter();
         if (!$filteredCategories || empty($filteredCategories)) {
-            $this->setMessage(
+            $this->jobExecutor->setMessage(
                 __('No category to ignore')
             );
 
@@ -700,7 +700,7 @@ class Category extends Import
             $connection->select()->from($tableName)->where('code IN (?)', $filteredCategories)
         );
         if (!$categoriesToDelete) {
-            $this->setMessage(
+            $this->jobExecutor->setMessage(
                 __('No category found')
             );
 
@@ -961,7 +961,7 @@ class Category extends Import
             $this->cacheTypeList->cleanType($type);
         }
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('Cache cleaned for: %1', join(', ', $types))
         );
     }

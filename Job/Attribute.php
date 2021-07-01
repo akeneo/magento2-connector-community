@@ -174,7 +174,7 @@ class Attribute extends Import
         /** @var array $attribute */
         $attribute = $attributes->getItems();
         if (empty($attribute)) {
-            $this->setMessage(__('No results from Akeneo'));
+            $this->jobExecutor->setMessage(__('No results from Akeneo'));
             $this->stop(1);
 
             return;
@@ -210,7 +210,7 @@ class Attribute extends Import
         foreach ($attributes as $index => $attribute) {
             // If the attribute starts with a number, skip
             if (ctype_digit(substr($attribute['code'], 0, 1))) {
-                $this->setAdditionalMessage(__('The attribute %1 was not imported because it starts with a number. Update it in Akeneo and retry.', $attribute['code']));
+                $this->jobExecutor->setAdditionalMessage(__('The attribute %1 was not imported because it starts with a number. Update it in Akeneo and retry.', $attribute['code']));
                 continue;
             }
             /** @var string $attributeCode */
@@ -222,7 +222,7 @@ class Attribute extends Import
                     $metricsSetting
                 )) {
                 if ($attribute['scopable'] || $attribute['localizable']) {
-                    $this->setAdditionalMessage(__('Attribute %1 is scopable or localizable please change configuration at Stores > Configuration > Catalog > Akeneo Connector > Products > Metrics management.', $attributeCode));
+                    $this->jobExecutor->setAdditionalMessage(__('Attribute %1 is scopable or localizable please change configuration at Stores > Configuration > Catalog > Akeneo Connector > Products > Metrics management.', $attributeCode));
                     continue;
                 }
                 $attribute['type'] .= '_select';
@@ -231,7 +231,7 @@ class Attribute extends Import
         }
         $index++;
 
-        $this->setAdditionalMessage(
+        $this->jobExecutor->setAdditionalMessage(
             __('%1 line(s) found', $index)
         );
 
@@ -240,7 +240,7 @@ class Attribute extends Import
         $localeCode = $this->configHelper->getDefaultLocale();
 
         if (!$connection->tableColumnExists($tmpTable, 'labels-' . $localeCode)) {
-            $this->setMessage(__('No attributes with label in the admin locale %1 found.', $localeCode));
+            $this->jobExecutor->setMessage(__('No attributes with label in the admin locale %1 found.', $localeCode));
             $this->stop(1);
 
             return;
@@ -260,7 +260,7 @@ class Attribute extends Import
         /** @var array $row */
         while (($row = $query->fetch())) {
             if (!isset($row['label']) || $row['label'] === null) {
-                $this->setAdditionalMessage(
+                $this->jobExecutor->setAdditionalMessage(
                     __(
                         'The attribute %1 was not imported because it did not have a translation in admin store language : %2',
                         $row['code'],
@@ -464,7 +464,7 @@ class Attribute extends Import
             if ($skipAttribute === true) {
                 /** @var string $message */
                 $message = __('The attribute %1 was skipped because its type is not the same between Akeneo and Magento. Please delete it in Magento and try a new import', $row['code']);
-                $this->setAdditionalMessage($message);
+                $this->jobExecutor->setAdditionalMessage($message);
 
                 continue;
             }
@@ -736,7 +736,7 @@ class Attribute extends Import
             $this->cacheTypeList->cleanType($type);
         }
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('Cache cleaned for: %1', join(', ', $types))
         );
     }
@@ -765,7 +765,7 @@ class Attribute extends Import
         /** @var mixed[] $filters */
         $filters = $this->attributeFilters->getFilters();
         if (array_key_exists('error', $filters)) {
-            $this->setMessage($filters['error']);
+            $this->jobExecutor->setMessage($filters['error']);
             $this->stop(true);
         }
 

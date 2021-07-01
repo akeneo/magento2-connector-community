@@ -7,6 +7,8 @@ namespace Akeneo\Connector\Model;
 use Akeneo\Connector\Api\Data\JobInterface;
 use Akeneo\Connector\Api\JobRepositoryInterface;
 use Akeneo\Connector\Model\ResourceModel\Job as JobResourceModel;
+use Akeneo\Connector\Model\ResourceModel\Job\Collection;
+use Akeneo\Connector\Model\ResourceModel\Job\CollectionFactory;
 use Exception;
 use Magento\Framework\Exception\AlreadyExistsException;
 
@@ -33,17 +35,28 @@ class JobRepository implements JobRepositoryInterface
      * @var JobFactory $jobFactory
      */
     protected $jobFactory;
+    /**
+     * Description $collection field
+     *
+     * @var CollectionFactory $collectionFactory
+     */
+    protected $collectionFactory;
 
     /**
      * JobRepository constructor
      *
-     * @param JobFactory       $jobFactory
-     * @param JobResourceModel $jobResourceModel
+     * @param JobFactory        $jobFactory
+     * @param JobResourceModel  $jobResourceModel
+     * @param CollectionFactory $collectionFactory
      */
-    public function __construct(JobFactory $jobFactory, JobResourceModel $jobResourceModel)
-    {
-        $this->jobFactory       = $jobFactory;
-        $this->jobResourceModel = $jobResourceModel;
+    public function __construct(
+        JobFactory $jobFactory,
+        JobResourceModel $jobResourceModel,
+        CollectionFactory $collectionFactory
+    ) {
+        $this->jobFactory        = $jobFactory;
+        $this->jobResourceModel  = $jobResourceModel;
+        $this->collectionFactory = $collectionFactory;
     }
 
     /**
@@ -106,5 +119,15 @@ class JobRepository implements JobRepositoryInterface
         $this->jobResourceModel->delete($job);
 
         return $this;
+    }
+
+    /**
+     * Description getList function
+     *
+     * @return Collection
+     */
+    public function getList()
+    {
+        return $this->collectionFactory->create()->load();
     }
 }
