@@ -2773,6 +2773,7 @@ class Product extends JobImport
             $this->storeHelper->getStores(['lang', 'channel_code']) // en_US-channel
         );
 
+        $defaultUrlKeyColumn = '`url_key`';
         /**
          * @var string $local
          * @var array  $affected
@@ -2790,8 +2791,9 @@ class Product extends JobImport
                         'nullable' => false,
                     ]
                 );
-                $connection->update($tmpTable, ['url_key-' . $local => new Expr('`url_key`')]);
+                $connection->update($tmpTable, ['url_key-' . $local => new Expr($defaultUrlKeyColumn)]);
             }
+            $defaultUrlKeyColumn = "`url_key-$local`";
 
             /**
              * @var array $affected
