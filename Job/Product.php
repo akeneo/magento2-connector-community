@@ -2778,7 +2778,8 @@ class Product extends JobImport
          * @var array  $affected
          */
         foreach ($stores as $local => $affected) {
-            if (!$connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
+            $localUrlKey = 'url_key-' . $local;
+            if (!$connection->tableColumnExists($tmpTable, $localUrlKey)) {
                 $connection->addColumn(
                     $tmpTable,
                     'url_key-' . $local,
@@ -2790,7 +2791,14 @@ class Product extends JobImport
                         'nullable' => false,
                     ]
                 );
-                $connection->update($tmpTable, ['url_key-' . $local => new Expr('`url_key`')]);
+                $connection->update($tmpTable, [$localUrlKey => new Expr('`url_key`')]);
+            } else {
+                // fill empty or nullable fields
+                $connection->update(
+                    $tmpTable,
+                    [$localUrlKey => new Expr('`url_key`')],
+                    sprintf('%1$s IS NULL OR %1$s = ""', $connection->quoteIdentifier($localUrlKey))
+                );
             }
 
             /**
@@ -2806,7 +2814,7 @@ class Product extends JobImport
                     $tmpTable,
                     [
                         'entity_id' => '_entity_id',
-                        'url_key'   => 'url_key-' . $local,
+                        'url_key'   => $localUrlKey,
                         'store_id'  => new Expr($store['store_id']),
                         'visibility' => '_visibility',
                     ]
