@@ -103,6 +103,11 @@ class Category implements ArrayInterface
         /** @var array $optionArray */
         $optionArray = [];
 
+        /** check if categories is empty */
+        if(empty($categories)){
+            return $optionArray;
+        }
+
         /**
          * @var int    $optionValue
          * @var string $optionLabel
