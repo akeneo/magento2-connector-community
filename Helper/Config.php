@@ -2,28 +2,24 @@
 
 namespace Akeneo\Connector\Helper;
 
+use Magento\Catalog\Helper\Product as ProductHelper;
 use Magento\Catalog\Model\Product\Link;
-use Akeneo\Connector\Model\Source\Edition;
-use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\App\Helper\Context;
-use Magento\Framework\Encryption\Encryptor;
+use Magento\Catalog\Model\Product\Media\Config as MediaConfig;
+use Magento\CatalogInventory\Model\Configuration as CatalogInventoryConfiguration;
 use Magento\Directory\Helper\Data as DirectoryHelper;
-use Magento\Framework\Exception\FileSystemException;
-use Magento\Store\Api\Data\StoreInterface;
-use Magento\Store\Api\Data\WebsiteInterface;
-use Magento\Store\Model\ScopeInterface;
 use Magento\Directory\Model\Currency;
 use Magento\Eav\Model\Config as EavConfig;
-use Magento\Store\Model\StoreManagerInterface;
-use Magento\CatalogInventory\Model\Configuration as CatalogInventoryConfiguration;
-use Magento\Catalog\Model\Product\Media\Config as MediaConfig;
+use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Encryption\Encryptor;
+use Magento\Framework\Exception\FileSystemException;
+use Magento\Framework\File\Uploader;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Directory\WriteInterface;
-use Magento\Framework\File\Uploader;
-use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
-use Magento\Catalog\Helper\Product as ProductHelper;
-use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * Class Config
@@ -175,6 +171,12 @@ class Config
      * @var string PRODUCTS_FILTERS_UPDATED_SINCE
      */
     const PRODUCTS_FILTERS_UPDATED_SINCE = 'akeneo_connector/products_filters/updated';
+    /**
+     * Product filters updated since last hours config path
+     *
+     * @var string PRODUCTS_FILTERS_UPDATED_SINCE_LAST_HOURS
+     */
+    const PRODUCTS_FILTERS_UPDATED_SINCE_LAST_HOURS = 'akeneo_connector/products_filters/updated_since_last_hours';
     /**
      * Product advanced filters config path
      *
@@ -669,6 +671,16 @@ class Config
     public function getUpdatedSinceFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_SINCE);
+    }
+
+    /**
+     * Retrieve the updated since last hours filter
+     *
+     * @return string
+     */
+    public function getUpdatedSinceLastHoursFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_SINCE_LAST_HOURS);
     }
 
     /**
@@ -1427,9 +1439,9 @@ class Config
     public function getAssociationTypes()
     {
         /** @var string $relatedCode */
-        $relatedCode  = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_RELATED);
+        $relatedCode = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_RELATED);
         /** @var string $upsellCode */
-        $upsellCode   = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_UPSELL);
+        $upsellCode = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_UPSELL);
         /** @var string $crossellCode */
         $crossellCode = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_CROSSELL);
         /** @var string[] $associationTypes */
@@ -1455,7 +1467,7 @@ class Config
 
         return $associationTypes;
     }
-    
+
     /**
      * Get if advanced logs is active
      *

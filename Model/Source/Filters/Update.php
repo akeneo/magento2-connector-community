@@ -22,6 +22,8 @@ class Update implements ArrayInterface
     const GREATER_THAN = '>';
     const BETWEEN = 'BETWEEN';
     const SINCE_LAST_N_DAYS = 'SINCE LAST N DAYS';
+    const SINCE_LAST_N_HOURS = 'SINCE LAST N HOURS';
+
 
     /**
      * Return array of options for the status filter
@@ -46,6 +48,10 @@ class Update implements ArrayInterface
             [
                 'label' => __('Since last X days'),
                 'value' => self::SINCE_LAST_N_DAYS
+            ],
+            [
+                'label' => __('Since last X hours'),
+                'value' => self::SINCE_LAST_N_HOURS
             ],
         ];
     }

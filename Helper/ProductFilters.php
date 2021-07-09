@@ -2,16 +2,17 @@
 
 namespace Akeneo\Connector\Helper;
 
-use Akeneo\Pim\ApiClient\Search\SearchBuilder;
-use Akeneo\Pim\ApiClient\Search\SearchBuilderFactory;
-use Magento\Framework\App\Helper\AbstractHelper;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Helper\Locales as LocalesHelper;
+use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Model\Source\Filters\Completeness;
 use Akeneo\Connector\Model\Source\Filters\Mode;
 use Akeneo\Connector\Model\Source\Filters\Status;
 use Akeneo\Connector\Model\Source\Filters\Update;
+use Akeneo\Pim\ApiClient\Search\SearchBuilder;
+use Akeneo\Pim\ApiClient\Search\SearchBuilderFactory;
+use Magento\Framework\Stdlib\DateTime\DateTime;
+use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 
 /**
  * Class ProductFilters
@@ -55,6 +56,18 @@ class ProductFilters
      * @var SearchBuilder $searchBuilder
      */
     protected $searchBuilder;
+    /**
+     * This variable contains a DateTime
+     *
+     * @var DateTime $date
+     */
+    protected $date;
+    /**
+     * This variable contains a TimezoneInterface
+     *
+     * @var TimezoneInterface $timezone
+     */
+    protected $timezone;
 
     /**
      * ProductFilters constructor
@@ -63,17 +76,23 @@ class ProductFilters
      * @param Store                $storeHelper
      * @param Locales              $localesHelper
      * @param SearchBuilderFactory $searchBuilderFactory
+     * @param DateTime             $date
+     * @param TimezoneInterface    $timezone
      */
     public function __construct(
         ConfigHelper $configHelper,
         StoreHelper $storeHelper,
         LocalesHelper $localesHelper,
-        SearchBuilderFactory $searchBuilderFactory
+        SearchBuilderFactory $searchBuilderFactory,
+        DateTime $date,
+        TimezoneInterface $timezone
     ) {
         $this->configHelper         = $configHelper;
         $this->storeHelper          = $storeHelper;
         $this->localesHelper        = $localesHelper;
         $this->searchBuilderFactory = $searchBuilderFactory;
+        $this->date                 = $date;
+        $this->timezone             = $timezone;
     }
 
     /**
@@ -118,7 +137,7 @@ class ProductFilters
                     foreach ($advancedFilters['search']['family'] as $key => $familyFilter) {
                         if (isset($familyFilter['operator']) && $familyFilter['operator'] == 'IN') {
                             $advancedFilters['search']['family'][$key]['value'][] = $productFamily;
-                            $productFilterAdded = true;
+                            $productFilterAdded                                   = true;
 
                             break;
                         }
@@ -127,7 +146,7 @@ class ProductFilters
 
                 if (!$productFilterAdded) {
                     /** @var string[] $familyFilter */
-                    $familyFilter = ['operator' => 'IN', 'value' => [$productFamily]];
+                    $familyFilter                          = ['operator' => 'IN', 'value' => [$productFamily]];
                     $advancedFilters['search']['family'][] = $familyFilter;
                 }
             }
@@ -172,7 +191,7 @@ class ProductFilters
             if ($this->configHelper->getAttributeFilterByCodeMode() == true) {
                 $filter['attributes'] = $this->configHelper->getAttributeFilterByCode();
             }
-            
+
             /** @var string[] $locales */
             $locales = $this->storeHelper->getChannelStoreLangs($channel);
             if (!empty($locales)) {
@@ -192,7 +211,6 @@ class ProductFilters
 
         return $filters;
     }
-
 
     /**
      * Get the filters for the product model API query
@@ -219,7 +237,7 @@ class ProductFilters
         foreach ($mappedChannels as $channel) {
             /** @var string[] $filter */
             $filter = [
-                'scope'  => $channel,
+                'scope' => $channel,
             ];
 
             /** @var string[] $locales */
@@ -244,7 +262,7 @@ class ProductFilters
 
     /**
      * Retrieve advanced filters config
-     * 
+     *
      * @param bool $isProductModel
      *
      * @return mixed[]
@@ -347,6 +365,26 @@ class ProductFilters
                 return;
             }
             $this->searchBuilder->addFilter('updated', $mode, (int)$filter);
+        }
+        if ($mode == Update::SINCE_LAST_N_HOURS) {
+            /** @var string $mode */
+            $mode = Update::GREATER_THAN;
+            /** @var int $current_date_time */
+            $current_date_time = $this->timezone->date()->getTimestamp();
+            /** @var int $filter */
+            $filter = ((int)$this->configHelper->getUpdatedSinceLastHoursFilter()) * 3600;
+            if (!is_numeric($filter)) {
+                return;
+            }
+
+            /** @var int $timestamp */
+            $timestamp = $current_date_time - $filter;
+            /** @var string $date */
+            $date = (new \DateTime())->setTimestamp($timestamp)->format('Y-m-d H:i:s');
+
+            if (!empty($date)) {
+                $this->searchBuilder->addFilter('updated', $mode, $date);
+            }
         }
         if ($mode == Update::LOWER_THAN) {
             /** @var string $date */
