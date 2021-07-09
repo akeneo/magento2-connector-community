@@ -3102,7 +3102,7 @@ class Product extends JobImport
                     $medias[$row[$image['attribute']]] = $this->akeneoClient->getProductMediaFileApi()->get($row[$image['attribute']]);
                 }
                 /** @var string $name */
-                $name = $this->entitiesHelper->formatMediaName(basename($medias[$row['attribute']]]['code']));
+                $name = $this->entitiesHelper->formatMediaName(basename($medias[$row['attribute']]['code']));
                 /** @var string $filePath */
                 $filePath = $this->configHelper->getMediaFullPath($name);
                 /** @var bool|string[] $databaseRecords */
