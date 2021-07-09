@@ -3025,7 +3025,7 @@ class Product extends JobImport
         /** @var string $tableName */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var array $gallery */
-        $gallery = $this->configHelper->getMediaImportGalleryColumns();
+        $gallery = $this->configHelper->getMediaImportGalleryColumns(true);
 
         if (empty($gallery)) {
             $this->setStatus(true);
@@ -3047,11 +3047,11 @@ class Product extends JobImport
             'sku'             => 'identifier',
         ];
         foreach ($gallery as $image) {
-            if (!$connection->tableColumnExists($tmpTable, strtolower($image))) {
-                $this->setMessage(__('Info: No value found in the current batch for the attribute %1', $image), $this->logger);
+            if (!$connection->tableColumnExists($tmpTable, strtolower($image['attribute']))) {
+                $this->setMessage(__('Info: No value found in the current batch for the attribute %1', $image['attribute']), $this->logger);
                 continue;
             }
-            $data[$image] = strtolower($image);
+            $data[$image['attribute']] = strtolower($image['attribute']);
         }
 
         /** @var bool $rowIdExists */
@@ -3074,6 +3074,8 @@ class Product extends JobImport
         $galleryAttribute = $this->configHelper->getAttribute(BaseProductModel::ENTITY, 'media_gallery');
         /** @var string $galleryTable */
         $galleryTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery');
+        /** @var string $galleryValueTable */
+        $galleryValueTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery_value');
         /** @var string $galleryEntityTable */
         $galleryEntityTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery_value_to_entity');
         /** @var string $galleryValueTable */
@@ -3088,19 +3090,19 @@ class Product extends JobImport
             /** @var array $files */
             $files = [];
             foreach ($gallery as $image) {
-                if (!isset($row[$image])) {
+                if (!isset($row[$image['attribute']])) {
                     continue;
                 }
 
-                if (!$row[$image]) {
+                if (!$row[$image['attribute']]) {
                     continue;
                 }
 
-                if (!isset($medias[$row[$image]])) {
-                    $medias[$row[$image]] = $this->akeneoClient->getProductMediaFileApi()->get($row[$image]);
+                if (!isset($medias[$row[$image['attribute']]])) {
+                    $medias[$row[$image['attribute']]] = $this->akeneoClient->getProductMediaFileApi()->get($row[$image['attribute']]);
                 }
                 /** @var string $name */
-                $name = $this->entitiesHelper->formatMediaName(basename($medias[$row[$image]]['code']));
+                $name = $this->entitiesHelper->formatMediaName(basename($medias[$row[$image['attribute']]]['code']));
                 /** @var string $filePath */
                 $filePath = $this->configHelper->getMediaFullPath($name);
                 /** @var bool|string[] $databaseRecords */
@@ -3108,7 +3110,8 @@ class Product extends JobImport
 
                 if (!$this->configHelper->mediaFileExists($filePath)) {
                     /** @var ResponseInterface $binary */
-                    $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
+                    $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image['attribute']]);
+
                     /** @var string $imageContent */
                     $imageContent = $binary->getBody()->getContents();
                     $this->configHelper->saveMediaFile($filePath, $imageContent);
@@ -3175,6 +3178,10 @@ class Product extends JobImport
                     'disabled'        => 0,
                 ];
 
+                if ($image['position']) {
+                    $data['position'] = $image['position'];
+                }
+
                 if ($recordId != 0) {
                     $data['record_id'] = $recordId;
                 }
@@ -3184,7 +3191,7 @@ class Product extends JobImport
                 $columns = $this->configHelper->getMediaImportImagesColumns();
 
                 foreach ($columns as $column) {
-                    if ($column['column'] !== $image) {
+                    if ($column['column'] !== $image['attribute']) {
                         continue;
                     }
                     /** @var array $data */

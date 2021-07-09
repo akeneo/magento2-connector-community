@@ -1120,7 +1120,7 @@ class Config
      *
      * @return array
      */
-    public function getMediaImportGalleryColumns()
+    public function getMediaImportGalleryColumns($raw = false)
     {
         /** @var array $images */
         $images = [];
@@ -1140,7 +1140,15 @@ class Config
             if (!isset($image['attribute']) || $image['attribute'] === '') {
                 continue;
             }
-            $images[] = $image['attribute'];
+
+            if ($raw) {
+                if(!isset($image['position'])) {
+                    $image['position'] = 0;
+                }
+                $images[] = $image;
+            } else {
+                $images[] = $image['attribute'];
+            }
         }
 
         return $images;
