@@ -225,3 +225,6 @@
 * Fix error message on metric option creation when no value was found for an entire locale
 * Fix export PDF generation for image configuration and strpos strict testing
 * Update URL rewrite warning message color
+
+### Version 101.5.0 :
+* Update URL rewrite generation for products in order to either correctly assign by stores the values of an attribute from Akeneo or assign the SKU as default URL key
