@@ -2757,7 +2757,8 @@ class Product extends JobImport
         if (!$this->configHelper->isUrlGenerationEnabled()) {
             $this->setStatus(true);
             $this->setMessage(
-                __('Url rewrite generation is not enabled'), $this->logger
+                __('Url rewrite generation is not enabled'),
+                $this->logger
             );
 
             return;
@@ -2765,20 +2766,35 @@ class Product extends JobImport
 
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tableName */
+        /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var array $stores */
         $stores = array_merge(
-            $this->storeHelper->getStores(['lang']), // en_US
-            $this->storeHelper->getStores(['lang', 'channel_code']) // en_US-channel
+            $this->storeHelper->getStores(['lang']) // en_US
         );
+
+        /** @var bool $isUrlMapped */
+        $isUrlMapped = false;
+        // Check if url_key is mapped or contains value per store ou website
+        foreach ($stores as $local => $affected) {
+            if ($connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
+                $isUrlMapped = true;
+                $stores = array_merge(
+                    $this->storeHelper->getStores(['lang']), // en_US
+                    $this->storeHelper->getStores(['lang', 'channel_code']), // en_US-channel
+                    $this->storeHelper->getStores(['channel_code']) // channel
+                );
+
+                break;
+            }
+        }
 
         /**
          * @var string $local
          * @var array  $affected
          */
         foreach ($stores as $local => $affected) {
-            if (!$connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
+            if (!$isUrlMapped && !$connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
                 $connection->addColumn(
                     $tmpTable,
                     'url_key-' . $local,
@@ -2798,16 +2814,16 @@ class Product extends JobImport
              * @var array $store
              */
             foreach ($affected as $store) {
-                if (!$store['store_id']) {
+                if (!$store['store_id'] || !$connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
                     continue;
                 }
                 /** @var Select $select */
                 $select = $connection->select()->from(
                     $tmpTable,
                     [
-                        'entity_id' => '_entity_id',
-                        'url_key'   => 'url_key-' . $local,
-                        'store_id'  => new Expr($store['store_id']),
+                        'entity_id'  => '_entity_id',
+                        'url_key'    => 'url_key-' . $local,
+                        'store_id'   => new Expr($store['store_id']),
                         'visibility' => '_visibility',
                     ]
                 );
@@ -2887,7 +2903,8 @@ class Product extends JobImport
                             );
                             $paths[$requestPath] = [
                                 'request_path' => $requestPath,
-                                'target_path'  => 'catalog/product/view/id/' . $product->getEntityId() . '/category/' . $category->getId(),
+                                'target_path'  => 'catalog/product/view/id/' . $product->getEntityId(
+                                    ) . '/category/' . $category->getId(),
                                 'metadata'     => '{"category_id":"' . $category->getId() . '"}',
                                 'category_id'  => $category->getId(),
                             ];
@@ -2904,7 +2921,8 @@ class Product extends JobImport
                                 }
                                 $paths[$requestPath] = [
                                     'request_path' => $requestPath,
-                                    'target_path'  => 'catalog/product/view/id/' . $product->getEntityId() . '/category/' . $parent->getId(),
+                                    'target_path'  => 'catalog/product/view/id/' . $product->getEntityId(
+                                        ) . '/category/' . $parent->getId(),
                                     'metadata'     => '{"category_id":"' . $parent->getId() . '"}',
                                     'category_id'  => $parent->getId(),
                                 ];
@@ -2925,10 +2943,16 @@ class Product extends JobImport
 
                         /** @var string|null $rewriteId */
                         $rewriteId = $connection->fetchOne(
-                            $connection->select()->from($this->entitiesHelper->getTable('url_rewrite'), ['url_rewrite_id'])->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)->where(
+                            $connection->select()->from(
+                                $this->entitiesHelper->getTable('url_rewrite'),
+                                ['url_rewrite_id']
+                            )->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)->where(
                                 'target_path = ?',
                                 $targetPath
-                            )->where('entity_id = ?', $product->getEntityId())->where('store_id = ?', $product->getStoreId())
+                            )->where('entity_id = ?', $product->getEntityId())->where(
+                                'store_id = ?',
+                                $product->getStoreId()
+                            )
                         );
 
                         if ($rewriteId) {
@@ -2946,7 +2970,8 @@ class Product extends JobImport
                                             $rewriteId,
                                             $requestPath
                                         )
-                                    ), $this->logger
+                                    ),
+                                    $this->logger
                                 );
                             }
                         } else {
@@ -2971,12 +2996,16 @@ class Product extends JobImport
                             if ($isCategoryUsedInProductUrl && $path['category_id']) {
                                 /** @var int $rewriteId */
                                 $rewriteId = $connection->fetchOne(
-                                    $connection->select()
-                                        ->from($this->entitiesHelper->getTable('url_rewrite'), ['url_rewrite_id'])
-                                        ->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)
-                                        ->where('target_path = ?', $targetPath)
-                                        ->where('entity_id = ?', $product->getEntityId())
-                                        ->where('store_id = ?', $product->getStoreId())
+                                    $connection->select()->from(
+                                        $this->entitiesHelper->getTable('url_rewrite'),
+                                        ['url_rewrite_id']
+                                    )->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)->where(
+                                        'target_path = ?',
+                                        $targetPath
+                                    )->where('entity_id = ?', $product->getEntityId())->where(
+                                        'store_id = ?',
+                                        $product->getStoreId()
+                                    )
                                 );
                             }
                         }
