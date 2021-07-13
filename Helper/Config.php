@@ -366,6 +366,12 @@ class Config
      */
     const FAMILIES_FILTERS_UPDATED_GREATER = 'akeneo_connector/families/updated_greater';
     /**
+     * Advanced logs activation config path
+     *
+     * @var string ADVANCED_LOG
+     */
+    const ADVANCED_LOG = 'akeneo_connector/advanced/advanced_log';
+    /**
      * This variable contains a Encryptor
      *
      * @var Encryptor $encryptor
@@ -1454,6 +1460,16 @@ class Config
         }
 
         return $associationTypes;
+    }
+
+    /**
+     * Get if advanced logs is active
+     *
+     * @return string|null
+     */
+    public function isAdvancedLogActivated()
+    {
+        return $this->scopeConfig->getValue(self::ADVANCED_LOG);
     }
 
     /**

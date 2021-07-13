@@ -199,3 +199,32 @@
 * Remove automatic scope filter that was added when using the product and product model Advanced Filter
 * Add Family code in Magento 2 attribute set label to prevent SQL insertion error when multiple family have the same label
 * Fix image attribute re-download check on wrong file path
+
+### Version 101.3.2 :
+* Change job error status to success when no products are imported for a family
+* Update information warning messages color from red to orange
+
+### Version 101.3.3 :
+* Add compatibility for variation product parent change and variation product becoming a simple product in Akeneo
+* Fix connector compatibility with Akeneo 3.1
+* Fix category tree import with numeric code
+* Fix category URL rewrite generation on useless stores causing "-X" added to category URLs
+* Fix download of file attribute failing since last client upgrade
+
+### Version 101.3.4 :
+* Fix attribute requests condition on "entity_type_id" in order to prevent MYSQL errors during option import
+
+### Version 101.3.5 :
+* Fix completeness in advanced filter mode for product model not being applied
+* Add export Akeneo Connector configuration button in the admin configuration page
+* Add advanced filter mode in configuration (https://help.akeneo.com/magento2-connector/articles/13-advanced-loging.html)
+* Add Akeneo Growth Edition in Akeneo Edition selector configuration (https://help.akeneo.com/magento2-connector/articles/02-configure-PIM-API.html#configure-your-akeneo-edition)
+
+### Version 101.3.6 :
+* Optimize image import by storing result from API calls
+* Fix error message on metric option creation when no value was found for an entire locale
+* Fix export PDF generation for image configuration and strpos strict testing
+* Update URL rewrite warning message color
+
+### Version 101.5.0 :
+* Update URL rewrite generation for products in order to either correctly assign by stores the values of an attribute from Akeneo or assign the SKU as default URL key

@@ -26,6 +26,10 @@
                     <label>Documentation link</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\DocumentationLink</frontend_model>
                 </field>
+                <field id="export_config_pdf" translate="label" type="button" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Export Akeneo Connector configuration</label>
+                    <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\ExportPdf</frontend_model>
+                </field>
             </group>
             <group id="akeneo_api" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Akeneo API Configuration</label>
@@ -287,7 +291,7 @@ For example :<br/>
                     </depends>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity,growth</field>
                 </depends>
             </group>
             <group id="attribute" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -334,7 +338,7 @@ For example :<br/>
                     <can_be_empty>1</can_be_empty>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity,growth</field>
                 </depends>
             </group>
             <group id="product" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -459,8 +463,16 @@ For example :<br/>
                     <comment><![CDATA[Map each grouped family from Akeneo to its corresponding quantified association.<br />Please make sure to only map quantified association.]]></comment>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_five,serenity</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_five,serenity,growth</field>
                 </depends>
+            </group>
+            <group id="advanced" translate="label" sortOrder="70" showInDefault="1">
+                <label>Advanced</label>
+                <field id="advanced_log" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Advanced Loging</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Activating advanced log may slow down the imports. Temporary tables won't be deleted at the end of their imports. Logs will be placed in var/log/akeneo_connector</comment>
+                </field>
             </group>
         </section>
     </system>
