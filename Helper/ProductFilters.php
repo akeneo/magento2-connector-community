@@ -165,7 +165,7 @@ class ProductFilters
 
         // If import product gave a family, add this family to the search
         if ($productFamily) {
-            $familyFilter = ['operator' => 'IN', 'value' => [$productFamily]];
+            $familyFilter       = ['operator' => 'IN', 'value' => [$productFamily]];
             $search['family'][] = $familyFilter;
         }
 
@@ -367,10 +367,8 @@ class ProductFilters
             $this->searchBuilder->addFilter('updated', $mode, (int)$filter);
         }
         if ($mode == Update::SINCE_LAST_N_HOURS) {
-            /** @var string $mode */
-            $mode = Update::GREATER_THAN;
-            /** @var int $current_date_time */
-            $current_date_time = $this->timezone->date()->getTimestamp();
+            /** @var int $currentDateTime */
+            $currentDateTime = $this->timezone->date()->getTimestamp();
             /** @var int $filter */
             $filter = ((int)$this->configHelper->getUpdatedSinceLastHoursFilter()) * 3600;
             if (!is_numeric($filter)) {
@@ -378,13 +376,15 @@ class ProductFilters
             }
 
             /** @var int $timestamp */
-            $timestamp = $current_date_time - $filter;
+            $timestamp = $currentDateTime - $filter;
             /** @var string $date */
             $date = (new \DateTime())->setTimestamp($timestamp)->format('Y-m-d H:i:s');
 
             if (!empty($date)) {
-                $this->searchBuilder->addFilter('updated', $mode, $date);
+                $this->searchBuilder->addFilter('updated', Update::GREATER_THAN, $date);
             }
+
+            return;
         }
         if ($mode == Update::LOWER_THAN) {
             /** @var string $date */
@@ -404,6 +404,7 @@ class ProductFilters
         if (!empty($date)) {
             $this->searchBuilder->addFilter('updated', $mode, $date);
         }
+
         return;
     }
 

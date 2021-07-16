@@ -14,16 +14,38 @@ use Magento\Framework\Option\ArrayInterface;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-
 class Update implements ArrayInterface
 {
-    /** const keys */
+    /**
+     * Description LOWER_THAN constant
+     *
+     * @var string LOWER_THAN
+     */
     const LOWER_THAN = '<';
+    /**
+     * Description GREATER_THAN constant
+     *
+     * @var string GREATER_THAN
+     */
     const GREATER_THAN = '>';
+    /**
+     * Description BETWEEN constant
+     *
+     * @var string BETWEEN
+     */
     const BETWEEN = 'BETWEEN';
+    /**
+     * Description SINCE_LAST_N_DAYS constant
+     *
+     * @var string SINCE_LAST_N_DAYS
+     */
     const SINCE_LAST_N_DAYS = 'SINCE LAST N DAYS';
+    /**
+     * Description SINCE_LAST_N_HOURS constant
+     *
+     * @var string SINCE_LAST_N_HOURS
+     */
     const SINCE_LAST_N_HOURS = 'SINCE LAST N HOURS';
-
 
     /**
      * Return array of options for the status filter
@@ -35,23 +57,23 @@ class Update implements ArrayInterface
         return [
             [
                 'label' => __('Lower than'),
-                'value' => self::LOWER_THAN
+                'value' => self::LOWER_THAN,
             ],
             [
                 'label' => __('Greater than'),
-                'value' => self::GREATER_THAN
+                'value' => self::GREATER_THAN,
             ],
             [
                 'label' => __('Between'),
-                'value' => self::BETWEEN
+                'value' => self::BETWEEN,
             ],
             [
                 'label' => __('Since last X days'),
-                'value' => self::SINCE_LAST_N_DAYS
+                'value' => self::SINCE_LAST_N_DAYS,
             ],
             [
                 'label' => __('Since last X hours'),
-                'value' => self::SINCE_LAST_N_HOURS
+                'value' => self::SINCE_LAST_N_HOURS,
             ],
         ];
     }
