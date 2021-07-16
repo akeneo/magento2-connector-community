@@ -380,10 +380,10 @@ class Option extends Import
                 /** @var string $value */
                 $value = 'labels-' . $local;
 
-                if ($this->configHelper->setOptionCodeAsAdminLabel() && $store['store_id'] == 0) {
+                if ($this->configHelper->getOptionCodeAsAdminLabel() && $store['store_id'] == 0) {
                     $value = 'code';
                 }
-                
+
                 /** @var Select $options */
                 $options = $connection->select()->from(
                         ['a' => $tmpTable],

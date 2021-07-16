@@ -1477,7 +1477,7 @@ class Config
      *
      * @return bool
      */
-    public function setOptionCodeAsAdminLabel()
+    public function getOptionCodeAsAdminLabel()
     {
         return $this->scopeConfig->isSetFlag(self::ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL);
     }
