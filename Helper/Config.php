@@ -290,6 +290,12 @@ class Config
      */
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     /**
+     * Attribute option code as admin label config path
+     *
+     * @var string ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL
+     */
+    const ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL = 'akeneo_connector/attribute/option_code_as_admin_label';
+    /**
      * Attribute filter updated mode
      *
      * @var string ATTRIBUTE_FILTERS_UPDATED_MODE
@@ -1455,7 +1461,7 @@ class Config
 
         return $associationTypes;
     }
-    
+
     /**
      * Get if advanced logs is active
      *
@@ -1464,5 +1470,15 @@ class Config
     public function isAdvancedLogActivated()
     {
         return $this->scopeConfig->getValue(self::ADVANCED_LOG);
+    }
+
+    /**
+     * Description getOptionCodeAsAdminLabel function
+     *
+     * @return bool
+     */
+    public function getOptionCodeAsAdminLabel()
+    {
+        return $this->scopeConfig->isSetFlag(self::ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL);
     }
 }

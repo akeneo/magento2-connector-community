@@ -3,7 +3,6 @@
 namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Connector\Helper\Import\Entities;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Framework\App\DeploymentConfig;
@@ -84,14 +83,26 @@ class Option extends Entities
         /** @var int $entityTypeId */
         $entityTypeId = $this->configHelper->getEntityTypeId(ProductAttributeInterface::ENTITY_TYPE_CODE);
 
-        if ($connection->tableColumnExists($tableName, 't.labels-' . $localeCode)) {
+        /** @var string[] $columnToSelect */
+        $columnToSelect = ['label' => 't.labels-' . $localeCode, 'code' => 't.code', 'attribute' => 't.attribute'];
+        /** @var string $adminColumnValue */
+        $adminColumnValue = 't.labels-' . $localeCode;
+        /** @var string $condition */
+        $condition = '`labels-' . $localeCode . '` = e.value';
+        if ($this->configHelper->getOptionCodeAsAdminLabel()) {
+            $condition        = '`code` = e.value';
+            $adminColumnValue = 'code';
+            $columnToSelect   = ['code' => 't.code', 'attribute' => 't.attribute'];
+        }
+
+        if ($connection->tableColumnExists($tableName, $adminColumnValue)) {
             // Get all entities that are being imported and already present in Magento
             $select = $connection->select()->from(
                 ['t' => $tableName],
-                ['label' => 't.labels-' . $localeCode, 'code' => 't.code', 'attribute' => 't.attribute']
+                $columnToSelect
             )->joinInner(
                 ['e' => 'eav_attribute_option_value'],
-                '`labels-' . $localeCode . '` = e.value'
+                $condition
             )->joinInner(
                 ['o' => 'eav_attribute_option'],
                 'o.`option_id` = e.`option_id`'

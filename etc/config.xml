@@ -46,6 +46,9 @@
             <advanced>
                 <advanced_log>0</advanced_log>
             </advanced>
+            <attribute>
+                <option_code_as_admin_label>O</option_code_as_admin_label>
+            </attribute>
         </akeneo_connector>
     </default>
 </config>
