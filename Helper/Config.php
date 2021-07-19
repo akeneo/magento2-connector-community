@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Helper;
 
+use Exception;
 use Magento\Catalog\Model\Product\Link;
 use Akeneo\Connector\Model\Source\Edition;
 use Magento\Framework\App\Helper\AbstractHelper;
@@ -9,6 +10,8 @@ use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Encryption\Encryptor;
 use Magento\Directory\Helper\Data as DirectoryHelper;
 use Magento\Framework\Exception\FileSystemException;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\Data\WebsiteInterface;
 use Magento\Store\Model\ScopeInterface;
@@ -805,7 +808,7 @@ class Config
      * Retrieve the name of the website association attribute
      *
      * @return array
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getWebsiteAttribute()
     {
@@ -830,7 +833,7 @@ class Config
             /** @var string $adminChannel */
             $adminChannel = $this->getAdminDefaultChannel();
             if (empty($adminChannel)) {
-                throw new \Exception(__('No channel found for Admin website channel configuration.'));
+                throw new Exception(__('No channel found for Admin website channel configuration.'));
             }
 
             $mapping[] = [
@@ -961,7 +964,7 @@ class Config
      * Retrieve stores default tax class
      *
      * @return array
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getProductTaxClasses()
     {
@@ -1398,7 +1401,7 @@ class Config
      * @param string $entity
      *
      * @return int
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function getDefaultAttributeSetId($entity)
     {
@@ -1479,6 +1482,6 @@ class Config
      */
     public function getOptionCodeAsAdminLabel()
     {
-        return $this->scopeConfig->isSetFlag(self::ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL);
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL);
     }
 }
