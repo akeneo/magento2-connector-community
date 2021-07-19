@@ -70,7 +70,8 @@ class Option extends Entities
             $entityKey = $this->getColumnIdentifier($entityTable);
         }
 
-        /* Connect existing Magento options to new Akeneo items */ // Get existing entities from Akeneo table
+        /* Connect existing Magento options to new Akeneo items */
+        // Get existing entities from Akeneo table
         /** @var Select $select */
         $select = $connection->select()->from($akeneoConnectorTable, ['entity_id' => 'entity_id'])->where(
             'import = ?',

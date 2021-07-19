@@ -1473,7 +1473,7 @@ class Config
     }
 
     /**
-     * Description setOptionCodeAsAdminLabel function
+     * Description getOptionCodeAsAdminLabel function
      *
      * @return bool
      */
