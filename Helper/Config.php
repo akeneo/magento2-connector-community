@@ -2,24 +2,30 @@
 
 namespace Akeneo\Connector\Helper;
 
-use Magento\Catalog\Helper\Product as ProductHelper;
+use Exception;
 use Magento\Catalog\Model\Product\Link;
-use Magento\Catalog\Model\Product\Media\Config as MediaConfig;
-use Magento\CatalogInventory\Model\Configuration as CatalogInventoryConfiguration;
+use Magento\Framework\App\Helper\AbstractHelper;
+use Magento\Framework\App\Helper\Context;
+use Magento\Framework\Encryption\Encryptor;
 use Magento\Directory\Helper\Data as DirectoryHelper;
+use Magento\Framework\Exception\FileSystemException;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Api\Data\WebsiteInterface;
+use Magento\Store\Model\ScopeInterface;
 use Magento\Directory\Model\Currency;
 use Magento\Eav\Model\Config as EavConfig;
-use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\Encryption\Encryptor;
-use Magento\Framework\Exception\FileSystemException;
-use Magento\Framework\File\Uploader;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\CatalogInventory\Model\Configuration as CatalogInventoryConfiguration;
+use Magento\Catalog\Model\Product\Media\Config as MediaConfig;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Directory\WriteInterface;
-use Magento\Store\Api\Data\StoreInterface;
-use Magento\Store\Model\ScopeInterface;
-use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\File\Uploader;
+use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
+use Magento\Catalog\Helper\Product as ProductHelper;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 
 /**
  * Class Config
@@ -817,7 +823,7 @@ class Config
      * Retrieve the name of the website association attribute
      *
      * @return array
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getWebsiteAttribute()
     {
@@ -842,7 +848,7 @@ class Config
             /** @var string $adminChannel */
             $adminChannel = $this->getAdminDefaultChannel();
             if (empty($adminChannel)) {
-                throw new \Exception(__('No channel found for Admin website channel configuration.'));
+                throw new Exception(__('No channel found for Admin website channel configuration.'));
             }
 
             $mapping[] = [
@@ -973,7 +979,7 @@ class Config
      * Retrieve stores default tax class
      *
      * @return array
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getProductTaxClasses()
     {
@@ -1410,7 +1416,7 @@ class Config
      * @param string $entity
      *
      * @return int
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function getDefaultAttributeSetId($entity)
     {
@@ -1491,6 +1497,6 @@ class Config
      */
     public function getOptionCodeAsAdminLabel()
     {
-        return $this->scopeConfig->isSetFlag(self::ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL);
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL);
     }
 }
