@@ -369,8 +369,13 @@ class ProductFilters
         if ($mode == Update::SINCE_LAST_N_HOURS) {
             /** @var int $currentDateTime */
             $currentDateTime = $this->timezone->date()->getTimestamp();
+            /** @var string $valueConfig */
+            $valueConfig = $this->configHelper->getUpdatedSinceLastHoursFilter();
+            if (!$valueConfig) {
+                return;
+            }
             /** @var int $filter */
-            $filter = ((int)$this->configHelper->getUpdatedSinceLastHoursFilter()) * 3600;
+            $filter = ((int)$valueConfig) * 3600;
             if (!is_numeric($filter)) {
                 return;
             }
