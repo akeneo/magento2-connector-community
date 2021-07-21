@@ -3,20 +3,6 @@
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Helper\AttributeFilters;
-use Akeneo\Connector\Logger\Handler\OptionHandler;
-use Akeneo\Connector\Logger\OptionLogger;
-use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
-use Akeneo\Pim\ApiClient\Pagination\PageInterface;
-use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
-use Magento\Eav\Setup\EavSetup;
-use Magento\Framework\App\Cache\Type\Block as BlockCacheType;
-use Magento\Framework\DB\Adapter\AdapterInterface;
-use Magento\Framework\App\Cache\TypeListInterface;
-use Magento\Framework\DB\Select;
-use Magento\Framework\Event\ManagerInterface;
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Eav\Model\Config;
-use Magento\PageCache\Model\Cache\Type as PageCacheType;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Import\Attribute as AttributeHelper;
@@ -24,8 +10,20 @@ use Akeneo\Connector\Helper\Import\Entities as EntitiesHelper;
 use Akeneo\Connector\Helper\Import\Option as OptionHelper;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
-use Akeneo\Connector\Job\Import;
-use \Zend_Db_Expr as Expr;
+use Akeneo\Connector\Logger\Handler\OptionHandler;
+use Akeneo\Connector\Logger\OptionLogger;
+use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
+use Akeneo\Pim\ApiClient\Pagination\PageInterface;
+use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Magento\Eav\Model\Config;
+use Magento\Eav\Setup\EavSetup;
+use Magento\Framework\App\Cache\TypeListInterface;
+use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\DB\Select;
+use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Indexer\IndexerInterface;
+use Magento\Indexer\Model\IndexerFactory;
+use Zend_Db_Expr as Expr;
 
 /**
  * Class Option
@@ -117,6 +115,12 @@ class Option extends Import
      * @var PageInterface $attributes
      */
     protected $attributes;
+    /**
+     * This variable contains a IndexerInterface
+     *
+     * @var IndexerFactory $indexFactory
+     */
+    protected $indexFactory;
 
     /**
      * Option constructor
@@ -135,9 +139,9 @@ class Option extends Import
      * @param TypeListInterface $cacheTypeList
      * @param StoreHelper       $storeHelper
      * @param EavSetup          $eavSetup
+     * @param IndexerFactory    $indexFactory
      * @param array             $data
      *
-     * @throws LocalizedException
      */
     public function __construct(
         OptionLogger $logger,
@@ -154,6 +158,7 @@ class Option extends Import
         TypeListInterface $cacheTypeList,
         StoreHelper $storeHelper,
         EavSetup $eavSetup,
+        IndexerFactory $indexFactory,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
@@ -167,6 +172,7 @@ class Option extends Import
         $this->cacheTypeList    = $cacheTypeList;
         $this->storeHelper      = $storeHelper;
         $this->eavSetup         = $eavSetup;
+        $this->indexFactory     = $indexFactory;
     }
 
     /**
@@ -243,7 +249,8 @@ class Option extends Import
             }
         }
         $this->setMessage(
-            __('%1 line(s) found', $lines), $this->logger
+            __('%1 line(s) found', $lines),
+            $this->logger
         );
 
         if ($this->configHelper->isAdvancedLogActivated()) {
@@ -274,7 +281,8 @@ class Option extends Import
                         $row['code'],
                         $row['attribute'],
                         $localeCode
-                    ), $this->logger
+                    ),
+                    $this->logger
                 );
             }
         }
@@ -338,12 +346,12 @@ class Option extends Import
         }
         /** @var Select $options */
         $options = $connection->select()->from(['a' => $tmpTable], $columns)->joinInner(
-                ['b' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
-                'a.attribute = b.code AND b.import = "attribute"',
-                [
-                    'attribute_id' => 'b.entity_id',
-                ]
-            );
+            ['b' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
+            'a.attribute = b.code AND b.import = "attribute"',
+            [
+                'attribute_id' => 'b.entity_id',
+            ]
+        );
         $connection->query(
             $connection->insertFromSelect(
                 $options,
@@ -372,24 +380,24 @@ class Option extends Import
          * @var array  $data
          */
         foreach ($stores as $local => $data) {
-            if (!$connection->tableColumnExists($tmpTable, 'labels-'.$local)) {
+            if (!$connection->tableColumnExists($tmpTable, 'labels-' . $local)) {
                 continue;
             }
             /** @var array $store */
             foreach ($data as $store) {
                 /** @var Select $options */
                 $options = $connection->select()->from(
-                        ['a' => $tmpTable],
-                        [
-                            'option_id' => '_entity_id',
-                            'store_id'  => new Expr($store['store_id']),
-                            'value'     => 'labels-'.$local,
-                        ]
-                    )->joinInner(
-                        ['b' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
-                        'a.attribute = b.code AND b.import = "attribute"',
-                        []
-                    );
+                    ['a' => $tmpTable],
+                    [
+                        'option_id' => '_entity_id',
+                        'store_id'  => new Expr($store['store_id']),
+                        'value'     => 'labels-' . $local,
+                    ]
+                )->joinInner(
+                    ['b' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
+                    'a.attribute = b.code AND b.import = "attribute"',
+                    []
+                );
                 $connection->query(
                     $connection->insertFromSelect(
                         $options,
@@ -419,18 +427,59 @@ class Option extends Import
      */
     public function cleanCache()
     {
+        /** @var string $configurations */
+        $configurations = $this->configHelper->getCacheTypeOption();
+
+        if (!$configurations) {
+            $this->setMessage(__('No cache cleaned'), $this->logger);
+
+            return;
+        }
+
         /** @var string[] $types */
-        $types = [
-            BlockCacheType::TYPE_IDENTIFIER,
-            PageCacheType::TYPE_IDENTIFIER,
-        ];
+        $types = explode(',', $configurations);
+
         /** @var string $type */
         foreach ($types as $type) {
             $this->cacheTypeList->cleanType($type);
         }
 
         $this->setMessage(
-            __('Cache cleaned for: %1', join(', ', $types)), $this->logger
+            __('Cache cleaned for: %1', join(', ', $types)),
+            $this->logger
+        );
+    }
+
+    /**
+     * Refresh index
+     *
+     * @return void
+     * @throws \Exception
+     */
+    public function refreshIndex()
+    {
+        /** @var string $configurations */
+        $configurations = $this->configHelper->getIndexOption();
+
+        if (!$configurations) {
+            $this->setMessage(__('No index refreshed'), $this->logger);
+
+            return;
+        }
+
+        /** @var string[] $types */
+        $types = explode(',', $configurations);
+
+        /** @var string $type */
+        foreach ($types as $type) {
+            /** @var IndexerInterface $index */
+            $index = $this->indexFactory->create()->load($type);
+            $index->reindexAll();
+        }
+
+        $this->setMessage(
+            __('Index refreshed for: %1', join(', ', $types)),
+            $this->logger
         );
     }
 
@@ -438,7 +487,7 @@ class Option extends Import
      * Retrieve options for the given attribute and insert their data in the temporary table
      *
      * @param string $attributeCode
-     * @param int $paginationSize
+     * @param int    $paginationSize
      *
      * @return int
      */
@@ -476,7 +525,7 @@ class Option extends Import
             /** @var string|int $paginationSize */
             $paginationSize = $this->configHelper->getPaginationSize();
             /** @var string[] $filters */
-            $filters          = $this->attributeFilters->getFilters();
+            $filters = $this->attributeFilters->getFilters();
             if ($this->configHelper->isAdvancedLogActivated() && $logging) {
                 $this->logger->addDebug(__('Attribute API call Filters : ') . print_r($filters, true));
             }

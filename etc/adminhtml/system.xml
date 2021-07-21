@@ -461,8 +461,73 @@ For example :<br/>
                     <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_five,serenity,growth</field>
                 </depends>
             </group>
-            <group id="advanced" translate="label" sortOrder="70" showInDefault="1">
-                <label>Advanced</label>
+            <group id="index" translate="label" sortOrder="70" type="text" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Index</label>
+                <field id="index_category" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Reindex data after Category import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Index</source_model>
+                    <comment>Choose the index you want to trigger after the Category job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="index_family" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Reindex data after Family import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Index</source_model>
+                    <comment>Choose the index you want to trigger after the Family job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="index_attribute" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Reindex data after Attribute import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Index</source_model>
+                    <comment>Choose the index you want to trigger after the Attribute job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="index_option" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Reindex data after Option import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Index</source_model>
+                    <comment>Choose the index you want to trigger after the Option job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="index_product" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Reindex data after Product import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Index</source_model>
+                    <comment>Choose the index you want to trigger after the Product job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+            </group>
+            <group id="cache" translate="label" sortOrder="80" type="text" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Cache</label>
+                <field id="cache_type_category" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Flush cache types after Category import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Cache</source_model>
+                    <comment>Choose the cache type you want to flush after the Category job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="cache_type_family" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Flush cache types after Family import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Cache</source_model>
+                    <comment>Choose the cache type you want to flush after the Family job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="cache_type_attribute" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Flush cache types after Attribute import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Cache</source_model>
+                    <comment>Choose the cache type you want to flush after the Attribute job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="cache_type_option" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Flush cache types after Option import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Cache</source_model>
+                    <comment>Choose the cache type you want to flush after the Option job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="cache_type_product" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Flush cache types after Product import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Cache</source_model>
+                    <comment>Choose the cache type you want to flush after the Product job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+            </group>
+            <group id="advanced" translate="label" sortOrder="120" showInDefault="1">                <label>Advanced</label>
                 <field id="advanced_log" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Enable Advanced Loging</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
