@@ -2,7 +2,6 @@
 
 namespace Akeneo\Connector\Model\Source;
 
-use Magento\AdvancedSalesRule\Model\Indexer\SalesRule\Processor as SalesRuleProcessor;
 use Magento\Catalog\Model\Indexer\Category\Product;
 use Magento\Catalog\Model\Indexer\Product\Category;
 use Magento\Catalog\Model\Indexer\Product\Eav\Processor;
@@ -14,8 +13,6 @@ use Magento\CatalogSearch\Model\Indexer\Fulltext;
 use Magento\Customer\Model\Customer;
 use Magento\Framework\Option\ArrayInterface;
 use Magento\InventoryIndexer\Indexer\InventoryIndexer;
-use Magento\TargetRule\Model\Indexer\TargetRule\Product\Rule\Processor as RuleProcessor;
-use Magento\TargetRule\Model\Indexer\TargetRule\Rule\Product\Processor as ProductProcessor;
 use Magento\Theme\Model\Data\Design\Config;
 
 /**
