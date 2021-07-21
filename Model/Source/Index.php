@@ -73,24 +73,12 @@ class Index implements ArrayInterface
                 'value' => ProductRuleProcessor::INDEXER_ID,
             ],
             [
-                'label' => __('targetrule_product_rule'),
-                'value' => RuleProcessor::INDEXER_ID,
-            ],
-            [
-                'label' => __('targetrule_rule_product'),
-                'value' => ProductProcessor::INDEXER_ID,
-            ],
-            [
                 'label' => __('catalog_product_price'),
                 'value' => PriceProcessor::INDEXER_ID,
             ],
             [
                 'label' => __('catalogsearch_fulltext'),
                 'value' => Fulltext::INDEXER_ID,
-            ],
-            [
-                'label' => __('salesrule_rule'),
-                'value' => SalesRuleProcessor::INDEXER_ID,
             ],
         ];
     }
