@@ -2,13 +2,15 @@
 
 namespace Akeneo\Connector\Helper;
 
+use Exception;
 use Magento\Catalog\Model\Product\Link;
-use Akeneo\Connector\Model\Source\Edition;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Encryption\Encryptor;
 use Magento\Directory\Helper\Data as DirectoryHelper;
 use Magento\Framework\Exception\FileSystemException;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\Data\WebsiteInterface;
 use Magento\Store\Model\ScopeInterface;
@@ -176,6 +178,12 @@ class Config
      */
     const PRODUCTS_FILTERS_UPDATED_SINCE = 'akeneo_connector/products_filters/updated';
     /**
+     * Product filters updated since last hours config path
+     *
+     * @var string PRODUCTS_FILTERS_UPDATED_SINCE_LAST_HOURS
+     */
+    const PRODUCTS_FILTERS_UPDATED_SINCE_LAST_HOURS = 'akeneo_connector/products_filters/updated_since_last_hours';
+    /**
      * Product advanced filters config path
      *
      * @var string PRODUCTS_FILTERS_ADVANCED_FILTER
@@ -289,6 +297,12 @@ class Config
      * @var string ATTRIBUTE_TYPES
      */
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
+    /**
+     * Attribute option code as admin label config path
+     *
+     * @var string ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL
+     */
+    const ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL = 'akeneo_connector/attribute/option_code_as_admin_label';
     /**
      * Attribute filter updated mode
      *
@@ -672,6 +686,16 @@ class Config
     }
 
     /**
+     * Retrieve the updated since last hours filter
+     *
+     * @return string
+     */
+    public function getUpdatedSinceLastHoursFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_SINCE_LAST_HOURS);
+    }
+
+    /**
      * Retrieve attribute updated mode
      *
      * @return string
@@ -799,7 +823,7 @@ class Config
      * Retrieve the name of the website association attribute
      *
      * @return array
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getWebsiteAttribute()
     {
@@ -824,7 +848,7 @@ class Config
             /** @var string $adminChannel */
             $adminChannel = $this->getAdminDefaultChannel();
             if (empty($adminChannel)) {
-                throw new \Exception(__('No channel found for Admin website channel configuration.'));
+                throw new Exception(__('No channel found for Admin website channel configuration.'));
             }
 
             $mapping[] = [
@@ -955,7 +979,7 @@ class Config
      * Retrieve stores default tax class
      *
      * @return array
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getProductTaxClasses()
     {
@@ -1392,7 +1416,7 @@ class Config
      * @param string $entity
      *
      * @return int
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function getDefaultAttributeSetId($entity)
     {
@@ -1427,9 +1451,9 @@ class Config
     public function getAssociationTypes()
     {
         /** @var string $relatedCode */
-        $relatedCode  = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_RELATED);
+        $relatedCode = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_RELATED);
         /** @var string $upsellCode */
-        $upsellCode   = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_UPSELL);
+        $upsellCode = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_UPSELL);
         /** @var string $crossellCode */
         $crossellCode = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_CROSSELL);
         /** @var string[] $associationTypes */
@@ -1455,7 +1479,7 @@ class Config
 
         return $associationTypes;
     }
-    
+
     /**
      * Get if advanced logs is active
      *
@@ -1464,5 +1488,15 @@ class Config
     public function isAdvancedLogActivated()
     {
         return $this->scopeConfig->getValue(self::ADVANCED_LOG);
+    }
+
+    /**
+     * Description getOptionCodeAsAdminLabel function
+     *
+     * @return bool
+     */
+    public function getOptionCodeAsAdminLabel()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL);
     }
 }

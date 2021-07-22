@@ -26,6 +26,7 @@ use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Job\Import;
 use \Zend_Db_Expr as Expr;
+use Zend_Db_Statement_Interface;
 
 /**
  * Class Option
@@ -251,31 +252,33 @@ class Option extends Import
         }
 
         /* Remove option without an admin store label */
-        /** @var string $localeCode */
-        $localeCode = $this->configHelper->getDefaultLocale();
-        /** @var \Magento\Framework\DB\Select $select */
-        $select = $connection->select()->from(
-            $tmpTable,
-            [
-                'label'     => 'labels-' . $localeCode,
-                'code'      => 'code',
-                'attribute' => 'attribute',
-            ]
-        )->where('`labels-' . $localeCode . '` IS NULL');
-        /** @var \Zend_Db_Statement_Interface $query */
-        $query = $connection->query($select);
-        /** @var array $row */
-        while (($row = $query->fetch())) {
-            if (!isset($row['label']) || $row['label'] === null) {
-                $connection->delete($tmpTable, ['code = ?' => $row['code'], 'attribute = ?' => $row['attribute']]);
-                $this->setAdditionalMessage(
-                    __(
-                        'The option %1 from attribute %2 was not imported because it did not have a translation in admin store language : %3',
-                        $row['code'],
-                        $row['attribute'],
-                        $localeCode
-                    ), $this->logger
-                );
+        if (!$this->configHelper->getOptionCodeAsAdminLabel()) {
+            /** @var string $localeCode */
+            $localeCode = $this->configHelper->getDefaultLocale();
+            /** @var Select $select */
+            $select = $connection->select()->from(
+                $tmpTable,
+                [
+                    'label'     => 'labels-' . $localeCode,
+                    'code'      => 'code',
+                    'attribute' => 'attribute',
+                ]
+            )->where('`labels-' . $localeCode . '` IS NULL');
+            /** @var Zend_Db_Statement_Interface $query */
+            $query = $connection->query($select);
+            /** @var array $row */
+            while (($row = $query->fetch())) {
+                if (!isset($row['label']) || $row['label'] === null) {
+                    $connection->delete($tmpTable, ['code = ?' => $row['code'], 'attribute = ?' => $row['attribute']]);
+                    $this->setAdditionalMessage(
+                        __(
+                            'The option %1 from attribute %2 was not imported because it did not have a translation in admin store language : %3',
+                            $row['code'],
+                            $row['attribute'],
+                            $localeCode
+                        ), $this->logger
+                    );
+                }
             }
         }
     }
@@ -293,7 +296,7 @@ class Option extends Import
         $akeneoConnectorTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         /** @var string $entityTable */
         $entityTable = $this->entitiesHelper->getTable('eav_attribute_option');
-        /** @var \Magento\Framework\DB\Select $selectExistingEntities */
+        /** @var Select $selectExistingEntities */
         $selectExistingEntities = $connection->select()->from($entityTable, 'option_id');
         /** @var string[] $existingEntities */
         $existingEntities = array_column($connection->query($selectExistingEntities)->fetchAll(), 'option_id');
@@ -377,13 +380,20 @@ class Option extends Import
             }
             /** @var array $store */
             foreach ($data as $store) {
+                /** @var string $value */
+                $value = 'labels-' . $local;
+
+                if ($this->configHelper->getOptionCodeAsAdminLabel() && $store['store_id'] == 0) {
+                    $value = 'code';
+                }
+
                 /** @var Select $options */
                 $options = $connection->select()->from(
                         ['a' => $tmpTable],
                         [
                             'option_id' => '_entity_id',
                             'store_id'  => new Expr($store['store_id']),
-                            'value'     => 'labels-'.$local,
+                            'value'     => $value,
                         ]
                     )->joinInner(
                         ['b' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
