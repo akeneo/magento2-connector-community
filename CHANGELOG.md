@@ -228,3 +228,7 @@
 
 ### Version 101.5.0 :
 * Update URL rewrite generation for products in order to either correctly assign by stores the values of an attribute from Akeneo or assign the SKU as default URL key
+
+### Version 101.6.0 :
+* Add configuration to set Akeneo attribute option code as Admin label for options in Magento 2 (https://help.akeneo.com/magento2-connector/articles/14-configure-attribute-options.html)
+* Add "Since last X hours" product filter in order to filter Akeneo product updated date in hours (https://help.akeneo.com/magento2-connector/articles/03-products-filter-configuration.html#how-to-import-only-updated-products)
