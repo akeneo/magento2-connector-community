@@ -86,7 +86,7 @@ class Option extends Entities
         /** @var string[] $columnToSelect */
         $columnToSelect = ['label' => 't.labels-' . $localeCode, 'code' => 't.code', 'attribute' => 't.attribute'];
         /** @var string $adminColumnValue */
-        $adminColumnValue = 't.labels-' . $localeCode;
+        $adminColumnValue = 'labels-' . $localeCode;
         /** @var string $condition */
         $condition = '`labels-' . $localeCode . '` = e.value';
         if ($this->configHelper->getOptionCodeAsAdminLabel()) {
