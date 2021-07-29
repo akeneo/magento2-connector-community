@@ -587,6 +587,7 @@ class JobExecutor implements JobExecutorInterface
      */
     public function beforeRun()
     {
+        $this->setIdentifier(null);
         $this->eventManager->dispatch(
             'akeneo_connector_import_start',
             ['import' => $this->currentJobClass, 'executor' => $this]
