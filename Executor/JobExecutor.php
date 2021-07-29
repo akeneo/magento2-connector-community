@@ -278,8 +278,15 @@ class JobExecutor implements JobExecutorInterface
 
         /** @var int $jobStatus */
         $jobStatus = $this->currentJob->getStatus();
-        if ((int) $jobStatus === JobInterface::JOB_PROCESSING) {
+        if ((int)$jobStatus === JobInterface::JOB_SCHEDULED) {
+            $this->displayError(__('The job %1 is already scheduled', [$this->currentJob->getCode()]));
+
+            return false;
+        }
+
+        if ((int)$jobStatus === JobInterface::JOB_PROCESSING) {
             $this->displayError(__('The job %1 is already running', [$this->currentJob->getCode()]));
+
             return false;
         }
 
@@ -622,10 +629,6 @@ class JobExecutor implements JobExecutorInterface
      */
     public function afterRun($error = null)
     {
-        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/pouet-debug.log');
-        $logger = new \Zend\Log\Logger();
-        $logger->addWriter($writer);
-        $logger->info("afterRun");
         if ($error) {
             $this->continue = false;
             $this->setJobStatus(JobInterface::JOB_ERROR);
