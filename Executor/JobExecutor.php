@@ -276,6 +276,13 @@ class JobExecutor implements JobExecutorInterface
         $this->currentJobClass = $this->processClassFactory->create($job->getJobClass());
         $this->currentJobClass->setJobExecutor($this);
 
+        /** @var int $jobStatus */
+        $jobStatus = $this->currentJob->getStatus();
+        if ((int) $jobStatus === JobInterface::JOB_PROCESSING) {
+            $this->displayError(__('The job %1 is already running', [$this->currentJob->getCode()]));
+            return false;
+        }
+
         // If product import, run the import once per family
         /** @var array $productFamiliesToImport */
         $productFamiliesToImport = [];
@@ -319,8 +326,7 @@ class JobExecutor implements JobExecutorInterface
         $collection = $this->jobCollectionFactory->create()->addFieldToFilter(JobInterface::ENTITY_ID, ['in' => $ids]);
         /** @var JobInterface $job */
         foreach ($collection->getItems() as $job) {
-            $job->setStatus(JobInterface::JOB_SCHEDULED);
-            $this->jobRepository->save($job);
+            $this->setJobStatus(JobInterface::JOB_SCHEDULED, $job);
         }
     }
 
@@ -358,6 +364,13 @@ class JobExecutor implements JobExecutorInterface
             $this->setStep(0);
             if ($family) {
                 $this->currentJob->setFamily($family);
+            }
+
+            /** @var int $jobStatus */
+            $jobStatus = $this->currentJob->getStatus();
+            if ($jobStatus === JobInterface::JOB_PROCESSING) {
+                $this->displayError(__('The job %1 is already running', [$this->currentJob->getCode()]));
+                return false;
             }
 
             while ($this->canExecute()) {
@@ -575,6 +588,11 @@ class JobExecutor implements JobExecutorInterface
         if (!$job) {
             $job = $this->currentJob;
         }
+
+        if ($status === JobInterface::JOB_SCHEDULED) {
+            $job->setScheduledAt(date('y-m-d h:i:s'));
+        }
+
         $job->setStatus($status);
         $this->jobRepository->save($job);
     }
@@ -604,6 +622,10 @@ class JobExecutor implements JobExecutorInterface
      */
     public function afterRun($error = null)
     {
+        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/pouet-debug.log');
+        $logger = new \Zend\Log\Logger();
+        $logger->addWriter($writer);
+        $logger->info("afterRun");
         if ($error) {
             $this->continue = false;
             $this->setJobStatus(JobInterface::JOB_ERROR);

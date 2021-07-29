@@ -163,3 +163,4 @@ The attribute %1 was not imported because it starts with a number. Update it in 
 "Filter Families","Filter les familles"
 "Between 4.0.0 and 4.0.62","Entre 4.0.0 et 4.0.62"
 "4.0.62 or greater","4.0.62 ou supérieure"
+"The job %1 is already running","Le flux %1 est deja en cours d'execution"
