@@ -59,11 +59,13 @@ class LaunchScheduledJob
         $scheduledJobs = $this->collectionFactory->create()->addFieldToFilter(
             JobInterface::STATUS,
             JobInterface::JOB_SCHEDULED
-        );
+        )->addOrder(JobInterface::ORDER);
 
-        foreach($scheduledJobs as $job)
-        {
-
+        /** @var JobInterface $job */
+        foreach ($scheduledJobs as $job) {
+            /** @var string $code */
+            $code = $job->getCode();
+            $this->jobExecutor->execute($code);
         }
     }
 }
