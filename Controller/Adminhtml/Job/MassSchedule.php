@@ -70,7 +70,11 @@ class MassSchedule extends Action
         $collection = $this->collectionFactory->create()->addFieldToFilter(JobInterface::ENTITY_ID, ['in' => $ids]);
         /** @var JobInterface $job */
         foreach ($collection->getItems() as $job) {
-            $this->jobExecutor->setJobStatus(JobInterface::JOB_SCHEDULED, $job);
+            /** @var int $jobStatus */
+            $jobStatus = $job->getStatus();
+            if (in_array($jobStatus, [JobInterface::JOB_PENDING, JobInterface::JOB_SUCCESS, JobInterface::JOB_ERROR])) {
+                $this->jobExecutor->setJobStatus(JobInterface::JOB_SCHEDULED, $job);
+            }
         }
 
         /** @var Redirect $resultRedirect */
