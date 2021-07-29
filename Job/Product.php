@@ -568,7 +568,7 @@ class Product extends JobImport
         $step = $this->productModelHelper->createTable($this->akeneoClient, $filters);
         $messages[] = $step;
         if (array_keys(array_column($step, 'status'), false)) {
-            $this->displayMessages($messages);
+            $this->jobExecutor->displayMessages($messages);
 
             return;
         }
@@ -577,14 +577,14 @@ class Product extends JobImport
         $step = $this->productModelHelper->insertData($this->akeneoClient, $filters);
         $messages[] = $step;
         if (array_keys(array_column($step, 'status'), false)) {
-            $this->displayMessages($messages);
+            $this->jobExecutor->displayMessages($messages);
 
             return;
         }
         // Add missing columns from product models in product tmp table
         $this->productModelHelper->addColumns($this->getCode());
 
-        $this->displayMessages($messages);
+        $this->jobExecutor->displayMessages($messages);
     }
 
     /**
@@ -608,7 +608,7 @@ class Product extends JobImport
             $step       = $this->familyVariantHelper->createTable($this->akeneoClient, $this->getFamily());
             $messages[] = $step;
             if (array_keys(array_column($step, 'status'), false)) {
-                $this->displayMessages($messages);
+                $this->jobExecutor->displayMessages($messages);
 
                 return;
             }
@@ -616,14 +616,14 @@ class Product extends JobImport
             $step       = $this->familyVariantHelper->insertData($this->akeneoClient, $this->getFamily());
             $messages[] = $step;
             if (array_keys(array_column($step, 'status'), false)) {
-                $this->displayMessages($messages);
+                $this->jobExecutor->displayMessages($messages);
 
                 return;
             }
             $this->familyVariantHelper->updateAxis();
             $this->familyVariantHelper->updateProductModel();
             $this->familyVariantHelper->dropTable();
-            $this->displayMessages($messages);
+            $this->jobExecutor->displayMessages($messages);
         }
     }
 
