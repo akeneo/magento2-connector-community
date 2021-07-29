@@ -153,23 +153,6 @@ class UpgradeSchema implements UpgradeSchemaInterface
         }
 
         if (version_compare($context->getVersion(), '1.0.4', '<')) {
-            /** @var string $config */
-            $config = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_ASSET_GALLERY_MEDIA);
-            if ($config != false) {
-                /** @var array $media */
-                $media = $this->serializer->unserialize($config);
-                /**
-                 * @var int      $key
-                 * @var string[] $assetConfig
-                 */
-                foreach ($media as $key => $assetConfig) {
-                    $media[$key]['main_media_attribute'] = "";
-                }
-                $this->resourceConfig->saveConfig(ConfigHelper::PRODUCT_ASSET_GALLERY_MEDIA, json_encode($media));
-            }
-        }
-
-        if (version_compare($context->getVersion(), '1.0.5', '<')) {
             /**
              * Create table 'akeneo_connector_job'
              */
