@@ -161,7 +161,7 @@ abstract class Import extends DataObject implements ImportInterface
      */
     public function afterImport()
     {
-        $this->jobExecutor->setMessage(__('Import ID : %1', $this->jobExecutor->getIdentifier()))->afterRun()
+        $this->jobExecutor->setMessage(__('Import ID : %1', $this->jobExecutor->getIdentifier()))->afterRun();
     }
 
     /**
