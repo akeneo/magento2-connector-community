@@ -307,19 +307,18 @@ class JobExecutor implements JobExecutorInterface
     }
 
     /**
-     * Description executeByIds function
+     * Description scheduleJobs function
      *
      * @param int[] $ids
      *
      * @return void
      */
-    public function scheduleJobs($ids)
+    public function resetStatus($ids)
     {
         /** @var Collection $collection */
         $collection = $this->jobCollectionFactory->create()->addFieldToFilter(JobInterface::ENTITY_ID, ['in' => $ids]);
         /** @var JobInterface $job */
-        foreach($collection->getItems() as $job)
-        {
+        foreach ($collection->getItems() as $job) {
             $job->setStatus(JobInterface::JOB_SCHEDULED);
             $this->jobRepository->save($job);
         }
@@ -331,7 +330,7 @@ class JobExecutor implements JobExecutorInterface
         $collection = $this->jobCollectionFactory->create();
 
         $collection->addFieldToFilter(JobInterface::CODE, ['in' => $jobCodes]);
-        $collection->addOrder('main_table.' . JobInterface::ORDER, 'ASC');
+        $collection->addOrder(JobInterface::POSITION, 'ASC');
         $items = $collection->getItems();
 
         $sortedCodes = [];
@@ -565,15 +564,19 @@ class JobExecutor implements JobExecutorInterface
     /**
      * Description setJobStatus function
      *
-     * @param int $status
+     * @param int      $status
+     * @param Job|null $job
      *
      * @return void
      * @throws AlreadyExistsException
      */
-    public function setJobStatus(int $status)
+    public function setJobStatus(int $status, $job = null)
     {
-        $this->currentJob->setStatus($status);
-        $this->jobRepository->save($this->currentJob);
+        if (!$job) {
+            $job = $this->currentJob;
+        }
+        $job->setStatus($status);
+        $this->jobRepository->save($job);
     }
 
     /**

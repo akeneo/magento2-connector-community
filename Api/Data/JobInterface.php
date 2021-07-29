@@ -82,11 +82,11 @@ interface JobInterface
      */
     const LAST_SUCCESS_DATE = 'last_success_date';
     /**
-     * Execution job order
+     * Execution job position
      *
-     * @var string ORDER
+     * @var string POSITION
      */
-    const ORDER = 'order';
+    const POSITION = 'position';
     /**
      * Job PHP class
      *

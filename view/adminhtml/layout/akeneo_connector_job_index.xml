@@ -28,9 +28,13 @@
                         <argument name="form_field_name" xsi:type="string">entity_ids</argument>
                         <argument name="use_select_all" xsi:type="string">1</argument>
                         <argument name="options" xsi:type="array">
-                            <item name="start" xsi:type="array">
+                            <item name="schedule" xsi:type="array">
                                 <item name="label" xsi:type="string" translate="true">Schedule</item>
                                 <item name="url" xsi:type="string">*/*/massSchedule</item>
+                            </item>
+                            <item name="reset" xsi:type="array">
+                                <item name="label" xsi:type="string" translate="true">Reset</item>
+                                <item name="url" xsi:type="string">*/*/massReset</item>
                             </item>
                         </argument>
                     </arguments>

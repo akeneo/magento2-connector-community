@@ -12,7 +12,7 @@ use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 
 /**
- * Class MassSchedule
+ * Class MassReset
  *
  * @package   Akeneo\Connector\Controller\Adminhtml\Job
  * @author    Agence Dn'D <contact@dnd.fr>
@@ -20,7 +20,7 @@ use Magento\Backend\App\Action\Context;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class MassSchedule extends Action
+class MassReset extends Action
 {
     /**
      * Description $collectionFactory field
@@ -36,7 +36,7 @@ class MassSchedule extends Action
     protected $jobExecutor;
 
     /**
-     * MassSchedule constructor
+     * MassReset constructor
      *
      * @param Context           $context
      * @param CollectionFactory $collectionFactory
@@ -66,7 +66,7 @@ class MassSchedule extends Action
         $collection = $this->collectionFactory->create()->addFieldToFilter(JobInterface::ENTITY_ID, ['in' => $ids]);
         /** @var JobInterface $job */
         foreach ($collection->getItems() as $job) {
-            $this->jobExecutor->setJobStatus(JobInterface::JOB_SCHEDULED, $job);
+            $this->jobExecutor->setJobStatus(JobInterface::JOB_PENDING, $job);
         }
     }
 

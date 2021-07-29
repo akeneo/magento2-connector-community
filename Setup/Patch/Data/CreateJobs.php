@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Akeneo\Connector\Setup\Patch\Data;
 
 use Akeneo\Connector\Api\Data\JobInterface;
-use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Job\Attribute;
 use Akeneo\Connector\Job\Category;
 use Akeneo\Connector\Job\Family;
@@ -14,7 +13,7 @@ use Akeneo\Connector\Job\Product;
 use Akeneo\Connector\Model\Job;
 use Akeneo\Connector\Model\JobFactory;
 use Akeneo\Connector\Model\JobRepository;
-use Akeneo\Connector\Model\Source\Status;
+use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
 
@@ -95,7 +94,7 @@ class CreateJobs implements DataPatchInterface
             /** @var Job $job */
             $job = $this->jobFactory->create();
             $job->setCode($code);
-            $job->setOrder($index);
+            $job->setPosition($index);
             $job->setStatus(JobInterface::JOB_PENDING);
             $job->setJobClass($class);
             $this->jobRepository->save($job);

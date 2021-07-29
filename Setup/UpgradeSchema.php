@@ -217,11 +217,11 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 ['nullable' => false],
                 'Job import class'
             )->addColumn(
-                'order',
+                'position',
                 Table::TYPE_INTEGER,
                 null,
                 ['nullable' => false],
-                'Job order to priorize launch'
+                'Job position to priorize launch'
             )->setComment('Akeneo Connector Job');
 
             $installer->getConnection()->createTable($table);

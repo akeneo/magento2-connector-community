@@ -117,7 +117,7 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
      */
     public function getOrder()
     {
-        return $this->getData(self::ORDER);
+        return $this->getData(self::POSITION);
     }
 
     /**
@@ -209,9 +209,9 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
      *
      * @return Job
      */
-    public function setOrder($order)
+    public function setPosition($order)
     {
-        return $this->setData(self::ORDER, $order);
+        return $this->setData(self::POSITION, $order);
     }
 
     /**

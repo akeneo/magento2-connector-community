@@ -8,7 +8,7 @@ use Akeneo\Connector\Api\Data\JobInterface;
 use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Model\ResourceModel\Job\Collection;
 use Akeneo\Connector\Model\ResourceModel\Job\CollectionFactory;
-use Magento\Cron\Model\Schedule;
+use Magento\Framework\Exception\AlreadyExistsException;
 
 /**
  * Class LaunchScheduledJob
@@ -49,23 +49,25 @@ class LaunchScheduledJob
     /**
      * Description execute function
      *
-     * @param Schedule $schedule
-     *
      * @return void
+     * @throws AlreadyExistsException
      */
-    public function execute(Schedule $schedule)
+    public function execute()
     {
         /** @var Collection $scheduledJobs */
         $scheduledJobs = $this->collectionFactory->create()->addFieldToFilter(
             JobInterface::STATUS,
             JobInterface::JOB_SCHEDULED
-        )->addOrder(JobInterface::ORDER);
+        )->addOrder(JobInterface::POSITION);
+        /** @var string $codes */
+        $codes = '';
 
         /** @var JobInterface $job */
         foreach ($scheduledJobs as $job) {
             /** @var string $code */
-            $code = $job->getCode();
-            $this->jobExecutor->execute($code);
+            $codes .= ',' . $job->getCode();
         }
+
+        $this->jobExecutor->execute($codes);
     }
 }

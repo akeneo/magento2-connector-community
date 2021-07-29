@@ -10,9 +10,6 @@ use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Framework\Data\Collection;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Phrase;
-use Akeneo\Connector\Api\ImportRepositoryInterface;
-use Akeneo\Connector\Job\Import;
 use \Symfony\Component\Console\Command\Command;
 use \Symfony\Component\Console\Input\InputInterface;
 use \Symfony\Component\Console\Output\OutputInterface;
@@ -58,13 +55,11 @@ class AkeneoConnectorImportCommand extends Command
     /**
      * AkeneoConnectorImportCommand constructor.
      *
-     * @param ImportRepositoryInterface $importRepository
      * @param State                     $appState
      * @param ConfigHelper              $configHelper
      * @param null                      $name
      */
     public function __construct(
-        ImportRepositoryInterface $importRepository,
         State $appState,
         ConfigHelper $configHelper,
         JobExecutor $jobExecutor,
