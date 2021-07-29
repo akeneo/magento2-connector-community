@@ -5,7 +5,6 @@ namespace Akeneo\Connector\Block\Adminhtml\Grid\Column\Renderer;
 use Akeneo\Connector\Api\Data\JobInterface;
 use Magento\Backend\Block\Widget\Grid\Column\Renderer\AbstractRenderer;
 use Magento\Framework\DataObject;
-use Akeneo\Connector\Api\Data\ImportInterface;
 
 /**
  * Class Status

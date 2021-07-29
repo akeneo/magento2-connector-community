@@ -373,13 +373,6 @@ class JobExecutor implements JobExecutorInterface
                 $this->currentJob->setFamily($family);
             }
 
-            /** @var int $jobStatus */
-            $jobStatus = $this->currentJob->getStatus();
-            if ($jobStatus === JobInterface::JOB_PROCESSING) {
-                $this->displayError(__('The job %1 is already running', [$this->currentJob->getCode()]));
-                return false;
-            }
-
             while ($this->canExecute()) {
                 /** @var string $comment */
                 $comment = $this->getComment();
