@@ -10,6 +10,9 @@ use Akeneo\Connector\Model\ResourceModel\Job\Collection;
 use Akeneo\Connector\Model\ResourceModel\Job\CollectionFactory;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
+use Magento\Backend\Model\View\Result\Redirect;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Exception\AlreadyExistsException;
 
 /**
  * Class MassReset
@@ -56,7 +59,8 @@ class MassReset extends Action
     /**
      * Description execute function
      *
-     * @return void
+     * @return Redirect
+     * @throws AlreadyExistsException
      */
     public function execute()
     {
@@ -68,6 +72,12 @@ class MassReset extends Action
         foreach ($collection->getItems() as $job) {
             $this->jobExecutor->setJobStatus(JobInterface::JOB_PENDING, $job);
         }
+
+        /** @var Redirect $resultRedirect */
+        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+        $resultRedirect->setPath('*/*/');
+
+        return $resultRedirect;
     }
 
     /**
