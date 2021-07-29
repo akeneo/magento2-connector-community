@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Cron;
 
+use Akeneo\Connector\Api\Data\JobInterface;
 use Akeneo\Connector\Executor\JobExecutor;
+use Akeneo\Connector\Model\ResourceModel\Job\Collection;
+use Akeneo\Connector\Model\ResourceModel\Job\CollectionFactory;
 use Magento\Cron\Model\Schedule;
 
 /**
@@ -24,15 +27,23 @@ class LaunchScheduledJob
      * @var JobExecutor $jobExecutor
      */
     protected $jobExecutor;
+    /**
+     * Description $collectionFactory field
+     *
+     * @var CollectionFactory $collectionFactory
+     */
+    protected $collectionFactory;
 
     /**
      * LaunchScheduledJob constructor
      *
-     * @param JobExecutor $jobExecutor
+     * @param JobExecutor       $jobExecutor
+     * @param CollectionFactory $collectionFactory
      */
-    public function __construct(JobExecutor $jobExecutor)
+    public function __construct(JobExecutor $jobExecutor, CollectionFactory $collectionFactory)
     {
-        $this->jobExecutor = $jobExecutor;
+        $this->jobExecutor       = $jobExecutor;
+        $this->collectionFactory = $collectionFactory;
     }
 
     /**
@@ -44,6 +55,15 @@ class LaunchScheduledJob
      */
     public function execute(Schedule $schedule)
     {
+        /** @var Collection $scheduledJobs */
+        $scheduledJobs = $this->collectionFactory->create()->addFieldToFilter(
+            JobInterface::STATUS,
+            JobInterface::JOB_SCHEDULED
+        );
 
+        foreach($scheduledJobs as $job)
+        {
+
+        }
     }
 }
