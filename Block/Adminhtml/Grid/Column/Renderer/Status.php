@@ -33,17 +33,21 @@ class Status extends AbstractRenderer
         /** @var string $text */
         $text = '';
         switch ($this->_getValue($row)) {
-            case ImportInterface::IMPORT_SUCCESS:
+            case JobInterface::JOB_SUCCESS:
                 $class = 'grid-severity-notice';
-                $text = __('Success');
+                $text  = __('Success');
                 break;
-            case ImportInterface::IMPORT_ERROR:
+            case JobInterface::JOB_ERROR:
                 $class = 'grid-severity-critical';
-                $text = __('Error');
+                $text  = __('Error');
                 break;
-            case ImportInterface::IMPORT_PROCESSING:
+            case JobInterface::JOB_PROCESSING:
                 $class = 'grid-severity-minor';
-                $text = __('Processing');
+                $text  = __('Processing');
+                break;
+            case JobInterface::JOB_PENDING:
+                $class = 'grid-severity-minor';
+                $text  = __('Pending');
                 break;
             case JobInterface::JOB_SCHEDULED:
                 $class = 'grid-severity-minor';
