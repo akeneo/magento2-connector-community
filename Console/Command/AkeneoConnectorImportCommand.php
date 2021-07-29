@@ -73,45 +73,12 @@ class AkeneoConnectorImportCommand extends Command
     ) {
         parent::__construct($name);
 
-        $this->appState         = $appState;
-        $this->importRepository = $importRepository;
-        $this->configHelper     = $configHelper;
-        $this->jobExecutor      = $jobExecutor;
-        $this->jobRepository    = $jobRepository;
+        $this->appState      = $appState;
+        $this->configHelper  = $configHelper;
+        $this->jobExecutor   = $jobExecutor;
+        $this->jobRepository = $jobRepository;
     }
 
-    /**
-     * Check if multiple entities have been specified
-     * in the command line
-     *
-     * @param string $code
-     *
-     * @return void
-     */
-    protected function checkEntities(string $code)
-    {
-        /** @var string[] $entities */
-        $entities = explode(',', $code);
-        if (count($entities) > 1) {
-            $this->multiImport($entities);
-        } else {
-            $this->import($code);
-        }
-    }
-
-    /**
-     * Run import for multiple entities
-     *
-     * @param array $entities
-     *
-     * @return void
-     */
-    protected function multiImport(array $entities)
-    {
-        foreach ($entities as $entity) {
-            $this->import($entity);
-        }
-    }
 
     /**
      * {@inheritdoc}
@@ -141,6 +108,7 @@ class AkeneoConnectorImportCommand extends Command
 
         /** @var string $code */
         $code = $input->getOption(self::IMPORT_CODE);
+
         if (!$code) {
             $this->usage($output);
         } else {

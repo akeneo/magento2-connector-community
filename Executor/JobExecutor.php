@@ -248,6 +248,7 @@ class JobExecutor implements JobExecutorInterface
             return false;
         }
 
+        /** @var string[] $entities */
         $entities = explode(',', $code);
         if (count($entities) > 1) {
             $entities = $this->sortJobs($entities);
@@ -255,6 +256,8 @@ class JobExecutor implements JobExecutorInterface
             foreach ($entities as $code) {
                 $this->execute($code, $output);
             }
+
+            return true;
         }
 
         $this->output = $output;
@@ -289,7 +292,7 @@ class JobExecutor implements JobExecutorInterface
 
             foreach ($productFamiliesToImport as $family) {
                 $this->run($family);
-                //$import->setIdentifier(null);
+                $this->setIdentifier(null);
             }
 
             return true;
@@ -310,20 +313,16 @@ class JobExecutor implements JobExecutorInterface
      *
      * @return void
      */
-    public function executeByIds($ids)
+    public function scheduleJobs($ids)
     {
-        /** @var string[] $codes */
-        $codes = [];
-
-        /** @var int $id */
-        foreach ($ids as $id) {
-            $codes[] = $this->jobRepository->get($id)->getCode();
+        /** @var Collection $collection */
+        $collection = $this->jobCollectionFactory->create()->addFieldToFilter(JobInterface::ENTITY_ID, ['in' => $ids]);
+        /** @var JobInterface $job */
+        foreach($collection->getItems() as $job)
+        {
+            $job->setStatus(JobInterface::JOB_SCHEDULED);
+            $this->jobRepository->save($job);
         }
-
-        /** @var string $codeImploded */
-        $codeImploded = implode(',', $codes);
-
-        $this->execute($codeImploded);
     }
 
     protected function sortJobs($jobCodes)
@@ -359,7 +358,7 @@ class JobExecutor implements JobExecutorInterface
             $this->initSteps();
             $this->setStep(0);
             if ($family) {
-                $this->setFamily($family);
+                $this->currentJob->setFamily($family);
             }
 
             while ($this->canExecute()) {

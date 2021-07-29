@@ -17,7 +17,7 @@ use Magento\Backend\App\Action\Context;
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class MassLaunch extends Action
+class MassSchedule extends Action
 {
     /**
      * Description $jobExecutor function
@@ -50,7 +50,7 @@ class MassLaunch extends Action
     {
         /** @var int[] $ids */
         $ids = $this->getRequest()->getParam('entity_ids');
-        $this->jobExecutor->executeByIds($ids);
+        $this->jobExecutor->scheduleJobs($ids);
     }
 
     /**

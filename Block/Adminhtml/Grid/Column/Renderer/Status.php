@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Block\Adminhtml\Grid\Column\Renderer;
 
+use Akeneo\Connector\Api\Data\JobInterface;
 use Magento\Backend\Block\Widget\Grid\Column\Renderer\AbstractRenderer;
 use Magento\Framework\DataObject;
 use Akeneo\Connector\Api\Data\ImportInterface;
@@ -43,6 +44,10 @@ class Status extends AbstractRenderer
             case ImportInterface::IMPORT_PROCESSING:
                 $class = 'grid-severity-minor';
                 $text = __('Processing');
+                break;
+            case JobInterface::JOB_SCHEDULED:
+                $class = 'grid-severity-minor';
+                $text  = __('Scheduled');
                 break;
         }
 
