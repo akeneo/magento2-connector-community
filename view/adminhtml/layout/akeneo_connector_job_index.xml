@@ -28,6 +28,10 @@
                         <argument name="form_field_name" xsi:type="string">entity_ids</argument>
                         <argument name="use_select_all" xsi:type="string">1</argument>
                         <argument name="options" xsi:type="array">
+                            <item name="start" xsi:type="array">
+                                <item name="label" xsi:type="string" translate="true">Launch</item>
+                                <item name="url" xsi:type="string">*/*/massLaunch</item>
+                            </item>
                         </argument>
                     </arguments>
                 </block>

@@ -16,7 +16,9 @@ use Magento\Backend\App\Action;
 class Index extends Action
 {
     /**
-     * {@inheritdoc}
+     * Description execute function
+     *
+     * @return void
      */
     public function execute()
     {
@@ -29,7 +31,9 @@ class Index extends Action
     }
 
     /**
-     * {@inheritdoc}
+     * Description _isAllowed function
+     *
+     * @return bool
      */
     protected function _isAllowed()
     {

@@ -7,14 +7,14 @@ use Akeneo\Connector\Api\JobExecutorInterface;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Output as OutputHelper;
-use Akeneo\Connector\Job\Import;
 use Akeneo\Connector\Model\Job;
 use Akeneo\Connector\Model\JobRepository;
 use Akeneo\Connector\Model\Processor\ProcessClassFactory;
+use Akeneo\Connector\Model\ResourceModel\Job\Collection;
+use Akeneo\Connector\Model\ResourceModel\Job\CollectionFactory;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\PimEnterprise\ApiClient\AkeneoPimEnterpriseClientInterface;
 use Exception;
-use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Phrase;
@@ -139,16 +139,22 @@ class JobExecutor implements JobExecutorInterface
      * @var OutputInterface|null $output
      */
     protected $output;
+    /**
+     * Description $jobCollectionFactory
+     *
+     * @var CollectionFactory
+     */
+    protected $jobCollectionFactory;
 
     /**
      * JobExecutor constructor
      *
-     * @param \Akeneo\Connector\Model\JobRepository                 $jobRepository
-     * @param \Akeneo\Connector\Model\Processor\ProcessClassFactory $processClassFactory
-     * @param \Akeneo\Connector\Helper\Config                       $configHelper
-     * @param \Akeneo\Connector\Helper\Output                       $outputHelper
-     * @param \Magento\Framework\Event\ManagerInterface             $eventManager
-     * @param \Akeneo\Connector\Helper\Authenticator                $authenticator
+     * @param JobRepository       $jobRepository
+     * @param ProcessClassFactory $processClassFactory
+     * @param ConfigHelper        $configHelper
+     * @param OutputHelper        $outputHelper
+     * @param ManagerInterface    $eventManager
+     * @param Authenticator       $authenticator
      */
     public function __construct(
         JobRepository $jobRepository,
@@ -156,14 +162,16 @@ class JobExecutor implements JobExecutorInterface
         ConfigHelper $configHelper,
         OutputHelper $outputHelper,
         ManagerInterface $eventManager,
-        Authenticator $authenticator
+        Authenticator $authenticator,
+        CollectionFactory $jobCollectionFactory
     ) {
-        $this->jobRepository       = $jobRepository;
-        $this->processClassFactory = $processClassFactory;
-        $this->configHelper        = $configHelper;
-        $this->outputHelper        = $outputHelper;
-        $this->eventManager        = $eventManager;
-        $this->authenticator       = $authenticator;
+        $this->jobRepository        = $jobRepository;
+        $this->processClassFactory  = $processClassFactory;
+        $this->configHelper         = $configHelper;
+        $this->outputHelper         = $outputHelper;
+        $this->eventManager         = $eventManager;
+        $this->authenticator        = $authenticator;
+        $this->jobCollectionFactory = $jobCollectionFactory;
     }
 
     /**
@@ -223,7 +231,8 @@ class JobExecutor implements JobExecutorInterface
     /**
      * Description execute function
      *
-     * @param string $code
+     * @param string               $code
+     * @param OutputInterface|null $output
      *
      * @return bool
      * @throws AlreadyExistsException
@@ -237,6 +246,15 @@ class JobExecutor implements JobExecutorInterface
             $this->displayError($message);
 
             return false;
+        }
+
+        $entities = explode(',', $code);
+        if (count($entities) > 1) {
+            $entities = $this->sortJobs($entities);
+
+            foreach ($entities as $code) {
+                $this->execute($code, $output);
+            }
         }
 
         $this->output = $output;
@@ -283,6 +301,48 @@ class JobExecutor implements JobExecutorInterface
         $this->afterRun();
 
         return true;
+    }
+
+    /**
+     * Description executeByIds function
+     *
+     * @param int[] $ids
+     *
+     * @return void
+     */
+    public function executeByIds($ids)
+    {
+        /** @var string[] $codes */
+        $codes = [];
+
+        /** @var int $id */
+        foreach ($ids as $id) {
+            $codes[] = $this->jobRepository->get($id)->getCode();
+        }
+
+        /** @var string $codeImploded */
+        $codeImploded = implode(',', $codes);
+
+        $this->execute($codeImploded);
+    }
+
+    protected function sortJobs($jobCodes)
+    {
+        /** @var Collection $collection */
+        $collection = $this->jobCollectionFactory->create();
+
+        $collection->addFieldToFilter(JobInterface::CODE, ['in' => $jobCodes]);
+        $collection->addOrder('main_table.' . JobInterface::ORDER, 'ASC');
+        $items = $collection->getItems();
+
+        $sortedCodes = [];
+
+        /** @var Job $item */
+        foreach ($items as $item) {
+            $sortedCodes[] = $item->getCode();
+        }
+
+        return $sortedCodes;
     }
 
     /**
@@ -529,6 +589,7 @@ class JobExecutor implements JobExecutorInterface
             'akeneo_connector_import_start',
             ['import' => $this->currentJobClass, 'executor' => $this]
         );
+        $this->currentJob->setLastExecutedDate(date('y-m-d h:i:s'));
         $this->setJobStatus(JobInterface::JOB_PROCESSING);
     }
 
@@ -545,11 +606,12 @@ class JobExecutor implements JobExecutorInterface
             $this->setJobStatus(JobInterface::JOB_ERROR);
         }
 
-        if ($error === null) {
+        if ($error === null && $this->currentJob->getStatus() !== JobInterface::JOB_ERROR) {
             $this->eventManager->dispatch(
                 'akeneo_connector_import_finish_' . strtolower($this->currentJob->getCode()),
                 ['import' => $this]
             );
+            $this->currentJob->setLastSuccessDate(date('y-m-d h:i:s'));
             $this->setJobStatus(JobInterface::JOB_SUCCESS);
         }
     }
@@ -732,14 +794,13 @@ class JobExecutor implements JobExecutorInterface
     /**
      * Display info in console
      *
-     * @param string          $message
-     * @param OutputInterface $output
+     * @param string $message
      *
      * @return void
      */
     public function displayInfo(string $message)
     {
-        if (!empty($message)) {
+        if (!empty($message) && $this->output) {
             /** @var string $coloredMessage */
             $coloredMessage = '<info>' . $message . '</info>';
             $this->output->writeln($coloredMessage);
