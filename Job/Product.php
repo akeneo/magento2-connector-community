@@ -863,6 +863,7 @@ class Product extends JobImport
         $metricsVariantSettings = $this->configHelper->getMetricsColumns(true);
         /** @var string[] $locales */
         $locales = $this->storeHelper->getMappedWebsitesStoreLangs();
+        $this->jobOption->setJobExecutor($this->jobExecutor);
 
         $this->jobOption->createTable();
 
