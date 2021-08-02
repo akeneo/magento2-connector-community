@@ -40,15 +40,6 @@
                     </arguments>
                 </block>
                 <block class="Magento\Backend\Block\Widget\Grid\ColumnSet" name="adminhtml.akeneo_connector.job.container.container.grid.columnSet" as="grid.columnSet">
-                    <arguments>
-                        <argument name="id" xsi:type="string">jobGrid</argument>
-                        <argument name="rowUrl" xsi:type="array">
-                            <item name="path" xsi:type="string">*/*/view</item>
-                            <item name="extraParamsTemplate" xsi:type="array">
-                                <item name="entity_id" xsi:type="string">getId</item>
-                            </item>
-                        </argument>
-                    </arguments>
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="identifier">
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Job ID</argument>

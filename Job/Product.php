@@ -321,7 +321,7 @@ class Product extends JobImport
     {
         if (empty($this->configHelper->getMappedChannels())) {
             $this->jobExecutor->setMessage(__('No website/channel mapped. Please check your configurations.'));
-            $this->stop(true);
+            $this->jobExecutor->afterRun(true);
 
             return;
         }
@@ -342,7 +342,7 @@ class Product extends JobImport
 
             if (!$isFamilyImported) {
                 $this->jobExecutor->setMessage(__('The family %1 is not imported yet, please run Family import.', $this->getFamily()));
-                $this->stop(true);
+                $this->jobExecutor->afterRun(true);
 
                 return;
             }
@@ -365,7 +365,7 @@ class Product extends JobImport
         if (empty($products)) {
             // No product were found and we're in a grouped family, we don't import product models for it, so we stop the import
             if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
-                $this->jobExecutor->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()))->stop();
+                $this->jobExecutor->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()))->afterRun(true);
 
                 return;
             }
@@ -496,7 +496,7 @@ class Product extends JobImport
 
                 if (!$result) {
                     $this->jobExecutor->setMessage('Could not insert Product data in temp table');
-                    $this->stop(true);
+                    $this->jobExecutor->afterRun(true);
 
                     return;
                 }
@@ -540,7 +540,7 @@ class Product extends JobImport
 
         if (empty($index)) {
             $this->jobExecutor->setMessage('No Product data to insert in temp table');
-            $this->stop(true);
+            $this->jobExecutor->afterRun(true);
 
             return;
         }
@@ -1181,7 +1181,7 @@ class Product extends JobImport
             $this->jobExecutor->setMessage(
                 __('Duplicates sku detected. Make sure Product Model code is not used for a simple product sku. Duplicates: %1', join(', ', $duplicates))
             );
-            $this->stop(true);
+            $this->jobExecutor->afterRun(true);
 
             return;
         }
@@ -3226,7 +3226,7 @@ class Product extends JobImport
         $filters = $this->productFilters->getFilters($family, $isProductModel);
         if (array_key_exists('error', $filters)) {
             $this->jobExecutor->setMessage($filters['error']);
-            $this->stop(true);
+            $this->jobExecutor->afterRun(true);
         }
 
         $this->filters = $filters;
