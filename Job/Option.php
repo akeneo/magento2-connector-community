@@ -178,7 +178,7 @@ class Option extends Import
         foreach ($attributes as $attribute) {
             if ($attribute['type'] == 'pim_catalog_multiselect' || $attribute['type'] == 'pim_catalog_simpleselect') {
                 if (!$this->akeneoClient) {
-                    $this->akeneoClient = $this->getAkeneoClient();
+                    $this->akeneoClient = $this->jobExecutor->getAkeneoClient();
                 }
                 /** @var PageInterface $options */
                 $options = $this->akeneoClient->getAttributeOptionApi()->listPerPage($attribute['code']);
@@ -428,7 +428,7 @@ class Option extends Import
     protected function processAttributeOption($attributeCode, $paginationSize)
     {
         if (!$this->akeneoClient) {
-            $this->akeneoClient = $this->getAkeneoClient();
+            $this->akeneoClient = $this->jobExecutor->getAkeneoClient();
         }
         /** @var ResourceCursorInterface $options */
         $options = $this->akeneoClient->getAttributeOptionApi()->all($attributeCode, $paginationSize);
@@ -452,7 +452,7 @@ class Option extends Import
     {
         if (!$this->attributes) {
             if (!$this->akeneoClient) {
-                $this->akeneoClient = $this->getAkeneoClient();
+                $this->akeneoClient = $this->jobExecutor->getAkeneoClient();
             }
             /** @var string|int $paginationSize */
             $paginationSize = $this->configHelper->getPaginationSize();

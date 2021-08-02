@@ -7,6 +7,7 @@ use Akeneo\Connector\Api\JobExecutorInterface;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Output as OutputHelper;
+use Akeneo\Connector\Job\Import as JobImport;
 use Akeneo\Connector\Model\Job;
 use Akeneo\Connector\Model\JobRepository;
 use Akeneo\Connector\Model\Processor\ProcessClassFactory;
@@ -76,7 +77,7 @@ class JobExecutor implements JobExecutorInterface
     /**
      * Current executed Job object
      *
-     * @var Job $currentJob
+     * @var JobImport $currentJobClass
      */
     protected $currentJobClass;
     /**
@@ -278,7 +279,7 @@ class JobExecutor implements JobExecutorInterface
 
         /** @var int $jobStatus */
         $jobStatus = $this->currentJob->getStatus();
-        if ((int)$jobStatus === JobInterface::JOB_SCHEDULED) {
+        if ((int)$jobStatus === JobInterface::JOB_SCHEDULED && $output) {
             $this->displayError(__('The job %1 is already scheduled', [$this->currentJob->getCode()]));
 
             return false;
@@ -305,7 +306,9 @@ class JobExecutor implements JobExecutorInterface
             }
 
             foreach ($productFamiliesToImport as $family) {
+                $this->beforeRun();
                 $this->run($family);
+                $this->afterRun();
                 $this->setIdentifier(null);
             }
 
@@ -370,7 +373,7 @@ class JobExecutor implements JobExecutorInterface
             $this->initSteps();
             $this->setStep(0);
             if ($family) {
-                $this->currentJob->setFamily($family);
+                $this->currentJobClass->setFamily($family);
             }
 
             while ($this->canExecute()) {
@@ -688,7 +691,7 @@ class JobExecutor implements JobExecutorInterface
                     if (isset($message['message'], $message['status'])) {
                         if ($message['status'] == false) {
                             $this->setMessage($message['message']);
-                            $this->setStatus(false);
+                            //$this->setStatus(false);
                         } else {
                             $this->setAdditionalMessage($message['message']);
                         }

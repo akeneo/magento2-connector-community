@@ -384,7 +384,7 @@ class Product extends JobImport
             }
 
             if (empty($productModels)) {
-                $this->jobExecutor->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()))->stop();
+                $this->jobExecutor->setMessage(__('No results from Akeneo for the family: %1', $this->getFamily()))->afterRun(true);
 
                 return;
             }
