@@ -283,6 +283,10 @@ For example :<br/>
                         <field id="mode">standard</field>
                     </depends>
                 </field>
+                <field id="url_generation_enabled" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Regenerate url rewrites</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
             </group>
             <group id="families" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Filter Families</label>

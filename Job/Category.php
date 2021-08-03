@@ -422,7 +422,7 @@ class Category extends Import
                     ['entity_id' => '_entity_id', 'name' => 'labels-' . $local, 'parent_id' => 'parent_id']
                 );
 
-                $updateUrl = true; // TODO retrieve update URL from config
+                $updateUrl = $this->configHelper->isCategoryUrlGenerationEnabled();
 
                 if (!$updateUrl) {
                     $select->where('_is_new = ?', 1);
