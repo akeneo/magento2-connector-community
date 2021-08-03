@@ -533,18 +533,23 @@ class Entities
             /** @var bool $rowIdExists */
             $rowIdExists = $this->rowIdColumnExists($table);
 
-            if ($rowIdExists && $entityTable === $this->getTablePrefix() . 'catalog_product_entity') {
+            $stagingTables = [
+                $this->getTablePrefix() . 'catalog_product_entity',
+                $this->getTablePrefix() . 'catalog_category_entity',
+            ];
+
+            if ($rowIdExists && in_array($entityTable, $stagingTables)) {
                 /** @var Select $select */
                 $select = $connection->select()
-                                     ->from(
-                                         $tableName,
-                                         [
-                                             'attribute_id' => new Expr($attribute[AttributeInterface::ATTRIBUTE_ID]),
-                                             'store_id'     => new Expr($storeId),
-                                             'value'        => $value,
-                                         ]
-                                     );
-                $this->addJoinForContentStaging($select, [$identifier => 'row_id']);
+                    ->from(
+                         $tableName,
+                         [
+                             'attribute_id' => new Expr($attribute[AttributeInterface::ATTRIBUTE_ID]),
+                             'store_id'     => new Expr($storeId),
+                             'value'        => $value,
+                         ]
+                     );
+                $this->addJoinForContentStaging($select, [$identifier => 'row_id'], $entityTable);
             } else {
                 /** @var Select $select */
                 $select = $connection->select()->from(
@@ -841,22 +846,23 @@ class Entities
      *
      * @param Select   $select
      * @param string[] $cols
+     * @param string   $table
      *
      * @return void
      */
-    public function addJoinForContentStaging($select, $cols)
+    public function addJoinForContentStaging($select, $cols, $table)
     {
         $select
             ->joinLeft(
             // retrieve each product entity for each row_id.
             // We use "left join" to be able to create new product from Akeneo (they are not yet in catalog_product_entity)
-                ['p' => 'catalog_product_entity'],
-                '_entity_id = p.entity_id',
+                ['c' => $table],
+                '_entity_id = c.entity_id',
                 $cols
             )
             ->joinLeft( // retrieve all the staging update for the givens entities. We use "join left" to get the original entity
                 ['s' => 'staging_update'],
-                'p.created_in = s.id',
+                'c.created_in = s.id',
                 []
             );
 
