@@ -3,29 +3,26 @@
 namespace Akeneo\Connector\Helper;
 
 use Exception;
+use Magento\Catalog\Helper\Product as ProductHelper;
 use Magento\Catalog\Model\Product\Link;
-use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\App\Helper\Context;
-use Magento\Framework\Encryption\Encryptor;
+use Magento\Catalog\Model\Product\Media\Config as MediaConfig;
+use Magento\CatalogInventory\Model\Configuration as CatalogInventoryConfiguration;
 use Magento\Directory\Helper\Data as DirectoryHelper;
+use Magento\Directory\Model\Currency;
+use Magento\Eav\Model\Config as EavConfig;
+use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Encryption\Encryptor;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Store\Api\Data\StoreInterface;
-use Magento\Store\Api\Data\WebsiteInterface;
-use Magento\Store\Model\ScopeInterface;
-use Magento\Directory\Model\Currency;
-use Magento\Eav\Model\Config as EavConfig;
-use Magento\Store\Model\StoreManagerInterface;
-use Magento\CatalogInventory\Model\Configuration as CatalogInventoryConfiguration;
-use Magento\Catalog\Model\Product\Media\Config as MediaConfig;
+use Magento\Framework\File\Uploader;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Directory\WriteInterface;
-use Magento\Framework\File\Uploader;
-use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
-use Magento\Catalog\Helper\Product as ProductHelper;
-use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * Class Config
@@ -219,6 +216,12 @@ class Config
      * @var string PRODUCTS_CATEGORY_CATEGORIES
      */
     const PRODUCTS_CATEGORY_CATEGORIES = 'akeneo_connector/category/categories';
+    /**
+     * Categories does override content staging
+     *
+     * @var string PRODUCTS_CATEGORY_OVERRIDE_CONTENT_STAGING
+     */
+    const PRODUCTS_CATEGORY_OVERRIDE_CONTENT_STAGING = 'akeneo_connector/category/override_content_staging';
     /**
      * Attribute mapping config path
      *
@@ -807,6 +810,16 @@ class Config
     public function getCategoriesFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_CATEGORIES);
+    }
+
+    /**
+     * Retrieve the categories does override content staging
+     *
+     * @return string
+     */
+    public function getCategoriesIsOverrideContentStaging()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_OVERRIDE_CONTENT_STAGING);
     }
 
     /**
