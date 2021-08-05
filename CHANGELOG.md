@@ -235,3 +235,6 @@
 
 ### Version 101.6.1 :
 * Fix existing attribute option mapping from admin label with Akeneo attribute options
+
+### Version 101.7.0 :
+* Add content staging support for category import (https://help.akeneo.com/magento2-connector/articles/04-categories-configuration.html#does-akeneo-data-override-content-staging)

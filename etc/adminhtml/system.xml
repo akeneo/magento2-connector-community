@@ -283,6 +283,15 @@ For example :<br/>
                         <field id="mode">standard</field>
                     </depends>
                 </field>
+                <field id="override_content_staging" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Does Akeneo data override category content staging</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>
+                        <![CDATA[This parameter is only used on Magento 2 Enterprise Edition.<br /><br />
+                        <strong>Yes</strong> - Akeneo will override all category versions no matter what changes was scheduled.<br />
+                        <strong>No</strong> - Akeneo will only update the "base" version of the scheduled categories.]]>
+                    </comment>
+                </field>
             </group>
             <group id="families" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Filter Families</label>
