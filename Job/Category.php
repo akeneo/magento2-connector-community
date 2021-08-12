@@ -148,7 +148,7 @@ class Category extends Import
     {
         if (!$this->categoryFilters->getCategoriesToImport()) {
             $this->jobExecutor->setMessage(__('No categories to import, check your category filter configuration'));
-            $this->stop(1);
+            $this->jobExecutor->afterRun(1);
 
             return;
         }
@@ -163,7 +163,7 @@ class Category extends Import
 
         if (empty($category)) {
             $this->jobExecutor->setMessage(__('No results retrieved from Akeneo'));
-            $this->stop(1);
+            $this->jobExecutor->afterRun(1);
 
             return;
         }
@@ -205,7 +205,7 @@ class Category extends Import
                         $editions[$edition]
                     )
                 );
-                $this->stop(1);
+                $this->jobExecutor->afterRun(1);
 
                 return;
             }

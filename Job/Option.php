@@ -193,7 +193,7 @@ class Option extends Import
         }
         if ($hasOptions === false) {
             $this->jobExecutor->setMessage(__('No options found'));
-            $this->stop();
+            $this->jobExecutor->afterRun();
 
             return;
         }
@@ -201,7 +201,7 @@ class Option extends Import
         $option = $options->getItems();
         if (empty($option)) {
             $this->jobExecutor->setMessage(__('No results from Akeneo'));
-            $this->stop(1);
+            $this->jobExecutor->afterRun(1);
 
             return;
         }

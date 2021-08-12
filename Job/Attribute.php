@@ -175,7 +175,7 @@ class Attribute extends Import
         $attribute = $attributes->getItems();
         if (empty($attribute)) {
             $this->jobExecutor->setMessage(__('No results from Akeneo'));
-            $this->stop(1);
+            $this->jobExecutor->afterRun(1);
 
             return;
         }
@@ -241,7 +241,7 @@ class Attribute extends Import
 
         if (!$connection->tableColumnExists($tmpTable, 'labels-' . $localeCode)) {
             $this->jobExecutor->setMessage(__('No attributes with label in the admin locale %1 found.', $localeCode));
-            $this->stop(1);
+            $this->jobExecutor->afterRun(1);
 
             return;
         }
@@ -766,7 +766,7 @@ class Attribute extends Import
         $filters = $this->attributeFilters->getFilters();
         if (array_key_exists('error', $filters)) {
             $this->jobExecutor->setMessage($filters['error']);
-            $this->stop(true);
+            $this->jobExecutor->afterRun(true);
         }
 
         $this->filters = $filters;

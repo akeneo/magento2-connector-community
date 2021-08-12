@@ -143,7 +143,7 @@ abstract class Import extends DataObject implements ImportInterface
                     $this->getCode()
                 )
             );
-            $this->stop(1);
+            $this->jobExecutor->afterRun(1);
 
             return;
         }
