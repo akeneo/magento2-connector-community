@@ -14,7 +14,6 @@ use Akeneo\Connector\Model\Processor\ProcessClassFactory;
 use Akeneo\Connector\Model\ResourceModel\Job\Collection;
 use Akeneo\Connector\Model\ResourceModel\Job\CollectionFactory;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
-use Akeneo\PimEnterprise\ApiClient\AkeneoPimEnterpriseClientInterface;
 use Exception;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Exception\AlreadyExistsException;
@@ -89,7 +88,7 @@ class JobExecutor implements JobExecutorInterface
     /**
      * This variable contains a AkeneoPimEnterpriseClientInterface
      *
-     * @var AkeneoPimClientInterface|AkeneoPimEnterpriseClientInterface $akeneoClient
+     * @var AkeneoPimClientInterface $akeneoClient
      */
     protected $akeneoClient;
     /**
@@ -625,6 +624,7 @@ class JobExecutor implements JobExecutorInterface
      */
     public function afterRun($error = null)
     {
+        /** @var boolean continue */
         $this->continue = false;
 
         if ($error) {
@@ -692,7 +692,7 @@ class JobExecutor implements JobExecutorInterface
                     if (isset($message['message'], $message['status'])) {
                         if ($message['status'] == false) {
                             $this->setMessage($message['message']);
-                            //$this->setStatus(false);
+                            $this->currentJob->setStatus(false);
                         } else {
                             $this->setAdditionalMessage($message['message']);
                         }
