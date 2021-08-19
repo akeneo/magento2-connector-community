@@ -256,7 +256,7 @@ class Attribute extends Import
 
         if (!$connection->tableColumnExists($tmpTable, 'labels-' . $localeCode)) {
             $this->jobExecutor->setMessage(__('No attributes with label in the admin locale %1 found.', $localeCode), $this->logger);
-            $this->afterRun(1);
+            $this->jobExecutor->afterRun(1);
 
             return;
         }

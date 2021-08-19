@@ -55,7 +55,7 @@ abstract class Import extends DataObject implements ImportInterface
     /**
      * This variable contains a AkeneoPimEnterpriseClientInterface
      *
-     * @var AkeneoPimClientInterface|AkeneoPimEnterpriseClientInterface $akeneoClient
+     * @var AkeneoPimClientInterface $akeneoClient
      */
     protected $akeneoClient;
     /**
@@ -100,7 +100,8 @@ abstract class Import extends DataObject implements ImportInterface
         $this->authenticator = $authenticator;
         $this->outputHelper  = $outputHelper;
         $this->eventManager  = $eventManager;
-        $this->setFromAdmin  = false;
+        $this->entitiesHelper = $entitiesHelper;
+        $this->configHelper   = $configHelper;
     }
 
     /**

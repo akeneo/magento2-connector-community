@@ -516,7 +516,7 @@ class Product extends JobImport
 
                 if (!$result) {
                     $this->jobExecutor->setMessage('Could not insert Product data in temp table', $this->logger);
-                    $this->afterRun(true);
+                    $this->jobExecutor->afterRun(true);
 
                     return;
                 }
@@ -560,7 +560,7 @@ class Product extends JobImport
 
         if (empty($index)) {
             $this->jobExecutor->setMessage('No Product data to insert in temp table', $this->logger);
-            $this->afterRun(true);
+            $this->jobExecutor->afterRun(true);
 
             return;
         }
