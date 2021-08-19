@@ -178,7 +178,7 @@ class Option extends Import
     public function createTable()
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
             $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
         }
         /** @var PageInterface $attributes */

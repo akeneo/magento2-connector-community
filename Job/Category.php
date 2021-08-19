@@ -737,7 +737,7 @@ class Category extends Import
             $connection->select()->from($tableName)->where('code IN (?)', $filteredCategories)
         );
         if (!$categoriesToDelete) {
-            $this->setMessage(
+            $this->jobExecutor->setMessage(
                 __('No category found'),
                 $this->logger
             );

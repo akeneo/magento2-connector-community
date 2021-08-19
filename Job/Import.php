@@ -158,7 +158,7 @@ abstract class Import extends DataObject implements ImportInterface
     public function beforeImport()
     {
         if ($this->akeneoClient === false) {
-            $this->setMessage(
+            $this->jobExecutor->setMessage(
                 __(
                     'Could not start the import %s, check that your API credentials are correctly configured',
                     $this->getCode()

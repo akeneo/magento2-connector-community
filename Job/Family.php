@@ -142,7 +142,7 @@ class Family extends Import
         /** @var string[] $filters */
         $filters = $this->familyFilters->getFilters();
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
             $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
             $this->logger->addDebug(__('Family API call Filters : ') . print_r($filters, true));
         }
