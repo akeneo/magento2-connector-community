@@ -268,7 +268,7 @@ class Category extends Import
 
         $this->jobExecutor->setMessage(
             __('%1 line(s) found. %2', $index, $warning),
-            $logger
+            $this->logger
         );
 
         if ($this->configHelper->isAdvancedLogActivated()) {

@@ -625,8 +625,9 @@ class JobExecutor implements JobExecutorInterface
      */
     public function afterRun($error = null)
     {
+        $this->continue = false;
+
         if ($error) {
-            $this->continue = false;
             $this->setJobStatus(JobInterface::JOB_ERROR);
         }
 
