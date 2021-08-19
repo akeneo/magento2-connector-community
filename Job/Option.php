@@ -3,6 +3,8 @@
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Helper\AttributeFilters;
+use Akeneo\Connector\Logger\Handler\OptionHandler;
+use Akeneo\Connector\Logger\OptionLogger;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
@@ -24,6 +26,7 @@ use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Job\Import;
 use \Zend_Db_Expr as Expr;
+use Zend_Db_Statement_Interface;
 
 /**
  * Class Option
@@ -56,23 +59,11 @@ class Option extends Import
      */
     protected $akeneoClient;
     /**
-     * This variable contains an EntitiesHelper
-     *
-     * @var EntitiesHelper $entitiesHelper
-     */
-    protected $entitiesHelper;
-    /**
      * This variable contains an OptionHelper
      *
      * @var OptionHelper $optionHelper
      */
     protected $optionHelper;
-    /**
-     * This variable contains a ConfigHelper
-     *
-     * @var ConfigHelper $configHelper
-     */
-    protected $configHelper;
     /**
      * This variable contains a Config
      *
@@ -104,6 +95,18 @@ class Option extends Import
      */
     protected $eavSetup;
     /**
+     * This variable contains a logger
+     *
+     * @var OptionLogger $logger
+     */
+    protected $logger;
+    /**
+     * This variable contains a handler
+     *
+     * @var OptionHandler $handler
+     */
+    protected $handler;
+    /**
      * This variable contains a TypeListInterface
      *
      * @var TypeListInterface $cacheTypeList
@@ -119,6 +122,8 @@ class Option extends Import
     /**
      * Option constructor
      *
+     * @param OptionLogger      $logger
+     * @param OptionHandler     $handler
      * @param OutputHelper      $outputHelper
      * @param ManagerInterface  $eventManager
      * @param Authenticator     $authenticator
@@ -136,6 +141,8 @@ class Option extends Import
      * @throws LocalizedException
      */
     public function __construct(
+        OptionLogger $logger,
+        OptionHandler $handler,
         OutputHelper $outputHelper,
         ManagerInterface $eventManager,
         Authenticator $authenticator,
@@ -150,11 +157,11 @@ class Option extends Import
         EavSetup $eavSetup,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
 
-        $this->entitiesHelper   = $entitiesHelper;
+        $this->logger           = $logger;
+        $this->handler          = $handler;
         $this->optionHelper     = $optionHelper;
-        $this->configHelper     = $configHelper;
         $this->eavConfig        = $eavConfig;
         $this->attributeHelper  = $attributeHelper;
         $this->attributeFilters = $attributeFilters;
@@ -170,8 +177,12 @@ class Option extends Import
      */
     public function createTable()
     {
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+        }
         /** @var PageInterface $attributes */
-        $attributes = $this->getAllAttributes();
+        $attributes = $this->getAllAttributes(true);
         /** @var bool $hasOptions */
         $hasOptions = false;
         /** @var array $attribute */
@@ -192,7 +203,7 @@ class Option extends Import
             }
         }
         if ($hasOptions === false) {
-            $this->jobExecutor->setMessage(__('No options found'));
+            $this->jobExecutor->setMessage(__('No options found'), $this->logger);
             $this->jobExecutor->afterRun();
 
             return;
@@ -200,7 +211,7 @@ class Option extends Import
         /** @var array $option */
         $option = $options->getItems();
         if (empty($option)) {
-            $this->jobExecutor->setMessage(__('No results from Akeneo'));
+            $this->jobExecutor->setMessage(__('No results from Akeneo'), $this->logger);
             $this->jobExecutor->afterRun(1);
 
             return;
@@ -233,35 +244,41 @@ class Option extends Import
             }
         }
         $this->jobExecutor->setMessage(
-            __('%1 line(s) found', $lines)
+            __('%1 line(s) found', $lines), $this->logger
         );
 
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logImportedEntities($this->logger);
+        }
+
         /* Remove option without an admin store label */
-        /** @var string $localeCode */
-        $localeCode = $this->configHelper->getDefaultLocale();
-        /** @var \Magento\Framework\DB\Select $select */
-        $select = $connection->select()->from(
-            $tmpTable,
-            [
-                'label'     => 'labels-' . $localeCode,
-                'code'      => 'code',
-                'attribute' => 'attribute',
-            ]
-        )->where('`labels-' . $localeCode . '` IS NULL');
-        /** @var \Zend_Db_Statement_Interface $query */
-        $query = $connection->query($select);
-        /** @var array $row */
-        while (($row = $query->fetch())) {
-            if (!isset($row['label']) || $row['label'] === null) {
-                $connection->delete($tmpTable, ['code = ?' => $row['code'], 'attribute = ?' => $row['attribute']]);
-                $this->jobExecutor->setAdditionalMessage(
-                    __(
-                        'The option %1 from attribute %2 was not imported because it did not have a translation in admin store language : %3',
-                        $row['code'],
-                        $row['attribute'],
-                        $localeCode
-                    )
-                );
+        if (!$this->configHelper->getOptionCodeAsAdminLabel()) {
+            /** @var string $localeCode */
+            $localeCode = $this->configHelper->getDefaultLocale();
+            /** @var Select $select */
+            $select = $connection->select()->from(
+                $tmpTable,
+                [
+                    'label'     => 'labels-' . $localeCode,
+                    'code'      => 'code',
+                    'attribute' => 'attribute',
+                ]
+            )->where('`labels-' . $localeCode . '` IS NULL');
+            /** @var Zend_Db_Statement_Interface $query */
+            $query = $connection->query($select);
+            /** @var array $row */
+            while (($row = $query->fetch())) {
+                if (!isset($row['label']) || $row['label'] === null) {
+                    $connection->delete($tmpTable, ['code = ?' => $row['code'], 'attribute = ?' => $row['attribute']]);
+                    $this->jobExecutor->setAdditionalMessage(
+                        __(
+                            'The option %1 from attribute %2 was not imported because it did not have a translation in admin store language : %3',
+                            $row['code'],
+                            $row['attribute'],
+                            $localeCode
+                        ), $this->logger
+                    );
+                }
             }
         }
     }
@@ -279,7 +296,7 @@ class Option extends Import
         $akeneoConnectorTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         /** @var string $entityTable */
         $entityTable = $this->entitiesHelper->getTable('eav_attribute_option');
-        /** @var \Magento\Framework\DB\Select $selectExistingEntities */
+        /** @var Select $selectExistingEntities */
         $selectExistingEntities = $connection->select()->from($entityTable, 'option_id');
         /** @var string[] $existingEntities */
         $existingEntities = array_column($connection->query($selectExistingEntities)->fetchAll(), 'option_id');
@@ -298,6 +315,9 @@ class Option extends Import
     public function matchEntities()
     {
         $this->optionHelper->matchEntity('code', 'eav_attribute_option', 'option_id', $this->getCode(), 'attribute');
+        if ($this->configHelper->isAdvancedLogActivated()) {
+            $this->logImportedEntities($this->logger, true);
+        }
     }
 
     /**
@@ -360,13 +380,20 @@ class Option extends Import
             }
             /** @var array $store */
             foreach ($data as $store) {
+                /** @var string $value */
+                $value = 'labels-' . $local;
+
+                if ($this->configHelper->getOptionCodeAsAdminLabel() && $store['store_id'] == 0) {
+                    $value = 'code';
+                }
+
                 /** @var Select $options */
                 $options = $connection->select()->from(
                         ['a' => $tmpTable],
                         [
                             'option_id' => '_entity_id',
                             'store_id'  => new Expr($store['store_id']),
-                            'value'     => 'labels-'.$local,
+                            'value'     => $value,
                         ]
                     )->joinInner(
                         ['b' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
@@ -413,7 +440,7 @@ class Option extends Import
         }
 
         $this->jobExecutor->setMessage(
-            __('Cache cleaned for: %1', join(', ', $types))
+            __('Cache cleaned for: %1', join(', ', $types)), $this->logger
         );
     }
 
@@ -446,9 +473,11 @@ class Option extends Import
     /**
      * Get all attributes from the API
      *
+     * @param bool $logging
+     *
      * @return ResourceCursorInterface|mixed
      */
-    public function getAllAttributes()
+    public function getAllAttributes($logging = false)
     {
         if (!$this->attributes) {
             if (!$this->akeneoClient) {
@@ -458,6 +487,9 @@ class Option extends Import
             $paginationSize = $this->configHelper->getPaginationSize();
             /** @var string[] $filters */
             $filters          = $this->attributeFilters->getFilters();
+            if ($this->configHelper->isAdvancedLogActivated() && $logging) {
+                $this->logger->addDebug(__('Attribute API call Filters : ') . print_r($filters, true));
+            }
             $this->attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize, $filters);
         }
 

@@ -26,6 +26,10 @@
                     <label>Documentation link</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\DocumentationLink</frontend_model>
                 </field>
+                <field id="export_config_pdf" translate="label" type="button" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Export Akeneo Connector configuration</label>
+                    <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\ExportPdf</frontend_model>
+                </field>
             </group>
             <group id="akeneo_api" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Akeneo API Configuration</label>
@@ -190,6 +194,17 @@
                         <field id="updated_mode">SINCE LAST N DAYS</field>
                     </depends>
                 </field>
+                <field id="updated_since_last_hours" translate="label" type="text" sortOrder="135" showInDefault="1" showInWebsite="0"
+                    showInStore="0">
+                    <label>Updated Since Last Hours</label>
+                    <comment>
+                        <![CDATA[Import only product updated since last X hours. Leave blank for no filter.]]>
+                    </comment>
+                    <depends>
+                        <field id="mode">standard</field>
+                        <field id="updated_mode">SINCE LAST N HOURS</field>
+                    </depends>
+                </field>
                 <field id="families" translate="label comment" type="multiselect" sortOrder="140" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Families</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Family</source_model>
@@ -268,6 +283,15 @@ For example :<br/>
                         <field id="mode">standard</field>
                     </depends>
                 </field>
+                <field id="override_content_staging" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Does Akeneo data override category content staging</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>
+                        <![CDATA[This parameter is only used on Magento 2 Enterprise Edition.<br /><br />
+                        <strong>Yes</strong> - Akeneo will override all category versions no matter what changes was scheduled.<br />
+                        <strong>No</strong> - Akeneo will only update the "base" version of the scheduled categories.]]>
+                    </comment>
+                </field>
             </group>
             <group id="families" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Filter Families</label>
@@ -287,7 +311,7 @@ For example :<br/>
                     </depends>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity,growth</field>
                 </depends>
             </group>
             <group id="attribute" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -297,6 +321,11 @@ For example :<br/>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Type</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>Match specific Akeneo type with Magento input field</comment>
+                </field>
+                <field id="option_code_as_admin_label" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Set attribute option code as Admin label for attribute options</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Set this configuration to "Yes" in order to set the Akeneo option code as the attribute option Admin label in Magento. If this configuration is set to "No", the Admin label of the option will be imported from the Magento 2 locale configuration for the Admin scope.</comment>
                 </field>
             </group>
             <group id="filter_attribute" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -329,7 +358,7 @@ For example :<br/>
                     <can_be_empty>1</can_be_empty>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity,growth</field>
                 </depends>
             </group>
             <group id="product" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -454,8 +483,16 @@ For example :<br/>
                     <comment><![CDATA[Map each grouped family from Akeneo to its corresponding quantified association.<br />Please make sure to only map quantified association.]]></comment>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_five,serenity</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_five,serenity,growth</field>
                 </depends>
+            </group>
+            <group id="advanced" translate="label" sortOrder="70" showInDefault="1">
+                <label>Advanced</label>
+                <field id="advanced_log" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Advanced Loging</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Activating advanced log may slow down the imports. Temporary tables won't be deleted at the end of their imports. Logs will be placed in var/log/akeneo_connector</comment>
+                </field>
             </group>
         </section>
     </system>

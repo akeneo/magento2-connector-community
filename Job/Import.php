@@ -3,14 +3,18 @@
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Executor\JobExecutor;
+use Akeneo\Connector\Helper\Config;
+use Akeneo\Connector\Helper\Import\Entities;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\PimEnterprise\ApiClient\AkeneoPimEnterpriseClientInterface;
 use Magento\Framework\DataObject;
+use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Phrase;
 use Akeneo\Connector\Api\Data\ImportInterface;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Output as OutputHelper;
+use Zend_Db_Statement_Exception;
 
 /**
  * Class Import
@@ -60,6 +64,18 @@ abstract class Import extends DataObject implements ImportInterface
      * @var JobExecutor $jobExecutor
      */
     protected $jobExecutor;
+    /**
+     * This variable contains a Config
+     *
+     * @var Config $configHelper
+     */
+    protected $configHelper;
+    /**
+     * This variable contains an EntitiesHelper
+     *
+     * @var Entities $entitiesHelper
+     */
+    protected $entitiesHelper;
 
     /**
      * Import constructor.
@@ -67,12 +83,16 @@ abstract class Import extends DataObject implements ImportInterface
      * @param OutputHelper     $outputHelper
      * @param ManagerInterface $eventManager
      * @param Authenticator    $authenticator
+     * @param Entities         $entitiesHelper
+     * @param Config           $configHelper
      * @param array            $data
      */
     public function __construct(
         OutputHelper $outputHelper,
         ManagerInterface $eventManager,
         Authenticator $authenticator,
+        Entities $entitiesHelper,
+        Config $configHelper,
         array $data = []
     ) {
         parent::__construct($data);
@@ -190,5 +210,31 @@ abstract class Import extends DataObject implements ImportInterface
     {
         $this->jobExecutor = $jobExecutor;
         $this->akeneoClient = $jobExecutor->getAkeneoClient();
+    }
+
+    public function logImportedEntities($logger = null, $newEntities = false, $identifierColumn = 'code')
+    {
+        if ($logger) {
+            /** @var AdapterInterface $connection */
+            $connection = $this->entitiesHelper->getConnection();
+            /** @var string $tmpTable */
+            $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+            /** @var \Magento\Framework\DB\Select $selectExistingEntities */
+            $selectImportedEntities = $connection->select()->from($tmpTable, $identifierColumn);
+            if ($newEntities) {
+                $selectImportedEntities = $selectImportedEntities->where('_is_new = ?', '1');
+            }
+            /** @var string[] $existingEntities */
+            $existingEntities = array_column(
+                $connection->query($selectImportedEntities)->fetchAll(),
+                $identifierColumn
+            );
+            if ($newEntities) {
+                $logger->addDebug(__('Imported new entities : %1', implode(',', $existingEntities)));
+
+                return;
+            }
+            $logger->addDebug(__('Imported entities : %1', implode(',', $existingEntities)));
+        }
     }
 }

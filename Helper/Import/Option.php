@@ -3,7 +3,6 @@
 namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Connector\Helper\Import\Entities;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Framework\App\DeploymentConfig;
@@ -84,22 +83,51 @@ class Option extends Entities
         /** @var int $entityTypeId */
         $entityTypeId = $this->configHelper->getEntityTypeId(ProductAttributeInterface::ENTITY_TYPE_CODE);
 
-        // Get all entities that are being imported and already present in Magento
-        $select = $connection->select()->from(
-            ['t' => $tableName],
-            ['label' => 't.labels-' . $localeCode, 'code' => 't.code', 'attribute' => 't.attribute']
-        )->joinInner(
-            ['e' => 'eav_attribute_option_value'],
-            '`labels-' . $localeCode . '` = e.value'
-        )->joinInner(
-            ['o' => 'eav_attribute_option'],
-            'o.`option_id` = e.`option_id`'
-        )->joinInner(
-            ['a' => 'eav_attribute'],
-            'o.`attribute_id` = a.`attribute_id` AND t.`attribute` = a.`attribute_code`'
-        )->where('e.store_id = ?', 0)->where('a.entity_type_id', $entityTypeId);
-        /** @var string $query */
-        $query = $connection->query($select);
+        /** @var string[] $columnToSelect */
+        $columnToSelect = ['label' => 't.labels-' . $localeCode, 'code' => 't.code', 'attribute' => 't.attribute'];
+        /** @var string $adminColumnValue */
+        $adminColumnValue = 'labels-' . $localeCode;
+        /** @var string $condition */
+        $condition = '`labels-' . $localeCode . '` = e.value';
+        if ($this->configHelper->getOptionCodeAsAdminLabel()) {
+            $condition        = '`code` = e.value';
+            $adminColumnValue = 'code';
+            $columnToSelect   = ['code' => 't.code', 'attribute' => 't.attribute'];
+        }
+
+        if ($connection->tableColumnExists($tableName, $adminColumnValue)) {
+            // Get all entities that are being imported and already present in Magento
+            $select = $connection->select()->from(
+                ['t' => $tableName],
+                $columnToSelect
+            )->joinInner(
+                ['e' => 'eav_attribute_option_value'],
+                $condition
+            )->joinInner(
+                ['o' => 'eav_attribute_option'],
+                'o.`option_id` = e.`option_id`'
+            )->joinInner(
+                ['a' => 'eav_attribute'],
+                'o.`attribute_id` = a.`attribute_id` AND t.`attribute` = a.`attribute_code`'
+            )->where('e.store_id = ?', 0)->where('a.entity_type_id', $entityTypeId);
+            /** @var string $query */
+            $query = $connection->query($select);
+
+            /** @var mixed $row */
+            while ($row = $query->fetch()) {
+                // Create a row in Akeneo table for options present in Magento and Akeneo that were never imported before
+                if (!in_array($row['option_id'], $existingEntities)) {
+                    /** @var string[] $values */
+                    $values = [
+                        'import'    => 'option',
+                        'code'      => $row['attribute'] . '-' . $row['code'],
+                        'entity_id' => $row['option_id'],
+                    ];
+                    $connection->insertOnDuplicate($akeneoConnectorTable, $values);
+                }
+            }
+        }
+
         /* Use new error-free separator */
         $entityCodeColumnName = ($prefix ? 'CONCAT(t.`' . $prefix . '`, "-", t.`' . $pimKey . '`)' : 't.`' . $pimKey . '`');
 
@@ -110,20 +138,6 @@ class Option extends Entities
         /** @var string $update */
         $update = 'UPDATE `' . $akeneoConnectorTable . '` AS `e`, `' . $tableName . '` AS `t` SET e.code = ' . $entityCodeColumnName . ' WHERE e.code = ' . $oldEntityCodeColumnName . ' AND e.`import` = "' . $import . '"';
         $connection->query($update);
-
-        /** @var mixed $row */
-        while ($row = $query->fetch()) {
-            // Create a row in Akeneo table for options present in Magento and Akeneo that were never imported before
-            if (!in_array($row['option_id'], $existingEntities)) {
-                /** @var string[] $values */
-                $values = [
-                    'import'    => 'option',
-                    'code'      => $row['attribute'] . '-' . $row['code'],
-                    'entity_id' => $row['option_id'],
-                ];
-                $connection->insertOnDuplicate($akeneoConnectorTable, $values);
-            }
-        }
 
         /* Continue with original matchEntities */
         /* Update entity_id column from akeneo_connector_entities table */
