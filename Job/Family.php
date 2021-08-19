@@ -143,7 +143,7 @@ class Family extends Import
         $filters = $this->familyFilters->getFilters();
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
             $this->logger->addDebug(__('Family API call Filters : ') . print_r($filters, true));
         }
         /** @var PageInterface $families */
@@ -158,7 +158,7 @@ class Family extends Import
             return;
         }
         $family = reset($family);
-        $this->entitiesHelper->createTmpTableFromApi($family, $this->getCode());
+        $this->entitiesHelper->createTmpTableFromApi($family, $this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -185,7 +185,7 @@ class Family extends Import
         foreach ($families as $index => $family) {
             $warning = $this->checkLabelPerLocales($family, $lang, $warning);
 
-            $this->entitiesHelper->insertDataFromApi($family, $this->getCode());
+            $this->entitiesHelper->insertDataFromApi($family, $this->jobExecutor->getCurrentJob()->getCode());
         }
         $index++;
 
@@ -233,7 +233,7 @@ class Family extends Import
      */
     public function matchEntities()
     {
-        $this->entitiesHelper->matchEntity('code', 'eav_attribute_set', 'attribute_set_id', $this->getCode());
+        $this->entitiesHelper->matchEntity('code', 'eav_attribute_set', 'attribute_set_id', $this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -246,7 +246,7 @@ class Family extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string $label */
         $label = 'labels-' . $this->configHelper->getDefaultLocale();
         /** @var string $productEntityTypeId */
@@ -284,7 +284,7 @@ class Family extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string $familyAttributeRelationsTable */
         $familyAttributeRelationsTable = $this->entitiesHelper->getTable('akeneo_connector_family_attribute_relations');
 
@@ -324,7 +324,7 @@ class Family extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var \Zend_Db_Statement_Interface $query */
         $query = $connection->query(
             $connection->select()->from($tmpTable, ['_entity_id'])->where('_is_new = ?', 1)
@@ -358,7 +358,7 @@ class Family extends Import
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->getCode());
+        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -381,5 +381,15 @@ class Family extends Import
         $this->jobExecutor->setMessage(
             __('Cache cleaned for: %1', join(', ', $types)), $this->logger
         );
+    }
+
+    /**
+     * Description getLogger function
+     *
+     * @return FamilyLogger
+     */
+    public function getLogger()
+    {
+        return $this->logger;
     }
 }

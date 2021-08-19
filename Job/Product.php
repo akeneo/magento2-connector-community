@@ -332,7 +332,7 @@ class Product extends JobImport
     public function createTable()
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
             $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
         }
 
@@ -409,7 +409,7 @@ class Product extends JobImport
                 return;
             }
             $productModel = reset($productModels);
-            $this->entitiesHelper->createTmpTableFromApi($productModel, $this->getCode());
+            $this->entitiesHelper->createTmpTableFromApi($productModel, $this->jobExecutor->getCurrentJob()->getCode());
             $this->entitiesHelper->createTmpTableFromApi($productModel, 'product_model');
             $this->jobExecutor->setAdditionalMessage(
                 __('No product found for family: %1 but product model found, process with import', $this->getFamily()), $this->logger
@@ -420,7 +420,7 @@ class Product extends JobImport
             $product = reset($products);
             // Make sure to delete product model table
             $this->entitiesHelper->dropTable('product_model');
-            $this->entitiesHelper->createTmpTableFromApi($product, $this->getCode());
+            $this->entitiesHelper->createTmpTableFromApi($product, $this->jobExecutor->getCurrentJob()->getCode());
 
             /** @var string $message */
             $message = __('Family imported in this batch: %1', $this->getFamily());
@@ -512,7 +512,7 @@ class Product extends JobImport
                 }
 
                 /** @var bool $result */
-                $result = $this->entitiesHelper->insertDataFromApi($product, $this->getCode());
+                $result = $this->entitiesHelper->insertDataFromApi($product, $this->jobExecutor->getCurrentJob()->getCode());
 
                 if (!$result) {
                     $this->jobExecutor->setMessage('Could not insert Product data in temp table', $this->logger);
@@ -541,7 +541,7 @@ class Product extends JobImport
                 );
 
                 /** @var string $tmpTable */
-                $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+                $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
                 /** @var array $data */
                 foreach ($attributesToImport as $attribute) {
                     if ($connection->tableColumnExists($tmpTable, $attribute)) {
@@ -608,7 +608,7 @@ class Product extends JobImport
             return;
         }
         // Add missing columns from product models in product tmp table
-        $this->productModelHelper->addColumns($this->getCode());
+        $this->productModelHelper->addColumns($this->jobExecutor->getCurrentJob()->getCode());
 
         $this->jobExecutor->displayMessages($messages, $this->logger);
     }
@@ -688,7 +688,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
@@ -884,7 +884,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var mixed[] $metricsVariantSettings */
         $metricsVariantSettings = $this->configHelper->getMetricsColumns(true);
         /** @var string[] $locales */
@@ -952,7 +952,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         $connection->addColumn($tmpTable, '_children', 'text');
         $connection->addColumn(
@@ -1196,7 +1196,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         /** @var array $duplicates */
         $duplicates = $connection->fetchCol(
@@ -1216,7 +1216,7 @@ class Product extends JobImport
             'identifier',
             'catalog_product_entity',
             'entity_id',
-            $this->getCode()
+            $this->jobExecutor->getCurrentJob()->getCode()
         );
     }
 
@@ -1230,7 +1230,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         if (!$connection->tableColumnExists($tmpTable, 'family')) {
             $this->setStatus(false);
@@ -1273,7 +1273,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string[] $columns */
         $columns = array_keys($connection->describeTable($tmpTable));
         /** @var string[] $except */
@@ -1352,7 +1352,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         if ($connection->isTableExists($this->entitiesHelper->getTable('sequence_product'))) {
             /** @var array $values */
@@ -1437,7 +1437,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $attributesMapped */
         $attributesMapped = $this->configHelper->getFileImportColumns();
 
@@ -1542,7 +1542,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string[] $attributeScopeMapping */
         $attributeScopeMapping = $this->entitiesHelper->getAttributeScopeMapping();
         /** @var array $stores */
@@ -1748,7 +1748,7 @@ class Product extends JobImport
          */
         foreach ($values as $storeId => $data) {
             $this->entitiesHelper->setValues(
-                $this->getCode(),
+                $this->jobExecutor->getCurrentJob()->getCode(),
                 'catalog_product_entity',
                 $data,
                 $entityTypeId,
@@ -1778,7 +1778,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         /** @var string $productEntityTable */
         $productEntityTable = $this->entitiesHelper->getTable('catalog_product_entity');
@@ -1961,7 +1961,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string $entityTable */
         $entityTable = $this->entitiesHelper->getTable('catalog_product_entity');
         /** @var string $productRelationTable */
@@ -2042,7 +2042,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string $websiteAttribute */
         $websiteAttribute = $this->configHelper->getWebsiteAttribute();
         if ($websiteAttribute != null) {
@@ -2207,7 +2207,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         if (!$connection->tableColumnExists($tmpTable, 'categories')) {
             $this->setStatus(false);
@@ -2276,7 +2276,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var int $websiteId */
         $websiteId = $this->configHelper->getDefaultScopeId();
         /** @var array $values */
@@ -2314,7 +2314,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string $entitiesTable */
         $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         /** @var string $productsTable */
@@ -2389,7 +2389,7 @@ class Product extends JobImport
             /** @var Select $select */
             $select = $connection->select()->from(['c' => $entitiesTable], [])->joinInner(
                 ['d' => $tmpTable],
-                sprintf('FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"', $concat, $this->getCode()),
+                sprintf('FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"', $concat, $this->jobExecutor->getCurrentJob()->getCode()),
                 $columsToSelect
             );
 
@@ -2446,7 +2446,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string $entitiesTable */
         $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         /** @var string $productsEntityTable */
@@ -2768,7 +2768,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $stores */
         $stores = array_merge(
             $this->storeHelper->getStores(['lang']) // en_US
@@ -3053,7 +3053,7 @@ class Product extends JobImport
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tableName */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $gallery */
         $gallery = $this->configHelper->getMediaImportGalleryColumns();
 
@@ -3250,7 +3250,7 @@ class Product extends JobImport
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->getCode());
+        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
         $this->productModelHelper->dropTable();
     }
 
@@ -3530,5 +3530,15 @@ class Product extends JobImport
         }
 
         return false;
+    }
+
+    /**
+     * Description getLogger function
+     *
+     * @return ProductLogger
+     */
+    public function getLogger()
+    {
+        return $this->logger;
     }
 }

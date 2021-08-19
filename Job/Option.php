@@ -179,7 +179,7 @@ class Option extends Import
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
         }
         /** @var PageInterface $attributes */
         $attributes = $this->getAllAttributes(true);
@@ -217,7 +217,7 @@ class Option extends Import
             return;
         }
         $option = reset($option);
-        $this->entitiesHelper->createTmpTableFromApi($option, $this->getCode());
+        $this->entitiesHelper->createTmpTableFromApi($option, $this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -230,7 +230,7 @@ class Option extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
         /** @var PageInterface $attributes */
@@ -314,7 +314,7 @@ class Option extends Import
      */
     public function matchEntities()
     {
-        $this->optionHelper->matchEntity('code', 'eav_attribute_option', 'option_id', $this->getCode(), 'attribute');
+        $this->optionHelper->matchEntity('code', 'eav_attribute_option', 'option_id', $this->jobExecutor->getCurrentJob()->getCode(), 'attribute');
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logImportedEntities($this->logger, true);
         }
@@ -330,7 +330,7 @@ class Option extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $columns */
         $columns = [
             'option_id'  => 'a._entity_id',
@@ -367,7 +367,7 @@ class Option extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $stores */
         $stores = $this->storeHelper->getStores('lang');
         /**
@@ -419,7 +419,7 @@ class Option extends Import
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->getCode());
+        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -463,7 +463,7 @@ class Option extends Import
         $index = 0;
         /** @var array $option */
         foreach ($options as $index => $option) {
-            $this->entitiesHelper->insertDataFromApi($option, $this->getCode());
+            $this->entitiesHelper->insertDataFromApi($option, $this->jobExecutor->getCurrentJob()->getCode());
         }
         $index++;
 
@@ -494,5 +494,15 @@ class Option extends Import
         }
 
         return $this->attributes;
+    }
+
+    /**
+     * Description getLogger function
+     *
+     * @return OptionLogger
+     */
+    public function getLogger()
+    {
+        return $this->logger;
     }
 }

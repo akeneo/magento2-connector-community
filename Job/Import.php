@@ -161,7 +161,7 @@ abstract class Import extends DataObject implements ImportInterface
             $this->jobExecutor->setMessage(
                 __(
                     'Could not start the import %s, check that your API credentials are correctly configured',
-                    $this->getCode()
+                    $this->jobExecutor->getCurrentJob()->getCode()
                 )
             );
             $this->jobExecutor->afterRun(1);
@@ -219,7 +219,7 @@ abstract class Import extends DataObject implements ImportInterface
             /** @var AdapterInterface $connection */
             $connection = $this->entitiesHelper->getConnection();
             /** @var string $tmpTable */
-            $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+            $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
             /** @var \Magento\Framework\DB\Select $selectExistingEntities */
             $selectImportedEntities = $connection->select()->from($tmpTable, $identifierColumn);
             if ($newEntities) {

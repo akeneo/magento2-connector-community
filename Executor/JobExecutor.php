@@ -569,9 +569,12 @@ class JobExecutor implements JobExecutorInterface
      *
      * @return JobExecutor
      */
-    public function setMessage($message)
+    public function setMessage($message, $logger = null)
     {
         $this->message = $message;
+        if ($logger && $this->configHelper->isAdvancedLogActivated()) {
+            $this->currentJobClass->getLogger()->addDebug($message);
+        }
 
         return $this;
     }
@@ -626,7 +629,6 @@ class JobExecutor implements JobExecutorInterface
     {
         /** @var boolean continue */
         $this->continue = false;
-
         if ($error) {
             $this->setJobStatus(JobInterface::JOB_ERROR);
         }
@@ -682,7 +684,7 @@ class JobExecutor implements JobExecutorInterface
      *
      * @return void
      */
-    public function displayMessages($messages)
+    public function displayMessages($messages, $logger = null)
     {
         /** @var string[] $importMessages */
         foreach ($messages as $importMessages) {
@@ -691,10 +693,10 @@ class JobExecutor implements JobExecutorInterface
                 foreach ($importMessages as $message) {
                     if (isset($message['message'], $message['status'])) {
                         if ($message['status'] == false) {
-                            $this->setMessage($message['message']);
+                            $this->setMessage($message['message'], $logger);
                             $this->currentJob->setStatus(false);
                         } else {
-                            $this->setAdditionalMessage($message['message']);
+                            $this->setAdditionalMessage($message['message'], $logger);
                         }
                     }
                 }
@@ -709,9 +711,12 @@ class JobExecutor implements JobExecutorInterface
      *
      * @return $this
      */
-    public function setAdditionalMessage($message)
+    public function setAdditionalMessage($message, $logger = null)
     {
         $this->message = $this->getMessageWithoutPrefix() . $this->getEndOfLine() . $message;
+        if ($logger && $this->configHelper->isAdvancedLogActivated()) {
+            $this->currentJobClass->getLogger()->addDebug($message);
+        }
 
         return $this;
     }

@@ -177,7 +177,7 @@ class Attribute extends Import
         $filters = $this->getFilters();
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
             $this->logger->addDebug(__('Attribute API call Filters : ') . print_r($filters, true));
         }
         /** @var PageInterface $attributes */
@@ -191,7 +191,7 @@ class Attribute extends Import
             return;
         }
         $attribute = reset($attribute);
-        $this->entitiesHelper->createTmpTableFromApi($attribute, $this->getCode());
+        $this->entitiesHelper->createTmpTableFromApi($attribute, $this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -204,7 +204,7 @@ class Attribute extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
         /** @var mixed[] $filters */
@@ -238,7 +238,7 @@ class Attribute extends Import
                 }
                 $attribute['type'] .= '_select';
             }
-            $this->entitiesHelper->insertDataFromApi($attribute, $this->getCode());
+            $this->entitiesHelper->insertDataFromApi($attribute, $this->jobExecutor->getCurrentJob()->getCode());
         }
         $index++;
 
@@ -339,7 +339,7 @@ class Attribute extends Import
             )
         );
 
-        $this->entitiesHelper->matchEntity('code', 'eav_attribute', 'attribute_id', $this->getCode());
+        $this->entitiesHelper->matchEntity('code', 'eav_attribute', 'attribute_id', $this->jobExecutor->getCurrentJob()->getCode());
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logImportedEntities($this->logger, true);
         }
@@ -355,7 +355,7 @@ class Attribute extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $columns */
         $columns = $this->attributeHelper->getSpecificColumns();
         /**
@@ -398,7 +398,7 @@ class Attribute extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string $familyAttributeRelationsTable */
         $familyAttributeRelationsTable = $this->entitiesHelper->getTable('akeneo_connector_family_attribute_relations');
 
@@ -440,7 +440,7 @@ class Attribute extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         /** @var string $adminLang */
         $adminLang = $this->storeHelper->getAdminLang();
@@ -734,7 +734,7 @@ class Attribute extends Import
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->getCode());
+        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -790,5 +790,15 @@ class Attribute extends Import
         $this->filters = $filters;
 
         return $this->filters;
+    }
+
+    /**
+     * Description getLogger function
+     *
+     * @return AttributeLogger
+     */
+    public function getLogger()
+    {
+        return $this->logger;
     }
 }

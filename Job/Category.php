@@ -164,7 +164,7 @@ class Category extends Import
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
             $this->logger->addDebug(
                 __('Category API call Filters : ') . print_r($this->categoryFilters->getParentFilters(), true)
             );
@@ -191,7 +191,7 @@ class Category extends Import
             return;
         }
         $category = reset($category);
-        $this->entitiesHelper->createTmpTableFromApi($category, $this->getCode());
+        $this->entitiesHelper->createTmpTableFromApi($category, $this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -262,7 +262,7 @@ class Category extends Import
         foreach ($categories as $index => $category) {
             $warning = $this->checkLabelPerLocales($category, $lang, $warning);
 
-            $this->entitiesHelper->insertDataFromApi($category, $this->getCode());
+            $this->entitiesHelper->insertDataFromApi($category, $this->jobExecutor->getCurrentJob()->getCode());
         }
         $index++;
 
@@ -311,7 +311,7 @@ class Category extends Import
             'code',
             'catalog_category_entity',
             'entity_id',
-            $this->getCode()
+            $this->jobExecutor->getCurrentJob()->getCode()
         );
     }
 
@@ -325,7 +325,7 @@ class Category extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tableName */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         $connection->addColumn(
             $tmpTable,
@@ -395,7 +395,7 @@ class Category extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tableName */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $stores */
         $stores = $this->storeHelper->getStores('lang');
 
@@ -493,7 +493,7 @@ class Category extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tableName */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         $connection->addColumn(
             $tmpTable,
@@ -545,7 +545,7 @@ class Category extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tableName */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         if ($connection->isTableExists($this->entitiesHelper->getTable('sequence_catalog_category'))) {
             /** @var array $values */
@@ -626,7 +626,7 @@ class Category extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tableName */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $values */
         $values = [
             'is_active'       => new Expr($this->configHelper->getIsCategoryActive()),
@@ -639,7 +639,7 @@ class Category extends Import
         $entityTypeId = $this->configHelper->getEntityTypeId(CategoryModel::ENTITY);
 
         $this->entitiesHelper->setValues(
-            $this->getCode(),
+            $this->jobExecutor->getCurrentJob()->getCode(),
             'catalog_category_entity',
             $values,
             $entityTypeId,
@@ -667,7 +667,7 @@ class Category extends Import
                     'url_path' => 'url_path-' . $local,
                 ];
                 $this->entitiesHelper->setValues(
-                    $this->getCode(),
+                    $this->jobExecutor->getCurrentJob()->getCode(),
                     'catalog_category_entity',
                     $values,
                     $entityTypeId,
@@ -728,7 +728,7 @@ class Category extends Import
             return;
         }
         /** @var string $tableName */
-        $tableName = $this->entitiesHelper->getTableName($this->getCode());
+        $tableName = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var AdapterInterface $connection */
         $connection         = $this->entitiesHelper->getConnection();
         $filteredCategories = explode(',', $filteredCategories);
@@ -763,7 +763,7 @@ class Category extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tableName */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $stores */
         $stores = $this->storeHelper->getStores('lang');
         /** @var mixed[] $categoryPath */
@@ -980,7 +980,7 @@ class Category extends Import
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->getCode());
+        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -1004,5 +1004,15 @@ class Category extends Import
             __('Cache cleaned for: %1', join(', ', $types)),
             $this->logger
         );
+    }
+
+    /**
+     * Description getLogger function
+     *
+     * @return CategoryLogger
+     */
+    public function getLogger()
+    {
+        return $this->logger;
     }
 }
