@@ -2,14 +2,9 @@
 
 namespace Akeneo\Connector\Model\Source;
 
-use Magento\Framework\App\Cache\Type\Block;
-use Magento\Framework\App\Cache\Type\Collection;
-use Magento\Framework\App\Cache\Type\Config;
-use Magento\Framework\App\Cache\Type\Layout;
-use Magento\Framework\App\Cache\Type\Reflection;
-use Magento\Framework\App\Cache\Type\Translate;
 use Magento\Framework\Option\ArrayInterface;
-use Magento\PageCache\Model\Cache\Type;
+use Magento\Framework\App\Cache\TypeList;
+use Magento\Framework\DataObject;
 
 /**
  * Class Cache
@@ -22,42 +17,43 @@ use Magento\PageCache\Model\Cache\Type;
 class Cache implements ArrayInterface
 {
     /**
+     * Type List
+     *
+     * @var TypeList $typeList
+     */
+    private $typeList;
+
+    /**
+     * Cache constructor
+     *
+     * @param TypeList $typeList
+     */
+    public function __construct(
+        TypeList $typeList
+    ) {
+        $this->typeList = $typeList;
+    }
+
+    /**
      * Return array of options for the cache
      *
      * @return array Format: array('<value>' => '<label>', ...)
      */
     public function toOptionArray()
     {
-        return [
-            [
-                'label' => __('block_html'),
-                'value' => Block::TYPE_IDENTIFIER,
+        /** @var string[] $cacheOptions */
+        $cacheOptions = [];
+        /** @var mixed[] $cacheTypes */
+        $cacheTypes = $this->typeList->getTypes();
 
-            ],
-            [
-                'label' => __('full_page'),
-                'value' => Type::TYPE_IDENTIFIER,
-            ],
-            [
-                'label' => __('collections'),
-                'value' => Collection::TYPE_IDENTIFIER,
-            ],
-            [
-                'label' => __('config'),
-                'value' => Config::TYPE_IDENTIFIER,
-            ],
-            [
-                'label' => __('layout'),
-                'value' => Layout::TYPE_IDENTIFIER,
-            ],
-            [
-                'label' => __('reflection'),
-                'value' => Reflection::TYPE_IDENTIFIER,
-            ],
-            [
-                'label' => __('translate'),
-                'value' => Translate::TYPE_IDENTIFIER,
-            ],
-        ];
+        /** @var DataObject $cacheData */
+        foreach ($cacheTypes as $cacheData) {
+            $cacheOptions[] = [
+                'label' => $cacheData->getCacheType(),
+                'value' => $cacheData->getId(),
+            ];
+        }
+
+        return $cacheOptions;
     }
 }
