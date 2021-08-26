@@ -403,6 +403,10 @@ class Entities
         /** @var string $tableName */
         $tableName = $this->getTableName($import);
 
+        /** @var string $codeIndexName */
+        $codeIndexName = $connection->getIndexName($tableName, 'code');
+        $connection->query('CREATE INDEX ' . $codeIndexName . ' ON ' . $tableName . ' (code(255));');
+
         $connection->delete($tableName, [$pimKey . ' = ?' => '']);
         /** @var string $akeneoConnectorTable */
         $akeneoConnectorTable = $this->getTable('akeneo_connector_entities');
