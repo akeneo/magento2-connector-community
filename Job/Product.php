@@ -3368,6 +3368,8 @@ class Product extends JobImport
 
         /** @var string[] $types */
         $types = explode(',', $configurations);
+        /** @var string[] $types */
+        $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
         /** @var string $type */
         foreach ($types as $type) {
@@ -3375,7 +3377,7 @@ class Product extends JobImport
         }
 
         $this->setMessage(
-            __('Cache cleaned for: %1', join(', ', $types)),
+            __('Cache cleaned for: %1', join(', ', array_intersect_key($cacheTypeLabels, array_flip($types)))),
             $this->logger
         );
     }
@@ -3399,16 +3401,19 @@ class Product extends JobImport
 
         /** @var string[] $types */
         $types = explode(',', $configurations);
+        /** @var string[] $typesFlushed */
+        $typesFlushed = [];
 
         /** @var string $type */
         foreach ($types as $type) {
             /** @var IndexerInterface $index */
             $index = $this->indexFactory->create()->load($type);
             $index->reindexAll();
+            $typesFlushed[] = $index->getTitle();
         }
 
         $this->setMessage(
-            __('Index refreshed for: %1', join(', ', $types)),
+            __('Index refreshed for: %1', join(', ', $typesFlushed)),
             $this->logger
         );
     }
