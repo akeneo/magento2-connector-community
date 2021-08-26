@@ -73,12 +73,12 @@ class AkeneoConnectorImportStepFinishObserver implements ObserverInterface
         $log->addStep(
             [
                 'log_id'     => $log->getId(),
-                'identifier' => $currentJob->getCode(),
+                'identifier' => $executor->getIdentifier(),
                 'number'     => $executor->getStep(),
                 'method'     => $executor->getMethod(),
                 'message'    => $executor->getMessage(),
                 'continue'   => $executor->isDone() ? 0 : 1,
-                'status'     => $currentJob->getStatus() === JobInterface::JOB_ERROR ? 1 : 0,
+                'status' => $executor->getCurrentJobClass()->getStatus(),
             ]
         );
 

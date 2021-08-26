@@ -76,6 +76,12 @@ abstract class Import extends DataObject implements ImportInterface
      * @var Entities $entitiesHelper
      */
     protected $entitiesHelper;
+    /**
+     * This variable contains a boolean
+     *
+     * @var bool $status
+     */
+    protected $status;
 
     /**
      * Import constructor.
@@ -97,9 +103,9 @@ abstract class Import extends DataObject implements ImportInterface
     ) {
         parent::__construct($data);
 
-        $this->authenticator = $authenticator;
-        $this->outputHelper  = $outputHelper;
-        $this->eventManager  = $eventManager;
+        $this->authenticator  = $authenticator;
+        $this->outputHelper   = $outputHelper;
+        $this->eventManager   = $eventManager;
         $this->entitiesHelper = $entitiesHelper;
         $this->configHelper   = $configHelper;
     }
@@ -207,12 +213,53 @@ abstract class Import extends DataObject implements ImportInterface
         return $response;
     }
 
+    /**
+     * Description setJobExecutor function
+     *
+     * @param JobExecutor $jobExecutor
+     *
+     * @return void
+     */
     public function setJobExecutor(JobExecutor $jobExecutor)
     {
-        $this->jobExecutor = $jobExecutor;
+        $this->jobExecutor  = $jobExecutor;
         $this->akeneoClient = $jobExecutor->getAkeneoClient();
     }
 
+    /**
+     * Set import status
+     *
+     * @param $status
+     *
+     * @return Import
+     */
+    public function setStatus($status)
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    /**
+     * Get import status
+     *
+     * @return bool
+     */
+    public function getStatus()
+    {
+        return $this->status;
+    }
+
+    /**
+     * Description logImportedEntities function
+     *
+     * @param null   $logger
+     * @param false  $newEntities
+     * @param string $identifierColumn
+     *
+     * @return void
+     * @throws Zend_Db_Statement_Exception
+     */
     public function logImportedEntities($logger = null, $newEntities = false, $identifierColumn = 'code')
     {
         if ($logger) {

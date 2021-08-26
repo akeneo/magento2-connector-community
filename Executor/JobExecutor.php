@@ -418,6 +418,16 @@ class JobExecutor implements JobExecutorInterface
     }
 
     /**
+     * Description getCurrentJobClass function
+     *
+     * @return JobImport
+     */
+    public function getCurrentJobClass()
+    {
+        return $this->currentJobClass;
+    }
+
+    /**
      * Check if import may be processed (Not already running, ...)
      *
      * @return bool

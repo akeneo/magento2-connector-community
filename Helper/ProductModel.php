@@ -119,13 +119,13 @@ class ProductModel
     {
         /** @var string[] $messages */
         $messages = [];
-        
+
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         if ($connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
             return $messages;
         }
-        
+
         foreach ($filters as $filter) {
             /** @var PageInterface $productModels */
             $productModels = $akeneoClient->getProductModelApi()->listPerPage(1, false, $filter);
@@ -338,7 +338,7 @@ class ProductModel
 
         return $metricsSymbols;
     }
-    
+
     /**
      * Add columns to product table
      *
