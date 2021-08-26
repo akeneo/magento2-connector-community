@@ -13,10 +13,9 @@ namespace Akeneo\Connector\Api;
  */
 interface ProcessClassFactoryInterface
 {
-
     /**
      * @param string $type
-     * @param array $arguments
+     * @param array  $arguments
      *
      * @return object
      */
