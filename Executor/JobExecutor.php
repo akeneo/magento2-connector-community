@@ -537,6 +537,7 @@ class JobExecutor implements JobExecutorInterface
      */
     public function initStatus()
     {
+        $this->currentJobClass->setStatus(true);
         $this->setContinue(true);
         $this->setMessage(__('completed'));
     }
@@ -854,11 +855,13 @@ class JobExecutor implements JobExecutorInterface
      *
      * @return void
      */
-    public function init(string $code) {
+    public function init(string $code)
+    {
         /** @var Job $job */
-        $job = $this->jobRepository->getByCode($code);
+        $job                   = $this->jobRepository->getByCode($code);
         $this->currentJob      = $job;
         $this->currentJobClass = $this->processClassFactory->create($job->getJobClass());
         $this->currentJobClass->setJobExecutor($this);
+        $this->currentJobClass->setStatus(true);
     }
 }
