@@ -238,3 +238,7 @@
 
 ### Version 101.7.0 :
 * Add content staging support for category import (https://help.akeneo.com/magento2-connector/articles/04-categories-configuration.html#does-akeneo-data-override-content-staging)
+
+### Version 101.8.0 :
+* Add configurations to choose which cache to flush after each job (https://help.akeneo.com/magento2-connector/articles/16-configure-cache-flush.html)
+* Add configurations to choose which index to refresh after each job (https://help.akeneo.com/magento2-connector/articles/15-configure-index-refresh.html)
