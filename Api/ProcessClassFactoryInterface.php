@@ -5,10 +5,11 @@ namespace Akeneo\Connector\Api;
 /**
  * Interface ProcessClassFactoryInterface
  *
- * @author                 Mattheo Geoffray <mattheo.geoffray@dnd.fr>
- * @copyright              Copyright (c) 2016 Agence Dn'D
- * @license                http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
- * @link                   http://www.dnd.fr/
+ * @package   Akeneo\Connector\Api
+ * @author    Agence Dn'D <contact@dnd.fr>
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @link      https://www.dnd.fr/
  */
 interface ProcessClassFactoryInterface
 {
