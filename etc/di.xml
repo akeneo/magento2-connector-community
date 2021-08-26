@@ -82,6 +82,10 @@
                         <item name="comment" xsi:type="string">Drop temporary table</item>
                     </item>
                     <item name="14" xsi:type="array">
+                        <item name="method" xsi:type="string">refreshIndex</item>
+                        <item name="comment" xsi:type="string">Refresh index</item>
+                    </item>
+                    <item name="15" xsi:type="array">
                         <item name="method" xsi:type="string">cleanCache</item>
                         <item name="comment" xsi:type="string">Clean cache</item>
                     </item>
@@ -127,6 +131,10 @@
                         <item name="comment" xsi:type="string">Drop temporary table</item>
                     </item>
                     <item name="9" xsi:type="array">
+                        <item name="method" xsi:type="string">refreshIndex</item>
+                        <item name="comment" xsi:type="string">Refresh index</item>
+                    </item>
+                    <item name="10" xsi:type="array">
                         <item name="method" xsi:type="string">cleanCache</item>
                         <item name="comment" xsi:type="string">Clean cache</item>
                     </item>
@@ -173,6 +181,10 @@
                         <item name="comment" xsi:type="string">Drop temporary table</item>
                     </item>
                     <item name="9" xsi:type="array">
+                        <item name="method" xsi:type="string">refreshIndex</item>
+                        <item name="comment" xsi:type="string">Refresh index</item>
+                    </item>
+                    <item name="10" xsi:type="array">
                         <item name="method" xsi:type="string">cleanCache</item>
                         <item name="comment" xsi:type="string">Clean cache</item>
                     </item>
@@ -214,6 +226,10 @@
                         <item name="comment" xsi:type="string">Drop temporary table</item>
                     </item>
                     <item name="8" xsi:type="array">
+                        <item name="method" xsi:type="string">refreshIndex</item>
+                        <item name="comment" xsi:type="string">Refresh index</item>
+                    </item>
+                    <item name="9" xsi:type="array">
                         <item name="method" xsi:type="string">cleanCache</item>
                         <item name="comment" xsi:type="string">Clean cache</item>
                     </item>
@@ -323,6 +339,10 @@
                         <item name="comment" xsi:type="string">Drop temporary table</item>
                     </item>
                     <item name="25" xsi:type="array">
+                        <item name="method" xsi:type="string">refreshIndex</item>
+                        <item name="comment" xsi:type="string">Refresh index</item>
+                    </item>
+                    <item name="26" xsi:type="array">
                         <item name="method" xsi:type="string">cleanCache</item>
                         <item name="comment" xsi:type="string">Clean cache</item>
                     </item>
