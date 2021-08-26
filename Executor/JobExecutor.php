@@ -836,4 +836,19 @@ class JobExecutor implements JobExecutorInterface
             $this->output->writeln($coloredMessage);
         }
     }
+
+    /**
+     * Description init function
+     *
+     * @param string $code
+     *
+     * @return void
+     */
+    public function init(string $code) {
+        /** @var Job $job */
+        $job = $this->jobRepository->getByCode($code);
+        $this->currentJob      = $job;
+        $this->currentJobClass = $this->processClassFactory->create($job->getJobClass());
+        $this->currentJobClass->setJobExecutor($this);
+    }
 }

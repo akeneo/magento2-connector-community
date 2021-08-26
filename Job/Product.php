@@ -3,6 +3,8 @@
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
+use Akeneo\Connector\Executor\JobExecutor;
+use Akeneo\Connector\Executor\JobExecutorFactory;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\FamilyVariant;
@@ -250,33 +252,40 @@ class Product extends JobImport
      * @var ProductHandler $handler
      */
     protected $handler;
+    /**
+     * Description $jobExecutorFactory field
+     *
+     * @var JobExecutorFactory $jobExecutorFactory
+     */
+    protected $jobExecutorFactory;
 
     /**
      * Product constructor.
      *
-     * @param ProductLogger           $logger
-     * @param ProductHandler          $handler
-     * @param OutputHelper            $outputHelper
-     * @param ManagerInterface        $eventManager
-     * @param Authenticator           $authenticator
-     * @param ProductImportHelper     $entitiesHelper
-     * @param ConfigHelper            $configHelper
-     * @param ProductModel            $productModel
-     * @param FamilyVariant           $familyVariant
-     * @param EavConfig               $eavConfig
-     * @param EavAttribute            $eavAttribute
-     * @param ProductFilters          $productFilters
-     * @param ScopeConfigInterface    $scopeConfig
-     * @param JsonSerializer          $serializer
-     * @param BaseProductModel        $product
-     * @param ProductUrlPathGenerator $productUrlPathGenerator
-     * @param TypeListInterface       $cacheTypeList
-     * @param StoreHelper             $storeHelper
-     * @param Entities                $entities
-     * @param Option                  $jobOption
-     * @param AttributeMetrics        $attributeMetrics
-     * @param StoreManagerInterface   $storeManager
-     * @param array                   $data
+     * @param ProductLogger                                 $logger
+     * @param ProductHandler                                $handler
+     * @param OutputHelper                                  $outputHelper
+     * @param ManagerInterface                              $eventManager
+     * @param Authenticator                                 $authenticator
+     * @param ProductImportHelper                           $entitiesHelper
+     * @param ConfigHelper                                  $configHelper
+     * @param ProductModel                                  $productModel
+     * @param FamilyVariant                                 $familyVariant
+     * @param EavConfig                                     $eavConfig
+     * @param EavAttribute                                  $eavAttribute
+     * @param ProductFilters                                $productFilters
+     * @param ScopeConfigInterface                          $scopeConfig
+     * @param JsonSerializer                                $serializer
+     * @param BaseProductModel                              $product
+     * @param ProductUrlPathGenerator                       $productUrlPathGenerator
+     * @param TypeListInterface                             $cacheTypeList
+     * @param StoreHelper                                   $storeHelper
+     * @param Entities                                      $entities
+     * @param Option                                        $jobOption
+     * @param AttributeMetrics                              $attributeMetrics
+     * @param StoreManagerInterface                         $storeManager
+     * @param JobExecutorFactory                            $jobExecutorFactory
+     * @param array                                         $data
      */
     public function __construct(
         ProductLogger $logger,
@@ -301,6 +310,7 @@ class Product extends JobImport
         JobOption $jobOption,
         AttributeMetrics $attributeMetrics,
         StoreManagerInterface $storeManager,
+        JobExecutorFactory $jobExecutorFactory,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
@@ -322,6 +332,7 @@ class Product extends JobImport
         $this->attributeMetrics        = $attributeMetrics;
         $this->storeManager            = $storeManager;
         $this->entities                = $entities;
+        $this->jobExecutorFactory      = $jobExecutorFactory;
     }
 
     /**
@@ -891,6 +902,11 @@ class Product extends JobImport
         $locales = $this->storeHelper->getMappedWebsitesStoreLangs();
         $this->jobOption->setJobExecutor($this->jobExecutor);
 
+        // Create another JobExecutor to use the create table function of the jobOption import
+        /** @var JobExecutor $optionJobExecutor */
+        $optionJobExecutor = $this->jobExecutorFactory->create();
+        $optionJobExecutor->init($this->jobOption->getCode());
+        $this->jobOption->setJobExecutor($optionJobExecutor);
         $this->jobOption->createTable();
 
         foreach ($metricsVariantSettings as $metricsVariantSetting) {

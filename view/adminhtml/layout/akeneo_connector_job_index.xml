@@ -65,21 +65,21 @@
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="scheduled_at">
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Scheduled At</argument>
-                            <argument name="index" xsi:type="string">created_at</argument>
+                            <argument name="index" xsi:type="string">scheduled_at</argument>
                             <argument name="type" xsi:type="string">datetime</argument>
                         </arguments>
                     </block>
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="last_executed_date">
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Last executed date</argument>
-                            <argument name="index" xsi:type="string">created_at</argument>
+                            <argument name="index" xsi:type="string">last_executed_date</argument>
                             <argument name="type" xsi:type="string">datetime</argument>
                         </arguments>
                     </block>
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="last_success_date">
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Last success date</argument>
-                            <argument name="index" xsi:type="string">created_at</argument>
+                            <argument name="index" xsi:type="string">last_success_date</argument>
                             <argument name="type" xsi:type="string">datetime</argument>
                         </arguments>
                     </block>
