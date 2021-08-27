@@ -155,6 +155,7 @@ class JobExecutor implements JobExecutorInterface
      * @param OutputHelper        $outputHelper
      * @param ManagerInterface    $eventManager
      * @param Authenticator       $authenticator
+     * @param CollectionFactory   $jobCollectionFactory
      */
     public function __construct(
         JobRepository $jobRepository,
@@ -291,14 +292,12 @@ class JobExecutor implements JobExecutorInterface
         }
 
         // If product import, run the import once per family
-        /** @var array $productFamiliesToImport */
-        $productFamiliesToImport = [];
         if ($code == self::IMPORT_CODE_PRODUCT) {
+            /** @var array $productFamiliesToImport */
             $productFamiliesToImport = $this->currentJobClass->getFamiliesToImport();
 
             if (!count($productFamiliesToImport)) {
                 $message = __('No family to import');
-
                 $this->displayError($message);
 
                 return false;

@@ -18,10 +18,9 @@ use \Symfony\Component\Console\Input\InputOption;
 /**
  * Class AkeneoConnectorImportCommand
  *
- * @category  Class
  * @package   Akeneo\Connector\Console\Command
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
@@ -53,11 +52,13 @@ class AkeneoConnectorImportCommand extends Command
     protected $jobRepository;
 
     /**
-     * AkeneoConnectorImportCommand constructor.
+     * AkeneoConnectorImportCommand constructor
      *
-     * @param State                     $appState
-     * @param ConfigHelper              $configHelper
-     * @param null                      $name
+     * @param State         $appState
+     * @param ConfigHelper  $configHelper
+     * @param JobExecutor   $jobExecutor
+     * @param JobRepository $jobRepository
+     * @param null          $name
      */
     public function __construct(
         State $appState,
@@ -73,7 +74,6 @@ class AkeneoConnectorImportCommand extends Command
         $this->jobExecutor   = $jobExecutor;
         $this->jobRepository = $jobRepository;
     }
-
 
     /**
      * {@inheritdoc}

@@ -7,7 +7,7 @@ use Magento\Framework\DataObject\IdentityInterface;
 use Magento\Framework\Model\AbstractModel;
 
 /**
- * Class Log
+ * Class Job
  *
  * @package   Akeneo\Connector\Model
  * @author    Agence Dn'D <contact@dnd.fr>

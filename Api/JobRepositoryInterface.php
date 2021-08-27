@@ -5,7 +5,6 @@ namespace Akeneo\Connector\Api;
 /**
  * Interface JobRepositoryInterface
  *
- * @category  Interface
  * @package   Akeneo\Connector\Api
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D

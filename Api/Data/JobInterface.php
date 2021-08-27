@@ -16,7 +16,7 @@ namespace Akeneo\Connector\Api\Data;
 interface JobInterface
 {
     /**
-     * Succes status
+     * Success status
      *
      * @var int JOB_SUCCESS
      */
