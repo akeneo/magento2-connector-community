@@ -6,7 +6,6 @@ use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Helper\Config;
 use Akeneo\Connector\Helper\Import\Entities;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
-use Akeneo\PimEnterprise\ApiClient\AkeneoPimEnterpriseClientInterface;
 use Magento\Framework\DataObject;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\Event\ManagerInterface;
@@ -52,7 +51,7 @@ abstract class Import extends DataObject implements ImportInterface
      */
     protected $comment;
     /**
-     * This variable contains a AkeneoPimEnterpriseClientInterface
+     * This variable contains a AkeneoPimClientInterface
      *
      * @var AkeneoPimClientInterface $akeneoClient
      */

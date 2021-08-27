@@ -86,7 +86,7 @@ class JobExecutor implements JobExecutorInterface
      */
     protected $setFromAdmin;
     /**
-     * This variable contains a AkeneoPimEnterpriseClientInterface
+     * This variable contains a AkeneoPimClientInterface
      *
      * @var AkeneoPimClientInterface $akeneoClient
      */
@@ -558,12 +558,12 @@ class JobExecutor implements JobExecutorInterface
     /**
      * Get Akeneo Client instance
      *
-     * @return AkeneoPimEnterpriseClientInterface|false
+     * @return AkeneoPimClientInterface|false
      */
     public function getAkeneoClient()
     {
         try {
-            /** @var AkeneoPimEnterpriseClientInterface|false $akeneoClient */
+            /** @var AkeneoPimClientInterface|false $akeneoClient */
             $akeneoClient = $this->authenticator->getAkeneoApiClient();
         } catch (Exception $e) {
             $akeneoClient = false;
