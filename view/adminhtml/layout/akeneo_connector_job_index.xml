@@ -86,6 +86,7 @@
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="actions">
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Actions</argument>
+                            <argument name="sortable" xsi:type="string">0</argument>
                             <argument name="renderer" xsi:type="string">Akeneo\Connector\Block\Adminhtml\Job\JobActions</argument>
                         </arguments>
                     </block>
