@@ -396,7 +396,7 @@ class Product extends JobImport
         if (empty($products)) {
             // No product were found and we're in a grouped family, we don't import product models for it, so we stop the import
             if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
-                $this->jobExecutor->setAdditionalMessage(__('No results from Akeneo for the family: %1', $this->getFamily()), $this->logger)->afterRun();
+                $this->jobExecutor->setAdditionalMessage(__('No results from Akeneo for the family: %1', $this->getFamily()), $this->logger)->afterRun(null, true);
 
                 return;
             }
@@ -415,7 +415,7 @@ class Product extends JobImport
             }
 
             if (empty($productModels)) {
-                $this->jobExecutor->setAdditionalMessage(__('No results from Akeneo for the family: %1', $this->getFamily()), $this->logger)->afterRun();
+                $this->jobExecutor->setAdditionalMessage(__('No results from Akeneo for the family: %1', $this->getFamily()), $this->logger)->afterRun(null, true);
 
                 return;
             }
