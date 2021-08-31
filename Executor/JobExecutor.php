@@ -738,26 +738,12 @@ class JobExecutor implements JobExecutorInterface
      */
     public function setAdditionalMessage($message, $logger = null)
     {
-        $this->message = $this->getMessageWithoutPrefix() . $this->getEndOfLine() . $message;
+        $this->message = $this->getMessageWithoutPrefix() . PHP_EOL . $message;
         if ($logger && $this->configHelper->isAdvancedLogActivated()) {
             $this->currentJobClass->getLogger()->addDebug($message);
         }
 
         return $this;
-    }
-
-    /**
-     * Get end of line for command line or console
-     *
-     * @return string
-     */
-    public function getEndOfLine()
-    {
-        if ($this->getSetFromAdmin() === false) {
-            return PHP_EOL;
-        }
-
-        return '</br>';
     }
 
     /**
@@ -786,30 +772,6 @@ class JobExecutor implements JobExecutorInterface
         }
 
         return $this->identifier;
-    }
-
-    /**
-     * Set set from admin
-     *
-     * @param $value
-     *
-     * @return $this
-     */
-    public function setSetFromAdmin($value)
-    {
-        $this->setFromAdmin = $value;
-
-        return $this;
-    }
-
-    /**
-     * Get set from admin
-     *
-     * @return bool
-     */
-    public function getSetFromAdmin()
-    {
-        return $this->setFromAdmin;
     }
 
     /**
