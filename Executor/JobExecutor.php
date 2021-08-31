@@ -265,7 +265,7 @@ class JobExecutor implements JobExecutorInterface
 
         /** @var Job $job */
         $job = $this->jobRepository->getByCode($code);
-        if (!$job) {
+        if (!$job->getData()) {
             /** @var Phrase $message */
             $message = __('Job code not found');
 
