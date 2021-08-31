@@ -625,6 +625,10 @@ class JobExecutor implements JobExecutorInterface
             'akeneo_connector_import_start',
             ['import' => $this->currentJobClass, 'executor' => $this]
         );
+        $this->eventManager->dispatch(
+            'akeneo_connector_import_start_' . strtolower($this->currentJob->getCode()),
+            ['executor' => $this]
+        );
         $this->currentJob->setLastExecutedDate(date('y-m-d h:i:s'));
         $this->setJobStatus(JobInterface::JOB_PROCESSING);
     }
@@ -652,8 +656,12 @@ class JobExecutor implements JobExecutorInterface
 
         if ($error === null && $this->currentJob->getStatus() !== JobInterface::JOB_ERROR) {
             $this->eventManager->dispatch(
+                'akeneo_connector_import_finish',
+                ['import' => $this->currentJobClass, 'executor' => $this]
+            );
+            $this->eventManager->dispatch(
                 'akeneo_connector_import_finish_' . strtolower($this->currentJob->getCode()),
-                ['import' => $this]
+                ['executor' => $this]
             );
             $this->currentJob->setLastSuccessDate(date('y-m-d h:i:s'));
             $this->setJobStatus(JobInterface::JOB_SUCCESS);
