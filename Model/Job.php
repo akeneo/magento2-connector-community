@@ -199,7 +199,7 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
      */
     public function setLastSuccessDate($date)
     {
-        return $this->setData(self::LAST_EXECUTED_DATE, $date);
+        return $this->setData(self::LAST_SUCCESS_DATE, $date);
     }
 
     /**
