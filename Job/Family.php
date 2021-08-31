@@ -2,7 +2,12 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Helper\Authenticator;
+use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\FamilyFilters;
+use Akeneo\Connector\Helper\Import\Entities;
+use Akeneo\Connector\Helper\Output as OutputHelper;
+use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Logger\FamilyLogger;
 use Akeneo\Connector\Logger\Handler\FamilyHandler;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
@@ -15,12 +20,9 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
-use Akeneo\Connector\Helper\Authenticator;
-use Akeneo\Connector\Helper\Import\Entities;
-use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Magento\Framework\Indexer\IndexerInterface;
+use Magento\Indexer\Model\IndexerFactory;
 use Zend_Db_Expr as Expr;
-use Akeneo\Connector\Helper\Output as OutputHelper;
-use Akeneo\Connector\Helper\Store as StoreHelper;
 
 /**
  * Class Family
@@ -88,6 +90,12 @@ class Family extends Import
      * @var FamilyFilters $familyFilters
      */
     protected $familyFilters;
+    /**
+     * This variable contains a IndexerInterface
+     *
+     * @var IndexerFactory $indexFactory
+     */
+    protected $indexFactory;
 
     /**
      * Family constructor
@@ -104,6 +112,7 @@ class Family extends Import
      * @param TypeListInterface $cacheTypeList
      * @param Config            $eavConfig
      * @param FamilyFilters     $familyFilters
+     * @param IndexerFactory    $indexFactory
      * @param array             $data
      */
     public function __construct(
@@ -119,6 +128,7 @@ class Family extends Import
         TypeListInterface $cacheTypeList,
         Config $eavConfig,
         FamilyFilters $familyFilters,
+        IndexerFactory $indexFactory,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
@@ -130,6 +140,7 @@ class Family extends Import
         $this->eavConfig           = $eavConfig;
         $this->storeHelper         = $storeHelper;
         $this->familyFilters       = $familyFilters;
+        $this->indexFactory        = $indexFactory;
     }
 
     /**
@@ -190,7 +201,8 @@ class Family extends Import
         $index++;
 
         $this->jobExecutor->setMessage(
-            __('%1 line(s) found. %2', $index, $warning), $this->logger
+            __('%1 line(s) found. %2', $index, $warning),
+            $this->logger
         );
 
         if ($this->configHelper->isAdvancedLogActivated()) {
@@ -347,7 +359,8 @@ class Family extends Import
         }
 
         $this->jobExecutor->setMessage(
-            __('%1 family(ies) initialized', $count), $this->logger
+            __('%1 family(ies) initialized', $count),
+            $this->logger
         );
     }
 
@@ -368,18 +381,64 @@ class Family extends Import
      */
     public function cleanCache()
     {
+        /** @var string $configurations */
+        $configurations = $this->configHelper->getCacheTypeFamily();
+
+        if (!$configurations) {
+            $this->setMessage(__('No cache cleaned'), $this->logger);
+
+            return;
+        }
+
         /** @var string[] $types */
-        $types = [
-            \Magento\Framework\App\Cache\Type\Block::TYPE_IDENTIFIER,
-            \Magento\PageCache\Model\Cache\Type::TYPE_IDENTIFIER,
-        ];
+        $types = explode(',', $configurations);
+        /** @var string[] $types */
+        $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
+
         /** @var string $type */
         foreach ($types as $type) {
             $this->cacheTypeList->cleanType($type);
         }
 
         $this->jobExecutor->setMessage(
-            __('Cache cleaned for: %1', join(', ', $types)), $this->logger
+            __('Cache cleaned for: %1', join(', ', array_intersect_key($cacheTypeLabels, array_flip($types)))),
+            $this->logger
+        );
+    }
+
+    /**
+     * Refresh index
+     *
+     * @return void
+     * @throws \Exception
+     */
+    public function refreshIndex()
+    {
+        /** @var string $configurations */
+        $configurations = $this->configHelper->getIndexFamily();
+
+        if (!$configurations) {
+            $this->jobExecutor->setMessage(__('No index refreshed'), $this->logger);
+
+            return;
+        }
+
+        /** @var string[] $types */
+        $types = explode(',', $configurations);
+        /** @var string[] $typesFlushed */
+        $typesFlushed = [];
+
+        /** @var string $type */
+        foreach ($types as $type) {
+            /** @var IndexerInterface $index */
+            $index = $this->indexFactory->create()->load($type);
+            $index->reindexAll();
+            $typesFlushed[] = $index->getTitle();
+        }
+
+        $this->jobExecutor->setMessage(
+            __('Index refreshed for: %1', join(', ', $typesFlushed)),
+            $this->logger
         );
     }
 

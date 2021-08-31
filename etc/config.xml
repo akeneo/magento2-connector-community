@@ -49,6 +49,13 @@
             <attribute>
                 <option_code_as_admin_label>0</option_code_as_admin_label>
             </attribute>
+            <cache>
+                <cache_type_category>block_html,full_page</cache_type_category>
+                <cache_type_family>block_html,full_page</cache_type_family>
+                <cache_type_attribute>block_html,full_page</cache_type_attribute>
+                <cache_type_option>block_html,full_page</cache_type_option>
+                <cache_type_product>block_html,full_page</cache_type_product>
+            </cache>
         </akeneo_connector>
     </default>
 </config>

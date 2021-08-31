@@ -20,7 +20,9 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Indexer\IndexerInterface;
 use Magento\Staging\Model\VersionManager;
+use Magento\Indexer\Model\IndexerFactory;
 use Zend_Db_Expr as Expr;
 
 /**
@@ -105,6 +107,12 @@ class Category extends Import
      * @var Entities $entities
      */
     protected $entities;
+    /**
+     * This variable contains a IndexerInterface
+     *
+     * @var IndexerFactory $indexFactory
+     */
+    protected $indexFactory;
 
     /**
      * Category constructor
@@ -123,6 +131,7 @@ class Category extends Import
      * @param CategoryFilters          $categoryFilters
      * @param Edition                  $editionSource
      * @param Entities                 $entities
+     * @param IndexerFactory           $indexFactory
      * @param array                    $data
      */
     public function __construct(
@@ -140,6 +149,7 @@ class Category extends Import
         CategoryFilters $categoryFilters,
         Edition $editionSource,
         Entities $entities,
+        IndexerFactory $indexFactory,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
@@ -153,6 +163,7 @@ class Category extends Import
         $this->categoryFilters          = $categoryFilters;
         $this->editionSource            = $editionSource;
         $this->entities                 = $entities;
+        $this->indexFactory             = $indexFactory;
     }
 
     /**
@@ -990,18 +1001,63 @@ class Category extends Import
      */
     public function cleanCache()
     {
-        /** @var array $types */
-        $types = [
-            \Magento\Framework\App\Cache\Type\Block::TYPE_IDENTIFIER,
-            \Magento\PageCache\Model\Cache\Type::TYPE_IDENTIFIER,
-        ];
+        /** @var string $configurations */
+        $configurations = $this->configHelper->getCacheTypeCategory();
 
+        if (!$configurations) {
+            $this->setMessage(__('No cache cleaned'), $this->logger);
+
+            return;
+        }
+
+        /** @var string[] $types */
+        $types = explode(',', $configurations);
+        /** @var string[] $types */
+        $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
+
+        /** @var string $type */
         foreach ($types as $type) {
             $this->cacheTypeList->cleanType($type);
         }
 
         $this->jobExecutor->setMessage(
-            __('Cache cleaned for: %1', join(', ', $types)),
+            __('Cache cleaned for: %1', join(', ', array_intersect_key($cacheTypeLabels, array_flip($types)))),
+            $this->logger
+        );
+    }
+
+    /**
+     * Refresh index
+     *
+     * @return void
+     * @throws \Exception
+     */
+    public function refreshIndex()
+    {
+        /** @var string $configurations */
+        $configurations = $this->configHelper->getIndexCategory();
+
+        if (!$configurations) {
+            $this->jobExecutor->setMessage(__('No index refreshed'), $this->logger);
+
+            return;
+        }
+
+        /** @var string[] $types */
+        $types = explode(',', $configurations);
+        /** @var string[] $typesFlushed */
+        $typesFlushed = [];
+
+        /** @var string $type */
+        foreach ($types as $type) {
+            /** @var IndexerInterface $index */
+            $index = $this->indexFactory->create()->load($type);
+            $index->reindexAll();
+            $typesFlushed[] = $index->getTitle();
+        }
+
+        $this->jobExecutor->setMessage(
+            __('Index refreshed for: %1', join(', ', $typesFlushed)),
             $this->logger
         );
     }

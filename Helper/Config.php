@@ -383,6 +383,66 @@ class Config
      */
     const ADVANCED_LOG = 'akeneo_connector/advanced/advanced_log';
     /**
+     * Cache type category config path
+     *
+     * @var string CACHE_TYPE_CATEGORY
+     */
+    const CACHE_TYPE_CATEGORY = 'akeneo_connector/cache/cache_type_category';
+    /**
+     * Cache type family config path
+     *
+     * @var string CACHE_TYPE_FAMILY
+     */
+    const CACHE_TYPE_FAMILY = 'akeneo_connector/cache/cache_type_family';
+    /**
+     * Cache type attribute config path
+     *
+     * @var string CACHE_TYPE_ATTRIBUTE
+     */
+    const CACHE_TYPE_ATTRIBUTE = 'akeneo_connector/cache/cache_type_attribute';
+    /**
+     * Cache type option config path
+     *
+     * @var string CACHE_TYPE_OPTION
+     */
+    const CACHE_TYPE_OPTION = 'akeneo_connector/cache/cache_type_option';
+    /**
+     * Cache type product config path
+     *
+     * @var string CACHE_TYPE_PRODUCT
+     */
+    const CACHE_TYPE_PRODUCT = 'akeneo_connector/cache/cache_type_product';
+    /**
+     * Index category config path
+     *
+     * @var string INDEX_CATEGORY
+     */
+    const INDEX_CATEGORY = 'akeneo_connector/index/index_category';
+    /**
+     * Index family config path
+     *
+     * @var string INDEX_FAMILY
+     */
+    const INDEX_FAMILY = 'akeneo_connector/index/index_family';
+    /**
+     * Index attribute config path
+     *
+     * @var string INDEX_ATTRIBUTE
+     */
+    const INDEX_ATTRIBUTE = 'akeneo_connector/index/index_attribute';
+    /**
+     * Index option config path
+     *
+     * @var string INDEX_OPTION
+     */
+    const INDEX_OPTION = 'akeneo_connector/index/index_option';
+    /**
+     * Index product config path
+     *
+     * @var string INDEX_PRODUCT
+     */
+    const INDEX_PRODUCT = 'akeneo_connector/index/index_product';
+    /**
      * This variable contains a Encryptor
      *
      * @var Encryptor $encryptor
@@ -1511,5 +1571,105 @@ class Config
     public function getOptionCodeAsAdminLabel()
     {
         return $this->scopeConfig->getValue(self::ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL);
+    }
+
+    /**
+     * Get cache type attribute
+     *
+     * @return string|null
+     */
+    public function getCacheTypeAttribute()
+    {
+        return $this->scopeConfig->getValue(self::CACHE_TYPE_ATTRIBUTE);
+    }
+
+    /**
+     * Get cache type category
+     *
+     * @return string|null
+     */
+    public function getCacheTypeCategory()
+    {
+        return $this->scopeConfig->getValue(self::CACHE_TYPE_CATEGORY);
+    }
+
+    /**
+     * Get cache type family
+     *
+     * @return string|null
+     */
+    public function getCacheTypeFamily()
+    {
+        return $this->scopeConfig->getValue(self::CACHE_TYPE_FAMILY);
+    }
+
+    /**
+     * Get cache type product
+     *
+     * @return string
+     */
+    public function getCacheTypeProduct()
+    {
+        return $this->scopeConfig->getValue(self::CACHE_TYPE_PRODUCT);
+    }
+
+    /**
+     * Get cache type option
+     *
+     * @return string|null
+     */
+    public function getCacheTypeOption()
+    {
+        return $this->scopeConfig->getValue(self::CACHE_TYPE_OPTION);
+    }
+
+    /**
+     * Get index category
+     *
+     * @return string|null
+     */
+    public function getIndexCategory()
+    {
+        return $this->scopeConfig->getValue(self::INDEX_CATEGORY);
+    }
+
+    /**
+     * Get index attribute
+     *
+     * @return string|null
+     */
+    public function getIndexAttribute()
+    {
+        return $this->scopeConfig->getValue(self::INDEX_ATTRIBUTE);
+    }
+
+    /**
+     * Get index family
+     *
+     * @return string|null
+     */
+    public function getIndexFamily()
+    {
+        return $this->scopeConfig->getValue(self::INDEX_FAMILY);
+    }
+
+    /**
+     * Get index option
+     *
+     * @return string|null
+     */
+    public function getIndexOption()
+    {
+        return $this->scopeConfig->getValue(self::INDEX_OPTION);
+    }
+
+    /**
+     * Get index product
+     *
+     * @return string|null
+     */
+    public function getIndexProduct()
+    {
+        return $this->scopeConfig->getValue(self::INDEX_PRODUCT);
     }
 }
