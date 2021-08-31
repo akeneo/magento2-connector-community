@@ -73,6 +73,8 @@ class MassReset extends Action
             $this->jobExecutor->setJobStatus(JobInterface::JOB_PENDING, $job);
         }
 
+        $this->messageManager->addSuccessMessage(__('Jobs are correctly resetted'));
+
         /** @var Redirect $resultRedirect */
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         $resultRedirect->setPath('*/*/');

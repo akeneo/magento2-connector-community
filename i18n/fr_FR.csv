@@ -172,3 +172,5 @@ The attribute %1 was not imported because it starts with a number. Update it in 
 "Yes","Oui"
 "No","Non"
 "The job %1 is already running","Le flux %1 est deja en cours d'execution"
+"Jobs are correctly scheduled","Les flux sont correctement planifiés"
+"Jobs are correctly resetted","Les flux sont correctement réinitialisés"
