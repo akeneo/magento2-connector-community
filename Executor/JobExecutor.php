@@ -303,12 +303,12 @@ class JobExecutor implements JobExecutorInterface
                 return false;
             }
 
+            $this->beforeRun();
             foreach ($productFamiliesToImport as $family) {
-                $this->beforeRun();
                 $this->run($family);
-                $this->afterRun();
                 $this->setIdentifier(null);
             }
+            $this->afterRun();
 
             return true;
         }
