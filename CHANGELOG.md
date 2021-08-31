@@ -242,3 +242,8 @@
 ### Version 101.8.0 :
 * Add configurations to choose which cache to flush after each job (https://help.akeneo.com/magento2-connector/articles/16-configure-cache-flush.html)
 * Add configurations to choose which index to refresh after each job (https://help.akeneo.com/magento2-connector/articles/15-configure-index-refresh.html)
+
+### Version 101.8.1 :
+* Add index to "code" column in every job temporary tables
+* Add index to "identifier" column in product job temporary table
+* Add index to "attribute" column in option job temporary table
