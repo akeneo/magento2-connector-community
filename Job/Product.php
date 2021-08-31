@@ -1226,6 +1226,10 @@ class Product extends JobImport
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
 
+        /** @var string $identifierIndexName */
+        $identifierIndexName = $connection->getIndexName($tmpTable, 'identifier');
+        $connection->query('CREATE INDEX ' . $identifierIndexName . ' ON ' . $tmpTable . ' (identifier(255));');
+
         /** @var array $duplicates */
         $duplicates = $connection->fetchCol(
             $connection->select()->from($tmpTable, ['identifier'])->group('identifier')->having(
