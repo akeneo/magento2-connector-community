@@ -129,34 +129,6 @@ abstract class Import extends DataObject implements ImportInterface
     }
 
     /**
-     * Set import identifier
-     *
-     * @param string $identifier
-     *
-     * @return Import
-     */
-    public function setIdentifier($identifier)
-    {
-        $this->identifier = $identifier;
-
-        return $this;
-    }
-
-    /**
-     * Get import identifier
-     *
-     * @return string
-     */
-    public function getIdentifier()
-    {
-        if (!$this->identifier) {
-            $this->setIdentifier(uniqid());
-        }
-
-        return $this->identifier;
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function beforeImport()
