@@ -385,7 +385,7 @@ class Family extends Import
         $configurations = $this->configHelper->getCacheTypeFamily();
 
         if (!$configurations) {
-            $this->setMessage(__('No cache cleaned'), $this->logger);
+            $this->jobExecutor->setMessage(__('No cache cleaned'), $this->logger);
 
             return;
         }

@@ -359,7 +359,7 @@ class Product extends JobImport
                 __('No website/channel mapped. Please check your configurations.'),
                 $this->logger
             );
-            $this->stop(true);
+            $this->jobExecutor->afterRun(true);
 
             return;
         }
@@ -409,7 +409,7 @@ class Product extends JobImport
         if (empty($products)) {
             // No product were found and we're in a grouped family, we don't import product models for it, so we stop the import
             if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
-                $this->setAdditionalMessage(
+                $this->jobExecutor->setAdditionalMessage(
                     __('No results from Akeneo for the family: %1', $this->getFamily()),
                     $this->logger
                 )->afterRun(null, true);
@@ -431,7 +431,7 @@ class Product extends JobImport
             }
 
             if (empty($productModels)) {
-                $this->setAdditionalMessage(
+                $this->jobExecutor->setAdditionalMessage(
                     __('No results from Akeneo for the family: %1', $this->getFamily()),
                     $this->logger
                 )->afterRun(null, true);
@@ -441,7 +441,7 @@ class Product extends JobImport
             $productModel = reset($productModels);
             $this->entitiesHelper->createTmpTableFromApi($productModel, $this->jobExecutor->getCurrentJob()->getCode());
             $this->entitiesHelper->createTmpTableFromApi($productModel, 'product_model');
-            $this->setAdditionalMessage(
+            $this->jobExecutor->setAdditionalMessage(
                 __('No product found for family: %1 but product model found, process with import', $this->getFamily()),
                 $this->logger
             );

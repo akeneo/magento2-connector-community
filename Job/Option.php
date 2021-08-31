@@ -442,7 +442,7 @@ class Option extends Import
         $configurations = $this->configHelper->getCacheTypeOption();
 
         if (!$configurations) {
-            $this->setMessage(__('No cache cleaned'), $this->logger);
+            $this->jobExecutor->setMessage(__('No cache cleaned'), $this->logger);
 
             return;
         }

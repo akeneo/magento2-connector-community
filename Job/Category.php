@@ -1005,7 +1005,7 @@ class Category extends Import
         $configurations = $this->configHelper->getCacheTypeCategory();
 
         if (!$configurations) {
-            $this->setMessage(__('No cache cleaned'), $this->logger);
+            $this->jobExecutor->setMessage(__('No cache cleaned'), $this->logger);
 
             return;
         }
