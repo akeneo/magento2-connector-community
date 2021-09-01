@@ -247,3 +247,6 @@
 * Add index to "code" column in every job temporary tables
 * Add index to "identifier" column in product job temporary table
 * Add index to "attribute" column in option job temporary table
+
+### Version 101.8.2 :
+* Fix issue on temporary table indexes when a column is missing
