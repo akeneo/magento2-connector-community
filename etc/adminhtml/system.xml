@@ -18,15 +18,15 @@
             <resource>Akeneo_Connector::config_akeneo_connector</resource>
             <group id="general" translate="label" sortOrder="10" showInDefault="1">
                 <label>General</label>
-                <field id="version" translate="label" type="label" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="1">
+                <field id="version" translate="label" type="label" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Extension Version</label>
                     <backend_model>Akeneo\Connector\Model\Config\Version</backend_model>
                 </field>
-                <field id="documentation_link" translate="label" type="label" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="1">
+                <field id="documentation_link" translate="label" type="label" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Documentation link</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\DocumentationLink</frontend_model>
                 </field>
-                <field id="export_config_pdf" translate="label" type="button" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="1">
+                <field id="export_config_pdf" translate="label" type="button" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Export Akeneo Connector configuration</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\ExportPdf</frontend_model>
                 </field>
