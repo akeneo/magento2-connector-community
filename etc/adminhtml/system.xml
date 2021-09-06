@@ -367,14 +367,36 @@ For example :<br/>
                     <label>Website Attribute</label>
                     <comment>Enter the code of the select or multiselect attribute used to associate products to your websites, leave blank to ignore</comment>
                 </field>
-                <field id="activation" translate="label comment" type="select" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Default Product Status</label>
+                <field id="product_status_mode" translate="label" type="select" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Product Status Mode</label>
+                    <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
+                    <depends>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth</field>
+                    </depends>
+                </field>
+                <field id="enable_simple_products_per_website" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Simple Products per website if completeness in channel is equal or greater than</label>
+                    <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
+                    <depends>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth</field>
+                        <field id="product_status_mode">status_based_on_completeness_level</field>
+                    </depends>
+                </field>
+                <field id="default_configurable_product_status" translate="label" type="select" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Default Configurable Products Status</label>
+                    <source_model>Akeneo\Connector\Model\Source\Activation</source_model>
+                    <depends>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth</field>
+                        <field id="product_status_mode">status_based_on_completeness_level</field>
+                    </depends>
+                </field>
+                <field id="activation" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">                    <label>Default Product Status</label>
                     <source_model>Akeneo\Connector\Model\Source\Activation</source_model>
                     <comment>
                         <![CDATA[Default status for product creation<br/>If a product is updated, status won't be modified unless it is disabled in Akeneo]]>
                     </comment>
                 </field>
-                <field id="attribute_mapping" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="attribute_mapping" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Attribute Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Attribute</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -383,18 +405,18 @@ For example :<br/>
 "price" "special_price" and "cost" attributes won't be automatically mapped unless you explicitely declare them in this configuration.]]>
                     </comment>
                 </field>
-                <field id="metrics" translate="label" type="text" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="metrics" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Metric Attributes</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Metrics</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                 </field>
-                <field id="tax_class" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="tax_class" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Default Tax Class</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Tax</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>Set up default tax class for website</comment>
                 </field>
-                <field id="configurable_attributes" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="configurable_attributes" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Configurable</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -412,7 +434,7 @@ For example :<br/>
                         ]]>
                     </comment>
                 </field>
-                <field id="association_related" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0"
+                <field id="association_related" translate="label" type="text" sortOrder="55" showInDefault="1" showInWebsite="0"
                         showInStore="0">
                     <label>Akeneo association code for Related products</label>
                 </field>
