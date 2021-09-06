@@ -11,6 +11,8 @@ use Magento\Framework\App\Config\ConfigResource\ConfigInterface;
 use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
+use Magento\Framework\Encryption\Encryptor;
+
 
 /**
  * Class UpgradeSchema
@@ -42,6 +44,12 @@ class UpgradeSchema implements UpgradeSchemaInterface
      * @var JsonSerializer $serializer
      */
     protected $serializer;
+    /**
+     * This variable contains a Encryptor
+     *
+     * @var Encryptor $encryptor
+     */
+    protected $encryptor;
 
     /**
      * UpgradeSchema constructor.
@@ -49,15 +57,18 @@ class UpgradeSchema implements UpgradeSchemaInterface
      * @param ScopeConfigInterface $scopeConfig
      * @param ConfigInterface      $resourceConfig
      * @param JsonSerializer       $serializer
+     * @param Encryptor            $encryptor
      */
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         ConfigInterface $resourceConfig,
-        JsonSerializer $serializer
+        JsonSerializer $serializer,
+        Encryptor $encryptor
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->resourceConfig = $resourceConfig;
         $this->serializer = $serializer;
+        $this->encryptor = $encryptor;
     }
 
     /**
@@ -150,6 +161,15 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     json_encode($configurable)
                 );
             }
+        }
+
+        if (version_compare($context->getVersion(), '1.0.4', '<')) {
+            /** @var string $config */
+            $config = $this->scopeConfig->getValue(ConfigHelper::AKENEO_API_CLIENT_SECRET);
+            /** @var string $encryptConfig */
+            $encryptConfig = $this->encryptor->encrypt($config);
+
+            $this->resourceConfig->saveConfig(ConfigHelper::AKENEO_API_CLIENT_SECRET, $encryptConfig);
         }
 
         $installer->endSetup();
