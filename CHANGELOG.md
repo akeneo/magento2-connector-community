@@ -225,3 +225,28 @@
 * Fix error message on metric option creation when no value was found for an entire locale
 * Fix export PDF generation for image configuration and strpos strict testing
 * Update URL rewrite warning message color
+
+### Version 101.5.0 :
+* Update URL rewrite generation for products in order to either correctly assign by stores the values of an attribute from Akeneo or assign the SKU as default URL key
+
+### Version 101.6.0 :
+* Add configuration to set Akeneo attribute option code as Admin label for options in Magento 2 (https://help.akeneo.com/magento2-connector/articles/14-configure-attribute-options.html)
+* Add "Since last X hours" product filter in order to filter Akeneo product updated date in hours (https://help.akeneo.com/magento2-connector/articles/03-products-filter-configuration.html#how-to-import-only-updated-products)
+
+### Version 101.6.1 :
+* Fix existing attribute option mapping from admin label with Akeneo attribute options
+
+### Version 101.7.0 :
+* Add content staging support for category import (https://help.akeneo.com/magento2-connector/articles/04-categories-configuration.html#does-akeneo-data-override-content-staging)
+
+### Version 101.8.0 :
+* Add configurations to choose which cache to flush after each job (https://help.akeneo.com/magento2-connector/articles/16-configure-cache-flush.html)
+* Add configurations to choose which index to refresh after each job (https://help.akeneo.com/magento2-connector/articles/15-configure-index-refresh.html)
+
+### Version 101.8.1 :
+* Add index to "code" column in every job temporary tables
+* Add index to "identifier" column in product job temporary table
+* Add index to "attribute" column in option job temporary table
+
+### Version 101.8.2 :
+* Fix issue on temporary table indexes when a column is missing

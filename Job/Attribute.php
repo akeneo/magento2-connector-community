@@ -3,26 +3,27 @@
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Helper\AttributeFilters;
-use Akeneo\Connector\Logger\AttributeLogger;
-use Akeneo\Connector\Logger\Handler\AttributeHandler;
-use Akeneo\Pim\ApiClient\Pagination\PageInterface;
-use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
-use Magento\Catalog\Api\Data\ProductAttributeInterface;
-use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
-use Magento\Eav\Setup\EavSetup;
-use Magento\Framework\DB\Adapter\AdapterInterface;
-use Magento\Framework\App\Cache\TypeListInterface;
-use Magento\Framework\DB\Select;
-use Magento\Framework\Event\ManagerInterface;
-use Magento\Eav\Model\Config;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Import\Attribute as AttributeHelper;
 use Akeneo\Connector\Helper\Import\Entities as EntitiesHelper;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
-use Akeneo\Connector\Job\Import;
-use \Zend_Db_Expr as Expr;
+use Akeneo\Connector\Logger\AttributeLogger;
+use Akeneo\Connector\Logger\Handler\AttributeHandler;
+use Akeneo\Pim\ApiClient\Pagination\PageInterface;
+use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Magento\Catalog\Api\Data\ProductAttributeInterface;
+use Magento\Eav\Model\Config;
+use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
+use Magento\Eav\Setup\EavSetup;
+use Magento\Framework\App\Cache\TypeListInterface;
+use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\DB\Select;
+use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Indexer\IndexerInterface;
+use Magento\Indexer\Model\IndexerFactory;
+use Zend_Db_Expr as Expr;
 
 /**
  * Class Attribute
@@ -119,6 +120,12 @@ class Attribute extends Import
         'small_image',
         'weight',
     ];
+    /**
+     * This variable contains a IndexerInterface
+     *
+     * @var IndexerFactory $indexFactory
+     */
+    protected $indexFactory;
 
     /**
      * Attribute constructor
@@ -136,6 +143,7 @@ class Attribute extends Import
      * @param TypeListInterface $cacheTypeList
      * @param StoreHelper       $storeHelper
      * @param EavSetup          $eavSetup
+     * @param IndexerFactory    $indexFactory
      * @param array             $data
      */
     public function __construct(
@@ -152,6 +160,7 @@ class Attribute extends Import
         TypeListInterface $cacheTypeList,
         StoreHelper $storeHelper,
         EavSetup $eavSetup,
+        IndexerFactory $indexFactory,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
@@ -164,6 +173,7 @@ class Attribute extends Import
         $this->cacheTypeList    = $cacheTypeList;
         $this->storeHelper      = $storeHelper;
         $this->eavSetup         = $eavSetup;
+        $this->indexFactory     = $indexFactory;
     }
 
     /**
@@ -221,7 +231,13 @@ class Attribute extends Import
         foreach ($attributes as $index => $attribute) {
             // If the attribute starts with a number, skip
             if (ctype_digit(substr($attribute['code'], 0, 1))) {
-                $this->setAdditionalMessage(__('The attribute %1 was not imported because it starts with a number. Update it in Akeneo and retry.', $attribute['code']), $this->logger);
+                $this->setAdditionalMessage(
+                    __(
+                        'The attribute %1 was not imported because it starts with a number. Update it in Akeneo and retry.',
+                        $attribute['code']
+                    ),
+                    $this->logger
+                );
                 continue;
             }
             /** @var string $attributeCode */
@@ -233,7 +249,13 @@ class Attribute extends Import
                     $metricsSetting
                 )) {
                 if ($attribute['scopable'] || $attribute['localizable']) {
-                    $this->setAdditionalMessage(__('Attribute %1 is scopable or localizable please change configuration at Stores > Configuration > Catalog > Akeneo Connector > Products > Metrics management.', $attributeCode), $this->logger);
+                    $this->setAdditionalMessage(
+                        __(
+                            'Attribute %1 is scopable or localizable please change configuration at Stores > Configuration > Catalog > Akeneo Connector > Products > Metrics management.',
+                            $attributeCode
+                        ),
+                        $this->logger
+                    );
                     continue;
                 }
                 $attribute['type'] .= '_select';
@@ -265,8 +287,8 @@ class Attribute extends Import
         $select = $connection->select()->from(
             $tmpTable,
             [
-                'label'     => 'labels-' . $localeCode,
-                'code'      => 'code',
+                'label' => 'labels-' . $localeCode,
+                'code'  => 'code',
             ]
         )->where('`labels-' . $localeCode . '` IS NULL');
 
@@ -280,7 +302,8 @@ class Attribute extends Import
                         'The attribute %1 was not imported because it did not have a translation in admin store language : %2',
                         $row['code'],
                         $localeCode
-                    ), $this->logger
+                    ),
+                    $this->logger
                 );
                 $connection->delete($tmpTable, ['code = ?' => $row['code']]);
             }
@@ -360,7 +383,7 @@ class Attribute extends Import
         $columns = $this->attributeHelper->getSpecificColumns();
         /**
          * @var string $name
-         * @var array $def
+         * @var array  $def
          */
         foreach ($columns as $name => $def) {
             $connection->addColumn($tmpTable, $name, $def['type']);
@@ -377,7 +400,7 @@ class Attribute extends Import
         /** @var array $data */
         $data = $connection->fetchAssoc($select);
         /**
-         * @var int $id
+         * @var int   $id
          * @var array $attribute
          */
         foreach ($data as $id => $attribute) {
@@ -466,12 +489,18 @@ class Attribute extends Import
             /** @var bool $skipAttribute */
             $skipAttribute = false;
             if ($attributeFrontendInput && $row['frontend_input']) {
-                if ($attributeFrontendInput !== $row['frontend_input'] && !in_array($row['code'], $this->excludedAttributes)) {
+                if ($attributeFrontendInput !== $row['frontend_input'] && !in_array(
+                        $row['code'],
+                        $this->excludedAttributes
+                    )) {
                     $skipAttribute = true;
                     /* Verify if attribute is mapped to an ignored attribute */
                     if (is_array($mapping)) {
                         foreach ($mapping as $match) {
-                            if (in_array($match['magento_attribute'], $this->excludedAttributes) && $row['code'] == $match['akeneo_attribute']) {
+                            if (in_array(
+                                    $match['magento_attribute'],
+                                    $this->excludedAttributes
+                                ) && $row['code'] == $match['akeneo_attribute']) {
                                 $skipAttribute = false;
                             }
                         }
@@ -481,7 +510,10 @@ class Attribute extends Import
 
             if ($skipAttribute === true) {
                 /** @var string $message */
-                $message = __('The attribute %1 was skipped because its type is not the same between Akeneo and Magento. Please delete it in Magento and try a new import', $row['code']);
+                $message = __(
+                    'The attribute %1 was skipped because its type is not the same between Akeneo and Magento. Please delete it in Magento and try a new import',
+                    $row['code']
+                );
                 $this->setAdditionalMessage($message, $this->logger);
 
                 continue;
@@ -687,10 +719,10 @@ class Attribute extends Import
             $stores = $this->storeHelper->getStores('lang');
             /**
              * @var string $lang
-             * @var array $data
+             * @var array  $data
              */
             foreach ($stores as $lang => $data) {
-                if (isset($row['labels-'.$lang])) {
+                if (isset($row['labels-' . $lang])) {
                     /** @var array $store */
                     foreach ($data as $store) {
                         /** @var string $exists */
@@ -704,20 +736,24 @@ class Attribute extends Import
                         if ($exists) {
                             /** @var array $values */
                             $values = [
-                                'value' => $row['labels-'.$lang],
+                                'value' => $row['labels-' . $lang],
                             ];
                             /** @var array $where */
-                            $where  = [
+                            $where = [
                                 'attribute_id = ?' => $row['_entity_id'],
                                 'store_id = ?'     => $store['store_id'],
                             ];
 
-                            $connection->update($this->entitiesHelper->getTable('eav_attribute_label'), $values, $where);
+                            $connection->update(
+                                $this->entitiesHelper->getTable('eav_attribute_label'),
+                                $values,
+                                $where
+                            );
                         } else {
                             $values = [
                                 'attribute_id' => $row['_entity_id'],
                                 'store_id'     => $store['store_id'],
-                                'value'        => $row['labels-'.$lang],
+                                'value'        => $row['labels-' . $lang],
                             ];
                             $connection->insert($this->entitiesHelper->getTable('eav_attribute_label'), $values);
                         }
@@ -744,18 +780,64 @@ class Attribute extends Import
      */
     public function cleanCache()
     {
+        /** @var string $configurations */
+        $configurations = $this->configHelper->getCacheTypeAttribute();
+
+        if (!$configurations) {
+            $this->setMessage(__('No cache cleaned'), $this->logger);
+
+            return;
+        }
+
         /** @var string[] $types */
-        $types = [
-            \Magento\Framework\App\Cache\Type\Block::TYPE_IDENTIFIER,
-            \Magento\PageCache\Model\Cache\Type::TYPE_IDENTIFIER,
-        ];
+        $types = explode(',', $configurations);
+        /** @var string[] $types */
+        $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
+
         /** @var string $type */
         foreach ($types as $type) {
             $this->cacheTypeList->cleanType($type);
         }
 
         $this->setMessage(
-            __('Cache cleaned for: %1', join(', ', $types)), $this->logger
+            __('Cache cleaned for: %1', join(', ', array_intersect_key($cacheTypeLabels, array_flip($types)))),
+            $this->logger
+        );
+    }
+
+    /**
+     * Refresh index
+     *
+     * @return void
+     * @throws \Exception
+     */
+    public function refreshIndex()
+    {
+        /** @var string $configurations */
+        $configurations = $this->configHelper->getIndexAttribute();
+
+        if (!$configurations) {
+            $this->setMessage(__('No index refreshed'), $this->logger);
+
+            return;
+        }
+
+        /** @var string[] $types */
+        $types = explode(',', $configurations);
+        /** @var string[] $typesFlushed */
+        $typesFlushed = [];
+
+        /** @var string $type */
+        foreach ($types as $type) {
+            /** @var IndexerInterface $index */
+            $index = $this->indexFactory->create()->load($type);
+            $index->reindexAll();
+            $typesFlushed[] = $index->getTitle();
+        }
+
+        $this->setMessage(
+            __('Index refreshed for: %1', join(', ', $typesFlushed)),
+            $this->logger
         );
     }
 

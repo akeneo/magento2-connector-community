@@ -18,8 +18,11 @@ use Magento\CatalogUrlRewrite\Model\CategoryUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\CategoryUrlRewriteGenerator;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Indexer\IndexerInterface;
 use Magento\Staging\Model\VersionManager;
+use Magento\Indexer\Model\IndexerFactory;
 use Zend_Db_Expr as Expr;
 
 /**
@@ -98,6 +101,18 @@ class Category extends Import
      * @var Edition $editionSource
      */
     protected $editionSource;
+    /**
+     * This variable contains entities
+     *
+     * @var Entities $entities
+     */
+    protected $entities;
+    /**
+     * This variable contains a IndexerInterface
+     *
+     * @var IndexerFactory $indexFactory
+     */
+    protected $indexFactory;
 
     /**
      * Category constructor
@@ -115,6 +130,8 @@ class Category extends Import
      * @param CategoryUrlPathGenerator $categoryUrlPathGenerator
      * @param CategoryFilters          $categoryFilters
      * @param Edition                  $editionSource
+     * @param Entities                 $entities
+     * @param IndexerFactory           $indexFactory
      * @param array                    $data
      */
     public function __construct(
@@ -131,6 +148,8 @@ class Category extends Import
         CategoryUrlPathGenerator $categoryUrlPathGenerator,
         CategoryFilters $categoryFilters,
         Edition $editionSource,
+        Entities $entities,
+        IndexerFactory $indexFactory,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
@@ -143,6 +162,8 @@ class Category extends Import
         $this->categoryUrlPathGenerator = $categoryUrlPathGenerator;
         $this->categoryFilters          = $categoryFilters;
         $this->editionSource            = $editionSource;
+        $this->entities                 = $entities;
+        $this->indexFactory             = $indexFactory;
     }
 
     /**
@@ -155,7 +176,9 @@ class Category extends Import
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
             $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
-            $this->logger->addDebug(__('Category API call Filters : ') . print_r($this->categoryFilters->getParentFilters(), true));
+            $this->logger->addDebug(
+                __('Category API call Filters : ') . print_r($this->categoryFilters->getParentFilters(), true)
+            );
         }
         if (!$this->categoryFilters->getCategoriesToImport()) {
             $this->setMessage(__('No categories to import, check your category filter configuration'), $this->logger);
@@ -214,7 +237,8 @@ class Category extends Import
                     __(
                         'Wrong Akeneo version selected in the Akeneo Edition configuration field: %1',
                         $editions[$edition]
-                    ), $this->logger
+                    ),
+                    $this->logger
                 );
                 $this->stop(1);
 
@@ -254,7 +278,8 @@ class Category extends Import
         $index++;
 
         $this->setMessage(
-            __('%1 line(s) found. %2', $index, $warning), $this->logger
+            __('%1 line(s) found. %2', $index, $warning),
+            $this->logger
         );
 
         if ($this->configHelper->isAdvancedLogActivated()) {
@@ -565,11 +590,14 @@ class Category extends Import
             'children_count'   => new Expr('0'),
         ];
 
-        /** @var string $columnIdentifier */
-        $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($table);
+        /** @var Select $parents */
+        $parents = $connection->select()->from($tmpTable, $values);
 
-        if ($columnIdentifier == 'row_id') {
-            $values['row_id'] = '_entity_id';
+        /** @var bool $rowIdExists */
+        $rowIdExists = $this->entitiesHelper->rowIdColumnExists($table);
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStagingCategory($parents, ['p.row_id']);
+            $values['row_id'] = 'IFNULL (p.row_id, _entity_id)'; // on category creation, row_id is null
         }
 
         /** @var \Magento\Framework\DB\Select $parents */
@@ -589,7 +617,7 @@ class Category extends Import
         ];
         $connection->update($table, $values, 'created_at IS NULL');
 
-        if ($columnIdentifier === 'row_id') {
+        if ($rowIdExists) {
             /** @var array $values */
             $values = [
                 'created_in' => new Expr(1),
@@ -704,7 +732,8 @@ class Category extends Import
         $filteredCategories = $this->configHelper->getCategoriesFilter();
         if (!$filteredCategories || empty($filteredCategories)) {
             $this->setMessage(
-                __('No category to ignore'), $this->logger
+                __('No category to ignore'),
+                $this->logger
             );
 
             return;
@@ -720,7 +749,8 @@ class Category extends Import
         );
         if (!$categoriesToDelete) {
             $this->setMessage(
-                __('No category found'), $this->logger
+                __('No category found'),
+                $this->logger
             );
 
             return;
@@ -859,7 +889,8 @@ class Category extends Import
                                         $rewriteId,
                                         $requestPath
                                     )
-                                ), $this->logger
+                                ),
+                                $this->logger
                             );
                         }
                     } else {
@@ -970,18 +1001,64 @@ class Category extends Import
      */
     public function cleanCache()
     {
-        /** @var array $types */
-        $types = [
-            \Magento\Framework\App\Cache\Type\Block::TYPE_IDENTIFIER,
-            \Magento\PageCache\Model\Cache\Type::TYPE_IDENTIFIER,
-        ];
+        /** @var string $configurations */
+        $configurations = $this->configHelper->getCacheTypeCategory();
 
+        if (!$configurations) {
+            $this->setMessage(__('No cache cleaned'), $this->logger);
+
+            return;
+        }
+
+        /** @var string[] $types */
+        $types = explode(',', $configurations);
+        /** @var string[] $types */
+        $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
+
+        /** @var string $type */
         foreach ($types as $type) {
             $this->cacheTypeList->cleanType($type);
         }
 
         $this->setMessage(
-            __('Cache cleaned for: %1', join(', ', $types)), $this->logger
+            __('Cache cleaned for: %1', join(', ', array_intersect_key($cacheTypeLabels, array_flip($types)))),
+            $this->logger
+        );
+    }
+
+    /**
+     * Refresh index
+     *
+     * @return void
+     * @throws \Exception
+     */
+    public function refreshIndex()
+    {
+        /** @var string $configurations */
+        $configurations = $this->configHelper->getIndexCategory();
+
+        if (!$configurations) {
+            $this->setMessage(__('No index refreshed'), $this->logger);
+
+            return;
+        }
+
+        /** @var string[] $types */
+        $types = explode(',', $configurations);
+        /** @var string[] $typesFlushed */
+        $typesFlushed = [];
+
+        /** @var string $type */
+        foreach ($types as $type) {
+            /** @var IndexerInterface $index */
+            $index = $this->indexFactory->create()->load($type);
+            $index->reindexAll();
+            $typesFlushed[] = $index->getTitle();
+        }
+
+        $this->setMessage(
+            __('Index refreshed for: %1', join(', ', $typesFlushed)),
+            $this->logger
         );
     }
 }

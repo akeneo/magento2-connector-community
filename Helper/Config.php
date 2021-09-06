@@ -2,28 +2,27 @@
 
 namespace Akeneo\Connector\Helper;
 
+use Exception;
+use Magento\Catalog\Helper\Product as ProductHelper;
 use Magento\Catalog\Model\Product\Link;
-use Akeneo\Connector\Model\Source\Edition;
-use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\App\Helper\Context;
-use Magento\Framework\Encryption\Encryptor;
+use Magento\Catalog\Model\Product\Media\Config as MediaConfig;
+use Magento\CatalogInventory\Model\Configuration as CatalogInventoryConfiguration;
 use Magento\Directory\Helper\Data as DirectoryHelper;
-use Magento\Framework\Exception\FileSystemException;
-use Magento\Store\Api\Data\StoreInterface;
-use Magento\Store\Api\Data\WebsiteInterface;
-use Magento\Store\Model\ScopeInterface;
 use Magento\Directory\Model\Currency;
 use Magento\Eav\Model\Config as EavConfig;
-use Magento\Store\Model\StoreManagerInterface;
-use Magento\CatalogInventory\Model\Configuration as CatalogInventoryConfiguration;
-use Magento\Catalog\Model\Product\Media\Config as MediaConfig;
+use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Encryption\Encryptor;
+use Magento\Framework\Exception\FileSystemException;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\File\Uploader;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Directory\WriteInterface;
-use Magento\Framework\File\Uploader;
-use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
-use Magento\Catalog\Helper\Product as ProductHelper;
-use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * Class Config
@@ -176,6 +175,12 @@ class Config
      */
     const PRODUCTS_FILTERS_UPDATED_SINCE = 'akeneo_connector/products_filters/updated';
     /**
+     * Product filters updated since last hours config path
+     *
+     * @var string PRODUCTS_FILTERS_UPDATED_SINCE_LAST_HOURS
+     */
+    const PRODUCTS_FILTERS_UPDATED_SINCE_LAST_HOURS = 'akeneo_connector/products_filters/updated_since_last_hours';
+    /**
      * Product advanced filters config path
      *
      * @var string PRODUCTS_FILTERS_ADVANCED_FILTER
@@ -211,6 +216,12 @@ class Config
      * @var string PRODUCTS_CATEGORY_CATEGORIES
      */
     const PRODUCTS_CATEGORY_CATEGORIES = 'akeneo_connector/category/categories';
+    /**
+     * Categories does override content staging
+     *
+     * @var string PRODUCTS_CATEGORY_OVERRIDE_CONTENT_STAGING
+     */
+    const PRODUCTS_CATEGORY_OVERRIDE_CONTENT_STAGING = 'akeneo_connector/category/override_content_staging';
     /**
      * Attribute mapping config path
      *
@@ -290,6 +301,12 @@ class Config
      */
     const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     /**
+     * Attribute option code as admin label config path
+     *
+     * @var string ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL
+     */
+    const ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL = 'akeneo_connector/attribute/option_code_as_admin_label';
+    /**
      * Attribute filter updated mode
      *
      * @var string ATTRIBUTE_FILTERS_UPDATED_MODE
@@ -365,6 +382,66 @@ class Config
      * @var string ADVANCED_LOG
      */
     const ADVANCED_LOG = 'akeneo_connector/advanced/advanced_log';
+    /**
+     * Cache type category config path
+     *
+     * @var string CACHE_TYPE_CATEGORY
+     */
+    const CACHE_TYPE_CATEGORY = 'akeneo_connector/cache/cache_type_category';
+    /**
+     * Cache type family config path
+     *
+     * @var string CACHE_TYPE_FAMILY
+     */
+    const CACHE_TYPE_FAMILY = 'akeneo_connector/cache/cache_type_family';
+    /**
+     * Cache type attribute config path
+     *
+     * @var string CACHE_TYPE_ATTRIBUTE
+     */
+    const CACHE_TYPE_ATTRIBUTE = 'akeneo_connector/cache/cache_type_attribute';
+    /**
+     * Cache type option config path
+     *
+     * @var string CACHE_TYPE_OPTION
+     */
+    const CACHE_TYPE_OPTION = 'akeneo_connector/cache/cache_type_option';
+    /**
+     * Cache type product config path
+     *
+     * @var string CACHE_TYPE_PRODUCT
+     */
+    const CACHE_TYPE_PRODUCT = 'akeneo_connector/cache/cache_type_product';
+    /**
+     * Index category config path
+     *
+     * @var string INDEX_CATEGORY
+     */
+    const INDEX_CATEGORY = 'akeneo_connector/index/index_category';
+    /**
+     * Index family config path
+     *
+     * @var string INDEX_FAMILY
+     */
+    const INDEX_FAMILY = 'akeneo_connector/index/index_family';
+    /**
+     * Index attribute config path
+     *
+     * @var string INDEX_ATTRIBUTE
+     */
+    const INDEX_ATTRIBUTE = 'akeneo_connector/index/index_attribute';
+    /**
+     * Index option config path
+     *
+     * @var string INDEX_OPTION
+     */
+    const INDEX_OPTION = 'akeneo_connector/index/index_option';
+    /**
+     * Index product config path
+     *
+     * @var string INDEX_PRODUCT
+     */
+    const INDEX_PRODUCT = 'akeneo_connector/index/index_product';
     /**
      * This variable contains a Encryptor
      *
@@ -672,6 +749,16 @@ class Config
     }
 
     /**
+     * Retrieve the updated since last hours filter
+     *
+     * @return string
+     */
+    public function getUpdatedSinceLastHoursFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_SINCE_LAST_HOURS);
+    }
+
+    /**
      * Retrieve attribute updated mode
      *
      * @return string
@@ -786,6 +873,16 @@ class Config
     }
 
     /**
+     * Retrieve the categories does override content staging
+     *
+     * @return string
+     */
+    public function getCategoriesIsOverrideContentStaging()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_OVERRIDE_CONTENT_STAGING);
+    }
+
+    /**
      * Get Admin Website Default Channel from configuration
      *
      * @return string
@@ -799,7 +896,7 @@ class Config
      * Retrieve the name of the website association attribute
      *
      * @return array
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getWebsiteAttribute()
     {
@@ -824,7 +921,7 @@ class Config
             /** @var string $adminChannel */
             $adminChannel = $this->getAdminDefaultChannel();
             if (empty($adminChannel)) {
-                throw new \Exception(__('No channel found for Admin website channel configuration.'));
+                throw new Exception(__('No channel found for Admin website channel configuration.'));
             }
 
             $mapping[] = [
@@ -955,7 +1052,7 @@ class Config
      * Retrieve stores default tax class
      *
      * @return array
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getProductTaxClasses()
     {
@@ -1400,7 +1497,7 @@ class Config
      * @param string $entity
      *
      * @return int
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function getDefaultAttributeSetId($entity)
     {
@@ -1435,9 +1532,9 @@ class Config
     public function getAssociationTypes()
     {
         /** @var string $relatedCode */
-        $relatedCode  = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_RELATED);
+        $relatedCode = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_RELATED);
         /** @var string $upsellCode */
-        $upsellCode   = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_UPSELL);
+        $upsellCode = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_UPSELL);
         /** @var string $crossellCode */
         $crossellCode = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_CROSSELL);
         /** @var string[] $associationTypes */
@@ -1463,7 +1560,7 @@ class Config
 
         return $associationTypes;
     }
-    
+
     /**
      * Get if advanced logs is active
      *
@@ -1472,5 +1569,115 @@ class Config
     public function isAdvancedLogActivated()
     {
         return $this->scopeConfig->getValue(self::ADVANCED_LOG);
+    }
+
+    /**
+     * Description getOptionCodeAsAdminLabel function
+     *
+     * @return bool
+     */
+    public function getOptionCodeAsAdminLabel()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL);
+    }
+
+    /**
+     * Get cache type attribute
+     *
+     * @return string|null
+     */
+    public function getCacheTypeAttribute()
+    {
+        return $this->scopeConfig->getValue(self::CACHE_TYPE_ATTRIBUTE);
+    }
+
+    /**
+     * Get cache type category
+     *
+     * @return string|null
+     */
+    public function getCacheTypeCategory()
+    {
+        return $this->scopeConfig->getValue(self::CACHE_TYPE_CATEGORY);
+    }
+
+    /**
+     * Get cache type family
+     *
+     * @return string|null
+     */
+    public function getCacheTypeFamily()
+    {
+        return $this->scopeConfig->getValue(self::CACHE_TYPE_FAMILY);
+    }
+
+    /**
+     * Get cache type product
+     *
+     * @return string
+     */
+    public function getCacheTypeProduct()
+    {
+        return $this->scopeConfig->getValue(self::CACHE_TYPE_PRODUCT);
+    }
+
+    /**
+     * Get cache type option
+     *
+     * @return string|null
+     */
+    public function getCacheTypeOption()
+    {
+        return $this->scopeConfig->getValue(self::CACHE_TYPE_OPTION);
+    }
+
+    /**
+     * Get index category
+     *
+     * @return string|null
+     */
+    public function getIndexCategory()
+    {
+        return $this->scopeConfig->getValue(self::INDEX_CATEGORY);
+    }
+
+    /**
+     * Get index attribute
+     *
+     * @return string|null
+     */
+    public function getIndexAttribute()
+    {
+        return $this->scopeConfig->getValue(self::INDEX_ATTRIBUTE);
+    }
+
+    /**
+     * Get index family
+     *
+     * @return string|null
+     */
+    public function getIndexFamily()
+    {
+        return $this->scopeConfig->getValue(self::INDEX_FAMILY);
+    }
+
+    /**
+     * Get index option
+     *
+     * @return string|null
+     */
+    public function getIndexOption()
+    {
+        return $this->scopeConfig->getValue(self::INDEX_OPTION);
+    }
+
+    /**
+     * Get index product
+     *
+     * @return string|null
+     */
+    public function getIndexProduct()
+    {
+        return $this->scopeConfig->getValue(self::INDEX_PRODUCT);
     }
 }

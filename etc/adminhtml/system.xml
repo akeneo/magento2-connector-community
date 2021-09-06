@@ -194,6 +194,17 @@
                         <field id="updated_mode">SINCE LAST N DAYS</field>
                     </depends>
                 </field>
+                <field id="updated_since_last_hours" translate="label" type="text" sortOrder="135" showInDefault="1" showInWebsite="0"
+                    showInStore="0">
+                    <label>Updated Since Last Hours</label>
+                    <comment>
+                        <![CDATA[Import only product updated since last X hours. Leave blank for no filter.]]>
+                    </comment>
+                    <depends>
+                        <field id="mode">standard</field>
+                        <field id="updated_mode">SINCE LAST N HOURS</field>
+                    </depends>
+                </field>
                 <field id="families" translate="label comment" type="multiselect" sortOrder="140" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Families</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Family</source_model>
@@ -272,6 +283,15 @@ For example :<br/>
                         <field id="mode">standard</field>
                     </depends>
                 </field>
+                <field id="override_content_staging" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Does Akeneo data override category content staging</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>
+                        <![CDATA[This parameter is only used on Magento 2 Enterprise Edition.<br /><br />
+                        <strong>Yes</strong> - Akeneo will override all category versions no matter what changes was scheduled.<br />
+                        <strong>No</strong> - Akeneo will only update the "base" version of the scheduled categories.]]>
+                    </comment>
+                </field>
             </group>
             <group id="families" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Filter Families</label>
@@ -301,6 +321,11 @@ For example :<br/>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Type</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>Match specific Akeneo type with Magento input field</comment>
+                </field>
+                <field id="option_code_as_admin_label" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Set attribute option code as Admin label for attribute options</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Set this configuration to "Yes" in order to set the Akeneo option code as the attribute option Admin label in Magento. If this configuration is set to "No", the Admin label of the option will be imported from the Magento 2 locale configuration for the Admin scope.</comment>
                 </field>
             </group>
             <group id="filter_attribute" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -461,8 +486,73 @@ For example :<br/>
                     <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_five,serenity,growth</field>
                 </depends>
             </group>
-            <group id="advanced" translate="label" sortOrder="70" showInDefault="1">
-                <label>Advanced</label>
+            <group id="index" translate="label" sortOrder="70" type="text" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Index</label>
+                <field id="index_category" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Reindex data after Category import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Index</source_model>
+                    <comment>Choose the index you want to trigger after the Category job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="index_family" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Reindex data after Family import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Index</source_model>
+                    <comment>Choose the index you want to trigger after the Family job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="index_attribute" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Reindex data after Attribute import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Index</source_model>
+                    <comment>Choose the index you want to trigger after the Attribute job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="index_option" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Reindex data after Option import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Index</source_model>
+                    <comment>Choose the index you want to trigger after the Option job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="index_product" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Reindex data after Product import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Index</source_model>
+                    <comment>Choose the index you want to trigger after the Product job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+            </group>
+            <group id="cache" translate="label" sortOrder="80" type="text" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Cache</label>
+                <field id="cache_type_category" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Flush cache types after Category import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Cache</source_model>
+                    <comment>Choose the cache type you want to flush after the Category job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="cache_type_family" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Flush cache types after Family import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Cache</source_model>
+                    <comment>Choose the cache type you want to flush after the Family job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="cache_type_attribute" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Flush cache types after Attribute import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Cache</source_model>
+                    <comment>Choose the cache type you want to flush after the Attribute job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="cache_type_option" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Flush cache types after Option import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Cache</source_model>
+                    <comment>Choose the cache type you want to flush after the Option job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="cache_type_product" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Flush cache types after Product import</label>
+                    <source_model>Akeneo\Connector\Model\Source\Cache</source_model>
+                    <comment>Choose the cache type you want to flush after the Product job is finished.</comment>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+            </group>
+            <group id="advanced" translate="label" sortOrder="120" showInDefault="1">                <label>Advanced</label>
                 <field id="advanced_log" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Enable Advanced Loging</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>

@@ -45,7 +45,6 @@ class Entities
      * @var string IMPORT_CODE_PRODUCT
      */
     const IMPORT_CODE_PRODUCT = 'product';
-
     /**
      * This variable contains a ResourceConnection
      *
@@ -170,13 +169,14 @@ class Entities
                 ConfigOptionsListConstants::CONFIG_PATH_DB_PREFIX
             );
         }
+
         return $this->tablePrefix;
     }
 
     /**
      * Create temporary table from api result
      *
-     * @param array $result
+     * @param array  $result
      * @param string $tableSuffix
      *
      * @return $this
@@ -193,7 +193,7 @@ class Entities
     /**
      * Drop table if exist then create it
      *
-     * @param array $fields
+     * @param array  $fields
      * @param string $tableSuffix
      *
      * @return $this
@@ -283,7 +283,7 @@ class Entities
         $columns = [];
         /**
          * @var string $key
-         * @var mixed $value
+         * @var mixed  $value
          */
         foreach ($result as $key => $value) {
             if (in_array($key, static::EXCLUDED_COLUMNS)) {
@@ -403,6 +403,12 @@ class Entities
         /** @var string $tableName */
         $tableName = $this->getTableName($import);
 
+        if ($connection->tableColumnExists($tableName, 'code')) {
+            /** @var string $codeIndexName */
+            $codeIndexName = $connection->getIndexName($tableName, 'code');
+            $connection->query('CREATE INDEX ' . $codeIndexName . ' ON ' . $tableName . ' (code(255));');
+        }
+
         $connection->delete($tableName, [$pimKey . ' = ?' => '']);
         /** @var string $akeneoConnectorTable */
         $akeneoConnectorTable = $this->getTable('akeneo_connector_entities');
@@ -414,14 +420,16 @@ class Entities
         }
 
         /* Update entity_id column from akeneo_connector_entities table */
-        $connection->query('
+        $connection->query(
+            '
             UPDATE `' . $tableName . '` t
             SET `_entity_id` = (
                 SELECT `entity_id` FROM `' . $akeneoConnectorTable . '` c
                 WHERE ' . ($prefix ? 'CONCAT(t.`' . $prefix . '`, "_", t.`' . $pimKey . '`)' : 't.`' . $pimKey . '`') . ' = c.`code`
                     AND c.`import` = "' . $import . '"
             )
-        ');
+        '
+        );
 
         /** @var string $mysqlVersion */
         $mysqlVersion = $this->getMysqlVersion();
@@ -439,21 +447,20 @@ class Entities
         /** @var array $values */
         $values = [
             '_entity_id' => new Expr('@id := @id + 1'),
-            '_is_new' => new Expr('1'),
+            '_is_new'    => new Expr('1'),
         ];
         $connection->update($tableName, $values, '_entity_id IS NULL');
 
         /* Update akeneo_connector_entities table with code and new entity_id */
         /** @var Select $select */
-        $select = $connection->select()
-            ->from(
-                $tableName,
-                [
-                    'import' => new Expr("'" . $import . "'"),
-                    'code' => $prefix ? new Expr('CONCAT(`' . $prefix . '`, "_", `' . $pimKey . '`)') : $pimKey,
-                    'entity_id' => '_entity_id',
-                ]
-            )->where('_is_new = ?', 1);
+        $select = $connection->select()->from(
+            $tableName,
+            [
+                'import'    => new Expr("'" . $import . "'"),
+                'code'      => $prefix ? new Expr('CONCAT(`' . $prefix . '`, "_", `' . $pimKey . '`)') : $pimKey,
+                'entity_id' => '_entity_id',
+            ]
+        )->where('_is_new = ?', 1);
 
         $connection->query(
             $connection->insertFromSelect($select, $akeneoConnectorTable, ['import', 'code', 'entity_id'], 2)
@@ -467,14 +474,14 @@ class Entities
         if ($count) {
             /** @var string $maxCode */
             $maxCode = $connection->fetchOne(
-                $connection->select()
-                    ->from($akeneoConnectorTable, new Expr('MAX(`entity_id`)'))
-                    ->where('import = ?', $import)
+                $connection->select()->from($akeneoConnectorTable, new Expr('MAX(`entity_id`)'))->where(
+                    'import = ?',
+                    $import
+                )
             );
             /** @var string $maxEntity */
             $maxEntity = $connection->fetchOne(
-                $connection->select()
-                    ->from($entityTable, new Expr('MAX(`' . $entityKey . '`)'))
+                $connection->select()->from($entityTable, new Expr('MAX(`' . $entityKey . '`)'))
             );
 
             $connection->query(
@@ -497,8 +504,14 @@ class Entities
      *
      * @return \Akeneo\Connector\Helper\Import\Entities
      */
-    public function setValues($import, $entityTable, $values, $entityTypeId, $storeId, $mode = AdapterInterface::INSERT_ON_DUPLICATE)
-    {
+    public function setValues(
+        $import,
+        $entityTable,
+        $values,
+        $entityTypeId,
+        $storeId,
+        $mode = AdapterInterface::INSERT_ON_DUPLICATE
+    ) {
         /** @var \Magento\Framework\DB\Adapter\AdapterInterface $connection */
         $connection = $this->getConnection();
         /** @var string $tableName */
@@ -535,16 +548,26 @@ class Entities
 
             if ($rowIdExists && $entityTable === $this->getTablePrefix() . 'catalog_product_entity') {
                 /** @var Select $select */
-                $select = $connection->select()
-                                     ->from(
-                                         $tableName,
-                                         [
-                                             'attribute_id' => new Expr($attribute[AttributeInterface::ATTRIBUTE_ID]),
-                                             'store_id'     => new Expr($storeId),
-                                             'value'        => $value,
-                                         ]
-                                     );
+                $select = $connection->select()->from(
+                    $tableName,
+                    [
+                        'attribute_id' => new Expr($attribute[AttributeInterface::ATTRIBUTE_ID]),
+                        'store_id'     => new Expr($storeId),
+                        'value'        => $value,
+                    ]
+                );
                 $this->addJoinForContentStaging($select, [$identifier => 'row_id']);
+            } elseif ($rowIdExists && $entityTable === $this->getTablePrefix() . 'catalog_category_entity') {
+                /** @var Select $select */
+                $select = $connection->select()->from(
+                    $tableName,
+                    [
+                        'attribute_id' => new Expr($attribute[AttributeInterface::ATTRIBUTE_ID]),
+                        'store_id'     => new Expr($storeId),
+                        'value'        => $value,
+                    ]
+                );
+                $this->addJoinForContentStagingCategory($select, [$identifier => 'row_id']);
             } else {
                 /** @var Select $select */
                 $select = $connection->select()->from(
@@ -577,7 +600,7 @@ class Entities
                 $values = [
                     'value' => new Expr('NULL'),
                 ];
-                $where = [
+                $where  = [
                     'value = ?' => '0000-00-00 00:00:00',
                 ];
                 $connection->update(
@@ -606,17 +629,16 @@ class Entities
 
         /** @var array $attribute */
         $attribute = $connection->fetchRow(
-            $connection->select()
-                ->from(
-                    $this->getTable('eav_attribute'),
-                    [
-                        AttributeInterface::ATTRIBUTE_ID,
-                        AttributeInterface::BACKEND_TYPE
-                    ]
-                )
-                ->where(AttributeInterface::ENTITY_TYPE_ID . ' = ?', $entityTypeId)
-                ->where(AttributeInterface::ATTRIBUTE_CODE . ' = ?', $code)
-                ->limit(1)
+            $connection->select()->from(
+                $this->getTable('eav_attribute'),
+                [
+                    AttributeInterface::ATTRIBUTE_ID,
+                    AttributeInterface::BACKEND_TYPE,
+                ]
+            )->where(AttributeInterface::ENTITY_TYPE_ID . ' = ?', $entityTypeId)->where(
+                AttributeInterface::ATTRIBUTE_CODE . ' = ?',
+                $code
+            )->limit(1)
         );
 
         if (empty($attribute)) {
@@ -646,7 +668,10 @@ class Entities
         /** @var int $entityTypeId */
         $entityTypeId = $this->configHelper->getEntityTypeId(ProductAttributeInterface::ENTITY_TYPE_CODE);
         /** @var Select $select */
-        $select = $connection->select()->from(['a' => $eavAttribute], ['attribute_code'])->where('a.entity_type_id = ?', $entityTypeId)->joinInner(['c' => $catalogAttribute], 'c.attribute_id = a.attribute_id', ['is_global']);
+        $select = $connection->select()->from(['a' => $eavAttribute], ['attribute_code'])->where(
+            'a.entity_type_id = ?',
+            $entityTypeId
+        )->joinInner(['c' => $catalogAttribute], 'c.attribute_id = a.attribute_id', ['is_global']);
 
         /** @var string[] $attributeScopes */
         $attributeScopes = $connection->fetchPairs($select);
@@ -672,6 +697,7 @@ class Entities
 
         return $this->rowIdExists[$table];
     }
+
     /**
      * Retrieve if row id column exists
      *
@@ -706,7 +732,8 @@ class Entities
         if ($connection->tableColumnExists($tableName, $source)) {
             $connection->addColumn($tableName, $target, 'text');
             $connection->update(
-                $tableName, array($target => new Expr('`' . $source . '`'))
+                $tableName,
+                [$target => new Expr('`' . $source . '`')]
             );
         }
 
@@ -717,7 +744,7 @@ class Entities
      * Delete entity relation
      *
      * @param string $import
-     * @param int $entityId
+     * @param int    $entityId
      *
      * @return int The number of affected rows.
      */
@@ -732,7 +759,7 @@ class Entities
         /** @var array $data */
         $data = [
             'import = ?'    => $import,
-            'entity_id = ?' => $entityId
+            'entity_id = ?' => $entityId,
         ];
 
         return $connection->delete($pimTable, $data);
@@ -755,11 +782,12 @@ class Entities
             $keyParts    = explode('-', $key, 2);
             $keyParts[0] = strtolower($keyParts[0]);
             if (count($keyParts) > 1) {
-                $newValues[$keyParts[0].'-'.$keyParts[1]] = $data;
+                $newValues[$keyParts[0] . '-' . $keyParts[1]] = $data;
             } else {
                 $newValues[$keyParts[0]] = $data;
             }
         }
+
         return $newValues;
     }
 
@@ -771,7 +799,8 @@ class Entities
      *
      * @return void
      */
-    public function formatUrlKeyColumn($tmpTable, $local = null) {
+    public function formatUrlKeyColumn($tmpTable, $local = null)
+    {
         /** @var bool $isUrlKeyMapped */
         $isUrlKeyMapped = $this->configHelper->isUrlKeyMapped();
         /** @var string $columnKey */
@@ -836,6 +865,7 @@ class Entities
 
         return $finalName;
     }
+
     /**
      * Description addJoinForContentStaging function
      *
@@ -846,14 +876,13 @@ class Entities
      */
     public function addJoinForContentStaging($select, $cols)
     {
-        $select
-            ->joinLeft(
-            // retrieve each product entity for each row_id.
-            // We use "left join" to be able to create new product from Akeneo (they are not yet in catalog_product_entity)
-                ['p' => 'catalog_product_entity'],
-                '_entity_id = p.entity_id',
-                $cols
-            )
+        $select->joinLeft(
+        // retrieve each product entity for each row_id.
+        // We use "left join" to be able to create new product from Akeneo (they are not yet in catalog_product_entity)
+            ['p' => 'catalog_product_entity'],
+            '_entity_id = p.entity_id',
+            $cols
+        )
             ->joinLeft( // retrieve all the staging update for the givens entities. We use "join left" to get the original entity
                 ['s' => 'staging_update'],
                 'p.created_in = s.id',
@@ -864,6 +893,46 @@ class Entities
             $select->where(
             // filter to get only "default product entities"
             // ie. product with 2 stagings scheduled will appear 5 times in catalog_product_entity table.
+            // We only want row not updated by the content staging (the first, the one between the 2 scheduled and the last).
+                's.rollback_id IS NULL'
+            );
+        }
+
+        try {
+            // if possible, we remove behaviour of the ContentStaging override on FromRenderer @see \Magento\Staging\Model\Select\FromRenderer
+            $select->setPart('disable_staging_preview', true);
+        } catch (Zend_Db_Select_Exception $e) {
+            $this->_logger->error($e->getMessage());
+        }
+    }
+
+    /**
+     * Description addJoinForContentStaging function
+     *
+     * @param Select   $select
+     * @param string[] $cols
+     *
+     * @return void
+     */
+    public function addJoinForContentStagingCategory($select, $cols)
+    {
+        $select->joinLeft(
+        // retrieve each category entity for each row_id.
+        // We use "left join" to be able to create new category from Akeneo (they are not yet in catalog_category_entity)
+            ['p' => 'catalog_category_entity'],
+            '_entity_id = p.entity_id',
+            $cols
+        )
+            ->joinLeft( // retrieve all the staging update for the givens entities. We use "join left" to get the original entity
+                ['s' => 'staging_update'],
+                'p.created_in = s.id',
+                []
+            );
+
+        if (!$this->configHelper->getCategoriesIsOverrideContentStaging()) {
+            $select->where(
+            // filter to get only "default category entities"
+            // ie. category with 2 stagings scheduled will appear 5 times in catalog_category_entity table.
             // We only want row not updated by the content staging (the first, the one between the 2 scheduled and the last).
                 's.rollback_id IS NULL'
             );
