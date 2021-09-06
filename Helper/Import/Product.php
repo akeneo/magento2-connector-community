@@ -4,7 +4,6 @@ namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Serializer as JsonSerializer;
-use Akeneo\Connector\Helper\Import\Entities;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
@@ -13,6 +12,7 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Serialize\Serializer\Serialize;
 use Zend_Db_Expr as Expr;
 
 /**
@@ -39,6 +39,10 @@ class Product extends Entities
      * @var string VALUES_KEY
      */
     const VALUES_KEY = 'values';
+    /**
+     * @var string COMPLETENESS_KEY
+     */
+    const COMPLETENESS_KEY = 'completenesses';
     /**
      * QUANTIFIED_ASSOCIATIONS_KEY const
      *
@@ -69,6 +73,12 @@ class Product extends Entities
      * @var ScopeConfigInterface $scopeConfig
      */
     protected $scopeConfig;
+    /**
+     * This variable contains a Serialize
+     *
+     * @var Serialize $nativeSerializer
+     */
+    protected $nativeSerializer;
 
     /**
      * Product constructor
@@ -80,6 +90,7 @@ class Product extends Entities
      * @param ConfigHelper            $configHelper
      * @param JsonSerializer          $serializer
      * @param ScopeConfigInterface    $scopeConfig
+     * @param Serialize               $nativeSerializer
      */
     public function __construct(
         ResourceConnection $connection,
@@ -88,13 +99,15 @@ class Product extends Entities
         ProductUrlPathGenerator $productUrlPathGenerator,
         ConfigHelper $configHelper,
         JsonSerializer $serializer,
-        ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig,
+        Serialize $nativeSerializer
     ) {
         parent::__construct($connection, $deploymentConfig, $product, $configHelper);
 
         $this->serializer              = $serializer;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
         $this->scopeConfig             = $scopeConfig;
+        $this->nativeSerializer        = $nativeSerializer;
     }
 
     /**
@@ -121,6 +134,16 @@ class Product extends Entities
             if (in_array($key, self::ALL_ASSOCIATIONS_KEY, true)) {
                 /** @var array $values */
                 $values = $this->formatAssociations($value, $key);
+                /** @var array $columns */
+                $columns = $columns + $values;
+
+                continue;
+            }
+
+            if ($key === self::COMPLETENESS_KEY) {
+                /** @var array $values */
+                $values = $this->formatCompleteness($value, $key);
+
                 /** @var array $columns */
                 $columns = $columns + $values;
 
@@ -285,6 +308,46 @@ class Product extends Entities
         }
 
         return $associations;
+    }
+
+    /**
+     * Format completeness field
+     *
+     * @param mixed[]     $values
+     * @param string|null $assoKey
+     *
+     * @return array
+     */
+    public function formatCompleteness(array $values, ?string $assoKey = null)
+    {
+        /** @var array $completeness */
+        $completeness = [];
+
+        /** @var string[] $finalProducts */
+        $finalProducts = [];
+        /**
+         * @var array $values
+         * @var string $product
+         */
+        foreach ($values as $product) {
+            if (empty($product)) {
+                continue;
+            }
+            if ($assoKey === self::COMPLETENESS_KEY) {
+                /** @var string $product */
+                $finalProducts[] = $product;
+            }
+        }
+
+        if (isset($finalProducts)) {
+            $completeness['completenesses'] = $this->nativeSerializer->serialize($finalProducts);
+        }
+
+        if (empty($completeness)) {
+            return [];
+        }
+
+        return $completeness;
     }
 
     /**
