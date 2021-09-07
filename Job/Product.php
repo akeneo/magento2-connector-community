@@ -28,6 +28,7 @@ use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ProductLink\Link as ProductLink;
+use Magento\Catalog\Model\Product\Type;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Eav\Model\Config as EavConfig;
@@ -727,7 +728,19 @@ class Product extends JobImport
                     'nullable' => false,
                 ]
             );
-        } else {
+        } else if ($this->configHelper->getMappingAttribute() === Type::TYPE_VIRTUAL){
+            $connection->addColumn(
+                $tmpTable,
+                '_type_id',
+                [
+                    'type'     => 'text',
+                    'length'   => 255,
+                    'default'  => 'virtual',
+                    'COMMENT'  => ' ',
+                    'nullable' => false,
+                ]
+            );
+        }else {
             $connection->addColumn(
                 $tmpTable,
                 '_type_id',

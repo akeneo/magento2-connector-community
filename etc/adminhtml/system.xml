@@ -363,9 +363,19 @@ For example :<br/>
             </group>
             <group id="product" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Products</label>
-                <field id="website_attribute" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="website_attribute" translate="label comment" type="text" sortOrder="5" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Website Attribute</label>
                     <comment>Enter the code of the select or multiselect attribute used to associate products to your websites, leave blank to ignore</comment>
+                </field>
+                <field id="product_mapping_attribute" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Akeneo Attribute Code for Product Type Mapping</label>
+                    <comment><![CDATA[
+                        - Code of the select attribute that will be used to select product type
+                        <br />
+                        - If empty, every product that is not a product model will be created as a simple product
+                        <br />
+                        - If “virtual“ value is found, the product will be created as a virtual product
+                        ]]></comment>
                 </field>
                 <field id="activation" translate="label comment" type="select" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Default Product Status</label>
