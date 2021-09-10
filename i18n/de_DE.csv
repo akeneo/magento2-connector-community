@@ -171,5 +171,5 @@ The attribute %1 was not imported because it starts with a number. Update it in 
 "Empty","Leer"
 "Yes","Ja"
 "No","Nein"
-"Jobs are correctly scheduled","Jobs sind korrekt geplant"
-"Jobs are correctly resetted","Jobs werden korrekt zurückgesetzt"
+"Job(s) successfully scheduled","Jobs sind korrekt geplant"
+"Job(s) successfully reset","Jobs werden korrekt zurückgesetzt"

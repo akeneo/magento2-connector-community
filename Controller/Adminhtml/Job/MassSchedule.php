@@ -77,7 +77,7 @@ class MassSchedule extends Action
             }
         }
 
-        $this->messageManager->addSuccessMessage(__('Jobs are correctly scheduled'));
+        $this->messageManager->addSuccessMessage(__('Job(s) successfully scheduled'));
 
         /** @var Redirect $resultRedirect */
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
