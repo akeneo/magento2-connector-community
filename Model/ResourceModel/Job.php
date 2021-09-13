@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Model\ResourceModel;
 
 use Magento\Framework\DB\Adapter\AdapterInterface;

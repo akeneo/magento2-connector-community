@@ -266,6 +266,7 @@ class JobExecutor implements JobExecutorInterface
         if (count($entities) > 1) {
             $entities = $this->sortJobs($entities);
 
+            /** @var string $jobCode */
             foreach ($entities as $jobCode) {
                 $this->execute($jobCode, $output);
             }
@@ -294,7 +295,7 @@ class JobExecutor implements JobExecutorInterface
         }
 
         // If product import, run the import once per family
-        if ($code == self::IMPORT_CODE_PRODUCT) {
+        if ($code === self::IMPORT_CODE_PRODUCT) {
             /** @var array $productFamiliesToImport */
             $productFamiliesToImport = $this->currentJobClass->getFamiliesToImport();
 
@@ -330,7 +331,7 @@ class JobExecutor implements JobExecutorInterface
     }
 
     /**
-     * Description scheduleJobs function
+     * Description resetStatus function
      *
      * @param int[] $ids
      *
@@ -346,6 +347,13 @@ class JobExecutor implements JobExecutorInterface
         }
     }
 
+    /**
+     * Description sortJobs function
+     *
+     * @param $jobCodes
+     *
+     * @return array
+     */
     protected function sortJobs($jobCodes)
     {
         /** @var Collection $collection */
@@ -353,12 +361,12 @@ class JobExecutor implements JobExecutorInterface
 
         $collection->addFieldToFilter(JobInterface::CODE, ['in' => $jobCodes]);
         $collection->addOrder(JobInterface::POSITION, 'ASC');
-        $items = $collection->getItems();
 
+        /** @var array $sortedCodes */
         $sortedCodes = [];
 
         /** @var Job $item */
-        foreach ($items as $item) {
+        foreach ($collection->getItems() as $item) {
             $sortedCodes[] = $item->getCode();
         }
 
@@ -391,7 +399,7 @@ class JobExecutor implements JobExecutorInterface
 
                 /** @var string $message */
                 $message = $this->getMessage();
-                if ($this->currentJob->getStatus() == JobInterface::JOB_ERROR) {
+                if ($this->currentJob->getStatus() === JobInterface::JOB_ERROR) {
                     $this->displayError((string)$message);
                 } else {
                     $this->displayComment($message);
@@ -509,7 +517,7 @@ class JobExecutor implements JobExecutorInterface
      */
     public function getMethod()
     {
-        return isset($this->steps[$this->getStep()]['method']) ? $this->steps[$this->getStep()]['method'] : null;
+        return $this->steps[$this->getStep()]['method'] ?? null;
     }
 
     /**
@@ -519,7 +527,7 @@ class JobExecutor implements JobExecutorInterface
      */
     public function nextStep()
     {
-        $this->step += 1;
+        ++$this->step;
 
         return $this;
     }
@@ -584,8 +592,9 @@ class JobExecutor implements JobExecutorInterface
      * Set import message
      *
      * @param string|Phrase $message
+     * @param null          $logger
      *
-     * @return JobExecutor
+     * @return $this
      */
     public function setMessage($message, $logger = null)
     {
@@ -734,7 +743,7 @@ class JobExecutor implements JobExecutorInterface
                 /** @var string[] $message */
                 foreach ($importMessages as $message) {
                     if (isset($message['message'], $message['status'])) {
-                        if ($message['status'] == false) {
+                        if ($message['status'] === false) {
                             $this->setMessage($message['message'], $logger);
                             $this->currentJob->setStatus(false);
                         } else {
@@ -749,7 +758,8 @@ class JobExecutor implements JobExecutorInterface
     /**
      * Set additional message during import
      *
-     * @param $message
+     * @param string|Phrase $message
+     * @param null          $logger
      *
      * @return $this
      */

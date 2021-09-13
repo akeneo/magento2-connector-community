@@ -68,8 +68,8 @@ class JobActions extends AbstractRenderer
         );
 
         /** @var string $html */
-        $html = '<a href="' . $href . '">' . __('View Logs') . '</a><br>';
-        $html .= '<a href="' . $hrefSchedule . '">' . __('Schedule') . '</a>';
+        $html = '<a href="' . $hrefSchedule . '">' . __('Schedule Job') . '</a> / ';
+        $html .= '<a href="' . $href . '">' . __('View Logs') . '</a>';
 
         return $html;
     }
