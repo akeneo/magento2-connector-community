@@ -40,22 +40,16 @@
                     </arguments>
                 </block>
                 <block class="Magento\Backend\Block\Widget\Grid\ColumnSet" name="adminhtml.akeneo_connector.job.container.container.grid.columnSet" as="grid.columnSet">
-                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="identifier">
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="name">
                         <arguments>
-                            <argument name="header" xsi:type="string" translate="true">Job ID</argument>
-                            <argument name="index" xsi:type="string">entity_id</argument>
+                            <argument name="header" xsi:type="string" translate="true">Name</argument>
+                            <argument name="index" xsi:type="string">name</argument>
                         </arguments>
                     </block>
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="code">
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Code</argument>
                             <argument name="index" xsi:type="string">code</argument>
-                        </arguments>
-                    </block>
-                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="name">
-                        <arguments>
-                            <argument name="header" xsi:type="string" translate="true">Name</argument>
-                            <argument name="index" xsi:type="string">name</argument>
                         </arguments>
                     </block>
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="status">
