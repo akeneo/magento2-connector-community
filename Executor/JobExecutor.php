@@ -17,6 +17,7 @@ use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Exception;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Exception\AlreadyExistsException;
+use Magento\Framework\Message\ManagerInterface as MessageManagerInterface;
 use Magento\Framework\Phrase;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -156,6 +157,7 @@ class JobExecutor implements JobExecutorInterface
      * @param ManagerInterface    $eventManager
      * @param Authenticator       $authenticator
      * @param CollectionFactory   $jobCollectionFactory
+     * @param MessageManagerInterface $messageManager
      */
     public function __construct(
         JobRepository $jobRepository,
@@ -164,7 +166,8 @@ class JobExecutor implements JobExecutorInterface
         OutputHelper $outputHelper,
         ManagerInterface $eventManager,
         Authenticator $authenticator,
-        CollectionFactory $jobCollectionFactory
+        CollectionFactory $jobCollectionFactory,
+        MessageManagerInterface $messageManager
     ) {
         $this->jobRepository        = $jobRepository;
         $this->processClassFactory  = $processClassFactory;
@@ -173,6 +176,7 @@ class JobExecutor implements JobExecutorInterface
         $this->eventManager         = $eventManager;
         $this->authenticator        = $authenticator;
         $this->jobCollectionFactory = $jobCollectionFactory;
+        $this->messageManager       = $messageManager;
     }
 
     /**
@@ -277,17 +281,7 @@ class JobExecutor implements JobExecutorInterface
         $this->currentJobClass = $this->processClassFactory->create($job->getJobClass());
         $this->currentJobClass->setJobExecutor($this);
 
-        /** @var int $jobStatus */
-        $jobStatus = $this->currentJob->getStatus();
-        if ((int)$jobStatus === JobInterface::JOB_SCHEDULED && $output) {
-            $this->displayError(__('The job %1 is already scheduled', [$this->currentJob->getCode()]));
-
-            return false;
-        }
-
-        if ((int)$jobStatus === JobInterface::JOB_PROCESSING) {
-            $this->displayError(__('The job %1 is already running', [$this->currentJob->getCode()]));
-
+        if (!$this->checkStatusConditions()) {
             return false;
         }
 
@@ -304,6 +298,7 @@ class JobExecutor implements JobExecutorInterface
             }
 
             $this->beforeRun();
+            /** @var string $family */
             foreach ($productFamiliesToImport as $family) {
                 $this->run($family);
                 $this->setIdentifier(null);
@@ -805,6 +800,12 @@ class JobExecutor implements JobExecutorInterface
             /** @var string $coloredMessage */
             $coloredMessage = '<error>' . $message . '</error>';
             $this->output->writeln($coloredMessage);
+
+            return;
+        }
+
+        if (!empty($message)) {
+            $this->messageManager->addErrorMessage($message);
         }
     }
 
@@ -821,6 +822,12 @@ class JobExecutor implements JobExecutorInterface
             /** @var string $coloredMessage */
             $coloredMessage = '<info>' . $message . '</info>';
             $this->output->writeln($coloredMessage);
+
+            return;
+        }
+
+        if (!empty($message)) {
+            $this->messageManager->addErrorMessage($message);
         }
     }
 
@@ -839,5 +846,38 @@ class JobExecutor implements JobExecutorInterface
         $this->currentJobClass = $this->processClassFactory->create($job->getJobClass());
         $this->currentJobClass->setJobExecutor($this);
         $this->currentJobClass->setStatus(true);
+    }
+
+    /**
+     * Check conditions to launch or schedule a job
+     *
+     * @param JobInterface $job
+     * @param int          $jobStatus
+     *
+     * @return bool
+     */
+    public function checkStatusConditions($job = null, $jobStatus = null)
+    {
+        if (!$jobStatus) {
+            $jobStatus = (int)$this->currentJob->getStatus();
+        }
+
+        if (!$job) {
+            $job = $this->currentJob;
+        }
+
+        if ((int)$jobStatus === JobInterface::JOB_SCHEDULED) {
+            $this->displayError(__('The job %1 is already scheduled', [$job->getCode()]));
+
+            return false;
+        }
+
+        if ((int)$jobStatus === JobInterface::JOB_PROCESSING) {
+            $this->displayError(__('The job %1 is already running', [$job->getCode()]));
+
+            return false;
+        }
+
+        return true;
     }
 }
