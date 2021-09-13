@@ -472,11 +472,11 @@ class JobExecutor implements JobExecutorInterface
 
         $this->eventManager->dispatch(
             'akeneo_connector_import_step_start',
-            ['executor' => $this]
+            ['import' => $this]
         );
         $this->eventManager->dispatch(
             'akeneo_connector_import_step_start_' . strtolower($this->currentJob->getCode()),
-            ['executor' => $this]
+            ['import' => $this]
         );
 
         $this->initStatus();
@@ -488,10 +488,10 @@ class JobExecutor implements JobExecutorInterface
             $this->setMessage($exception->getMessage());
         }
 
-        $this->eventManager->dispatch('akeneo_connector_import_step_finish', ['executor' => $this]);
+        $this->eventManager->dispatch('akeneo_connector_import_step_finish', ['import' => $this]);
         $this->eventManager->dispatch(
             'akeneo_connector_import_step_finish_' . strtolower($this->currentJob->getCode()),
-            ['executor' => $this]
+            ['import' => $this]
         );
 
         $this->nextStep();
