@@ -93,6 +93,7 @@
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Actions</argument>
                             <argument name="sortable" xsi:type="string">0</argument>
+                            <argument name="filter" xsi:type="string">0</argument>
                             <argument name="renderer" xsi:type="string">Akeneo\Connector\Block\Adminhtml\Job\JobActions</argument>
                         </arguments>
                     </block>
