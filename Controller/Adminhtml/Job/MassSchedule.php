@@ -72,10 +72,9 @@ class MassSchedule extends Action
         foreach ($collection->getItems() as $job) {
             /** @var int $jobStatus */
             $jobStatus = $job->getStatus();
-            $this->jobExecutor->checkStatusConditions($job, $jobStatus);
-
-            if (in_array($jobStatus, [JobInterface::JOB_PENDING, JobInterface::JOB_SUCCESS, JobInterface::JOB_ERROR])) {
+            if ($this->jobExecutor->checkStatusConditions($job, $jobStatus)) {
                 $this->jobExecutor->setJobStatus(JobInterface::JOB_SCHEDULED, $job);
+                $this->messageManager->addSuccessMessage(__('Job %1 correctly scheduled', $job->getName()));
             }
         }
 

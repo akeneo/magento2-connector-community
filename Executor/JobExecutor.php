@@ -148,17 +148,23 @@ class JobExecutor implements JobExecutorInterface
      * @var CollectionFactory
      */
     protected $jobCollectionFactory;
+    /**
+     * Description $messageManager field
+     *
+     * @var MessageManagerInterface $messageManager
+     */
+    protected $messageManager;
 
     /**
      * JobExecutor constructor
      *
-     * @param JobRepository       $jobRepository
-     * @param ProcessClassFactory $processClassFactory
-     * @param ConfigHelper        $configHelper
-     * @param OutputHelper        $outputHelper
-     * @param ManagerInterface    $eventManager
-     * @param Authenticator       $authenticator
-     * @param CollectionFactory   $jobCollectionFactory
+     * @param JobRepository           $jobRepository
+     * @param ProcessClassFactory     $processClassFactory
+     * @param ConfigHelper            $configHelper
+     * @param OutputHelper            $outputHelper
+     * @param ManagerInterface        $eventManager
+     * @param Authenticator           $authenticator
+     * @param CollectionFactory       $jobCollectionFactory
      * @param MessageManagerInterface $messageManager
      */
     public function __construct(
@@ -250,7 +256,7 @@ class JobExecutor implements JobExecutorInterface
             /** @var Phrase $message */
             $message = __('API credentials are missing. Please configure the connector and retry.');
 
-            $this->displayError($message);
+            $this->displayError((string)$message);
 
             return false;
         }
@@ -275,7 +281,7 @@ class JobExecutor implements JobExecutorInterface
             /** @var Phrase $message */
             $message = __('Job code not found');
 
-            $this->displayError($message);
+            $this->displayError((string)$message);
 
             return false;
         }
@@ -294,7 +300,7 @@ class JobExecutor implements JobExecutorInterface
 
             if (!count($productFamiliesToImport)) {
                 $message = __('No family to import');
-                $this->displayError($message);
+                $this->displayError((string)$message);
 
                 return false;
             }
@@ -381,7 +387,7 @@ class JobExecutor implements JobExecutorInterface
                 /** @var string $message */
                 $message = $this->getMessage();
                 if ($this->currentJob->getStatus() == JobInterface::JOB_ERROR) {
-                    $this->displayError($message);
+                    $this->displayError((string)$message);
                 } else {
                     $this->displayComment($message);
                 }
@@ -774,8 +780,7 @@ class JobExecutor implements JobExecutorInterface
     /**
      * Display comment in console
      *
-     * @param string          $message
-     * @param OutputInterface $output
+     * @param string $message
      *
      * @return void
      */
@@ -791,8 +796,7 @@ class JobExecutor implements JobExecutorInterface
     /**
      * Display error in console
      *
-     * @param string          $message
-     * @param OutputInterface $output
+     * @param string $message
      *
      * @return void
      */
@@ -869,13 +873,13 @@ class JobExecutor implements JobExecutorInterface
         }
 
         if ((int)$jobStatus === JobInterface::JOB_SCHEDULED) {
-            $this->displayError(__('The job %1 is already scheduled', [$job->getCode()]));
+            $this->displayError((string)__('The job %1 is already scheduled', [$job->getCode()]));
 
             return false;
         }
 
         if ((int)$jobStatus === JobInterface::JOB_PROCESSING) {
-            $this->displayError(__('The job %1 is already running', [$job->getCode()]));
+            $this->displayError((string)__('The job %1 is already running', [$job->getCode()]));
 
             return false;
         }
