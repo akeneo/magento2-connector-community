@@ -404,6 +404,10 @@ class JobExecutor implements JobExecutorInterface
                 } else {
                     $this->displayComment($message);
                 }
+
+                if ($this->isDone()) {
+                    break;
+                }
             }
         } catch (Exception $exception) {
             $this->afterRun(true);
@@ -449,7 +453,7 @@ class JobExecutor implements JobExecutorInterface
      */
     public function canExecute()
     {
-        if ($this->step < 0 || $this->step > $this->countSteps() - 1) {
+        if ($this->step < 0 || $this->step >= $this->countSteps() - 1) {
             return false;
         }
 
@@ -875,7 +879,7 @@ class JobExecutor implements JobExecutorInterface
         $this->currentJob      = $job;
         $this->currentJobClass = $this->processClassFactory->create($job->getJobClass());
         $this->currentJobClass->setJobExecutor($this);
-        $this->currentJobClass->setStatus(true);
+        $this->currentJobClass->setStatus(1);
     }
 
     /**
