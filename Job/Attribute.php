@@ -265,7 +265,8 @@ class Attribute extends Import
         $index++;
 
         $this->jobExecutor->setAdditionalMessage(
-            __('%1 line(s) found', $index)
+            __('%1 line(s) found', $index),
+            $this->logger
         );
 
         if ($this->configHelper->isAdvancedLogActivated()) {
