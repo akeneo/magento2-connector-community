@@ -22,14 +22,14 @@
                 </resource>
                 <resource id="Magento_Backend::system">
                     <resource id="Akeneo_Connector::akeneo_connector" title="Akeneo Connector Api" sortOrder="100">
-                        <resource id="Akeneo_Connector::import" title="Import API" sortOrder="10">
-                            <resource id="Akeneo_Connector::import_category" title="Categories" sortOrder="10" />
-                            <resource id="Akeneo_Connector::import_family" title="Families" sortOrder="20" />
-                            <resource id="Akeneo_Connector::import_attribute" title="Attributes" sortOrder="30" />
-                            <resource id="Akeneo_Connector::import_option" title="Options" sortOrder="40" />
-                            <resource id="Akeneo_Connector::import_product_model" title="Variants" sortOrder="50" />
-                            <resource id="Akeneo_Connector::import_family_variant" title="Family Variant" sortOrder="60" />
-                            <resource id="Akeneo_Connector::import_product" title="Products" sortOrder="70" />
+                        <resource id="Akeneo_Connector::job" title="Import API" sortOrder="10">
+                            <resource id="Akeneo_Connector::job_category" title="Categories" sortOrder="10" />
+                            <resource id="Akeneo_Connector::job_family" title="Families" sortOrder="20" />
+                            <resource id="Akeneo_Connector::job_attribute" title="Attributes" sortOrder="30" />
+                            <resource id="Akeneo_Connector::job_option" title="Options" sortOrder="40" />
+                            <resource id="Akeneo_Connector::job_product_model" title="Variants" sortOrder="50" />
+                            <resource id="Akeneo_Connector::job_family_variant" title="Family Variant" sortOrder="60" />
+                            <resource id="Akeneo_Connector::job_product" title="Products" sortOrder="70" />
                         </resource>
                         <resource id="Akeneo_Connector::akeneo_connector_log" title="Log" sortOrder="20" />
                     </resource>

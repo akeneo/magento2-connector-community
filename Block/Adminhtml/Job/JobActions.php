@@ -33,16 +33,16 @@ class JobActions extends AbstractRenderer
      *
      * @param Context      $context
      * @param UrlInterface $urlBuilder
-     * @param string[]     $data
+     * @param mixed[]     $data
      */
     public function __construct(
         Context $context,
         UrlInterface $urlBuilder,
         array $data = []
     ) {
-        $this->urlBuilder = $urlBuilder;
-
         parent::__construct($context, $data);
+
+        $this->urlBuilder = $urlBuilder;
     }
 
     /**
