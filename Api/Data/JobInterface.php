@@ -93,4 +93,10 @@ interface JobInterface
      * @var string JOB_CLASS
      */
     const JOB_CLASS = 'job_class';
+    /**
+     * Job name
+     *
+     * @var string NAME
+     */
+    const NAME = 'name';
 }

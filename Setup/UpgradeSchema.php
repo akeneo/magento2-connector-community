@@ -200,6 +200,12 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 ['nullable' => false],
                 'Job import class'
             )->addColumn(
+                'name',
+                Table::TYPE_TEXT,
+                255,
+                ['nullable' => false],
+                'Job import name'
+            )->addColumn(
                 'position',
                 Table::TYPE_INTEGER,
                 null,

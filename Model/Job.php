@@ -130,6 +130,17 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
         return $this->getData(self::JOB_CLASS);
     }
 
+
+    /**
+     * Description getName function
+     *
+     * @return string|null
+     */
+    public function getName()
+    {
+        return $this->getData(self::NAME);
+    }
+
     /**
      * Set ID
      *
@@ -224,5 +235,17 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
     public function setJobClass($class)
     {
         return $this->setData(self::JOB_CLASS, $class);
+    }
+
+    /**
+     * Description setName function
+     *
+     * @param $name
+     *
+     * @return Job
+     */
+    public function setName($name)
+    {
+        return $this->setData(self::NAME, $name);
     }
 }

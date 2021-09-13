@@ -52,6 +52,12 @@
                             <argument name="index" xsi:type="string">code</argument>
                         </arguments>
                     </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="name">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Name</argument>
+                            <argument name="index" xsi:type="string">name</argument>
+                        </arguments>
+                    </block>
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="status">
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Status</argument>

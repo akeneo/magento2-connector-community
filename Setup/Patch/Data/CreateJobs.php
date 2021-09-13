@@ -91,11 +91,14 @@ class CreateJobs implements DataPatchInterface
          * @var string $class
          */
         foreach (self::JOBS_CODES as $code => $class) {
+            /** @var string $name */
+            $name = ucfirst($code);
             /** @var Job $job */
             $job = $this->jobFactory->create();
             $job->setCode($code);
             $job->setPosition($index);
             $job->setStatus(JobInterface::JOB_PENDING);
+            $job->setName($name);
             $job->setJobClass($class);
             $this->jobRepository->save($job);
             $index++;
