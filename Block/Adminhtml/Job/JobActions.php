@@ -61,7 +61,15 @@ class JobActions extends AbstractRenderer
             'akeneo_connector/log/index',
             ['filter' => $filterEncoded]
         );
+        /** @var string $hrefSchedule */
+        $hrefSchedule = $this->urlBuilder->getUrl(
+            'akeneo_connector/job/massSchedule',
+            ['entity_ids' => $row->getEntityId()]
+        );
 
-        return '<a href="' . $href . '">' . __('View Logs') . '</a>';
+        $html = '<a href="' . $href . '">' . __('View Logs') . '</a><br>';
+        $html .= '<a href="' . $hrefSchedule . '">' . __('Schedule') . '</a>';
+
+        return $html;
     }
 }
