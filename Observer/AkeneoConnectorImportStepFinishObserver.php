@@ -58,8 +58,7 @@ class AkeneoConnectorImportStepFinishObserver implements ObserverInterface
             return $this;
         }
 
-        if ($executor->getStep() + 1 == $executor->countSteps() || ($executor->isDone() && $currentJob->getStatus(
-                ) != JobInterface::JOB_ERROR)) {
+        if ($executor->getStep() + 1 == $executor->countSteps() - 1 || ($executor->isDone() && $currentJob->getStatus() != JobInterface::JOB_ERROR)) {
             $log->setStatus(ImportInterface::IMPORT_SUCCESS); // Success
             $this->logRepository->save($log);
         }
@@ -77,7 +76,7 @@ class AkeneoConnectorImportStepFinishObserver implements ObserverInterface
                 'method'     => $executor->getMethod(),
                 'message'    => $executor->getMessage(),
                 'continue'   => $executor->isDone() ? 0 : 1,
-                'status' => $executor->getCurrentJobClass()->getStatus(),
+                'status'     => $executor->getCurrentJobClass()->getStatus(),
             ]
         );
 
