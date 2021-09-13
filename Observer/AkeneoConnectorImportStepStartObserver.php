@@ -60,7 +60,7 @@ class AkeneoConnectorImportStepStartObserver implements ObserverInterface
     public function execute(Observer $observer)
     {
         /** @var JobExecutor $executor */
-        $executor = $observer->getEvent()->getExecutor();
+        $executor = $observer->getEvent()->getImport();
         if ($executor->getStep() == 0) {
             /** @var LogModel $log */
             $log = $this->logFactory->create();

@@ -49,7 +49,7 @@ class AkeneoConnectorImportStepFinishObserver implements ObserverInterface
     public function execute(Observer $observer)
     {
         /** @var JobExecutorInterface $executor */
-        $executor   = $observer->getEvent()->getExecutor();
+        $executor   = $observer->getEvent()->getImport();
         $currentJob = $executor->getCurrentJob();
         /** @var LogInterface $log */
         $log = $this->logRepository->getByIdentifier($executor->getIdentifier());
