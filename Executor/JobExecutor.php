@@ -308,6 +308,11 @@ class JobExecutor implements JobExecutorInterface
             $this->beforeRun();
             /** @var string $family */
             foreach ($productFamiliesToImport as $family) {
+                $this->eventManager->dispatch(
+                    'akeneo_connector_import_product_family',
+                    ['executor' => $this, 'family' => $family]
+                );
+
                 $this->run($family);
                 $this->setIdentifier(null);
             }
@@ -655,11 +660,19 @@ class JobExecutor implements JobExecutorInterface
 
         if ($error) {
             $this->setJobStatus(JobInterface::JOB_ERROR);
+            $this->eventManager->dispatch(
+                'akeneo_connector_import_on_error',
+                ['executor' => $this, 'error' => $this->getMessage()]
+            );
         }
 
         if ($error === null && $this->currentJob->getStatus() !== JobInterface::JOB_ERROR) {
             $this->currentJob->setLastSuccessDate(date('y-m-d h:i:s'));
             $this->setJobStatus(JobInterface::JOB_SUCCESS);
+            $this->eventManager->dispatch(
+                'akeneo_connector_import_on_success',
+                ['executor' => $this]
+            );
         }
 
         $this->eventManager->dispatch(
