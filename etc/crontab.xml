@@ -14,7 +14,6 @@
         <job name="akeneo_connector_launch_scheduled_job" instance="Akeneo\Connector\Cron\LaunchScheduledJob" method="execute">
             <!-- Every minute -->
             <schedule>*/1 * * * *</schedule>
-            <!--<config_path>jobs/cron/schedule</config_path>-->
         </job>
     </group>
 </config>

@@ -266,8 +266,8 @@ class JobExecutor implements JobExecutorInterface
         if (count($entities) > 1) {
             $entities = $this->sortJobs($entities);
 
-            foreach ($entities as $code) {
-                $this->execute($code, $output);
+            foreach ($entities as $jobCode) {
+                $this->execute($jobCode, $output);
             }
 
             return true;

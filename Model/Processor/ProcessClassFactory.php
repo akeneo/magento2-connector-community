@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Model\Processor;
 
 use Akeneo\Connector\Api\ProcessClassFactoryInterface;
