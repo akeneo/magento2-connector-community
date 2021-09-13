@@ -22,7 +22,7 @@
                 </resource>
                 <resource id="Magento_Backend::system">
                     <resource id="Akeneo_Connector::akeneo_connector" title="Akeneo Connector Api" sortOrder="100">
-                        <resource id="Akeneo_Connector::akeneo_connector_job" title="Import API" sortOrder="10"/>
+                        <resource id="Akeneo_Connector::akeneo_connector_job" title="Job API" sortOrder="10"/>
                         <resource id="Akeneo_Connector::akeneo_connector_log" title="Log" sortOrder="20" />
                     </resource>
                 </resource>
