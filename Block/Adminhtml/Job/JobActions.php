@@ -33,7 +33,7 @@ class JobActions extends AbstractRenderer
      *
      * @param Context      $context
      * @param UrlInterface $urlBuilder
-     * @param mixed[]     $data
+     * @param mixed[]      $data
      */
     public function __construct(
         Context $context,
@@ -67,6 +67,7 @@ class JobActions extends AbstractRenderer
             ['entity_ids' => $row->getEntityId()]
         );
 
+        /** @var string $html */
         $html = '<a href="' . $href . '">' . __('View Logs') . '</a><br>';
         $html .= '<a href="' . $hrefSchedule . '">' . __('Schedule') . '</a>';
 
