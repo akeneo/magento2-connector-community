@@ -289,7 +289,7 @@ class JobExecutor implements JobExecutorInterface
         $this->currentJobClass = $this->processClassFactory->create($job->getJobClass());
         $this->currentJobClass->setJobExecutor($this);
 
-        if (!$this->checkStatusConditions()) {
+        if (!$this->checkStatusConditions($job)) {
             return false;
         }
 
@@ -858,28 +858,22 @@ class JobExecutor implements JobExecutorInterface
      * Check conditions to launch or schedule a job
      *
      * @param JobInterface $job
-     * @param int          $jobStatus
+     * @param bool         $isMassAction
      *
      * @return bool
      */
-    public function checkStatusConditions($job = null, $jobStatus = null)
+    public function checkStatusConditions($job, $isMassAction = null)
     {
-        if (!$jobStatus) {
-            $jobStatus = (int)$this->currentJob->getStatus();
-        }
-
-        if (!$job) {
-            $job = $this->currentJob;
-        }
-
-        if ((int)$jobStatus === JobInterface::JOB_SCHEDULED) {
-            $this->displayError((string)__('The job %1 is already scheduled', [$job->getCode()]));
+        /** @var int $jobStatus */
+        $jobStatus = (int)$job->getStatus();
+        if ((int)$jobStatus === JobInterface::JOB_SCHEDULED && ($isMassAction || $this->output)) {
+            $this->displayError((string)__('The job %1 is already scheduled', [$job->getName()]));
 
             return false;
         }
 
         if ((int)$jobStatus === JobInterface::JOB_PROCESSING) {
-            $this->displayError((string)__('The job %1 is already running', [$job->getCode()]));
+            $this->displayError((string)__('The job %1 is already running', [$job->getName()]));
 
             return false;
         }
