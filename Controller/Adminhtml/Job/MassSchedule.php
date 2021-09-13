@@ -95,6 +95,6 @@ class MassSchedule extends Action
      */
     protected function _isAllowed()
     {
-        return $this->_authorization->isAllowed('Akeneo_Connector::job');
+        return $this->_authorization->isAllowed('Akeneo_Connector::akeneo_connector_job');
     }
 }
