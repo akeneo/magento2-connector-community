@@ -654,15 +654,15 @@ class JobExecutor implements JobExecutorInterface
      * Description afterRun function
      *
      * @param bool|null $error
-     * @param bool|null $onlyStop ;
+     * @param bool|null $onlyStop
      *
      * @return void
      * @throws AlreadyExistsException
      */
     public function afterRun($error = null, $onlyStop = null)
     {
-        /** @var boolean continue */
         $this->continue = false;
+
         if ($onlyStop) {
             return;
         }
