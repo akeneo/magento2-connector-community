@@ -1725,11 +1725,6 @@ class Product extends JobImport
             }
         }
 
-        if ($this->configHelper->getProductStatusMode() !== StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
-            /** @var string $status */
-            $status = $this->configHelper->getProductActivation();
-        }
-
         // Update new simple status
         $connection->update(
             $tmpTable,
