@@ -1689,7 +1689,8 @@ class Product extends JobImport
             /** @var Select $selectComplet */
             $selectComplet = $connection->select()->from(['a' => $tmpTable], $columnsForCompleteness);
             /** @var Zend_Db_Statement_Pdo $completQuery */
-            $completQuery       = $connection->query($selectComplet);
+            $completQuery = $connection->query($selectComplet);
+            /** @var string $completenessConfig */
             $completenessConfig = $this->configHelper->getEnableSimpleProductsPerWebsite();
             while (($row = $completQuery->fetch())) {
                 /** @var string[] $completenesses */
@@ -1698,7 +1699,10 @@ class Product extends JobImport
                 $status = 1;
                 /** @var string[] $completeness */
                 foreach ($completenesses as $completeness) {
-                    /** @var string $local */
+                    /**
+                     * @var string $local
+                     * @var string $store
+                     */
                     foreach ($stores as $local => $store) {
                         if ($local === $completeness['locale'] && $completeness['data'] < $completenessConfig) {
                             $status = 2;
