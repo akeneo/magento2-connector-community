@@ -728,19 +728,7 @@ class Product extends JobImport
                     'nullable' => false,
                 ]
             );
-        } else if ($this->configHelper->getMappingAttribute() === Type::TYPE_VIRTUAL){
-            $connection->addColumn(
-                $tmpTable,
-                '_type_id',
-                [
-                    'type'     => 'text',
-                    'length'   => 255,
-                    'default'  => 'virtual',
-                    'COMMENT'  => ' ',
-                    'nullable' => false,
-                ]
-            );
-        }else {
+        } else {
             $connection->addColumn(
                 $tmpTable,
                 '_type_id',
@@ -857,14 +845,15 @@ class Product extends JobImport
                 ]
             );
         }
-
-        if ($connection->tableColumnExists($tmpTable, 'type_id')) {
+        /** @var string $productMappingAttribute */
+        $productMappingAttribute = $this->configHelper->getMappingAttribute();
+        if ($connection->tableColumnExists($tmpTable, $productMappingAttribute)) {
             /** @var string $types */
             $types = $connection->quote($this->allowedTypeId);
             $connection->update(
                 $tmpTable,
                 [
-                    '_type_id' => new Expr("IF(`type_id` IN ($types), `type_id`, 'simple')"),
+                    '_type_id' => new Expr("IF($productMappingAttribute IN ($types), $productMappingAttribute, 'simple')"),
                 ]
             );
         }
