@@ -40,11 +40,11 @@ class Status extends AbstractRenderer
                 $text  = __('Error');
                 break;
             case JobInterface::JOB_PROCESSING:
-                $class = 'grid-severity-minor';
+                $class = 'grid-severity-processing';
                 $text  = __('Processing');
                 break;
             case JobInterface::JOB_PENDING:
-                $class = 'grid-severity-minor';
+                $class = 'grid-severity-pending';
                 $text  = __('Pending');
                 break;
             case JobInterface::JOB_SCHEDULED:
