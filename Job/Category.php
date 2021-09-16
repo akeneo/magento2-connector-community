@@ -174,15 +174,15 @@ class Category extends Import
     public function createTable()
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
             $this->logger->addDebug(
                 __('Category API call Filters : ') . print_r($this->categoryFilters->getParentFilters(), true)
             );
         }
         if (!$this->categoryFilters->getCategoriesToImport()) {
-            $this->setMessage(__('No categories to import, check your category filter configuration'), $this->logger);
-            $this->stop(1);
+            $this->jobExecutor->setMessage(__('No categories to import, check your category filter configuration'), $this->logger);
+            $this->jobExecutor->afterRun(1);
 
             return;
         }
@@ -196,13 +196,13 @@ class Category extends Import
         $category = $categories->getItems();
 
         if (empty($category)) {
-            $this->setMessage(__('No results retrieved from Akeneo'), $this->logger);
-            $this->stop(1);
+            $this->jobExecutor->setMessage(__('No results retrieved from Akeneo'), $this->logger);
+            $this->jobExecutor->afterRun(1);
 
             return;
         }
         $category = reset($category);
-        $this->entitiesHelper->createTmpTableFromApi($category, $this->getCode());
+        $this->entitiesHelper->createTmpTableFromApi($category, $this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -233,14 +233,14 @@ class Category extends Import
             if (count($categoriesToImport) != iterator_count($parentCategories)) {
                 /** @var string[] $editions */
                 $editions = $this->editionSource->toOptionArray();
-                $this->setMessage(
+                $this->jobExecutor->setMessage(
                     __(
                         'Wrong Akeneo version selected in the Akeneo Edition configuration field: %1',
                         $editions[$edition]
                     ),
                     $this->logger
                 );
-                $this->stop(1);
+                $this->jobExecutor->afterRun(1);
 
                 return;
             }
@@ -273,11 +273,11 @@ class Category extends Import
         foreach ($categories as $index => $category) {
             $warning = $this->checkLabelPerLocales($category, $lang, $warning);
 
-            $this->entitiesHelper->insertDataFromApi($category, $this->getCode());
+            $this->entitiesHelper->insertDataFromApi($category, $this->jobExecutor->getCurrentJob()->getCode());
         }
         $index++;
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('%1 line(s) found. %2', $index, $warning),
             $this->logger
         );
@@ -322,7 +322,7 @@ class Category extends Import
             'code',
             'catalog_category_entity',
             'entity_id',
-            $this->getCode()
+            $this->jobExecutor->getCurrentJob()->getCode()
         );
     }
 
@@ -336,7 +336,7 @@ class Category extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tableName */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         $connection->addColumn(
             $tmpTable,
@@ -406,7 +406,7 @@ class Category extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tableName */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $stores */
         $stores = $this->storeHelper->getStores('lang');
 
@@ -504,7 +504,7 @@ class Category extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tableName */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         $connection->addColumn(
             $tmpTable,
@@ -556,7 +556,7 @@ class Category extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tableName */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         if ($connection->isTableExists($this->entitiesHelper->getTable('sequence_catalog_category'))) {
             /** @var array $values */
@@ -637,7 +637,7 @@ class Category extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tableName */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $values */
         $values = [
             'is_active'       => new Expr($this->configHelper->getIsCategoryActive()),
@@ -650,7 +650,7 @@ class Category extends Import
         $entityTypeId = $this->configHelper->getEntityTypeId(CategoryModel::ENTITY);
 
         $this->entitiesHelper->setValues(
-            $this->getCode(),
+            $this->jobExecutor->getCurrentJob()->getCode(),
             'catalog_category_entity',
             $values,
             $entityTypeId,
@@ -678,7 +678,7 @@ class Category extends Import
                     'url_path' => 'url_path-' . $local,
                 ];
                 $this->entitiesHelper->setValues(
-                    $this->getCode(),
+                    $this->jobExecutor->getCurrentJob()->getCode(),
                     'catalog_category_entity',
                     $values,
                     $entityTypeId,
@@ -731,7 +731,7 @@ class Category extends Import
         /** @var string|string[] $filteredCategories */
         $filteredCategories = $this->configHelper->getCategoriesFilter();
         if (!$filteredCategories || empty($filteredCategories)) {
-            $this->setMessage(
+            $this->jobExecutor->setMessage(
                 __('No category to ignore'),
                 $this->logger
             );
@@ -739,7 +739,7 @@ class Category extends Import
             return;
         }
         /** @var string $tableName */
-        $tableName = $this->entitiesHelper->getTableName($this->getCode());
+        $tableName = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var AdapterInterface $connection */
         $connection         = $this->entitiesHelper->getConnection();
         $filteredCategories = explode(',', $filteredCategories);
@@ -748,7 +748,7 @@ class Category extends Import
             $connection->select()->from($tableName)->where('code IN (?)', $filteredCategories)
         );
         if (!$categoriesToDelete) {
-            $this->setMessage(
+            $this->jobExecutor->setMessage(
                 __('No category found'),
                 $this->logger
             );
@@ -774,7 +774,7 @@ class Category extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tableName */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $stores */
         $stores = $this->storeHelper->getStores('lang');
         /** @var mixed[] $categoryPath */
@@ -882,7 +882,7 @@ class Category extends Import
                                 ['url_rewrite_id = ?' => $rewriteId]
                             );
                         } catch (\Exception $e) {
-                            $this->setAdditionalMessage(
+                            $this->jobExecutor->setAdditionalMessage(
                                 __(
                                     sprintf(
                                         'Tried to update url_rewrite_id %s : request path (%s) already exists for the store_id.',
@@ -991,7 +991,7 @@ class Category extends Import
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->getCode());
+        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -1005,7 +1005,7 @@ class Category extends Import
         $configurations = $this->configHelper->getCacheTypeCategory();
 
         if (!$configurations) {
-            $this->setMessage(__('No cache cleaned'), $this->logger);
+            $this->jobExecutor->setMessage(__('No cache cleaned'), $this->logger);
 
             return;
         }
@@ -1020,7 +1020,7 @@ class Category extends Import
             $this->cacheTypeList->cleanType($type);
         }
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('Cache cleaned for: %1', join(', ', array_intersect_key($cacheTypeLabels, array_flip($types)))),
             $this->logger
         );
@@ -1038,7 +1038,7 @@ class Category extends Import
         $configurations = $this->configHelper->getIndexCategory();
 
         if (!$configurations) {
-            $this->setMessage(__('No index refreshed'), $this->logger);
+            $this->jobExecutor->setMessage(__('No index refreshed'), $this->logger);
 
             return;
         }
@@ -1056,9 +1056,19 @@ class Category extends Import
             $typesFlushed[] = $index->getTitle();
         }
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('Index refreshed for: %1', join(', ', $typesFlushed)),
             $this->logger
         );
+    }
+
+    /**
+     * Description getLogger function
+     *
+     * @return CategoryLogger
+     */
+    public function getLogger()
+    {
+        return $this->logger;
     }
 }

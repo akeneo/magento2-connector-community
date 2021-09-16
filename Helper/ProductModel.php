@@ -11,7 +11,7 @@ use Akeneo\Connector\Helper\Import\Product;
 use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
-use Akeneo\PimEnterprise\ApiClient\AkeneoPimEnterpriseClientInterface;
+use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Magento\Eav\Model\Config;
 use Magento\Framework\Serialize\Serializer\Json as MagentoJsonSerializer;
 
@@ -79,7 +79,7 @@ class ProductModel
      * ProductModel constructor
      *
      * @param Product                         $entitiesHelper
-     * @param \Akeneo\Connector\Helper\Config $configHelper
+     * @param ConfigHelper                    $configHelper
      * @param Config                          $eavConfig
      * @param ProductFilters                  $productFilters
      * @param Store                           $storeHelper
@@ -110,8 +110,8 @@ class ProductModel
     /**
      * Description createTable function
      *
-     * @param AkeneoPimEnterpriseClientInterface $akeneoClient
-     * @param string[]                           $filters
+     * @param AkeneoPimClientInterface $akeneoClient
+     * @param string[]                 $filters
      *
      * @return string[]
      */
@@ -119,13 +119,13 @@ class ProductModel
     {
         /** @var string[] $messages */
         $messages = [];
-        
+
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         if ($connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
             return $messages;
         }
-        
+
         foreach ($filters as $filter) {
             /** @var PageInterface $productModels */
             $productModels = $akeneoClient->getProductModelApi()->listPerPage(1, false, $filter);
@@ -152,8 +152,8 @@ class ProductModel
     /**
      * Insert data into temporary table
      *
-     * @param AkeneoPimEnterpriseClientInterface $akeneoClient
-     * @param string[]                           $filters
+     * @param AkeneoPimClientInterface $akeneoClient
+     * @param string[]                 $filters
      *
      * @return void
      */
@@ -338,7 +338,7 @@ class ProductModel
 
         return $metricsSymbols;
     }
-    
+
     /**
      * Add columns to product table
      *
