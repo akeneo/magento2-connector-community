@@ -226,7 +226,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
             $installer->getConnection()->createTable($table);
         }
 
-        if (version_compare($context->getVersion(), '1.0.4', '<')) {
+        if (version_compare($context->getVersion(), '1.0.5', '<')) {
             /** @var string $config */
             $config = $this->scopeConfig->getValue(ConfigHelper::AKENEO_API_CLIENT_SECRET);
             /** @var string $encryptConfig */
