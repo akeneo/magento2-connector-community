@@ -2,17 +2,16 @@
 
 namespace Akeneo\Connector\Block\Adminhtml\Grid\Column\Renderer;
 
+use Akeneo\Connector\Api\Data\JobInterface;
 use Magento\Backend\Block\Widget\Grid\Column\Renderer\AbstractRenderer;
 use Magento\Framework\DataObject;
-use Akeneo\Connector\Api\Data\ImportInterface;
 
 /**
  * Class Status
  *
- * @category  Class
  * @package   Akeneo\Connector\Block\Adminhtml\Grid\Column\Renderer
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
@@ -32,17 +31,25 @@ class Status extends AbstractRenderer
         /** @var string $text */
         $text = '';
         switch ($this->_getValue($row)) {
-            case ImportInterface::IMPORT_SUCCESS:
+            case JobInterface::JOB_SUCCESS:
                 $class = 'grid-severity-notice';
-                $text = __('Success');
+                $text  = __('Success');
                 break;
-            case ImportInterface::IMPORT_ERROR:
+            case JobInterface::JOB_ERROR:
                 $class = 'grid-severity-critical';
-                $text = __('Error');
+                $text  = __('Error');
                 break;
-            case ImportInterface::IMPORT_PROCESSING:
+            case JobInterface::JOB_PROCESSING:
+                $class = 'grid-severity-processing';
+                $text  = __('Processing');
+                break;
+            case JobInterface::JOB_PENDING:
+                $class = 'grid-severity-pending';
+                $text  = __('Pending');
+                break;
+            case JobInterface::JOB_SCHEDULED:
                 $class = 'grid-severity-minor';
-                $text = __('Processing');
+                $text  = __('Scheduled');
                 break;
         }
 

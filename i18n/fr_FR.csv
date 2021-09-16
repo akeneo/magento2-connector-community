@@ -171,3 +171,7 @@ The attribute %1 was not imported because it starts with a number. Update it in 
 "Empty","Vide"
 "Yes","Oui"
 "No","Non"
+"Job(s) successfully reset","Les flux ont été réinitialisés"
+"The job %1 is already running","Le flux %1 est deja en cours d'execution"
+"The job %1 is already scheduled","Le flux %1 est deja planifié"
+"Job %1 correctly scheduled","Le flux %1 est maintenant planifié"
