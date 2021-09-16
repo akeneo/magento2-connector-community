@@ -86,3 +86,25 @@
 .akeneo-connector-console .success {
     color: #E38D13;
 }
+
+.grid-severity-processing {
+    background: #c9d9ff none repeat scroll 0 0;
+    border: 1px solid #007bdb;
+    color: #007bdb;
+    font-weight: bold;
+    line-height: 17px;
+    text-align: center;
+    text-transform: uppercase;
+    display: block;
+}
+
+.grid-severity-pending {
+    background: #cacaca none repeat scroll 0 0;
+    border: 1px solid #535353;
+    color: #535353;
+    font-weight: bold;
+    line-height: 17px;
+    text-align: center;
+    text-transform: uppercase;
+    display: block;
+}

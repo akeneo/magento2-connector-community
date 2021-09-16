@@ -2,17 +2,17 @@
 
 namespace Akeneo\Connector\Setup;
 
-use Magento\Framework\Setup\UpgradeSchemaInterface;
+use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
+use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Helper\Serializer as JsonSerializer;
+use Magento\Framework\App\Config\ConfigResource\ConfigInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\DB\Ddl\Table;
+use Magento\Framework\Encryption\Encryptor;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\SchemaSetupInterface;
-use Magento\Framework\DB\Adapter\AdapterInterface;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\App\Config\ConfigResource\ConfigInterface;
-use Akeneo\Connector\Helper\Serializer as JsonSerializer;
-use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
-use Magento\Framework\Encryption\Encryptor;
-
+use Magento\Framework\Setup\UpgradeSchemaInterface;
 
 /**
  * Class UpgradeSchema
@@ -65,10 +65,10 @@ class UpgradeSchema implements UpgradeSchemaInterface
         JsonSerializer $serializer,
         Encryptor $encryptor
     ) {
-        $this->scopeConfig = $scopeConfig;
+        $this->scopeConfig    = $scopeConfig;
         $this->resourceConfig = $resourceConfig;
-        $this->serializer = $serializer;
-        $this->encryptor = $encryptor;
+        $this->serializer     = $serializer;
+        $this->encryptor      = $encryptor;
     }
 
     /**
@@ -125,7 +125,6 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     json_encode($configurable)
                 );
             }
-
         }
 
         if (version_compare($context->getVersion(), '1.0.2', '<')) {
@@ -161,6 +160,70 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     json_encode($configurable)
                 );
             }
+        }
+
+        if (version_compare($context->getVersion(), '1.0.4', '<')) {
+            /**
+             * Create table 'akeneo_connector_job'
+             */
+            /** @var Table $table */
+            $table = $installer->getConnection()->newTable($installer->getTable('akeneo_connector_job'))->addColumn(
+                'entity_id',
+                Table::TYPE_INTEGER,
+                null,
+                ['identity' => true, 'nullable' => false, 'primary' => true],
+                'Job ID'
+            )->addColumn(
+                'code',
+                Table::TYPE_TEXT,
+                255,
+                ['nullable' => false],
+                'Code'
+            )->addColumn(
+                'status',
+                Table::TYPE_TEXT,
+                255,
+                ['nullable' => false, 'default' => 'PENDING'],
+                'Status'
+            )->addColumn(
+                'scheduled_at',
+                Table::TYPE_DATETIME,
+                null,
+                ['nullable' => true],
+                'Date scheduled to launch the job'
+            )->addColumn(
+                'last_executed_date',
+                Table::TYPE_DATETIME,
+                null,
+                ['nullable' => true],
+                'Last executed date'
+            )->addColumn(
+                'last_success_date',
+                Table::TYPE_DATETIME,
+                null,
+                ['nullable' => true],
+                'Last date the job was executed correctly'
+            )->addColumn(
+                'job_class',
+                Table::TYPE_TEXT,
+                255,
+                ['nullable' => false],
+                'Job import class'
+            )->addColumn(
+                'name',
+                Table::TYPE_TEXT,
+                255,
+                ['nullable' => false],
+                'Job import name'
+            )->addColumn(
+                'position',
+                Table::TYPE_INTEGER,
+                null,
+                ['nullable' => false],
+                'Job position to priorize launch'
+            )->setComment('Akeneo Connector Job');
+
+            $installer->getConnection()->createTable($table);
         }
 
         if (version_compare($context->getVersion(), '1.0.4', '<')) {

@@ -153,8 +153,8 @@ class Family extends Import
         /** @var string[] $filters */
         $filters = $this->familyFilters->getFilters();
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
             $this->logger->addDebug(__('Family API call Filters : ') . print_r($filters, true));
         }
         /** @var PageInterface $families */
@@ -163,13 +163,13 @@ class Family extends Import
         $family = $families->getItems();
 
         if (empty($family)) {
-            $this->setMessage(__('No results retrieved from Akeneo'), $this->logger);
-            $this->stop(1);
+            $this->jobExecutor->setMessage(__('No results retrieved from Akeneo'), $this->logger);
+            $this->jobExecutor->afterRun(1);
 
             return;
         }
         $family = reset($family);
-        $this->entitiesHelper->createTmpTableFromApi($family, $this->getCode());
+        $this->entitiesHelper->createTmpTableFromApi($family, $this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -196,11 +196,11 @@ class Family extends Import
         foreach ($families as $index => $family) {
             $warning = $this->checkLabelPerLocales($family, $lang, $warning);
 
-            $this->entitiesHelper->insertDataFromApi($family, $this->getCode());
+            $this->entitiesHelper->insertDataFromApi($family, $this->jobExecutor->getCurrentJob()->getCode());
         }
         $index++;
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('%1 line(s) found. %2', $index, $warning),
             $this->logger
         );
@@ -245,7 +245,7 @@ class Family extends Import
      */
     public function matchEntities()
     {
-        $this->entitiesHelper->matchEntity('code', 'eav_attribute_set', 'attribute_set_id', $this->getCode());
+        $this->entitiesHelper->matchEntity('code', 'eav_attribute_set', 'attribute_set_id', $this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -258,7 +258,7 @@ class Family extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string $label */
         $label = 'labels-' . $this->configHelper->getDefaultLocale();
         /** @var string $productEntityTypeId */
@@ -296,7 +296,7 @@ class Family extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string $familyAttributeRelationsTable */
         $familyAttributeRelationsTable = $this->entitiesHelper->getTable('akeneo_connector_family_attribute_relations');
 
@@ -336,7 +336,7 @@ class Family extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var \Zend_Db_Statement_Interface $query */
         $query = $connection->query(
             $connection->select()->from($tmpTable, ['_entity_id'])->where('_is_new = ?', 1)
@@ -358,7 +358,7 @@ class Family extends Import
             $count++;
         }
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('%1 family(ies) initialized', $count),
             $this->logger
         );
@@ -371,7 +371,7 @@ class Family extends Import
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->getCode());
+        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -385,7 +385,7 @@ class Family extends Import
         $configurations = $this->configHelper->getCacheTypeFamily();
 
         if (!$configurations) {
-            $this->setMessage(__('No cache cleaned'), $this->logger);
+            $this->jobExecutor->setMessage(__('No cache cleaned'), $this->logger);
 
             return;
         }
@@ -400,7 +400,7 @@ class Family extends Import
             $this->cacheTypeList->cleanType($type);
         }
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('Cache cleaned for: %1', join(', ', array_intersect_key($cacheTypeLabels, array_flip($types)))),
             $this->logger
         );
@@ -418,7 +418,7 @@ class Family extends Import
         $configurations = $this->configHelper->getIndexFamily();
 
         if (!$configurations) {
-            $this->setMessage(__('No index refreshed'), $this->logger);
+            $this->jobExecutor->setMessage(__('No index refreshed'), $this->logger);
 
             return;
         }
@@ -436,9 +436,19 @@ class Family extends Import
             $typesFlushed[] = $index->getTitle();
         }
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('Index refreshed for: %1', join(', ', $typesFlushed)),
             $this->logger
         );
+    }
+
+    /**
+     * Description getLogger function
+     *
+     * @return FamilyLogger
+     */
+    public function getLogger()
+    {
+        return $this->logger;
     }
 }

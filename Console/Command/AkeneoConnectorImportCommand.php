@@ -2,14 +2,14 @@
 
 namespace Akeneo\Connector\Console\Command;
 
+use Akeneo\Connector\Api\Data\JobInterface;
+use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Model\JobRepository;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Framework\Data\Collection;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Phrase;
-use Akeneo\Connector\Api\ImportRepositoryInterface;
-use Akeneo\Connector\Job\Import;
 use \Symfony\Component\Console\Command\Command;
 use \Symfony\Component\Console\Input\InputInterface;
 use \Symfony\Component\Console\Output\OutputInterface;
@@ -18,10 +18,9 @@ use \Symfony\Component\Console\Input\InputOption;
 /**
  * Class AkeneoConnectorImportCommand
  *
- * @category  Class
  * @package   Akeneo\Connector\Console\Command
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
@@ -34,49 +33,46 @@ class AkeneoConnectorImportCommand extends Command
      */
     const IMPORT_CODE = 'code';
     /**
-     * This constant contains a string
-     *
-     * @var string IMPORT_CODE_PRODUCT
-     */
-    const IMPORT_CODE_PRODUCT = 'product';
-    /**
      * This variable contains a State
      *
      * @var State $appState
      */
     protected $appState;
     /**
-     * This variable contains a ImportRepositoryInterface
+     * Description $jobExecutor field
      *
-     * @var ImportRepositoryInterface $importRepository
+     * @var JobExecutor $jobExecutor
      */
-    protected $importRepository;
+    protected $jobExecutor;
     /**
-     * This variable contains a ConfigHelper
+     * Description $jobRepository field
      *
-     * @var ConfigHelper $configHelper
+     * @var JobRepository $jobRepository
      */
-    protected $configHelper;
+    protected $jobRepository;
 
     /**
      * AkeneoConnectorImportCommand constructor
      *
-     * @param ImportRepositoryInterface $importRepository
-     * @param State                     $appState
-     * @param ConfigHelper              $configHelper
-     * @param null                      $name
+     * @param State         $appState
+     * @param ConfigHelper  $configHelper
+     * @param JobExecutor   $jobExecutor
+     * @param JobRepository $jobRepository
+     * @param null          $name
      */
     public function __construct(
-        ImportRepositoryInterface $importRepository,
         State $appState,
         ConfigHelper $configHelper,
+        JobExecutor $jobExecutor,
+        JobRepository $jobRepository,
         $name = null
     ) {
         parent::__construct($name);
 
-        $this->appState         = $appState;
-        $this->importRepository = $importRepository;
-        $this->configHelper     = $configHelper;
+        $this->appState      = $appState;
+        $this->configHelper  = $configHelper;
+        $this->jobExecutor   = $jobExecutor;
+        $this->jobRepository = $jobRepository;
     }
 
     /**
@@ -107,145 +103,12 @@ class AkeneoConnectorImportCommand extends Command
 
         /** @var string $code */
         $code = $input->getOption(self::IMPORT_CODE);
+
         if (!$code) {
             $this->usage($output);
         } else {
-            $this->checkEntities($code, $output);
+            $this->jobExecutor->execute($code, $output);
         }
-    }
-
-    /**
-     * Check if multiple entities have been specified
-     * in the command line
-     *
-     * @param string $code
-     * @param OutputInterface $output
-     *
-     * @return void
-     */
-    protected function checkEntities(string $code, OutputInterface $output)
-    {
-        /** @var string[] $entities */
-        $entities = explode(',', $code);
-        if (count($entities) > 1) {
-            $this->multiImport($entities, $output);
-        } else {
-            $this->import($code, $output);
-        }
-    }
-
-    /**
-     * Run import for multiple entities
-     *
-     * @param array $entities
-     * @param OutputInterface $output
-     *
-     * @return void
-     */
-    protected function multiImport(array $entities, OutputInterface $output)
-    {
-        foreach ($entities as $entity) {
-            $this->import($entity, $output);
-        }
-    }
-
-    /**
-     * Run import
-     *
-     * @param string          $code
-     * @param OutputInterface $output
-     *
-     * @return bool
-     */
-    protected function import(string $code, OutputInterface $output)
-    {
-        /** @var Import $import */
-        $import = $this->importRepository->getByCode($code);
-        if (!$import) {
-            /** @var Phrase $message */
-            $message = __('Import code not found');
-            $this->displayError($message, $output);
-
-            return false;
-        }
-
-        if (!$this->configHelper->checkAkeneoApiCredentials()) {
-            /** @var Phrase $message */
-            $message = __('API credentials are missing. Please configure the connector and retry.');
-            $this->displayError($message, $output);
-
-            return false;
-        }
-
-        // If product import, run the import once per family
-        /** @var array $productFamiliesToImport */
-        $productFamiliesToImport = [];
-        if ($code == self::IMPORT_CODE_PRODUCT) {
-            $productFamiliesToImport = $import->getFamiliesToImport();
-
-            if (!count($productFamiliesToImport)) {
-                $message = __('No family to import');
-                $this->displayError($message, $output);
-
-                return false;
-            }
-
-            foreach ($productFamiliesToImport as $family) {
-                $this->runImport($import, $output, $family);
-                $import->setIdentifier(null);
-            }
-
-            return true;
-        }
-
-        // Run the import normaly
-        $this->runImport($import, $output);
-
-        return true;
-    }
-
-    /**
-     * Run the import
-     *
-     * @param Import     $import
-     * @param OutputInterface     $output
-     * @param null|string $family
-     *
-     * @return void
-     */
-    protected function runImport(Import $import, OutputInterface $output, $family = null) {
-        try {
-            $import->setStep(0);
-            if ($family) {
-                $import->setFamily($family);
-            }
-
-            while ($import->canExecute()) {
-                /** @var string $comment */
-                $comment = $import->getComment();
-                $this->displayInfo($comment, $output);
-
-                $import->execute();
-
-                /** @var string $message */
-                $message = $import->getMessage();
-                if (!$import->getStatus()) {
-                    $this->displayError($message, $output);
-                } else {
-                    $this->displayComment($message, $output);
-                }
-
-                if ($import->isDone()) {
-                    break;
-                }
-            }
-        } catch (\Exception $exception) {
-            /** @var string $message */
-            $message = $exception->getMessage();
-            $this->displayError($message, $output);
-        }
-
-        return true;
     }
 
     /**
@@ -257,8 +120,8 @@ class AkeneoConnectorImportCommand extends Command
      */
     protected function usage(OutputInterface $output)
     {
-        /** @var Collection $imports */
-        $imports = $this->importRepository->getList();
+        /** @var Collection $jobs */
+        $jobs = $this->jobRepository->getList();
 
         // Options
         $this->displayComment(__('Options:'), $output);
@@ -267,17 +130,17 @@ class AkeneoConnectorImportCommand extends Command
 
         // Codes
         $this->displayComment(__('Available codes:'), $output);
-        /** @var Import $import */
-        foreach ($imports as $import) {
-            $this->displayInfo($import->getCode(), $output);
+        /** @var JobInterface $job */
+        foreach ($jobs as $job) {
+            $this->displayInfo($job->getCode(), $output);
         }
         $output->writeln('');
 
         // Example
-        /** @var Import $import */
-        $import = $imports->getFirstItem();
+        /** @var JobInterface $job */
+        $job = $jobs->getFirstItem();
         /** @var string $code */
-        $code = $import->getCode();
+        $code = $job->getCode();
         if ($code) {
             $this->displayComment(__('Example:'), $output);
             $this->displayInfo(__('akeneo-connector:import --code=%1', $code), $output);
