@@ -250,3 +250,13 @@
 
 ### Version 101.8.2 :
 * Fix issue on temporary table indexes when a column is missing
+
+### Version 102.0.0 :
+* Add new asynchronous import system: (https://help.akeneo.com/magento2-connector/articles/trigger.html#how-to-trigger-import-jobs)
+    * Remove old console import in "System > Akeneo Connector > Jobs"
+    * Add new "akeneo_connector_job" table to manage job entity
+    * Add new cron task "akeneo_connector_launch_scheduled_job" to run jobs in background
+    * Add new job grid under "System > Akeneo Connector > Jobs" in order to manually schedule and run jobs
+    * Prevent concurrent job trigger if a job is already scheduled or running
+
+**Warning :** *In order to use the new import system, please make sure that Magento 2 CRON are correctly running (https://help.akeneo.com/magento2-connector/articles/all-pre-requisite.html#configure-your-magento-2)*
