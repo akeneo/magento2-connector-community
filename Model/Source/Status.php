@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Model\Source;
 
-use Akeneo\Connector\Api\Data\ImportInterface;
+use Akeneo\Connector\Api\Data\JobInterface;
 use Magento\Framework\Option\ArrayInterface;
 
 /**
@@ -32,15 +32,23 @@ class Status implements ArrayInterface
             ],
             [
                 'label' => __('Success'),
-                'value' => ImportInterface::IMPORT_SUCCESS,
+                'value' => JobInterface::JOB_SUCCESS,
             ],
             [
                 'label' => __('Error'),
-                'value' => ImportInterface::IMPORT_ERROR,
+                'value' => JobInterface::JOB_ERROR,
             ],
             [
                 'label' => __('Processing'),
-                'value' => ImportInterface::IMPORT_PROCESSING,
+                'value' => JobInterface::JOB_PROCESSING,
+            ],
+            [
+                'label' => __('Pending'),
+                'value' => JobInterface::JOB_PENDING,
+            ],
+            [
+                'label' => __('Scheduled'),
+                'value' => JobInterface::JOB_SCHEDULED,
             ],
         ];
     }
