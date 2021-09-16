@@ -7,7 +7,6 @@ use Akeneo\Connector\Api\Data\LogInterface;
 /**
  * Interface LogRepositoryInterface
  *
- * @category  Interface
  * @package   Akeneo\Connector\Api
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2019 Agence Dn'D
