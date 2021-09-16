@@ -7,14 +7,12 @@ namespace Akeneo\Connector\Helper;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Import\FamilyVariant as FamilyVariantHelper;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
-use Akeneo\PimEnterprise\ApiClient\AkeneoPimEnterpriseClientInterface;
+use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Eav\Model\Config;
-use Magento\Framework\App\Cache\Type\Block as BlockCacheType;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
-use Magento\PageCache\Model\Cache\Type as PageCacheType;
 use Zend_Db_Expr as Expr;
 
 /**
@@ -64,10 +62,10 @@ class FamilyVariant
     /**
      * FamilyVariant constructor
      *
-     * @param FamilyVariantHelper             $entitiesHelper
-     * @param \Akeneo\Connector\Helper\Config $configHelper
-     * @param TypeListInterface               $cacheTypeList
-     * @param Config                          $eavConfig
+     * @param FamilyVariantHelper $entitiesHelper
+     * @param ConfigHelper        $configHelper
+     * @param TypeListInterface   $cacheTypeList
+     * @param Config              $eavConfig
      */
     public function __construct(
         FamilyVariantHelper $entitiesHelper,
@@ -84,7 +82,7 @@ class FamilyVariant
     /**
      * Create temporary table
      *
-     * @param AkeneoPimEnterpriseClientInterface $akeneoClient
+     * @param AkeneoPimClientInterface $akeneoClient
      *
      * @return array|string[]
      */
@@ -125,8 +123,8 @@ class FamilyVariant
     /**
      * Insert data into temporary table
      *
-     * @param AkeneoPimEnterpriseClientInterface $akeneoClient
-     * @param string                             $family
+     * @param AkeneoPimClientInterface $akeneoClient
+     * @param string                   $family
      *
      * @return void
      */
@@ -272,9 +270,9 @@ class FamilyVariant
     /**
      * Insert the FamilyVariant data in the temporary table for each family
      *
-     * @param string                             $familyCode
-     * @param int                                $paginationSize
-     * @param AkeneoPimEnterpriseClientInterface $akeneoClient
+     * @param string                   $familyCode
+     * @param int                      $paginationSize
+     * @param AkeneoPimClientInterface $akeneoClient
      *
      * @return int
      */

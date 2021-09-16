@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Helper\Config;
 use Akeneo\Connector\Helper\Import\Entities;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
@@ -17,10 +18,9 @@ use Zend_Db_Statement_Exception;
 /**
  * Class Import
  *
- * @category  Class
  * @package   Akeneo\Connector\Job
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
@@ -45,47 +45,11 @@ abstract class Import extends DataObject implements ImportInterface
      */
     protected $identifier;
     /**
-     * This variable contains a boolean
+     * This variable contains a string or Phrase value
      *
-     * @var bool $status
+     * @var string|Phrase $comment
      */
-    protected $status;
-    /**
-     * This variable contains an int value
-     *
-     * @var int $step
-     */
-    protected $step;
-    /**
-     * This variable contains an array
-     *
-     * @var array $steps
-     */
-    protected $steps;
-    /**
-     * This variable contains an OutputHelper
-     *
-     * @var OutputHelper $outputHelper
-     */
-    protected $outputHelper;
-    /**
-     * This variable contains a Config
-     *
-     * @var Config $configHelper
-     */
-    protected $configHelper;
-    /**
-     * This variable contains an Authenticator
-     *
-     * @var mixed $authenticator
-     */
-    protected $authenticator;
-    /**
-     * This variable contains a mixed value
-     *
-     * @var ManagerInterface $eventManager
-     */
-    protected $eventManager;
+    protected $comment;
     /**
      * This variable contains a AkeneoPimClientInterface
      *
@@ -93,35 +57,29 @@ abstract class Import extends DataObject implements ImportInterface
      */
     protected $akeneoClient;
     /**
-     * This variable contains a string or Phrase value
+     * Current jobExecutor
      *
-     * @var string|Phrase $comment
+     * @var JobExecutor $jobExecutor
      */
-    protected $comment;
+    protected $jobExecutor;
     /**
-     * This variable contains a string or Phrase value
+     * This variable contains a Config
      *
-     * @var string|Phrase $message
+     * @var Config $configHelper
      */
-    protected $message;
-    /**
-     * This variable contains a bool value
-     *
-     * @var bool $continue
-     */
-    protected $continue;
-    /**
-     * This variable contains a bool value
-     *
-     * @var bool $setFromAdmin
-     */
-    protected $setFromAdmin;
+    protected $configHelper;
     /**
      * This variable contains an EntitiesHelper
      *
      * @var Entities $entitiesHelper
      */
     protected $entitiesHelper;
+    /**
+     * This variable contains a boolean
+     *
+     * @var bool $status
+     */
+    protected $status;
 
     /**
      * Import constructor.
@@ -148,40 +106,6 @@ abstract class Import extends DataObject implements ImportInterface
         $this->eventManager   = $eventManager;
         $this->entitiesHelper = $entitiesHelper;
         $this->configHelper   = $configHelper;
-        $this->step           = 0;
-        $this->setFromAdmin = false;
-        $this->initStatus();
-        $this->initSteps();
-    }
-
-    /**
-     * Load steps
-     *
-     * @return void
-     */
-    public function initSteps()
-    {
-        /** @var array $steps */
-        $steps = [];
-        if ($this->getData('steps')) {
-            $steps = $this->getData('steps');
-        }
-
-        $this->steps = array_merge(
-            [
-                [
-                    'method'  => 'beforeImport',
-                    'comment' => 'Start import',
-                ],
-            ],
-            $steps,
-            [
-                [
-                    'method'  => 'afterImport',
-                    'comment' => 'Import complete',
-                ],
-            ]
-        );
     }
 
     /**
@@ -205,143 +129,71 @@ abstract class Import extends DataObject implements ImportInterface
     }
 
     /**
-     * Set import identifier
-     *
-     * @param string $identifier
-     *
-     * @return Import
+     * {@inheritdoc}
      */
-    public function setIdentifier($identifier)
+    public function beforeImport()
     {
-        $this->identifier = $identifier;
+        if ($this->akeneoClient === false) {
+            $this->jobExecutor->setMessage(
+                __(
+                    'Could not start the import %s, check that your API credentials are correctly configured',
+                    $this->jobExecutor->getCurrentJob()->getCode()
+                )
+            );
+            $this->jobExecutor->afterRun(1);
 
-        return $this;
+            return;
+        }
+
+        /** @var string $identifier */
+        $identifier = $this->jobExecutor->getIdentifier();
+
+        $this->jobExecutor->setMessage(__('Import ID : %1', $identifier));
     }
 
     /**
-     * Get import identifier
+     * Function called after any step
+     *
+     * @return void
+     */
+    public function afterImport()
+    {
+        $this->jobExecutor->setMessage(__('Import ID : %1', $this->jobExecutor->getIdentifier()))->afterRun(null, true);
+    }
+
+    /**
+     * Check if all locales labels exists
+     *
+     * @param string[] $entity
+     * @param string[] $lang
+     * @param string   $response
      *
      * @return string
      */
-    public function getIdentifier()
+    public function checkLabelPerLocales(array $entity, array $lang, string $response)
     {
-        if (!$this->identifier) {
-            $this->setIdentifier(uniqid());
+        /** @var string[] $labels */
+        $labels = $entity['labels'];
+        foreach ($lang as $locale => $stores) {
+            if (empty($labels[$locale])) {
+                $response .= __("Label for '%1' in %2 is missing. ", $entity['code'], $locale);
+            }
         }
 
-        return $this->identifier;
+        return $response;
     }
 
     /**
-     * Set set from admin
+     * Description setJobExecutor function
      *
-     * @param $value
+     * @param JobExecutor $jobExecutor
      *
-     * @return $this
+     * @return void
      */
-    public function setSetFromAdmin($value)
+    public function setJobExecutor(JobExecutor $jobExecutor)
     {
-        $this->setFromAdmin = $value;
-
-        return $this;
-    }
-
-    /**
-     * Get set from admin
-     *
-     * @return bool
-     */
-    public function getSetFromAdmin()
-    {
-        return $this->setFromAdmin;
-    }
-
-    /**
-     * Set current step index
-     *
-     * @param int $step
-     *
-     * @return Import
-     */
-    public function setStep($step)
-    {
-        $this->step = $step;
-
-        return $this;
-    }
-
-    /**
-     * Get current step index
-     *
-     * @return int
-     */
-    public function getStep()
-    {
-        return $this->step;
-    }
-
-    /**
-     * Get end of line for command line or console
-     *
-     * @return string
-     */
-    public function getEndOfLine()
-    {
-        if ($this->getSetFromAdmin() === false) {
-            return PHP_EOL;
-        }
-
-        return '</br>';
-    }
-
-    /**
-     * Set import comment
-     *
-     * @param string|Phrase $comment
-     *
-     * @return Import
-     */
-    public function setComment($comment)
-    {
-        $this->comment = $comment;
-
-        return $this;
-    }
-
-    /**
-     * Set import message
-     *
-     * @param string|Phrase $message
-     * @param Logger|null   $logger
-     *
-     * @return Import
-     */
-    public function setMessage($message, $logger = null)
-    {
-        $this->message = $message;
-        if ($logger && $this->configHelper->isAdvancedLogActivated()) {
-            $this->logger->addDebug($message);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Set additional message during import
-     *
-     * @param string|Phrase $message
-     * @param Logger|null   $logger
-     *
-     * @return $this
-     */
-    public function setAdditionalMessage($message, $logger = null)
-    {
-        $this->message = $this->getMessageWithoutPrefix() . $this->getEndOfLine() . $message;
-        if ($logger && $this->configHelper->isAdvancedLogActivated()) {
-            $this->logger->addDebug($message);
-        }
-
-        return $this;
+        $this->jobExecutor  = $jobExecutor;
+        $this->akeneoClient = $jobExecutor->getAkeneoClient();
     }
 
     /**
@@ -369,318 +221,22 @@ abstract class Import extends DataObject implements ImportInterface
     }
 
     /**
-     * Set continue
+     * Description logImportedEntities function
      *
-     * @param bool $continue
-     *
-     * @return Import
-     */
-    public function setContinue($continue)
-    {
-        $this->continue = $continue;
-
-        return $this;
-    }
-
-    /**
-     * Get the prefixed comment
-     *
-     * @return string
-     */
-    public function getComment()
-    {
-        return isset($this->steps[$this->getStep()]['comment']) ?
-            $this->outputHelper->getPrefix() . $this->steps[$this->getStep()]['comment'] :
-            $this->outputHelper->getPrefix() . get_class($this) . '::' . $this->getMethod();
-    }
-
-    /**
-     * Return current message with the timestamp prefix
-     *
-     * @return string
-     */
-    public function getMessage()
-    {
-        return (string)$this->outputHelper->getPrefix().$this->message;
-    }
-
-    /**
-     * Return current message with the timestamp prefix
-     *
-     * @return string
-     */
-    public function getMessageWithoutPrefix()
-    {
-        return (string)$this->message;
-    }
-
-    /**
-     * Get method to execute
-     *
-     * @return string
-     */
-    public function getMethod()
-    {
-        return isset($this->steps[$this->getStep()]['method']) ?
-            $this->steps[$this->getStep()]['method'] : null;
-    }
-
-    /**
-     * Init status, continue and message
+     * @param null   $logger
+     * @param false  $newEntities
+     * @param string $identifierColumn
      *
      * @return void
+     * @throws Zend_Db_Statement_Exception
      */
-    public function initStatus()
-    {
-        $this->setStatus(true);
-        $this->setContinue(true);
-        $this->setMessage(__('completed'));
-    }
-
-    /**
-     * Function called to run import
-     * This function will get the right method to call
-     *
-     * @return array
-     */
-    public function execute()
-    {
-        if (!$this->canExecute() || !isset($this->steps[$this->step])) {
-            return $this->outputHelper->getImportAlreadyRunningResponse();
-        };
-
-        /** @var string $method */
-        $method = $this->getMethod();
-        if (!method_exists($this, $method)) {
-            $this->stop(true);
-
-            return $this->outputHelper->getNoImportFoundResponse();
-        }
-
-        if (!$this->akeneoClient) {
-            $this->akeneoClient = $this->getAkeneoClient();
-        }
-
-        if (!$this->akeneoClient) {
-            return $this->outputHelper->getApiConnectionError();
-        }
-
-        $this->eventManager->dispatch('akeneo_connector_import_step_start', ['import' => $this]);
-        $this->eventManager->dispatch(
-            'akeneo_connector_import_step_start_'.strtolower($this->getCode()),
-            ['import' => $this]
-        );
-        $this->initStatus();
-
-        try {
-            $this->{$method}();
-        } catch (\Exception $exception) {
-            $this->stop(true);
-            $this->setMessage($exception->getMessage());
-        }
-
-        $this->eventManager->dispatch('akeneo_connector_import_step_finish', ['import' => $this]);
-        $this->eventManager->dispatch(
-            'akeneo_connector_import_step_finish_'.strtolower($this->getCode()),
-            ['import' => $this]
-        );
-
-        return $this->getResponse();
-    }
-
-    /**
-     * Count steps
-     *
-     * @return int
-     */
-    public function countSteps()
-    {
-        return count($this->steps);
-    }
-
-    /**
-     * Check if import may be processed (Not already running, ...)
-     *
-     * @return bool
-     */
-    public function canExecute()
-    {
-        if ($this->step < 0 || $this->step > $this->countSteps()) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Format data to response structure
-     *
-     * @return array
-     */
-    protected function getResponse()
-    {
-        /** @var array $response */
-        $response = [
-            'continue'   => $this->continue,
-            'identifier' => $this->getIdentifier(),
-            'status'     => $this->getStatus(),
-        ];
-
-        if ($this->getComment()) {
-            $response['comment'] = $this->getComment();
-        }
-
-        if ($this->message) {
-            $response['message'] = $this->getMessage();
-        }
-
-        if (!$this->isDone()) {
-            $response['next'] = $this->nextStep()->getComment();
-        }
-
-        return $response;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function beforeImport()
-    {
-        if ($this->akeneoClient === false) {
-            $this->setMessage(__('Could not start the import %s, check that your API credentials are correctly configured', $this->getCode()));
-            $this->stop(1);
-
-            return;
-        }
-
-        /** @var string $identifier */
-        $identifier = $this->getIdentifier();
-
-        $this->setMessage(__('Import ID : %1', $identifier));
-    }
-
-    /**
-     * Function called after any step
-     *
-     * @return void
-     */
-    public function afterImport()
-    {
-        $this->setMessage(__('Import ID : %1', $this->identifier))->stop();
-    }
-
-    /**
-     * Stop the import (no step will be processed after)
-     *
-     * @param bool $error
-     *
-     * @return void
-     */
-    public function stop($error = false)
-    {
-        $this->continue = false;
-        if ($error == true) {
-            $this->setStatus(false);
-        }
-    }
-
-    /**
-     * Description hasError function
-     *
-     * @return bool
-     */
-    public function isDone()
-    {
-        if ($this->continue) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Increment the step
-     *
-     * @return Import
-     */
-    public function nextStep()
-    {
-        $this->step += 1;
-
-        return $this;
-    }
-
-    /**
-     * Check if all locales labels exists
-     *
-     * @param string[] $entity
-     * @param string[] $lang
-     * @param string $response
-     *
-     * @return string
-     */
-    public function checkLabelPerLocales(array $entity, array $lang, string $response)
-    {
-        /** @var string[] $labels */
-        $labels = $entity['labels'];
-        foreach ($lang as $locale => $stores) {
-            if (empty($labels[$locale])) {
-                $response .= __("Label for '%1' in %2 is missing. ", $entity['code'], $locale);
-            }
-        }
-        return $response;
-    }
-
-    /**
-     * Get Akeneo Client instance
-     *
-     * @return AkeneoPimEnterpriseClientInterface|false
-     */
-    public function getAkeneoClient()
-    {
-        try {
-            /** @var AkeneoPimEnterpriseClientInterface|false $akeneoClient */
-            $akeneoClient = $this->authenticator->getAkeneoApiClient();
-        } catch (\Exception $e) {
-            $akeneoClient = false;
-        }
-
-        return $akeneoClient;
-    }
-    
-    /**
-     * Display messages from import
-     *
-     * @param $messages
-     *
-     * @return void
-     */
-    public function displayMessages($messages, $logger = null) {
-        /** @var string[] $importMessages */
-        foreach ($messages as $importMessages) {
-            if (!empty($importMessages)) {
-                /** @var string[] $message */
-                foreach ($importMessages as $message) {
-                    if (isset($message['message'], $message['status'])) {
-                        if ($message['status'] == false) {
-                            $this->setMessage($message['message'], $logger);
-                            $this->setStatus(false);
-                        } else {
-                            $this->setAdditionalMessage($message['message'], $logger);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     public function logImportedEntities($logger = null, $newEntities = false, $identifierColumn = 'code')
     {
         if ($logger) {
             /** @var AdapterInterface $connection */
             $connection = $this->entitiesHelper->getConnection();
             /** @var string $tmpTable */
-            $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+            $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
             /** @var \Magento\Framework\DB\Select $selectExistingEntities */
             $selectImportedEntities = $connection->select()->from($tmpTable, $identifierColumn);
             if ($newEntities) {
