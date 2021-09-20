@@ -20,6 +20,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\File\Uploader;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Directory\WriteInterface;
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -30,7 +31,7 @@ use Magento\Store\Model\StoreManagerInterface;
  * @category  Class
  * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
@@ -449,11 +450,11 @@ class Config
      */
     protected $encryptor;
     /**
-     * This variable contains a Serializer
+     * This variable contains a Json
      *
-     * @var Serializer $serializer
+     * @var Json $jsonSerializer
      */
-    protected $serializer;
+    protected $jsonSerializer;
     /**
      * This variable contains a EavConfig
      *
@@ -501,7 +502,7 @@ class Config
      * Config constructor
      *
      * @param Encryptor                     $encryptor
-     * @param Serializer                    $serializer
+     * @param Json                          $jsonSerializer
      * @param EavConfig                     $eavConfig
      * @param StoreManagerInterface         $storeManager
      * @param CatalogInventoryConfiguration $catalogInventoryConfiguration
@@ -513,7 +514,7 @@ class Config
      */
     public function __construct(
         Encryptor $encryptor,
-        Serializer $serializer,
+        Json $jsonSerializer,
         EavConfig $eavConfig,
         StoreManagerInterface $storeManager,
         CatalogInventoryConfiguration $catalogInventoryConfiguration,
@@ -522,7 +523,7 @@ class Config
         ScopeConfigInterface $scopeConfig
     ) {
         $this->encryptor                     = $encryptor;
-        $this->serializer                    = $serializer;
+        $this->jsonSerializer                = $jsonSerializer;
         $this->eavConfig                     = $eavConfig;
         $this->storeManager                  = $storeManager;
         $this->mediaConfig                   = $mediaConfig;
@@ -817,7 +818,7 @@ class Config
     {
         $filters = $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_ADVANCED_FILTER);
 
-        return $this->serializer->unserialize($filters);
+        return $this->jsonSerializer->unserialize($filters);
     }
 
     /**
@@ -829,7 +830,7 @@ class Config
     {
         $filters = $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER);
 
-        return $this->serializer->unserialize($filters);
+        return $this->jsonSerializer->unserialize($filters);
     }
 
     /**
@@ -937,7 +938,7 @@ class Config
         }
 
         /** @var mixed[] $websiteMapping */
-        $websiteMapping = $this->serializer->unserialize($websiteMapping);
+        $websiteMapping = $this->jsonSerializer->unserialize($websiteMapping);
         if (empty($websiteMapping) || !is_array($websiteMapping)) {
             return $mapping;
         }
@@ -1056,23 +1057,23 @@ class Config
      */
     public function getProductTaxClasses()
     {
-        /** @var array $stores */
+        /** @var mixed[] $stores */
         $stores = $this->storeManager->getStores(true);
-        /** @var array $result */
+        /** @var mixed[] $result */
         $result = [];
 
-        /** @var string|array $classes */
+        /** @var string $classes */
         $classes = $this->scopeConfig->getValue(self::PRODUCT_TAX_CLASS);
         if (!$classes) {
             return $result;
         }
-
-        $classes = $this->serializer->unserialize($classes);
+        /** @var mixed[] $classes */
+        $classes = $this->jsonSerializer->unserialize($classes);
         if (!is_array($classes)) {
             return $result;
         }
 
-        /** @var array $class */
+        /** @var mixed[] $class */
         foreach ($classes as $class) {
             if (!isset($class['website'])) {
                 continue;
@@ -1154,7 +1155,7 @@ class Config
      */
     public function getMediaImportImagesColumns()
     {
-        /** @var array $images */
+        /** @var mixed[] $images */
         $images = [];
         /** @var string $config */
         $config = $this->scopeConfig->getValue(self::PRODUCT_MEDIA_IMAGES);
@@ -1162,8 +1163,8 @@ class Config
             return $images;
         }
 
-        /** @var array $media */
-        $media = $this->serializer->unserialize($config);
+        /** @var mixed[] $media */
+        $media = $this->jsonSerializer->unserialize($config);
         if (!$media) {
             return $images;
         }
@@ -1188,7 +1189,7 @@ class Config
      */
     public function getFileImportColumns()
     {
-        /** @var array $fileAttributes */
+        /** @var mixed[] $fileAttributes */
         $fileAttributes = [];
         /** @var string $config */
         $config = $this->scopeConfig->getValue(self::PRODUCT_FILE_ATTRIBUTE);
@@ -1196,8 +1197,8 @@ class Config
             return $fileAttributes;
         }
 
-        /** @var array $media */
-        $attributes = $this->serializer->unserialize($config);
+        /** @var mixed[] $media */
+        $attributes = $this->jsonSerializer->unserialize($config);
         if (!$attributes) {
             return $fileAttributes;
         }
@@ -1219,7 +1220,7 @@ class Config
      */
     public function getMediaImportGalleryColumns()
     {
-        /** @var array $images */
+        /** @var mixed[] $images */
         $images = [];
         /** @var string $config */
         $config = $this->scopeConfig->getValue(self::PRODUCT_MEDIA_GALLERY);
@@ -1227,8 +1228,8 @@ class Config
             return $images;
         }
 
-        /** @var array $media */
-        $media = $this->serializer->unserialize($config);
+        /** @var mixed[] $media */
+        $media = $this->jsonSerializer->unserialize($config);
         if (!$media) {
             return $images;
         }
@@ -1253,7 +1254,7 @@ class Config
      */
     public function getMetricsColumns($returnVariant = null, $returnConcat = null)
     {
-        /** @var array $metrics */
+        /** @var mixed[] $metrics */
         $metrics = [];
         /** @var string $config */
         $config = $this->scopeConfig->getValue(self::PRODUCT_METRICS);
@@ -1261,8 +1262,8 @@ class Config
             return $metrics;
         }
 
-        /** @var array $unserializeMetrics */
-        $unserializeMetrics = $this->serializer->unserialize($config);
+        /** @var mixed[] $unserializeMetrics */
+        $unserializeMetrics = $this->jsonSerializer->unserialize($config);
         if (!$unserializeMetrics) {
             return $metrics;
         }
@@ -1411,7 +1412,8 @@ class Config
     {
         /** @var mixed $matches */
         $matches = $this->scopeConfig->getValue(self::PRODUCT_ATTRIBUTE_MAPPING);
-        $matches = $this->serializer->unserialize($matches);
+        /** @var mixed[] $matches */
+        $matches = $this->jsonSerializer->unserialize($matches);
         /** @var mixed $loweredMatchs */
         $loweredMatches = [];
         /** @var string[] $match */
@@ -1433,7 +1435,7 @@ class Config
         /** @var string $familiesSerialized */
         $familiesSerialized = $this->scopeConfig->getValue(self::GROUPED_PRODUCTS_FAMILIES_MAPPING);
         /** @var mixed[] $associations */
-        $associations = $this->serializer->unserialize($familiesSerialized);
+        $associations = $this->jsonSerializer->unserialize($familiesSerialized);
         /** @var string[] $families */
         $families = [];
         /** @var mixed[] $association */
@@ -1454,7 +1456,7 @@ class Config
         /** @var string $associationsSerialized */
         $associationsSerialized = $this->scopeConfig->getValue(self::GROUPED_PRODUCTS_FAMILIES_MAPPING);
         /** @var string[] $associations */
-        $associations = $this->serializer->unserialize($associationsSerialized);
+        $associations = $this->jsonSerializer->unserialize($associationsSerialized);
 
         return $associations;
     }

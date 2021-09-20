@@ -13,7 +13,6 @@ use Akeneo\Connector\Helper\Import\Product as ProductImportHelper;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\ProductFilters;
 use Akeneo\Connector\Helper\ProductModel;
-use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Job\Import as JobImport;
 use Akeneo\Connector\Job\Option as JobOption;
@@ -43,6 +42,7 @@ use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Indexer\IndexerInterface;
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Indexer\Model\IndexerFactory;
 use Magento\Staging\Model\VersionManager;
 use Magento\Store\Model\StoreManagerInterface;
@@ -57,7 +57,7 @@ use Zend_Db_Statement_Pdo;
  * @category  Class
  * @package   Akeneo\Connector\Job
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
@@ -191,11 +191,11 @@ class Product extends JobImport
      */
     protected $scopeConfig;
     /**
-     * This variable contains a JsonSerializer
+     * This variable contains a Json
      *
-     * @var JsonSerializer $serializer
+     * @var Json $jsonSerializer
      */
-    protected $serializer;
+    protected $jsonSerializer;
     /**
      * This variable contains a ProductModel
      *
@@ -279,7 +279,7 @@ class Product extends JobImport
      * @param EavAttribute            $eavAttribute
      * @param ProductFilters          $productFilters
      * @param ScopeConfigInterface    $scopeConfig
-     * @param JsonSerializer          $serializer
+     * @param Json                    $jsonSerializer
      * @param BaseProductModel        $product
      * @param ProductUrlPathGenerator $productUrlPathGenerator
      * @param TypeListInterface       $cacheTypeList
@@ -306,7 +306,7 @@ class Product extends JobImport
         EavAttribute $eavAttribute,
         ProductFilters $productFilters,
         ScopeConfigInterface $scopeConfig,
-        JsonSerializer $serializer,
+        Json $jsonSerializer,
         BaseProductModel $product,
         ProductUrlPathGenerator $productUrlPathGenerator,
         TypeListInterface $cacheTypeList,
@@ -329,7 +329,7 @@ class Product extends JobImport
         $this->eavAttribute            = $eavAttribute;
         $this->productFilters          = $productFilters;
         $this->scopeConfig             = $scopeConfig;
-        $this->serializer              = $serializer;
+        $this->jsonSerializer          = $jsonSerializer;
         $this->product                 = $product;
         $this->cacheTypeList           = $cacheTypeList;
         $this->storeHelper             = $storeHelper;
@@ -351,7 +351,10 @@ class Product extends JobImport
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
-            $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->jobExecutor->setAdditionalMessage(
+                __('Path to log file : %1', $this->handler->getFilename()),
+                $this->logger
+            );
         }
 
         if (empty($this->configHelper->getMappedChannels())) {
@@ -543,7 +546,10 @@ class Product extends JobImport
                 }
 
                 /** @var bool $result */
-                $result = $this->entitiesHelper->insertDataFromApi($product, $this->jobExecutor->getCurrentJob()->getCode());
+                $result = $this->entitiesHelper->insertDataFromApi(
+                    $product,
+                    $this->jobExecutor->getCurrentJob()->getCode()
+                );
 
                 if (!$result) {
                     $this->jobExecutor->setMessage('Could not insert Product data in temp table', $this->logger);
@@ -1085,9 +1091,10 @@ class Product extends JobImport
             }
         }
 
-        /** @var string|array $additional */
+        /** @var string $additional */
         $additional = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES);
-        $additional = $this->serializer->unserialize($additional);
+        /** @var mixed[] $additional */
+        $additional = $this->jsonSerializer->unserialize($additional);
         if (!is_array($additional)) {
             $additional = [];
         }
@@ -2488,7 +2495,11 @@ class Product extends JobImport
             /** @var Select $select */
             $select = $connection->select()->from(['c' => $entitiesTable], [])->joinInner(
                 ['d' => $tmpTable],
-                sprintf('FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"', $concat, $this->jobExecutor->getCurrentJob()->getCode()),
+                sprintf(
+                    'FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"',
+                    $concat,
+                    $this->jobExecutor->getCurrentJob()->getCode()
+                ),
                 $columsToSelect
             );
 

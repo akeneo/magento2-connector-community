@@ -3,16 +3,15 @@
 namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Connector\Helper\Serializer as JsonSerializer;
-use Akeneo\Connector\Helper\Import\Entities;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\DeploymentConfig;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
-use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Serialize\Serializer\Json;
 use Zend_Db_Expr as Expr;
 
 /**
@@ -21,7 +20,7 @@ use Zend_Db_Expr as Expr;
  * @category  Class
  * @package   Akeneo\Connector\Helper\Import
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
@@ -52,11 +51,11 @@ class Product extends Entities
      */
     public const ALL_ASSOCIATIONS_KEY = [self::QUANTIFIED_ASSOCIATIONS_KEY, self::ASSOCIATIONS_KEY];
     /**
-     * This variable contains a JsonSerializer
+     * This variable contains a Json
      *
-     * @var JsonSerializer $serializer
+     * @var Json $jsonSerializer
      */
-    protected $serializer;
+    protected $jsonSerializer;
     /**
      * This variable contains a ProductUrlPathGenerator
      *
@@ -78,7 +77,7 @@ class Product extends Entities
      * @param BaseProductModel        $product
      * @param ProductUrlPathGenerator $productUrlPathGenerator
      * @param ConfigHelper            $configHelper
-     * @param JsonSerializer          $serializer
+     * @param Json                    $jsonSerializer
      * @param ScopeConfigInterface    $scopeConfig
      */
     public function __construct(
@@ -87,12 +86,12 @@ class Product extends Entities
         BaseProductModel $product,
         ProductUrlPathGenerator $productUrlPathGenerator,
         ConfigHelper $configHelper,
-        JsonSerializer $serializer,
+        Json $jsonSerializer,
         ScopeConfigInterface $scopeConfig
     ) {
         parent::__construct($connection, $deploymentConfig, $product, $configHelper);
 
-        $this->serializer              = $serializer;
+        $this->jsonSerializer          = $jsonSerializer;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
         $this->scopeConfig             = $scopeConfig;
     }
@@ -319,9 +318,10 @@ class Product extends Entities
      */
     public function isFieldInAttributeMapping($field)
     {
-        /** @var string|array $matches */
+        /** @var string $matches */
         $matches = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING);
-        $matches = $this->serializer->unserialize($matches);
+        /** @var mixed[] $matches */
+        $matches = $this->jsonSerializer->unserialize($matches);
         if (!is_array($matches)) {
             return false;
         }

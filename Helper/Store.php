@@ -2,14 +2,14 @@
 
 namespace Akeneo\Connector\Helper;
 
-use Magento\Store\Api\Data\StoreInterface;
-use Magento\Store\Api\Data\WebsiteInterface;
-use Magento\Store\Model\StoreManagerInterface;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Magento\Store\Model\ResourceModel\Website as WebsiteResource;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Directory\Helper\Data as DirectoryHelper;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Store\Api\Data\WebsiteInterface;
+use Magento\Store\Model\ResourceModel\Website as WebsiteResource;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * Class Store
@@ -17,7 +17,7 @@ use Magento\Store\Model\ScopeInterface;
  * @category  Class
  * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
@@ -36,11 +36,11 @@ class Store
      */
     protected $storeManager;
     /**
-     * This variable contains a Serializer
+     * This variable contains a Json
      *
-     * @var Serializer $serializer
+     * @var Json $jsonSerializer
      */
-    protected $serializer;
+    protected $jsonSerializer;
     /**
      * Website Resource Model
      *
@@ -58,20 +58,20 @@ class Store
      * Store constructor
      *
      * @param ConfigHelper          $configHelper
-     * @param Serializer            $serializer
+     * @param Json                  $jsonSerializer
      * @param StoreManagerInterface $storeManager
      * @param WebsiteResource       $websiteResource
      * @param ScopeConfigInterface  $scopeConfig
      */
     public function __construct(
         ConfigHelper $configHelper,
-        Serializer $serializer,
+        Json $jsonSerializer,
         StoreManagerInterface $storeManager,
         WebsiteResource $websiteResource,
         ScopeConfigInterface $scopeConfig
     ) {
         $this->configHelper    = $configHelper;
-        $this->serializer      = $serializer;
+        $this->jsonSerializer  = $jsonSerializer;
         $this->storeManager    = $storeManager;
         $this->websiteResource = $websiteResource;
         $this->scopeConfig     = $scopeConfig;
