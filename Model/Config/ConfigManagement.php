@@ -768,7 +768,7 @@ class ConfigManagement
      */
     protected function addLineBreak($nextElementHeight = null, $value = null)
     {
-        if (is_null($nextElementHeight)) {
+        if ($nextElementHeight === null) {
             $nextElementHeight = 0;
         }
 
@@ -776,7 +776,7 @@ class ConfigManagement
             $this->addNewPage();
         }
 
-        if (is_null($value)) {
+        if ($value === null) {
             $this->lastPosition -= self::LINE_BREAK;
         } else {
             $this->lastPosition -= $value;
