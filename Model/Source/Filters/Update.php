@@ -46,6 +46,12 @@ class Update implements ArrayInterface
      * @var string SINCE_LAST_N_HOURS
      */
     const SINCE_LAST_N_HOURS = 'SINCE LAST N HOURS';
+    /**
+     * Description SINCE_LAST_IMPORT constant
+     *
+     * @var string SINCE_LAST_IMPORT
+     */
+    const SINCE_LAST_IMPORT = 'LAST_IMPORT';
 
     /**
      * Return array of options for the status filter
@@ -74,6 +80,10 @@ class Update implements ArrayInterface
             [
                 'label' => __('Since last X hours'),
                 'value' => self::SINCE_LAST_N_HOURS,
+            ],
+            [
+                'label' => __('Since last import'),
+                'value' => self::SINCE_LAST_IMPORT,
             ],
         ];
     }
