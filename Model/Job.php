@@ -99,7 +99,7 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
      */
     public function getLastExecutedDate()
     {
-        return $this->getData(self::SCHEDULED_AT);
+        return $this->getData(self::LAST_EXECUTED_DATE);
     }
 
     /**
