@@ -144,6 +144,16 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
     }
 
     /**
+     * Description getLastExecutedDateBeforeLaunch function
+     *
+     * @return string|null
+     */
+    public function getLastExecutedDateBeforeLaunch()
+    {
+        return $this->getData(self::LAST_EXECUTED_DATE_BEFORE_LAUNCH);
+    }
+
+    /**
      * Set ID
      *
      * @param int $id
@@ -230,7 +240,7 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
     /**
      * Description setJobClass function
      *
-     * @param $class
+     * @param string $class
      *
      * @return Job
      */
@@ -242,12 +252,24 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
     /**
      * Description setName function
      *
-     * @param $name
+     * @param string $name
      *
      * @return Job
      */
     public function setName($name)
     {
         return $this->setData(self::NAME, $name);
+    }
+
+    /**
+     * Description setLastExecutedDateBeforeLaunch function
+     *
+     * @param string $date
+     *
+     * @return Job
+     */
+    public function setLastExecutedDateBeforeLaunch($date)
+    {
+        return $this->setData(self::LAST_EXECUTED_DATE_BEFORE_LAUNCH, $date);
     }
 }

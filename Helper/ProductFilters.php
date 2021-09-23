@@ -2,6 +2,8 @@
 
 namespace Akeneo\Connector\Helper;
 
+use Akeneo\Connector\Api\Data\JobInterface;
+use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Locales as LocalesHelper;
 use Akeneo\Connector\Helper\Store as StoreHelper;
@@ -98,12 +100,13 @@ class ProductFilters
     /**
      * Get the filters for the product API query
      *
+     * @param JobExecutor $jobExecutor
      * @param string|null $productFamily
      * @param bool        $isProductModel
      *
      * @return mixed[]|string[]
      */
-    public function getFilters($productFamily = null, $isProductModel = false)
+    public function getFilters($jobExecutor, $productFamily = null, $isProductModel = false)
     {
         /** @var mixed[] $mappedChannels */
         $mappedChannels = $this->configHelper->getMappedChannels();
@@ -159,7 +162,7 @@ class ProductFilters
             $this->addCompletenessFilter();
             $this->addStatusFilter();
             $this->addFamiliesFilter();
-            $this->addUpdatedFilter();
+            $this->addUpdatedFilter($jobExecutor);
             $search = $this->searchBuilder->getFilters();
         }
 
@@ -342,9 +345,11 @@ class ProductFilters
     /**
      * Add updated filter for Akeneo API
      *
+     * @param JobExecutor $jobExecutor
+     *
      * @return void
      */
-    protected function addUpdatedFilter()
+    protected function addUpdatedFilter($jobExecutor)
     {
         /** @var string $mode */
         $mode = $this->configHelper->getUpdatedMode();
@@ -365,6 +370,16 @@ class ProductFilters
                 return;
             }
             $this->searchBuilder->addFilter('updated', $mode, (int)$filter);
+        }
+        if ($mode == Update::SINCE_LAST_IMPORT) {
+            // Get the last import date as filter
+            /** @var string $filter */
+            $filter = $this->getLastImportDateFilter($jobExecutor);
+            if (!$filter) {
+                return;
+            }
+
+            $this->searchBuilder->addFilter('updated', Update::GREATER_THAN, $filter);
         }
         if ($mode == Update::SINCE_LAST_N_HOURS) {
             /** @var int $currentDateTime */
@@ -411,6 +426,18 @@ class ProductFilters
         }
 
         return;
+    }
+
+    /**
+     * Description getLastImportDateFilter function
+     *
+     * @param JobExecutor $jobExecutor
+     *
+     * @return string|null
+     */
+    protected function getLastImportDateFilter($jobExecutor)
+    {
+        return $jobExecutor->getCurrentJob()->getLastExecutedDateBeforeLaunch();
     }
 
     /**
