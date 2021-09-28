@@ -383,6 +383,12 @@ class Config
      */
     const ADVANCED_LOG = 'akeneo_connector/advanced/advanced_log';
     /**
+     * Clean logs config path
+     *
+     * @var string CLEAN_LOGS
+     */
+    public const CLEAN_LOGS = 'akeneo_connector/advanced/clean_logs';
+    /**
      * Cache type category config path
      *
      * @var string CACHE_TYPE_CATEGORY
@@ -1561,6 +1567,16 @@ class Config
     public function isAdvancedLogActivated()
     {
         return $this->scopeConfig->getValue(self::ADVANCED_LOG);
+    }
+
+    /**
+     * Description getClearJobLogs function
+     *
+     * @return string|null
+     */
+    public function getCleanLogs(): ?string
+    {
+        return $this->scopeConfig->getValue(self::CLEAN_LOGS);
     }
 
     /**

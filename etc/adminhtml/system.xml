@@ -558,6 +558,9 @@ For example :<br/>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>Activating advanced log may slow down the imports. Temporary tables won't be deleted at the end of their imports. Logs will be placed in var/log/akeneo_connector</comment>
                 </field>
+                <field id="clean_logs" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Clear job logs after X days</label>
+                </field>
             </group>
         </section>
     </system>
