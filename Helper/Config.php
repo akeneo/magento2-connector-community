@@ -30,7 +30,7 @@ use Magento\Store\Model\StoreManagerInterface;
  * @category  Class
  * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
@@ -41,347 +41,347 @@ class Config
      *
      * @var string AKENEO_API_BASE_URL
      */
-    const AKENEO_API_BASE_URL = 'akeneo_connector/akeneo_api/base_url';
+    public const AKENEO_API_BASE_URL = 'akeneo_connector/akeneo_api/base_url';
     /**
      * API user name config path
      *
      * @var string AKENEO_API_USERNAME
      */
-    const AKENEO_API_USERNAME = 'akeneo_connector/akeneo_api/username';
+    public const AKENEO_API_USERNAME = 'akeneo_connector/akeneo_api/username';
     /**
      * API password config path
      *
      * @var string AKENEO_API_PASSWORD
      */
-    const AKENEO_API_PASSWORD = 'akeneo_connector/akeneo_api/password';
+    public const AKENEO_API_PASSWORD = 'akeneo_connector/akeneo_api/password';
     /**
      * API client id config path
      *
      * @var string AKENEO_API_CLIENT_ID
      */
-    const AKENEO_API_CLIENT_ID = 'akeneo_connector/akeneo_api/client_id';
+    public const AKENEO_API_CLIENT_ID = 'akeneo_connector/akeneo_api/client_id';
     /**
      * API secret key config path
      *
      * @var string AKENEO_API_CLIENT_SECRET
      */
-    const AKENEO_API_CLIENT_SECRET = 'akeneo_connector/akeneo_api/client_secret';
+    public const AKENEO_API_CLIENT_SECRET = 'akeneo_connector/akeneo_api/client_secret';
     /**
      * API edition config path
      *
      * @var string AKENEO_API_EDITION
      */
-    const AKENEO_API_EDITION = 'akeneo_connector/akeneo_api/edition';
+    public const AKENEO_API_EDITION = 'akeneo_connector/akeneo_api/edition';
     /**
      * API pagination size config path
      *
      * @var string AKENEO_API_PAGINATION_SIZE
      */
-    const AKENEO_API_PAGINATION_SIZE = 'akeneo_connector/akeneo_api/pagination_size';
+    public const AKENEO_API_PAGINATION_SIZE = 'akeneo_connector/akeneo_api/pagination_size';
     /**
      * API admin channel config path
      *
      * @var string AKENEO_API_ADMIN_CHANNEL
      */
-    const AKENEO_API_ADMIN_CHANNEL = 'akeneo_connector/akeneo_api/admin_channel';
+    public const AKENEO_API_ADMIN_CHANNEL = 'akeneo_connector/akeneo_api/admin_channel';
     /**
      * API website mapping with channels config path
      *
      * @var string AKENEO_API_WEBSITE_MAPPING
      */
-    const AKENEO_API_WEBSITE_MAPPING = 'akeneo_connector/akeneo_api/website_mapping';
+    public const AKENEO_API_WEBSITE_MAPPING = 'akeneo_connector/akeneo_api/website_mapping';
     /**
      * Product filters mode config path
      *
      * @var string PRODUCTS_FILTERS_MODE
      */
-    const PRODUCTS_FILTERS_MODE = 'akeneo_connector/products_filters/mode';
+    public const PRODUCTS_FILTERS_MODE = 'akeneo_connector/products_filters/mode';
     /**
      * Product filters completeness type config path
      *
      * @var string PRODUCTS_FILTERS_COMPLETENESS_TYPE
      */
-    const PRODUCTS_FILTERS_COMPLETENESS_TYPE = 'akeneo_connector/products_filters/completeness_type';
+    public const PRODUCTS_FILTERS_COMPLETENESS_TYPE = 'akeneo_connector/products_filters/completeness_type';
     /**
      * Product filters completeness value config path
      *
      * @var string PRODUCTS_FILTERS_COMPLETENESS_VALUE
      */
-    const PRODUCTS_FILTERS_COMPLETENESS_VALUE = 'akeneo_connector/products_filters/completeness_value';
+    public const PRODUCTS_FILTERS_COMPLETENESS_VALUE = 'akeneo_connector/products_filters/completeness_value';
     /**
      * Product filters completeness locales config path
      *
      * @var string PRODUCTS_FILTERS_COMPLETENESS_LOCALES
      */
-    const PRODUCTS_FILTERS_COMPLETENESS_LOCALES = 'akeneo_connector/products_filters/completeness_locales';
+    public const PRODUCTS_FILTERS_COMPLETENESS_LOCALES = 'akeneo_connector/products_filters/completeness_locales';
     /**
      * Product model filters completeness locales config path
      *
      * @var string PRODUCTS_MODEL_FILTERS_COMPLETENESS_LOCALES
      */
-    const PRODUCTS_MODEL_FILTERS_COMPLETENESS_LOCALES = 'akeneo_connector/products_filters/model_completeness_locales';
+    public const PRODUCTS_MODEL_FILTERS_COMPLETENESS_LOCALES = 'akeneo_connector/products_filters/model_completeness_locales';
     /**
      * Product model filters completeness type config path
      *
      * @var string PRODUCTS_MODEL_FILTERS_COMPLETENESS_TYPE
      */
-    const PRODUCTS_MODEL_FILTERS_COMPLETENESS_TYPE = 'akeneo_connector/products_filters/model_completeness_type';
+    public const PRODUCTS_MODEL_FILTERS_COMPLETENESS_TYPE = 'akeneo_connector/products_filters/model_completeness_type';
     /**
      * Product filters status config path
      *
      * @var string PRODUCTS_FILTERS_STATUS
      */
-    const PRODUCTS_FILTERS_STATUS = 'akeneo_connector/products_filters/status';
+    public const PRODUCTS_FILTERS_STATUS = 'akeneo_connector/products_filters/status';
     /**
      * Product filters families config path
      *
      * @var string PRODUCTS_FILTERS_FAMILIES
      */
-    const PRODUCTS_FILTERS_FAMILIES = 'akeneo_connector/products_filters/families';
+    public const PRODUCTS_FILTERS_FAMILIES = 'akeneo_connector/products_filters/families';
     /**
      * Product filters updated mode config path
      *
      * @var string PRODUCTS_FILTERS_UPDATED_MODE
      */
-    const PRODUCTS_FILTERS_UPDATED_MODE = 'akeneo_connector/products_filters/updated_mode';
+    public const PRODUCTS_FILTERS_UPDATED_MODE = 'akeneo_connector/products_filters/updated_mode';
     /**
      * Product filters updated lower config pathL
      *
      * @var string PRODUCTS_FILTERS_UPDATED_LOWER
      */
-    const PRODUCTS_FILTERS_UPDATED_LOWER = 'akeneo_connector/products_filters/updated_lower';
+    public const PRODUCTS_FILTERS_UPDATED_LOWER = 'akeneo_connector/products_filters/updated_lower';
     /**
      * Product filters updated greater config path
      *
      * @var string PRODUCTS_FILTERS_UPDATED_GREATER
      */
-    const PRODUCTS_FILTERS_UPDATED_GREATER = 'akeneo_connector/products_filters/updated_greater';
+    public const PRODUCTS_FILTERS_UPDATED_GREATER = 'akeneo_connector/products_filters/updated_greater';
     /**
      * Product filters updated between config path
      *
      * @var string PRODUCTS_FILTERS_UPDATED_BETWEEN_AFTER
      */
-    const PRODUCTS_FILTERS_UPDATED_BETWEEN_AFTER = 'akeneo_connector/products_filters/updated_between_after';
+    public const PRODUCTS_FILTERS_UPDATED_BETWEEN_AFTER = 'akeneo_connector/products_filters/updated_between_after';
     /**
      * Product filters updated between before config path
      *
      * @var string PRODUCTS_FILTERS_UPDATED_BETWEEN_BEFORE
      */
-    const PRODUCTS_FILTERS_UPDATED_BETWEEN_BEFORE = 'akeneo_connector/products_filters/updated_between_before';
+    public const PRODUCTS_FILTERS_UPDATED_BETWEEN_BEFORE = 'akeneo_connector/products_filters/updated_between_before';
     /**
      * Product filters updated since config path
      *
      * @var string PRODUCTS_FILTERS_UPDATED_SINCE
      */
-    const PRODUCTS_FILTERS_UPDATED_SINCE = 'akeneo_connector/products_filters/updated';
+    public const PRODUCTS_FILTERS_UPDATED_SINCE = 'akeneo_connector/products_filters/updated';
     /**
      * Product filters updated since last hours config path
      *
      * @var string PRODUCTS_FILTERS_UPDATED_SINCE_LAST_HOURS
      */
-    const PRODUCTS_FILTERS_UPDATED_SINCE_LAST_HOURS = 'akeneo_connector/products_filters/updated_since_last_hours';
+    public const PRODUCTS_FILTERS_UPDATED_SINCE_LAST_HOURS = 'akeneo_connector/products_filters/updated_since_last_hours';
     /**
      * Product advanced filters config path
      *
      * @var string PRODUCTS_FILTERS_ADVANCED_FILTER
      */
-    const PRODUCTS_FILTERS_ADVANCED_FILTER = 'akeneo_connector/products_filters/advanced_filter';
+    public const PRODUCTS_FILTERS_ADVANCED_FILTER = 'akeneo_connector/products_filters/advanced_filter';
     /**
      * Product model advanced filters config path
      *
      * @var string PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER
      */
-    const PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER = 'akeneo_connector/products_filters/model_advanced_filter';
+    public const PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER = 'akeneo_connector/products_filters/model_advanced_filter';
     /**
      * Product category is active config path
      *
      * @var string PRODUCTS_CATEGORY_IS_ACTIVE
      */
-    const PRODUCTS_CATEGORY_IS_ACTIVE = 'akeneo_connector/category/is_active';
+    public const PRODUCTS_CATEGORY_IS_ACTIVE = 'akeneo_connector/category/is_active';
     /**
      * Categories are included in menu config path
      *
      * @var string PRODUCTS_CATEGORY_INCLUDE_IN_MENU
      */
-    const PRODUCTS_CATEGORY_INCLUDE_IN_MENU = 'akeneo_connector/category/include_in_menu';
+    public const PRODUCTS_CATEGORY_INCLUDE_IN_MENU = 'akeneo_connector/category/include_in_menu';
     /**
      * Categories are anchor config path
      *
      * @var string PRODUCTS_CATEGORY_IS_ANCHOR
      */
-    const PRODUCTS_CATEGORY_IS_ANCHOR = 'akeneo_connector/category/is_anchor';
+    public const PRODUCTS_CATEGORY_IS_ANCHOR = 'akeneo_connector/category/is_anchor';
     /**
      * Categories to not import config path
      *
      * @var string PRODUCTS_CATEGORY_CATEGORIES
      */
-    const PRODUCTS_CATEGORY_CATEGORIES = 'akeneo_connector/category/categories';
+    public const PRODUCTS_CATEGORY_CATEGORIES = 'akeneo_connector/category/categories';
     /**
      * Categories does override content staging
      *
      * @var string PRODUCTS_CATEGORY_OVERRIDE_CONTENT_STAGING
      */
-    const PRODUCTS_CATEGORY_OVERRIDE_CONTENT_STAGING = 'akeneo_connector/category/override_content_staging';
+    public const PRODUCTS_CATEGORY_OVERRIDE_CONTENT_STAGING = 'akeneo_connector/category/override_content_staging';
     /**
      * Attribute mapping config path
      *
      * @var string PRODUCT_ATTRIBUTE_MAPPING
      */
-    const PRODUCT_ATTRIBUTE_MAPPING = 'akeneo_connector/product/attribute_mapping';
+    public const PRODUCT_ATTRIBUTE_MAPPING = 'akeneo_connector/product/attribute_mapping';
     /**
      * Website attribute config path
      *
      * @var string PRODUCT_WEBSITE_ATTRIBUTE
      */
-    const PRODUCT_WEBSITE_ATTRIBUTE = 'akeneo_connector/product/website_attribute';
+    public const PRODUCT_WEBSITE_ATTRIBUTE = 'akeneo_connector/product/website_attribute';
     /**
      * Configurable attribute mapping config path
      *
      * @var string PRODUCT_CONFIGURABLE_ATTRIBUTES
      */
-    const PRODUCT_CONFIGURABLE_ATTRIBUTES = 'akeneo_connector/product/configurable_attributes';
+    public const PRODUCT_CONFIGURABLE_ATTRIBUTES = 'akeneo_connector/product/configurable_attributes';
     /**
      * Product tax class config path
      *
      * @var string PRODUCT_TAX_CLASS
      */
-    const PRODUCT_TAX_CLASS = 'akeneo_connector/product/tax_class';
+    public const PRODUCT_TAX_CLASS = 'akeneo_connector/product/tax_class';
     /**
      * Product url generation flag config path
      *
      * @var string PRODUCT_URL_GENERATION_ENABLED
      */
-    const PRODUCT_URL_GENERATION_ENABLED = 'akeneo_connector/product/url_generation_enabled';
+    public const PRODUCT_URL_GENERATION_ENABLED = 'akeneo_connector/product/url_generation_enabled';
     /**
      * Media import enabled config path
      *
      * @var string PRODUCT_MEDIA_ENABLED
      */
-    const PRODUCT_MEDIA_ENABLED = 'akeneo_connector/product/media_enabled';
+    public const PRODUCT_MEDIA_ENABLED = 'akeneo_connector/product/media_enabled';
     /**
      * Media attributes config path
      *
      * @var string PRODUCT_MEDIA_IMAGES
      */
-    const PRODUCT_MEDIA_IMAGES = 'akeneo_connector/product/media_images';
+    public const PRODUCT_MEDIA_IMAGES = 'akeneo_connector/product/media_images';
     /**
      * Media special images mapping config path
      *
      * @var string PRODUCT_MEDIA_GALLERY
      */
-    const PRODUCT_MEDIA_GALLERY = 'akeneo_connector/product/media_gallery';
+    public const PRODUCT_MEDIA_GALLERY = 'akeneo_connector/product/media_gallery';
     /**
      * File import flag config path
      *
      * @var string PRODUCT_FILE_ENABLED
      */
-    const PRODUCT_FILE_ENABLED = 'akeneo_connector/product/file_enabled';
+    public const PRODUCT_FILE_ENABLED = 'akeneo_connector/product/file_enabled';
     /**
      * File import attribute mapping config path
      *
      * @var string PRODUCT_FILE_ATTRIBUTE
      */
-    const PRODUCT_FILE_ATTRIBUTE = 'akeneo_connector/product/file_attribute';
+    public const PRODUCT_FILE_ATTRIBUTE = 'akeneo_connector/product/file_attribute';
     /**
      * Product metrics config path
      *
      * @var string PRODUCT_METRICS
      */
-    const PRODUCT_METRICS = 'akeneo_connector/product/metrics';
+    public const PRODUCT_METRICS = 'akeneo_connector/product/metrics';
     /**
      * Akeneo master of staging content flag config path
      *
      * @var string PRODUCT_AKENEO_MASTER
      */
-    const PRODUCT_AKENEO_MASTER = 'akeneo_connector/product/akeneo_master';
+    public const PRODUCT_AKENEO_MASTER = 'akeneo_connector/product/akeneo_master';
     /**
      * Attribute types mapping config path
      *
      * @var string ATTRIBUTE_TYPES
      */
-    const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
+    public const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     /**
      * Attribute option code as admin label config path
      *
      * @var string ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL
      */
-    const ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL = 'akeneo_connector/attribute/option_code_as_admin_label';
+    public const ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL = 'akeneo_connector/attribute/option_code_as_admin_label';
     /**
      * Attribute filter updated mode
      *
      * @var string ATTRIBUTE_FILTERS_UPDATED_MODE
      */
-    const ATTRIBUTE_FILTERS_UPDATED_MODE = 'akeneo_connector/filter_attribute/updated_mode';
+    public const ATTRIBUTE_FILTERS_UPDATED_MODE = 'akeneo_connector/filter_attribute/updated_mode';
     /**
      * Attribute filter greater
      *
      * @var string ATTRIBUTE_FILTERS_UPDATED_GREATER
      */
-    const ATTRIBUTE_FILTERS_UPDATED_GREATER = 'akeneo_connector/filter_attribute/updated_greater';
+    public const ATTRIBUTE_FILTERS_UPDATED_GREATER = 'akeneo_connector/filter_attribute/updated_greater';
     /**
      * Attribute filter by code mode
      *
      * @var string ATTRIBUTE_FILTERS_BY_CODE_MODE
      */
-    const ATTRIBUTE_FILTERS_BY_CODE_MODE = 'akeneo_connector/filter_attribute/filter_attribute_code_mode';
+    public const ATTRIBUTE_FILTERS_BY_CODE_MODE = 'akeneo_connector/filter_attribute/filter_attribute_code_mode';
     /**
      * Attribute filter by code
      *
      * @var string ATTRIBUTE_FILTERS_BY_CODE
      */
-    const ATTRIBUTE_FILTERS_BY_CODE = 'akeneo_connector/filter_attribute/filter_attribute_code';
+    public const ATTRIBUTE_FILTERS_BY_CODE = 'akeneo_connector/filter_attribute/filter_attribute_code';
     /**
      * Akeneo master of staging content flag config path
      *
      * @var string PRODUCT_ASSOCIATION_RELATED
      */
-    const PRODUCT_ASSOCIATION_RELATED = 'akeneo_connector/product/association_related';
+    public const PRODUCT_ASSOCIATION_RELATED = 'akeneo_connector/product/association_related';
     /**
      * Akeneo master of staging content flag config path
      *
      * @var string PRODUCT_ASSOCIATION_UPSELL
      */
-    const PRODUCT_ASSOCIATION_UPSELL = 'akeneo_connector/product/association_upsell';
+    public const PRODUCT_ASSOCIATION_UPSELL = 'akeneo_connector/product/association_upsell';
     /**
      * Akeneo master of staging content flag config path
      *
      * @var string PRODUCT_AKENEO_MASTER
      */
-    const PRODUCT_ASSOCIATION_CROSSELL = 'akeneo_connector/product/association_crossell';
+    public const PRODUCT_ASSOCIATION_CROSSELL = 'akeneo_connector/product/association_crossell';
     /**
      * Product activation flag config path
      *
      * @var string PRODUCT_ACTIVATION
      */
-    const PRODUCT_ACTIVATION = 'akeneo_connector/product/activation';
+    public const PRODUCT_ACTIVATION = 'akeneo_connector/product/activation';
     /**
      * Grouped product families mapping path
      *
      * @var string GROUPED_PRODUCTS_FAMILIES_MAPPING
      */
-    const GROUPED_PRODUCTS_FAMILIES_MAPPING = 'akeneo_connector/grouped_products/families_mapping';
+    public const GROUPED_PRODUCTS_FAMILIES_MAPPING = 'akeneo_connector/grouped_products/families_mapping';
     /**
      * @var int PAGINATION_SIZE_DEFAULT_VALUE
      */
-    const PAGINATION_SIZE_DEFAULT_VALUE = 10;
+    public const PAGINATION_SIZE_DEFAULT_VALUE = 10;
     /**
      * Families filters updated mode config path
      *
      * @var string FAMILIES_FILTERS_UPDATED_MODE
      */
-    const FAMILIES_FILTERS_UPDATED_MODE = 'akeneo_connector/families/updated_mode';
+    public const FAMILIES_FILTERS_UPDATED_MODE = 'akeneo_connector/families/updated_mode';
     /**
      * Families filters updated greater config path
      *
      * @var string FAMILIES_FILTERS_UPDATED_GREATER
      */
-    const FAMILIES_FILTERS_UPDATED_GREATER = 'akeneo_connector/families/updated_greater';
+    public const FAMILIES_FILTERS_UPDATED_GREATER = 'akeneo_connector/families/updated_greater';
     /**
      * Advanced logs activation config path
      *
      * @var string ADVANCED_LOG
      */
-    const ADVANCED_LOG = 'akeneo_connector/advanced/advanced_log';
+    public const ADVANCED_LOG = 'akeneo_connector/advanced/advanced_log';
     /**
      * Clean logs config path
      *
@@ -393,61 +393,61 @@ class Config
      *
      * @var string CACHE_TYPE_CATEGORY
      */
-    const CACHE_TYPE_CATEGORY = 'akeneo_connector/cache/cache_type_category';
+    public const CACHE_TYPE_CATEGORY = 'akeneo_connector/cache/cache_type_category';
     /**
      * Cache type family config path
      *
      * @var string CACHE_TYPE_FAMILY
      */
-    const CACHE_TYPE_FAMILY = 'akeneo_connector/cache/cache_type_family';
+    public const CACHE_TYPE_FAMILY = 'akeneo_connector/cache/cache_type_family';
     /**
      * Cache type attribute config path
      *
      * @var string CACHE_TYPE_ATTRIBUTE
      */
-    const CACHE_TYPE_ATTRIBUTE = 'akeneo_connector/cache/cache_type_attribute';
+    public const CACHE_TYPE_ATTRIBUTE = 'akeneo_connector/cache/cache_type_attribute';
     /**
      * Cache type option config path
      *
      * @var string CACHE_TYPE_OPTION
      */
-    const CACHE_TYPE_OPTION = 'akeneo_connector/cache/cache_type_option';
+    public const CACHE_TYPE_OPTION = 'akeneo_connector/cache/cache_type_option';
     /**
      * Cache type product config path
      *
      * @var string CACHE_TYPE_PRODUCT
      */
-    const CACHE_TYPE_PRODUCT = 'akeneo_connector/cache/cache_type_product';
+    public const CACHE_TYPE_PRODUCT = 'akeneo_connector/cache/cache_type_product';
     /**
      * Index category config path
      *
      * @var string INDEX_CATEGORY
      */
-    const INDEX_CATEGORY = 'akeneo_connector/index/index_category';
+    public const INDEX_CATEGORY = 'akeneo_connector/index/index_category';
     /**
      * Index family config path
      *
      * @var string INDEX_FAMILY
      */
-    const INDEX_FAMILY = 'akeneo_connector/index/index_family';
+    public const INDEX_FAMILY = 'akeneo_connector/index/index_family';
     /**
      * Index attribute config path
      *
      * @var string INDEX_ATTRIBUTE
      */
-    const INDEX_ATTRIBUTE = 'akeneo_connector/index/index_attribute';
+    public const INDEX_ATTRIBUTE = 'akeneo_connector/index/index_attribute';
     /**
      * Index option config path
      *
      * @var string INDEX_OPTION
      */
-    const INDEX_OPTION = 'akeneo_connector/index/index_option';
+    public const INDEX_OPTION = 'akeneo_connector/index/index_option';
     /**
      * Index product config path
      *
      * @var string INDEX_PRODUCT
      */
-    const INDEX_PRODUCT = 'akeneo_connector/index/index_product';
+    public const INDEX_PRODUCT = 'akeneo_connector/index/index_product';
     /**
      * This variable contains a Encryptor
      *
@@ -542,7 +542,7 @@ class Config
      *
      * @return string
      */
-    public function getAkeneoApiBaseUrl()
+    public function getAkeneoApiBaseUrl(): string
     {
         return $this->scopeConfig->getValue(self::AKENEO_API_BASE_URL);
     }
@@ -552,7 +552,7 @@ class Config
      *
      * @return string
      */
-    public function getAkeneoApiUsername()
+    public function getAkeneoApiUsername(): string
     {
         return $this->scopeConfig->getValue(self::AKENEO_API_USERNAME);
     }
@@ -563,7 +563,7 @@ class Config
      * @return string
      * @throws Exception
      */
-    public function getAkeneoApiPassword()
+    public function getAkeneoApiPassword(): string
     {
         /** @var string $password */
         $password = $this->scopeConfig->getValue(self::AKENEO_API_PASSWORD);
@@ -576,7 +576,7 @@ class Config
      *
      * @return string
      */
-    public function getAkeneoApiClientId()
+    public function getAkeneoApiClientId(): string
     {
         return $this->scopeConfig->getValue(self::AKENEO_API_CLIENT_ID);
     }
@@ -586,7 +586,7 @@ class Config
      *
      * @return string
      */
-    public function getAkeneoApiClientSecret()
+    public function getAkeneoApiClientSecret(): string
     {
         return $this->scopeConfig->getValue(self::AKENEO_API_CLIENT_SECRET);
     }
@@ -595,8 +595,9 @@ class Config
      * Check if all API credentials are correctly set
      *
      * @return bool
+     * @throws Exception
      */
-    public function checkAkeneoApiCredentials()
+    public function checkAkeneoApiCredentials(): bool
     {
         if (!$this->getAkeneoApiBaseUrl() || !$this->getAkeneoApiClientId() || !$this->getAkeneoApiClientSecret(
             ) || !$this->getAkeneoApiPassword() || !$this->getAkeneoApiUsername()) {
@@ -611,7 +612,7 @@ class Config
      *
      * @return string
      */
-    public function getEdition()
+    public function getEdition(): string
     {
         return $this->scopeConfig->getValue(self::AKENEO_API_EDITION);
     }
@@ -623,7 +624,7 @@ class Config
      * @see \Akeneo\Connector\Model\Source\Filters\Mode
      *
      */
-    public function getFilterMode()
+    public function getFilterMode(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_MODE);
     }
@@ -635,7 +636,7 @@ class Config
      * @see \Akeneo\Connector\Model\Source\Filters\Completeness
      *
      */
-    public function getCompletenessTypeFilter()
+    public function getCompletenessTypeFilter(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_COMPLETENESS_TYPE);
     }
@@ -645,7 +646,7 @@ class Config
      *
      * @return string
      */
-    public function getCompletenessValueFilter()
+    public function getCompletenessValueFilter(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_COMPLETENESS_VALUE);
     }
@@ -655,7 +656,7 @@ class Config
      *
      * @return string
      */
-    public function getCompletenessLocalesFilter()
+    public function getCompletenessLocalesFilter(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_COMPLETENESS_LOCALES);
     }
@@ -665,7 +666,7 @@ class Config
      *
      * @return string
      */
-    public function getModelCompletenessLocalesFilter()
+    public function getModelCompletenessLocalesFilter(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_COMPLETENESS_LOCALES);
     }
@@ -677,7 +678,7 @@ class Config
      * @see \Akeneo\Connector\Model\Source\Filters\ModelCompleteness
      *
      */
-    public function getModelCompletenessTypeFilter()
+    public function getModelCompletenessTypeFilter(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_COMPLETENESS_TYPE);
     }
@@ -689,7 +690,7 @@ class Config
      * @see \Akeneo\Connector\Model\Source\Filters\Status
      *
      */
-    public function getStatusFilter()
+    public function getStatusFilter(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_STATUS);
     }
@@ -699,7 +700,7 @@ class Config
      *
      * @return string
      */
-    public function getUpdatedMode()
+    public function getUpdatedMode(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_MODE);
     }
@@ -709,7 +710,7 @@ class Config
      *
      * @return string
      */
-    public function getUpdatedLowerFilter()
+    public function getUpdatedLowerFilter(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_LOWER);
     }
@@ -719,7 +720,7 @@ class Config
      *
      * @return string
      */
-    public function getUpdatedGreaterFilter()
+    public function getUpdatedGreaterFilter(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_GREATER);
     }
@@ -729,7 +730,7 @@ class Config
      *
      * @return string
      */
-    public function getUpdatedBetweenAfterFilter()
+    public function getUpdatedBetweenAfterFilter(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_BETWEEN_AFTER);
     }
@@ -739,7 +740,7 @@ class Config
      *
      * @return string
      */
-    public function getUpdatedBetweenBeforeFilter()
+    public function getUpdatedBetweenBeforeFilter(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_BETWEEN_BEFORE);
     }
@@ -749,7 +750,7 @@ class Config
      *
      * @return string
      */
-    public function getUpdatedSinceFilter()
+    public function getUpdatedSinceFilter(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_SINCE);
     }
@@ -759,7 +760,7 @@ class Config
      *
      * @return string
      */
-    public function getUpdatedSinceLastHoursFilter()
+    public function getUpdatedSinceLastHoursFilter(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_SINCE_LAST_HOURS);
     }
@@ -769,7 +770,7 @@ class Config
      *
      * @return string
      */
-    public function getAttributeUpdatedMode()
+    public function getAttributeUpdatedMode(): string
     {
         return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_UPDATED_MODE);
     }
@@ -779,7 +780,7 @@ class Config
      *
      * @return string
      */
-    public function getAttributeUpdatedGreaterFilter()
+    public function getAttributeUpdatedGreaterFilter(): string
     {
         return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_UPDATED_GREATER);
     }
@@ -789,7 +790,7 @@ class Config
      *
      * @return bool
      */
-    public function getAttributeFilterByCodeMode()
+    public function getAttributeFilterByCodeMode(): bool
     {
         return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_BY_CODE_MODE);
     }
@@ -799,7 +800,7 @@ class Config
      *
      * @return array
      */
-    public function getAttributeFilterByCode()
+    public function getAttributeFilterByCode(): array
     {
         return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_BY_CODE);
     }
@@ -809,7 +810,7 @@ class Config
      *
      * @return string
      */
-    public function getFamiliesFilter()
+    public function getFamiliesFilter(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_FAMILIES);
     }
@@ -819,7 +820,7 @@ class Config
      *
      * @return array
      */
-    public function getAdvancedFilters()
+    public function getAdvancedFilters(): array
     {
         $filters = $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_ADVANCED_FILTER);
 
@@ -831,7 +832,7 @@ class Config
      *
      * @return array
      */
-    public function getModelAdvancedFilters()
+    public function getModelAdvancedFilters(): array
     {
         $filters = $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER);
 
@@ -843,7 +844,7 @@ class Config
      *
      * @return string
      */
-    public function getIsCategoryActive()
+    public function getIsCategoryActive(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_IS_ACTIVE);
     }
@@ -853,7 +854,7 @@ class Config
      *
      * @return string
      */
-    public function getIsCategoryInMenu()
+    public function getIsCategoryInMenu(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_INCLUDE_IN_MENU);
     }
@@ -863,7 +864,7 @@ class Config
      *
      * @return string
      */
-    public function getIsCategoryAnchor()
+    public function getIsCategoryAnchor(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_IS_ANCHOR);
     }
@@ -873,7 +874,7 @@ class Config
      *
      * @return string
      */
-    public function getCategoriesFilter()
+    public function getCategoriesFilter(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_CATEGORIES);
     }
@@ -883,7 +884,7 @@ class Config
      *
      * @return string
      */
-    public function getCategoriesIsOverrideContentStaging()
+    public function getCategoriesIsOverrideContentStaging(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_OVERRIDE_CONTENT_STAGING);
     }
@@ -893,7 +894,7 @@ class Config
      *
      * @return string
      */
-    public function getAdminDefaultChannel()
+    public function getAdminDefaultChannel(): string
     {
         return $this->scopeConfig->getValue(self::AKENEO_API_ADMIN_CHANNEL);
     }
@@ -902,9 +903,8 @@ class Config
      * Retrieve the name of the website association attribute
      *
      * @return array
-     * @throws NoSuchEntityException
      */
-    public function getWebsiteAttribute()
+    public function getWebsiteAttribute(): array
     {
         return $this->scopeConfig->getValue(self::PRODUCT_WEBSITE_ATTRIBUTE);
     }
@@ -918,7 +918,7 @@ class Config
      * @throws Exception
      *
      */
-    public function getWebsiteMapping($withDefault = true)
+    public function getWebsiteMapping($withDefault = true): array
     {
         /** @var mixed[] $mapping */
         $mapping = [];
@@ -959,7 +959,7 @@ class Config
      * @return string[]
      * @throws Exception
      */
-    public function getMappedChannels()
+    public function getMappedChannels(): array
     {
         /** @var mixed[] $mapping */
         $mapping = $this->getWebsiteMapping();
@@ -976,7 +976,7 @@ class Config
      *
      * @return string
      */
-    public function getDefaultLocale($storeId = null)
+    public function getDefaultLocale($storeId = null): string
     {
         return $this->scopeConfig->getValue(
             DirectoryHelper::XML_PATH_DEFAULT_LOCALE,
@@ -992,7 +992,7 @@ class Config
      *
      * @return string
      */
-    public function getDefaultCurrency($storeId = null)
+    public function getDefaultCurrency($storeId = null): string
     {
         return $this->scopeConfig->getValue(
             Currency::XML_PATH_CURRENCY_DEFAULT,
@@ -1025,7 +1025,7 @@ class Config
      * @return int
      * @throws LocalizedException
      */
-    public function getEntityTypeId($entity)
+    public function getEntityTypeId($entity): int
     {
         return $this->eavConfig->getEntityType($entity)->getEntityTypeId();
     }
@@ -1039,7 +1039,7 @@ class Config
      * @return AbstractAttribute
      * @throws LocalizedException
      */
-    public function getAttribute($entityType, $code)
+    public function getAttribute($entityType, $code): AbstractAttribute
     {
         return $this->eavConfig->getAttribute($entityType, $code);
     }
@@ -1049,7 +1049,7 @@ class Config
      *
      * @return string
      */
-    public function getProductActivation()
+    public function getProductActivation(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCT_ACTIVATION);
     }
@@ -1060,7 +1060,7 @@ class Config
      * @return array
      * @throws NoSuchEntityException
      */
-    public function getProductTaxClasses()
+    public function getProductTaxClasses(): array
     {
         /** @var array $stores */
         $stores = $this->storeManager->getStores(true);
@@ -1108,7 +1108,7 @@ class Config
      * @return int
      * @throws NoSuchEntityException
      */
-    public function getDefaultWebsiteId()
+    public function getDefaultWebsiteId(): int
     {
         return $this->storeManager->getStore()->getWebsiteId();
     }
@@ -1118,7 +1118,7 @@ class Config
      *
      * @return int
      */
-    public function getDefaultScopeId()
+    public function getDefaultScopeId(): int
     {
         return $this->catalogInventoryConfiguration->getDefaultScopeId();
     }
@@ -1128,7 +1128,7 @@ class Config
      *
      * @return bool
      */
-    public function isMediaImportEnabled()
+    public function isMediaImportEnabled(): bool
     {
         return $this->scopeConfig->isSetFlag(self::PRODUCT_MEDIA_ENABLED);
     }
@@ -1138,7 +1138,7 @@ class Config
      *
      * @return bool
      */
-    public function isUrlGenerationEnabled()
+    public function isUrlGenerationEnabled(): bool
     {
         return $this->scopeConfig->isSetFlag(self::PRODUCT_URL_GENERATION_ENABLED);
     }
@@ -1148,7 +1148,7 @@ class Config
      *
      * @return bool
      */
-    public function isAkeneoMaster()
+    public function isAkeneoMaster(): bool
     {
         return $this->scopeConfig->isSetFlag(self::PRODUCT_AKENEO_MASTER);
     }
@@ -1158,7 +1158,7 @@ class Config
      *
      * @return array
      */
-    public function getMediaImportImagesColumns()
+    public function getMediaImportImagesColumns(): array
     {
         /** @var array $images */
         $images = [];
@@ -1182,7 +1182,7 @@ class Config
      *
      * @return bool
      */
-    public function isFileImportEnabled()
+    public function isFileImportEnabled(): bool
     {
         return $this->scopeConfig->isSetFlag(self::PRODUCT_FILE_ENABLED);
     }
@@ -1192,7 +1192,7 @@ class Config
      *
      * @return array
      */
-    public function getFileImportColumns()
+    public function getFileImportColumns(): array
     {
         /** @var array $fileAttributes */
         $fileAttributes = [];
@@ -1223,7 +1223,7 @@ class Config
      *
      * @return array
      */
-    public function getMediaImportGalleryColumns()
+    public function getMediaImportGalleryColumns(): array
     {
         /** @var array $images */
         $images = [];
@@ -1257,7 +1257,7 @@ class Config
      *
      * @return array|mixed[]
      */
-    public function getMetricsColumns($returnVariant = null, $returnConcat = null)
+    public function getMetricsColumns($returnVariant = null, $returnConcat = null): array
     {
         /** @var array $metrics */
         $metrics = [];
@@ -1305,7 +1305,7 @@ class Config
      *
      * @return bool
      */
-    public function mediaFileExists($filePath)
+    public function mediaFileExists($filePath): bool
     {
         return $this->mediaDirectory->isFile($filePath);
     }
@@ -1317,9 +1317,8 @@ class Config
      * @param null|string $subDirectory
      *
      * @return string
-     * @throws FileSystemException
      */
-    public function getMediaFullPath($fileName, $subDirectory = null)
+    public function getMediaFullPath($fileName, $subDirectory = null): string
     {
         if ($subDirectory) {
             return $subDirectory . $this->getMediaFilePath($fileName);
@@ -1331,12 +1330,13 @@ class Config
     /**
      * Download media by fullpath
      *
-     * @param string $filename
+     * @param string $filePath
      * @param string $content
      *
      * @return void
+     * @throws FileSystemException
      */
-    public function saveMediaFile($filePath, $content)
+    public function saveMediaFile($filePath, $content): void
     {
         $this->mediaDirectory->writeFile($filePath, $content);
     }
@@ -1346,7 +1346,7 @@ class Config
      *
      * @return string
      */
-    public function getFilesMediaDirectory()
+    public function getFilesMediaDirectory(): string
     {
         return $this->filesMediaFile;
     }
@@ -1358,7 +1358,7 @@ class Config
      *
      * @return string
      */
-    public function getMediaFilePath($filename)
+    public function getMediaFilePath($filename): string
     {
         return Uploader::getDispretionPath($filename) . '/' . Uploader::getCorrectFileName($filename);
     }
@@ -1370,7 +1370,7 @@ class Config
      *
      * @return bool
      */
-    public function isCategoryUsedInProductUrl($storeId = null)
+    public function isCategoryUsedInProductUrl($storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
             ProductHelper::XML_PATH_PRODUCT_URL_USE_CATEGORY,
@@ -1384,7 +1384,7 @@ class Config
      *
      * @return bool
      */
-    public function isUrlKeyMapped()
+    public function isUrlKeyMapped(): bool
     {
         /** @var mixed $matches */
         $matches = $this->getAttributeMapping();
@@ -1434,7 +1434,7 @@ class Config
      *
      * @return string[]
      */
-    public function getGroupedFamiliesToImport()
+    public function getGroupedFamiliesToImport(): array
     {
         /** @var string $familiesSerialized */
         $familiesSerialized = $this->scopeConfig->getValue(self::GROUPED_PRODUCTS_FAMILIES_MAPPING);
@@ -1455,7 +1455,7 @@ class Config
      *
      * @return string[]
      */
-    public function getGroupedAssociationsToImport()
+    public function getGroupedAssociationsToImport(): array
     {
         /** @var string $associationsSerialized */
         $associationsSerialized = $this->scopeConfig->getValue(self::GROUPED_PRODUCTS_FAMILIES_MAPPING);
@@ -1472,7 +1472,7 @@ class Config
      *
      * @return mixed[]
      */
-    public function getGroupedAssociationsForFamily(string $family)
+    public function getGroupedAssociationsForFamily(string $family): array
     {
         /** @var string[] $allAssociations */
         $allAssociations = $this->getGroupedAssociationsToImport();
@@ -1497,7 +1497,7 @@ class Config
      * @return int
      * @throws LocalizedException
      */
-    public function getDefaultAttributeSetId($entity)
+    public function getDefaultAttributeSetId($entity): int
     {
         return $this->eavConfig->getEntityType($entity)->getDefaultAttributeSetId();
     }
@@ -1507,7 +1507,7 @@ class Config
      *
      * @return string|null
      */
-    public function getFamiliesUpdatedMode()
+    public function getFamiliesUpdatedMode(): ?string
     {
         return $this->scopeConfig->getValue(self::FAMILIES_FILTERS_UPDATED_MODE);
     }
@@ -1517,7 +1517,7 @@ class Config
      *
      * @return string|null
      */
-    public function getFamiliesUpdatedGreater()
+    public function getFamiliesUpdatedGreater(): ?string
     {
         return $this->scopeConfig->getValue(self::FAMILIES_FILTERS_UPDATED_GREATER);
     }
@@ -1527,7 +1527,7 @@ class Config
      *
      * @return string[]
      */
-    public function getAssociationTypes()
+    public function getAssociationTypes(): array
     {
         /** @var string $relatedCode */
         $relatedCode = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_RELATED);
@@ -1564,7 +1564,7 @@ class Config
      *
      * @return string|null
      */
-    public function isAdvancedLogActivated()
+    public function isAdvancedLogActivated(): ?string
     {
         return $this->scopeConfig->getValue(self::ADVANCED_LOG);
     }
@@ -1584,7 +1584,7 @@ class Config
      *
      * @return bool
      */
-    public function getOptionCodeAsAdminLabel()
+    public function getOptionCodeAsAdminLabel(): bool
     {
         return $this->scopeConfig->getValue(self::ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL);
     }
@@ -1594,7 +1594,7 @@ class Config
      *
      * @return string|null
      */
-    public function getCacheTypeAttribute()
+    public function getCacheTypeAttribute(): ?string
     {
         return $this->scopeConfig->getValue(self::CACHE_TYPE_ATTRIBUTE);
     }
@@ -1604,7 +1604,7 @@ class Config
      *
      * @return string|null
      */
-    public function getCacheTypeCategory()
+    public function getCacheTypeCategory(): ?string
     {
         return $this->scopeConfig->getValue(self::CACHE_TYPE_CATEGORY);
     }
@@ -1614,7 +1614,7 @@ class Config
      *
      * @return string|null
      */
-    public function getCacheTypeFamily()
+    public function getCacheTypeFamily(): ?string
     {
         return $this->scopeConfig->getValue(self::CACHE_TYPE_FAMILY);
     }
@@ -1624,7 +1624,7 @@ class Config
      *
      * @return string
      */
-    public function getCacheTypeProduct()
+    public function getCacheTypeProduct(): string
     {
         return $this->scopeConfig->getValue(self::CACHE_TYPE_PRODUCT);
     }
@@ -1634,7 +1634,7 @@ class Config
      *
      * @return string|null
      */
-    public function getCacheTypeOption()
+    public function getCacheTypeOption(): ?string
     {
         return $this->scopeConfig->getValue(self::CACHE_TYPE_OPTION);
     }
@@ -1644,7 +1644,7 @@ class Config
      *
      * @return string|null
      */
-    public function getIndexCategory()
+    public function getIndexCategory(): ?string
     {
         return $this->scopeConfig->getValue(self::INDEX_CATEGORY);
     }
@@ -1654,7 +1654,7 @@ class Config
      *
      * @return string|null
      */
-    public function getIndexAttribute()
+    public function getIndexAttribute(): ?string
     {
         return $this->scopeConfig->getValue(self::INDEX_ATTRIBUTE);
     }
@@ -1664,7 +1664,7 @@ class Config
      *
      * @return string|null
      */
-    public function getIndexFamily()
+    public function getIndexFamily(): ?string
     {
         return $this->scopeConfig->getValue(self::INDEX_FAMILY);
     }
@@ -1674,7 +1674,7 @@ class Config
      *
      * @return string|null
      */
-    public function getIndexOption()
+    public function getIndexOption(): ?string
     {
         return $this->scopeConfig->getValue(self::INDEX_OPTION);
     }
@@ -1684,7 +1684,7 @@ class Config
      *
      * @return string|null
      */
-    public function getIndexProduct()
+    public function getIndexProduct(): ?string
     {
         return $this->scopeConfig->getValue(self::INDEX_PRODUCT);
     }
