@@ -437,7 +437,7 @@ class ProductFilters
      */
     protected function getLastImportDateFilter($jobExecutor)
     {
-        return $jobExecutor->getCurrentJob()->getLastExecutedDateBeforeLaunch();
+        return $jobExecutor->getCurrentJob()->getLastSuccessExecutedDate();
     }
 
     /**
