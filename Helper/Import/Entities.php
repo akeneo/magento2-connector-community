@@ -894,7 +894,9 @@ class Entities
             // filter to get only "default product entities"
             // ie. product with 2 stagings scheduled will appear 5 times in catalog_product_entity table.
             // We only want row not updated by the content staging (the first, the one between the 2 scheduled and the last).
-                's.rollback_id IS NULL'
+                's.is_rollback = 1'
+            )->orWhere(
+                's.id IS NULL'
             );
         }
 
@@ -934,7 +936,9 @@ class Entities
             // filter to get only "default category entities"
             // ie. category with 2 stagings scheduled will appear 5 times in catalog_category_entity table.
             // We only want row not updated by the content staging (the first, the one between the 2 scheduled and the last).
-                's.rollback_id IS NULL'
+                's.is_rollback = 1'
+            )->orWhere(
+                's.id IS NULL'
             );
         }
 
