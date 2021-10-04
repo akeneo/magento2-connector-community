@@ -1570,7 +1570,7 @@ class Config
     }
 
     /**
-     * Description getClearJobLogs function
+     * Description getCleanLogs function
      *
      * @return string|null
      */
