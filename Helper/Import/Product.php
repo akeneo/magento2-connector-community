@@ -3,16 +3,15 @@
 namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\DeploymentConfig;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Serialize\Serializer\Serialize;
+use Magento\Framework\Serialize\Serializer\Json;
 use Zend_Db_Expr as Expr;
 
 /**
@@ -56,11 +55,11 @@ class Product extends Entities
      */
     public const ALL_ASSOCIATIONS_KEY = [self::QUANTIFIED_ASSOCIATIONS_KEY, self::ASSOCIATIONS_KEY];
     /**
-     * This variable contains a JsonSerializer
+     * This variable contains a Json
      *
-     * @var JsonSerializer $serializer
+     * @var Json $jsonSerializer
      */
-    protected $serializer;
+    protected $jsonSerializer;
     /**
      * This variable contains a ProductUrlPathGenerator
      *
@@ -73,12 +72,6 @@ class Product extends Entities
      * @var ScopeConfigInterface $scopeConfig
      */
     protected $scopeConfig;
-    /**
-     * This variable contains a Serialize
-     *
-     * @var Serialize $nativeSerializer
-     */
-    protected $nativeSerializer;
 
     /**
      * Product constructor
@@ -88,9 +81,8 @@ class Product extends Entities
      * @param BaseProductModel        $product
      * @param ProductUrlPathGenerator $productUrlPathGenerator
      * @param ConfigHelper            $configHelper
-     * @param JsonSerializer          $serializer
+     * @param Json                    $jsonSerializer
      * @param ScopeConfigInterface    $scopeConfig
-     * @param Serialize               $nativeSerializer
      */
     public function __construct(
         ResourceConnection $connection,
@@ -98,16 +90,14 @@ class Product extends Entities
         BaseProductModel $product,
         ProductUrlPathGenerator $productUrlPathGenerator,
         ConfigHelper $configHelper,
-        JsonSerializer $serializer,
-        ScopeConfigInterface $scopeConfig,
-        Serialize $nativeSerializer
+        Json $jsonSerializer,
+        ScopeConfigInterface $scopeConfig
     ) {
         parent::__construct($connection, $deploymentConfig, $product, $configHelper);
 
-        $this->serializer              = $serializer;
+        $this->jsonSerializer          = $jsonSerializer;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
         $this->scopeConfig             = $scopeConfig;
-        $this->nativeSerializer        = $nativeSerializer;
     }
 
     /**
@@ -326,7 +316,7 @@ class Product extends Entities
         /** @var string[] $finalProducts */
         $finalProducts = [];
         /**
-         * @var array $values
+         * @var array  $values
          * @var string $product
          */
         foreach ($values as $product) {
@@ -340,7 +330,7 @@ class Product extends Entities
         }
 
         if (isset($finalProducts)) {
-            $completeness['completenesses'] = $this->nativeSerializer->serialize($finalProducts);
+            $completeness['completenesses'] = $this->jsonSerializer->serialize($finalProducts);
         }
 
         if (empty($completeness)) {
@@ -384,7 +374,7 @@ class Product extends Entities
     {
         /** @var string|array $matches */
         $matches = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING);
-        $matches = $this->serializer->unserialize($matches);
+        $matches = $this->jsonSerializer->unserialize($matches);
         if (!is_array($matches)) {
             return false;
         }
