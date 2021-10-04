@@ -260,3 +260,6 @@
     * Prevent concurrent job trigger if a job is already scheduled or running
 
 **Warning :** *In order to use the new import system, please make sure that Magento 2 CRON are correctly running (https://help.akeneo.com/magento2-connector/articles/all-pre-requisite.html#configure-your-magento-2)*
+
+### Version 102.0.1 :
+* Fix content staging scheduled update for a product, or a category without end date being updated wrongfully when "Does Akeneo data override content staging" configuration is set to "No"
