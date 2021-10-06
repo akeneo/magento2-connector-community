@@ -2168,18 +2168,18 @@ class Product extends JobImport
                                 /** @var bool $websiteSet */
                                 $websiteSet = false;
                                 /**
-                                 * @var string $optionId
-                                 * @var string $websiteId
+                                 * @var string $key
+                                 * @var string $website
                                  */
                                 foreach ($websites as $key => $website) {
-                                    if ($associatedWebsite === $website[0]['website_code']) {
+                                    if ($associatedWebsite === $key && isset($website[0]['website_id'])) {
                                         $websiteSet = true;
                                         /** @var Select $insertSelect */
                                         $insertSelect = $connection->select()->from(
                                             $tmpTable,
                                             [
                                                 'product_id' => new Expr($row['entity_id']),
-                                                'website_id' => new Expr($website[0]['website_code']),
+                                                'website_id' => new Expr($website[0]['website_id']),
                                             ]
                                         );
 
@@ -2195,12 +2195,11 @@ class Product extends JobImport
                                 }
 
                                 if ($websiteSet === false) {
-                                    $optionLabel = $attribute->getSource()->getOptionText($associatedWebsite);
                                     $this->jobExecutor->setAdditionalMessage(
                                         __(
                                             'Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.',
                                             $row['identifier'],
-                                            $optionLabel
+                                            $associatedWebsite
                                         ),
                                         $this->logger
                                     );
