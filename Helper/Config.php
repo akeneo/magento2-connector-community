@@ -895,10 +895,9 @@ class Config
     /**
      * Retrieve the name of the website association attribute
      *
-     * @return array
-     * @throws NoSuchEntityException
+     * @return string
      */
-    public function getWebsiteAttribute()
+    public function getWebsiteAttribute(): string
     {
         return $this->scopeConfig->getValue(self::PRODUCT_WEBSITE_ATTRIBUTE);
     }
