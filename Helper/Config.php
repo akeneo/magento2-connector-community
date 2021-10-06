@@ -897,7 +897,7 @@ class Config
      *
      * @return string
      */
-    public function getWebsiteAttribute(): string
+    public function getWebsiteAttribute(): ?string
     {
         return $this->scopeConfig->getValue(self::PRODUCT_WEBSITE_ATTRIBUTE);
     }
