@@ -2127,10 +2127,10 @@ class Product extends JobImport
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string $websiteAttribute */
         $websiteAttribute = $this->configHelper->getWebsiteAttribute();
-        if ($websiteAttribute != null) {
+        if ($websiteAttribute !== null) {
             $websiteAttribute = strtolower($websiteAttribute);
             $attribute        = $this->eavConfig->getAttribute('catalog_product', $websiteAttribute);
-            if ($attribute->getAttributeId() != null) {
+            if ($attribute->getAttributeId() !== null) {
                 /** @var array $websites */
                 $websites = $this->storeHelper->getStores('website_code');
 
@@ -2161,7 +2161,7 @@ class Product extends JobImport
                         );
                         /** @var string[] $associatedWebsites */
                         $associatedWebsites = $row['associated_website'];
-                        if ($associatedWebsites != null) {
+                        if ($associatedWebsites !== null) {
                             $associatedWebsites = explode(',', $associatedWebsites);
                             /** @var string $associatedWebsite */
                             foreach ($associatedWebsites as $associatedWebsite) {
@@ -2231,7 +2231,7 @@ class Product extends JobImport
              * @var array $affected
              */
             foreach ($websites as $websiteId => $affected) {
-                if ($websiteId == 0) {
+                if ($websiteId === 0) {
                     continue;
                 }
 
