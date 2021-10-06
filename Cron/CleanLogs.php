@@ -69,6 +69,11 @@ class CleanLogs
      */
     public function execute(): CleanLogs
     {
+        /** @var string $ifConfigEnable */
+        $ifConfigEnable = $this->configHelper->getEnableCleanLogs();
+        if (!$ifConfigEnable) {
+            return $this;
+        }
         /** @var string $valueConfig */
         $valueConfig = $this->configHelper->getCleanLogs();
         if (!$valueConfig) {

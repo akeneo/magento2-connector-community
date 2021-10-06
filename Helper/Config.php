@@ -389,6 +389,12 @@ class Config
      */
     public const CLEAN_LOGS = 'akeneo_connector/advanced/clean_logs';
     /**
+     * Enable clean logs config path
+     *
+     * @var string ENABLE_CLEAN_LOGS
+     */
+    public const ENABLE_CLEAN_LOGS = 'akeneo_connector/advanced/enable_clean_logs';
+    /**
      * Cache type category config path
      *
      * @var string CACHE_TYPE_CATEGORY
@@ -1577,6 +1583,16 @@ class Config
     public function getCleanLogs(): ?string
     {
         return $this->scopeConfig->getValue(self::CLEAN_LOGS);
+    }
+
+    /**
+     * Description getEnableCleanLogs function
+     *
+     * @return string|null
+     */
+    public function getEnableCleanLogs(): ?string
+    {
+        return $this->scopeConfig->getValue(self::ENABLE_CLEAN_LOGS);
     }
 
     /**
