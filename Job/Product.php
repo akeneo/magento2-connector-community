@@ -351,7 +351,10 @@ class Product extends JobImport
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
-            $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->jobExecutor->setAdditionalMessage(
+                __('Path to log file : %1', $this->handler->getFilename()),
+                $this->logger
+            );
         }
 
         if (empty($this->configHelper->getMappedChannels())) {
@@ -543,7 +546,10 @@ class Product extends JobImport
                 }
 
                 /** @var bool $result */
-                $result = $this->entitiesHelper->insertDataFromApi($product, $this->jobExecutor->getCurrentJob()->getCode());
+                $result = $this->entitiesHelper->insertDataFromApi(
+                    $product,
+                    $this->jobExecutor->getCurrentJob()->getCode()
+                );
 
                 if (!$result) {
                     $this->jobExecutor->setMessage('Could not insert Product data in temp table', $this->logger);
@@ -1314,7 +1320,7 @@ class Product extends JobImport
         );
         if ($noFamily) {
             $this->setStatus(false);
-            $this->jobExecuto->setMessage(
+            $this->jobExecutor->setMessage(
                 __('Warning: %1 product(s) without family. Please try to import families.', $noFamily),
                 $this->logger
             );
@@ -1341,10 +1347,15 @@ class Product extends JobImport
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string[] $columns */
         $columns = array_keys($connection->describeTable($tmpTable));
+        /** @var string $websiteAttribute */
+        $websiteAttribute = $this->configHelper->getWebsiteAttribute();
         /** @var string[] $except */
         $except = [
             'url_key',
         ];
+        if ($websiteAttribute) {
+            $except[] = $websiteAttribute;
+        }
         $except = array_merge($except, $this->excludedColumns);
 
         /** @var string $column */
@@ -2118,55 +2129,12 @@ class Product extends JobImport
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string $websiteAttribute */
         $websiteAttribute = $this->configHelper->getWebsiteAttribute();
-        if ($websiteAttribute != null) {
+        if ($websiteAttribute !== null) {
             $websiteAttribute = strtolower($websiteAttribute);
             $attribute        = $this->eavConfig->getAttribute('catalog_product', $websiteAttribute);
-            if ($attribute->getAttributeId() != null) {
-                /** @var string[] $options */
-                $options = $attribute->getSource()->getAllOptions();
+            if ($attribute->getAttributeId() !== null) {
                 /** @var array $websites */
                 $websites = $this->storeHelper->getStores('website_code');
-                /** @var string[] $optionMapping */
-                $optionMapping = [];
-                /** @var array $apiAttribute */
-                $apiAttribute = $this->akeneoClient->getAttributeOptionApi()->all($websiteAttribute, 1);
-                // Generate the option_id / website_id mapping
-                /**
-                 * @var int   $index
-                 * @var array $optionApiAttribute
-                 */
-                foreach ($apiAttribute as $index => $optionApiAttribute) {
-                    /** @var string[] $option */
-                    foreach ($options as $option) {
-                        if (isset($option['label']) && isset($optionApiAttribute['labels']) && isset($optionApiAttribute['code'])) {
-                            if (in_array($option['label'], $optionApiAttribute['labels'])) {
-                                $websiteMatch = false;
-                                /**
-                                 * @var string $websiteCode
-                                 * @var array  $affected
-                                 */
-                                foreach ($websites as $websiteCode => $affected) {
-                                    if ($optionApiAttribute['code'] == $websiteCode) {
-                                        if (isset($affected[0]['website_id'])) {
-                                            $websiteMatch  = true;
-                                            $optionMapping += [$option['value'] => $affected[0]['website_id']];
-                                        }
-                                    }
-                                }
-
-                                if ($websiteMatch === false && $option['label'] != ' ') {
-                                    $this->jobExecutor->setAdditionalMessage(
-                                        __(
-                                            'Warning: The option %1 is not a website code.',
-                                            $optionApiAttribute['code']
-                                        ),
-                                        $this->logger
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
 
                 if ($connection->tableColumnExists($tmpTable, $websiteAttribute)) {
                     /** @var Select $select */
@@ -2195,25 +2163,25 @@ class Product extends JobImport
                         );
                         /** @var string[] $associatedWebsites */
                         $associatedWebsites = $row['associated_website'];
-                        if ($associatedWebsites != null) {
+                        if ($associatedWebsites !== null) {
                             $associatedWebsites = explode(',', $associatedWebsites);
                             /** @var string $associatedWebsite */
                             foreach ($associatedWebsites as $associatedWebsite) {
                                 /** @var bool $websiteSet */
                                 $websiteSet = false;
                                 /**
-                                 * @var string $optionId
-                                 * @var string $websiteId
+                                 * @var string $key
+                                 * @var string $website
                                  */
-                                foreach ($optionMapping as $optionId => $websiteId) {
-                                    if ($associatedWebsite == $optionId) {
+                                foreach ($websites as $key => $website) {
+                                    if ($associatedWebsite === $key && isset($website[0]['website_id'])) {
                                         $websiteSet = true;
                                         /** @var Select $insertSelect */
                                         $insertSelect = $connection->select()->from(
                                             $tmpTable,
                                             [
                                                 'product_id' => new Expr($row['entity_id']),
-                                                'website_id' => new Expr($websiteId),
+                                                'website_id' => new Expr($website[0]['website_id']),
                                             ]
                                         );
 
@@ -2229,12 +2197,11 @@ class Product extends JobImport
                                 }
 
                                 if ($websiteSet === false) {
-                                    $optionLabel = $attribute->getSource()->getOptionText($associatedWebsite);
                                     $this->jobExecutor->setAdditionalMessage(
                                         __(
                                             'Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.',
                                             $row['identifier'],
-                                            $optionLabel
+                                            $associatedWebsite
                                         ),
                                         $this->logger
                                     );
@@ -2265,7 +2232,7 @@ class Product extends JobImport
              * @var array $affected
              */
             foreach ($websites as $websiteId => $affected) {
-                if ($websiteId == 0) {
+                if ($websiteId === 0) {
                     continue;
                 }
 
@@ -2488,7 +2455,11 @@ class Product extends JobImport
             /** @var Select $select */
             $select = $connection->select()->from(['c' => $entitiesTable], [])->joinInner(
                 ['d' => $tmpTable],
-                sprintf('FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"', $concat, $this->jobExecutor->getCurrentJob()->getCode()),
+                sprintf(
+                    'FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"',
+                    $concat,
+                    $this->jobExecutor->getCurrentJob()->getCode()
+                ),
                 $columsToSelect
             );
 
