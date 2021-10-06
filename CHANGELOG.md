@@ -263,3 +263,6 @@
 
 ### Version 102.0.1 :
 * Fix content staging scheduled update for a product, or a category without end date being updated wrongfully when "Does Akeneo data override content staging" configuration is set to "No"
+
+### Version 102.0.2 :
+* Fix website mapping not working when product job is scheduled and if "Set attribute option code as Admin label for attribute options" configuration is set to "Yes"
