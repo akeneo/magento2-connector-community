@@ -558,6 +558,19 @@ For example :<br/>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>Activating advanced log may slow down the imports. Temporary tables won't be deleted at the end of their imports. Logs will be placed in var/log/akeneo_connector</comment>
                 </field>
+                <field id="email_job_report" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Job Report By Email</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Send job report by email</comment>
+                </field>
+                <field id="email_job_report_recipient" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Job Report Recipient Emails</label>
+                    <comment>Email addresses of job reports recipients separated by commas ','</comment>
+                    <validate>no-whitespace</validate>
+                    <depends>
+                        <field id="email_job_report">1</field>
+                    </depends>
+                </field>
             </group>
         </section>
     </system>
