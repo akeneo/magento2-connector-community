@@ -1677,7 +1677,7 @@ class Product extends JobImport
         /** @var string[] $pKeyColumn */
         $pKeyColumn = 'a._entity_id';
         /** @var string[] $columnsForStatus */
-        $columnsForStatus = ['entity_id' => $pKeyColumn, '_entity_id', '_is_new' => 'a._is_new'];
+        $columnsForStatus = ['entity_id' => $pKeyColumn, '_entity_id', '_is_new' => 'a._is_new', 'enabled' => 'a.enabled'];
 
         /** @var bool $rowIdExists */
         $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productTable);
@@ -1706,7 +1706,7 @@ class Product extends JobImport
         $oldStatus = $connection->query($select);
         while (($row = $oldStatus->fetch())) {
             $valuesToInsert = [
-                '_status' => $row['value'],
+                '_status' => $row['enabled'],
             ];
             $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
         }
