@@ -235,6 +235,12 @@ class Config
      */
     const PRODUCT_WEBSITE_ATTRIBUTE = 'akeneo_connector/product/website_attribute';
     /**
+     * Mapping attribute config path
+     *
+     * @var string PRODUCT_MAPPING_ATTRIBUTE
+     */
+    const PRODUCT_MAPPING_ATTRIBUTE = 'akeneo_connector/product/product_mapping_attribute';
+    /**
      * Configurable attribute mapping config path
      *
      * @var string PRODUCT_CONFIGURABLE_ATTRIBUTES
@@ -904,6 +910,17 @@ class Config
     public function getWebsiteAttribute(): ?string
     {
         return $this->scopeConfig->getValue(self::PRODUCT_WEBSITE_ATTRIBUTE);
+    }
+
+    /**
+     * Retrieve the Akeneo attribute code for product type mapping
+     *
+     * @return string
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    public function getMappingAttribute()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCT_MAPPING_ATTRIBUTE);
     }
 
     /**
