@@ -82,6 +82,12 @@ interface JobInterface
      */
     const LAST_SUCCESS_DATE = 'last_success_date';
     /**
+     * The last executed date of the job which be successful
+     *
+     * @var string LAST_SUCCESS_EXECUTED_DATE
+     */
+    const LAST_SUCCESS_EXECUTED_DATE = 'last_success_executed_date';
+    /**
      * Execution job position
      *
      * @var string POSITION

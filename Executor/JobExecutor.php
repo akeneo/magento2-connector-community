@@ -681,6 +681,7 @@ class JobExecutor implements JobExecutorInterface
 
         if ($error === null && $this->currentJob->getStatus() !== JobInterface::JOB_ERROR) {
             $this->currentJob->setLastSuccessDate(date('y-m-d h:i:s'));
+            $this->currentJob->setLastSuccessExecutedDate($this->currentJob->getLastExecutedDate());
             $this->setJobStatus(JobInterface::JOB_SUCCESS);
             $this->eventManager->dispatch(
                 'akeneo_connector_import_on_success',
