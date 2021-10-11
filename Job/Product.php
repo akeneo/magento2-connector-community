@@ -23,6 +23,7 @@ use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
 use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Connector\Model\Source\Filters\Mode;
 use Akeneo\Connector\Model\Source\Filters\ModelCompleteness;
+use Akeneo\Connector\Model\Source\StatusMode;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Catalog\Model\Category as CategoryModel;
@@ -491,6 +492,9 @@ class Product extends JobImport
 
         /** @var mixed[] $filter */
         foreach ($filters as $filter) {
+            if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
+                $filter['with_completenesses'] = 'true'; //enable with_completenesses on call api
+            }
             /** @var ResourceCursorInterface $products */
             $products = $this->akeneoClient->getProductApi()->all($paginationSize, $filter);
 
@@ -1614,6 +1618,7 @@ class Product extends JobImport
      *
      * @return void
      * @throws LocalizedException
+     * @throws Zend_Db_Statement_Exception
      */
     public function setValues()
     {
@@ -1680,6 +1685,8 @@ class Product extends JobImport
         $pKeyColumn = 'a._entity_id';
         /** @var string[] $columnsForStatus */
         $columnsForStatus = ['entity_id' => $pKeyColumn, '_entity_id', '_is_new' => 'a._is_new'];
+        /** @var string[] $columnsForCompleteness */
+        $columnsForCompleteness = ['entity_id' => $pKeyColumn, '_entity_id', 'completenesses' => 'a.completenesses'];
 
         /** @var bool $rowIdExists */
         $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productTable);
@@ -1706,17 +1713,52 @@ class Product extends JobImport
         // Update existing simple status
         /** @var Zend_Db_Statement_Pdo $oldStatus */
         $oldStatus = $connection->query($select);
-        while (($row = $oldStatus->fetch())) {
-            $valuesToInsert = [
-                '_status' => $row['value'],
-            ];
-            $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
+        /** @var string $status */
+        $status = $this->configHelper->getProductActivation();
+        if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
+            /** @var Select $selectComplet */
+            $selectComplet = $connection->select()->from(['a' => $tmpTable], $columnsForCompleteness);
+            /** @var Zend_Db_Statement_Pdo $completQuery */
+            $completQuery = $connection->query($selectComplet);
+            /** @var string $completenessConfig */
+            $completenessConfig = $this->configHelper->getEnableSimpleProductsPerWebsite();
+            while (($row = $completQuery->fetch())) {
+                /** @var string[] $completenesses */
+                $completenesses = $this->serializer->unserialize($row['completenesses']);
+                /** @var int $status */
+                $status = 1;
+                /** @var string[] $completeness */
+                foreach ($completenesses as $completeness) {
+                    /**
+                     * @var string $local
+                     * @var string $store
+                     */
+                    foreach ($stores as $local => $store) {
+                        if ($local === $completeness['locale'] && $completeness['data'] < $completenessConfig) {
+                            $status = 2;
+                        }
+                    }
+                    $valuesToInsert = [
+                        '_status' => $status,
+                    ];
+
+                    $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
+                }
+            }
+        } else {
+            while (($row = $oldStatus->fetch())) {
+                $valuesToInsert = [
+                    '_status' => $row['value'],
+                ];
+
+                $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
+            }
         }
 
         // Update new simple status
         $connection->update(
             $tmpTable,
-            ['_status' => $this->configHelper->getProductActivation()],
+            ['_status' => $status],
             ['_is_new = ?' => 1, '_status = ?' => 1, '_type_id = ?' => 'simple']
         );
 
@@ -1738,16 +1780,26 @@ class Product extends JobImport
         /** @var Zend_Db_Statement_Pdo $oldConfigurableStatus */
         $oldConfigurableStatus = $connection->query($select);
         while (($row = $oldConfigurableStatus->fetch())) {
+            /** @var string $status */
+            $status = $row['value'];
+            if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
+                $status = $this->configHelper->getDefaultConfigurableProductStatus();
+            }
             $valuesToInsert = [
-                '_status' => $row['value'],
+                '_status' => $status,
             ];
             $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
         }
 
-        // Update new configurable status
+        /** @var string $status */
+        $status = $this->configHelper->getProductActivation();
+        if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
+            // Update new configurable status
+            $status = $this->configHelper->getDefaultConfigurableProductStatus();
+        }
         $connection->update(
             $tmpTable,
-            ['_status' => $this->configHelper->getProductActivation()],
+            ['_status' => $status],
             ['_is_new = ?' => 1, '_type_id = ?' => 'configurable']
         );
 

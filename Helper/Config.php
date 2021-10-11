@@ -361,6 +361,24 @@ class Config
      */
     const PRODUCT_ACTIVATION = 'akeneo_connector/product/activation';
     /**
+     * Product status mode config path
+     *
+     * @var string PRODUCT_STATUS_MODE
+     */
+    const PRODUCT_STATUS_MODE = 'akeneo_connector/product/product_status_mode';
+    /**
+     * Enable simple products per website config path
+     *
+     * @var string ENABLE_SIMPLE_PRODUCTS_PER_WEBSITE
+     */
+    const ENABLE_SIMPLE_PRODUCTS_PER_WEBSITE = 'akeneo_connector/product/enable_simple_products_per_website';
+    /**
+     * Default configurable product status config path
+     *
+     * @var string DEFAULT_CONFIGURABLE_PRODUCT_STATUS
+     */
+    const DEFAULT_CONFIGURABLE_PRODUCT_STATUS = 'akeneo_connector/product/default_configurable_product_status';
+    /**
      * Grouped product families mapping path
      *
      * @var string GROUPED_PRODUCTS_FAMILIES_MAPPING
@@ -1066,6 +1084,36 @@ class Config
     public function getProductActivation()
     {
         return $this->scopeConfig->getValue(self::PRODUCT_ACTIVATION);
+    }
+
+    /**
+     * Description getProductStatusMode function
+     *
+     * @return string
+     */
+    public function getProductStatusMode()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCT_STATUS_MODE);
+    }
+
+    /**
+     * Description getEnableSimpleProductsPerWebsite function
+     *
+     * @return string
+     */
+    public function getEnableSimpleProductsPerWebsite()
+    {
+        return $this->scopeConfig->getValue(self::ENABLE_SIMPLE_PRODUCTS_PER_WEBSITE);
+    }
+
+    /**
+     * Description getDefaultConfigurableProductStatus function
+     *
+     * @return string
+     */
+    public function getDefaultConfigurableProductStatus()
+    {
+        return $this->scopeConfig->getValue(self::DEFAULT_CONFIGURABLE_PRODUCT_STATUS);
     }
 
     /**
