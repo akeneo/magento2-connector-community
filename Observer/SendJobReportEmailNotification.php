@@ -145,7 +145,7 @@ class SendJobReportEmailNotification implements ObserverInterface
         $transportBuilder = $this->transportBuilder->setTemplateIdentifier(self::JOB_REPORT_NOTIFICATION_EMAIL_TEMPLATE)
             ->setTemplateOptions(
                 [
-                    'area'  => Area::AREA_ADMINHTML,
+                    'area'  => Area::AREA_FRONTEND,
                     'store' => $this->storeManagerInterface->getStore()->getId(),
                 ]
             )

@@ -11,5 +11,5 @@
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Email:etc/email_templates.xsd">
-    <template id="akeneo_connector_report_email" label="Job report email notification" file="job_report_email_notification.html" type="html" module="Akeneo_Connector" area="adminhtml"/>
+    <template id="akeneo_connector_report_email" label="Job report email notification" file="job_report_email_notification.html" type="html" module="Akeneo_Connector" area="frontend"/>
 </config>
