@@ -229,10 +229,12 @@ class UpgradeSchema implements UpgradeSchemaInterface
         if (version_compare($context->getVersion(), '1.0.5', '<')) {
             /** @var string $config */
             $config = $this->scopeConfig->getValue(ConfigHelper::AKENEO_API_CLIENT_SECRET);
-            /** @var string $encryptConfig */
-            $encryptConfig = $this->encryptor->encrypt($config);
+            if ($config) {
+                /** @var string $encryptConfig */
+                $encryptConfig = $this->encryptor->encrypt($config);
 
-            $this->resourceConfig->saveConfig(ConfigHelper::AKENEO_API_CLIENT_SECRET, $encryptConfig);
+                $this->resourceConfig->saveConfig(ConfigHelper::AKENEO_API_CLIENT_SECRET, $encryptConfig);
+            }
         }
 
         $installer->endSetup();
