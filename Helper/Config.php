@@ -443,6 +443,18 @@ class Config
      */
     const INDEX_PRODUCT = 'akeneo_connector/index/index_product';
     /**
+     * Email job report enabled path
+     *
+     * @var string EMAIL_JOB_REPORT_ENABLED
+     */
+    const EMAIL_JOB_REPORT_ENABLED = 'akeneo_connector/advanced/email_job_report_enabled';
+    /**
+     * Email job report recicipient path
+     *
+     * @var string EMAIL_JOB_REPORT_RECIPIENT
+     */
+    const EMAIL_JOB_REPORT_RECIPIENT = 'akeneo_connector/advanced/email_job_report_recipient';
+    /**
      * This variable contains a Encryptor
      *
      * @var Encryptor $encryptor
@@ -1670,5 +1682,32 @@ class Config
     public function getIndexProduct()
     {
         return $this->scopeConfig->getValue(self::INDEX_PRODUCT);
+    }
+
+
+    /**
+     * Description getJobReportEnabled function
+     *
+     * @return string|null
+     */
+    public function getJobReportEnabled()
+    {
+        return $this->scopeConfig->getValue(self::EMAIL_JOB_REPORT_ENABLED);
+    }
+
+    /**
+     * Description getJobReportRecipient function
+     *
+     * @return string[]|null
+     */
+    public function getJobReportRecipient()
+    {
+        /** @var string $recipients */
+        $recipients = $this->scopeConfig->getValue(self::EMAIL_JOB_REPORT_RECIPIENT);
+        if (!$recipients) {
+            return null;
+        }
+
+        return explode(',', $recipients);
     }
 }

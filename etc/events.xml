@@ -28,4 +28,7 @@
     <event name="catalog_product_delete_after">
         <observer name="akeneo_connector.catalog.product.delete.after" instance="Akeneo\Connector\Observer\Deletion\ProductObserver" />
     </event>
+    <event name="akeneo_connector_send_job_report_notification">
+        <observer name="akeneo_connector.send.job.report.notification" instance="Akeneo\Connector\Observer\SendJobReportEmailNotification" />
+    </event>
 </config>
