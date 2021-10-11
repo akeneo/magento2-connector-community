@@ -324,7 +324,6 @@ class Product extends Entities
                 continue;
             }
             if ($assoKey === self::COMPLETENESS_KEY) {
-                /** @var string $product */
                 $finalProducts[] = $product;
             }
         }
