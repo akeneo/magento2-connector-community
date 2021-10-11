@@ -49,8 +49,9 @@
                     <label>Akeneo API client ID</label>
                     <validate>no-whitespace</validate>
                 </field>
-                <field id="client_secret" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="client_secret" translate="label" type="obscure" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Akeneo API client secret</label>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                     <validate>no-whitespace</validate>
                 </field>
                 <field id="api_test" translate="label" type="button" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
