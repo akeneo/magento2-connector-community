@@ -568,7 +568,7 @@ For example :<br/>
                     <comment>Email addresses of job reports recipients separated by commas ','</comment>
                     <validate>no-whitespace</validate>
                     <depends>
-                        <field id="email_job_report">1</field>
+                        <field id="email_job_report_enabled">1</field>
                     </depends>
                 </field>
             </group>
