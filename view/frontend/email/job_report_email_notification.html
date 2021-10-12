@@ -6,10 +6,11 @@
  * @link      https://www.dnd.fr/
  */
 -->
-<!--@subject {{trans "Magento Akeneo Connector - Report activities"}} @-->
+<!--@subject {{trans "Magento Akeneo Connector - %jobName Report activities" jobName=$jobName}} @-->
 <!--@vars {
-    "var link":"Link to BO"
+    "var link":"Link to admin"
     "var jobStatus":"Job status"
+    "var jobName":"Job name"
 } @-->
 {{template config_path="design/email/header_template"}}
 
@@ -25,10 +26,11 @@
 </p>
 <p>
     {{trans
-"If you need more information, please refer to the logs in the BO"
+"If you need more information, please refer to the logs in the admin"
     }}
 </p>
 <p>
+    Import : {{var jobName}} <br>
     Status : {{var jobStatus}}
 </p>
 <p>{{trans
@@ -42,3 +44,4 @@
 </p>
 
 {{template config_path="design/email/footer_template"}}
+

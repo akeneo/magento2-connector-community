@@ -135,12 +135,19 @@ class SendJobReportEmailNotification implements ObserverInterface
      */
     private function sendEmail(array $recipients, LogInterface $log, JobExecutorInterface $executor): void
     {
+        /** @var JobInterface $currentJob */
+        $currentJob = $executor->getCurrentJob();
         /** @var string $jobStatus */
         $jobStatus = $executor->getCurrentJobClass()->getStatusLabel();
         /** @var int $logId */
         $logId = $log->getId();
         /** @var string $link */
         $link = $this->url->getUrl('akeneo_connector/log/view', ['log_id' => $logId]);
+        /** @var string $emailFrom */
+        $emailFrom = $this->config->getStoreEmail();
+        /** @var string $emailName */
+        $emailName = $this->config->getStorename();
+
         /** @var TransportBuilder $transportBuilder */
         $transportBuilder = $this->transportBuilder->setTemplateIdentifier(self::JOB_REPORT_NOTIFICATION_EMAIL_TEMPLATE)
             ->setTemplateOptions(
@@ -153,9 +160,10 @@ class SendJobReportEmailNotification implements ObserverInterface
                 [
                     'link'      => $link,
                     'jobStatus' => $jobStatus,
+                    'jobName' => $currentJob->getName()
                 ]
             )
-            ->setFromByScope(['email' => 'bastien.witczak@gmail.com', 'name' => '']);
+            ->setFromByScope(['email' => $emailFrom, 'name' => $emailName]);
 
         /** @var string $recipient */
         foreach ($recipients as $recipient) {

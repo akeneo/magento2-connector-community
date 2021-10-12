@@ -455,6 +455,18 @@ class Config
      */
     const EMAIL_JOB_REPORT_RECIPIENT = 'akeneo_connector/advanced/email_job_report_recipient';
     /**
+     * Email name job report from
+     *
+     * @var string EMAIL_JOB_REPORT_FROM_NAME
+     */
+    const EMAIL_JOB_REPORT_FROM_NAME = 'trans_email/ident_general/name';
+    /**
+     * Email job report from
+     *
+     * @var string EMAIL_JOB_REPORT_FROM
+     */
+    const EMAIL_JOB_REPORT_FROM = 'trans_email/ident_general/email';
+    /**
      * This variable contains a Encryptor
      *
      * @var Encryptor $encryptor
@@ -1709,5 +1721,31 @@ class Config
         }
 
         return explode(',', $recipients);
+    }
+
+    /**
+     * Description getStorename function
+     *
+     * @return string|null
+     */
+    public function getStorename()
+    {
+        return $this->scopeConfig->getValue(
+            self::EMAIL_JOB_REPORT_FROM_NAME,
+            ScopeInterface::SCOPE_STORE
+        );
+    }
+
+    /**
+     * Description getStoreEmail function
+     *
+     * @return string|null
+     */
+    public function getStoreEmail()
+    {
+        return $this->scopeConfig->getValue(
+            self::EMAIL_JOB_REPORT_FROM,
+            ScopeInterface::SCOPE_STORE
+        );
     }
 }
