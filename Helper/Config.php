@@ -1716,11 +1716,19 @@ class Config
     {
         /** @var string $recipients */
         $recipients = $this->scopeConfig->getValue(self::EMAIL_JOB_REPORT_RECIPIENT);
-        if (!$recipients) {
+        /** @var string[] $matches */
+        $matches = [];
+        preg_match_all(
+            '/[a-zA-Z0-9\-.]*@[.a-zA-Z0-9\-]*/',
+            $recipients,
+            $matches
+        );
+
+        if (!$matches) {
             return null;
         }
 
-        return explode(',', $recipients);
+        return $matches;
     }
 
     /**
