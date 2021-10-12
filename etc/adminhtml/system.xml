@@ -381,6 +381,9 @@ For example :<br/>
                         <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth</field>
                         <field id="product_status_mode">status_based_on_completeness_level</field>
                     </depends>
+                    <comment>
+                        <![CDATA[Completeness level should be a number between 0 and 100]]>
+                    </comment>
                 </field>
                 <field id="default_configurable_product_status" translate="label" type="select" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Default Configurable Products Status</label>
@@ -391,7 +394,11 @@ For example :<br/>
                     </depends>
                 </field>
                 <field id="activation" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">                    <label>Default Product Status</label>
+                    <label>Default Product Status</label>
                     <source_model>Akeneo\Connector\Model\Source\Activation</source_model>
+                    <depends>
+                        <field id="product_status_mode">default_product_status</field>
+                    </depends>
                     <comment>
                         <![CDATA[Default status for product creation<br/>If a product is updated, status won't be modified unless it is disabled in Akeneo]]>
                     </comment>
