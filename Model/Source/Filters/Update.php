@@ -82,7 +82,7 @@ class Update implements ArrayInterface
                 'value' => self::SINCE_LAST_N_HOURS,
             ],
             [
-                'label' => __('Since last import'),
+                'label' => __('Since last successful import'),
                 'value' => self::SINCE_LAST_IMPORT,
             ],
         ];
