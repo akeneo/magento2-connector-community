@@ -10,7 +10,7 @@
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
     <system>
         <section id="akeneo_connector" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
             <label>Akeneo Connector</label>
@@ -137,7 +137,7 @@
                     </depends>
                 </field>
                 <field id="updated_mode" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="0"
-                        showInStore="0">
+                    showInStore="0">
                     <label>Updated mode</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Update</source_model>
                     <depends>
@@ -145,7 +145,7 @@
                     </depends>
                 </field>
                 <field id="updated_lower" translate="label" type="date" sortOrder="90" showInDefault="1" showInWebsite="0"
-                        showInStore="0">
+                    showInStore="0">
                     <label>Updated before</label>
                     <comment>Import only product updated before the given date. Leave blank for no filter.</comment>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
@@ -155,7 +155,7 @@
                     </depends>
                 </field>
                 <field id="updated_greater" translate="label" type="date" sortOrder="100" showInDefault="1" showInWebsite="0"
-                        showInStore="0">
+                    showInStore="0">
                     <label>Updated after</label>
                     <comment>Import only product updated after the given date. Leave blank for no filter.</comment>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
@@ -165,7 +165,7 @@
                     </depends>
                 </field>
                 <field id="updated_between_after" translate="label" type="date" sortOrder="110" showInDefault="1" showInWebsite="0"
-                        showInStore="0">
+                    showInStore="0">
                     <label>Updated after</label>
                     <comment>Import only product updated after the given date. Leave at least one blank for no filter.</comment>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
@@ -175,7 +175,7 @@
                     </depends>
                 </field>
                 <field id="updated_between_before" translate="label" type="date" sortOrder="120" showInDefault="1" showInWebsite="0"
-                        showInStore="0">
+                    showInStore="0">
                     <label>Updated before</label>
                     <comment>Import only product updated before the given date. Leave at least one blank for no filter.</comment>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
@@ -185,7 +185,7 @@
                     </depends>
                 </field>
                 <field id="updated" translate="label" type="text" sortOrder="130" showInDefault="1" showInWebsite="0"
-                        showInStore="0">
+                    showInStore="0">
                     <label>Updated</label>
                     <comment>
                         <![CDATA[Import only product updated since last X days. Leave blank for no filter.]]>
@@ -364,9 +364,15 @@ For example :<br/>
             </group>
             <group id="product" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Products</label>
-                <field id="website_attribute" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="website_attribute" translate="label comment" type="text" sortOrder="5" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Website Attribute</label>
                     <comment>Enter the code of the select or multiselect attribute used to associate products to your websites, leave blank to ignore</comment>
+                </field>
+                <field id="product_mapping_attribute" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Akeneo Attribute Code for Product Type Mapping</label>
+                    <comment>
+                        <![CDATA[- Code of the select attribute that will be used to select product type<br />- If empty, every product that is not a product model will be created as a simple product<br />- If “virtual“ value is found, the product will be created as a virtual product]]>
+                    </comment>
                 </field>
                 <field id="activation" translate="label comment" type="select" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Default Product Status</label>
@@ -414,15 +420,15 @@ For example :<br/>
                     </comment>
                 </field>
                 <field id="association_related" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0"
-                        showInStore="0">
+                    showInStore="0">
                     <label>Akeneo association code for Related products</label>
                 </field>
                 <field id="association_upsell" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="0"
-                        showInStore="0">
+                    showInStore="0">
                     <label>Akeneo association code for Upsell products</label>
                 </field>
                 <field id="association_crossell" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="0"
-                        showInStore="0">
+                    showInStore="0">
                     <label>Akeneo association code for Cross-sell products</label>
                     <comment>Note: Quantified associations cannot be mapped with Cross-sell / Related / Upsell</comment>
                 </field>
@@ -553,7 +559,8 @@ For example :<br/>
                     <can_be_empty>1</can_be_empty>
                 </field>
             </group>
-            <group id="advanced" translate="label" sortOrder="120" showInDefault="1">                <label>Advanced</label>
+            <group id="advanced" translate="label" sortOrder="120" showInDefault="1">
+                <label>Advanced</label>
                 <field id="advanced_log" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Enable Advanced Loging</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
