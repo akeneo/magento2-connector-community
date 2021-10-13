@@ -216,6 +216,21 @@ class UpgradeSchema implements UpgradeSchemaInterface
             $installer->getConnection()->createTable($table);
         }
 
+        if (version_compare($context->getVersion(), '1.0.5', '<')) {
+            /**
+             * Add the last_executed_success_date column to the table akeneo_connector_job
+             */
+            $installer->getConnection()->addColumn(
+                $installer->getTable('akeneo_connector_job'),
+                'last_success_executed_date',
+                [
+                    'type' => Table::TYPE_DATETIME,
+                    'nullable' => false,
+                    'comment' => 'Last executed success date',
+                ]
+            );
+        }
+
         $installer->endSetup();
     }
 }
