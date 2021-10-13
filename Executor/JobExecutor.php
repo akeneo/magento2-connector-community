@@ -626,7 +626,7 @@ class JobExecutor implements JobExecutorInterface
         }
 
         if ($status === JobInterface::JOB_SCHEDULED) {
-            $job->setScheduledAt(date('y-m-d h:i:s'));
+            $job->setScheduledAt(date('y-m-d H:i:s'));
         }
 
         $job->setStatus($status);
@@ -650,7 +650,7 @@ class JobExecutor implements JobExecutorInterface
             'akeneo_connector_import_start_' . strtolower($this->currentJob->getCode()),
             ['executor' => $this]
         );
-        $this->currentJob->setLastExecutedDate(date('y-m-d h:i:s'));
+        $this->currentJob->setLastExecutedDate(date('y-m-d H:i:s'));
         $this->setJobStatus(JobInterface::JOB_PROCESSING);
     }
 
@@ -680,7 +680,8 @@ class JobExecutor implements JobExecutorInterface
         }
 
         if ($error === null && $this->currentJob->getStatus() !== JobInterface::JOB_ERROR) {
-            $this->currentJob->setLastSuccessDate(date('y-m-d h:i:s'));
+            $this->currentJob->setLastSuccessDate(date('y-m-d H:i:s'));
+            $this->currentJob->setLastSuccessExecutedDate($this->currentJob->getLastExecutedDate());
             $this->setJobStatus(JobInterface::JOB_SUCCESS);
             $this->eventManager->dispatch(
                 'akeneo_connector_import_on_success',

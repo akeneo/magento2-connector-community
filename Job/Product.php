@@ -3424,7 +3424,7 @@ class Product extends JobImport
     protected function getFilters($family = null, $isProductModel = false)
     {
         /** @var mixed[] $filters */
-        $filters = $this->productFilters->getFilters($family, $isProductModel);
+        $filters = $this->productFilters->getFilters($this->jobExecutor, $family, $isProductModel);
         if (array_key_exists('error', $filters)) {
             $this->jobExecutor->setMessage($filters['error'], $this->logger);
             $this->jobExecutor->afterRun(true);

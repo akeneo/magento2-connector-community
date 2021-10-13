@@ -235,6 +235,19 @@ class UpgradeSchema implements UpgradeSchemaInterface
 
                 $this->resourceConfig->saveConfig(ConfigHelper::AKENEO_API_CLIENT_SECRET, $encryptConfig);
             }
+
+            /**
+             * Add the last_executed_success_date column to the table akeneo_connector_job
+             */
+            $installer->getConnection()->addColumn(
+                $installer->getTable('akeneo_connector_job'),
+                'last_success_executed_date',
+                [
+                    'type' => Table::TYPE_DATETIME,
+                    'nullable' => false,
+                    'comment' => 'Last executed success date',
+                ]
+            );
         }
 
         $installer->endSetup();
