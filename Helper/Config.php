@@ -579,10 +579,14 @@ class Config
      * Retrieve Akeneo client_secret
      *
      * @return string
+     * @throws Exception
      */
     public function getAkeneoApiClientSecret()
     {
-        return $this->scopeConfig->getValue(self::AKENEO_API_CLIENT_SECRET);
+        /** @var string $apiClientSecret */
+        $apiClientSecret = $this->scopeConfig->getValue(self::AKENEO_API_CLIENT_SECRET);
+
+        return $this->encryptor->decrypt($apiClientSecret);
     }
 
     /**
