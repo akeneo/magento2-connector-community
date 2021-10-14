@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+
 <!--
 /**
  * Akeneo Connector Module
@@ -10,7 +11,7 @@
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
-    <group id="default">
+    <group id="akeneo_connector">
         <job name="akeneo_connector_launch_scheduled_job" instance="Akeneo\Connector\Cron\LaunchScheduledJob" method="execute">
             <!-- Every minute -->
             <schedule>*/1 * * * *</schedule>

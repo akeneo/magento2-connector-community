@@ -30,6 +30,7 @@ use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ProductLink\Link as ProductLink;
+use Magento\Catalog\Model\Product\Type;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Eav\Model\Config as EavConfig;
@@ -386,7 +387,7 @@ class Product extends JobImport
                     __('The family %1 is not imported yet, please run Family import.', $this->getFamily()),
                     $this->logger
                 );
-                $this->afterRun(true);
+                $this->jobExecutor->afterRun(true);
 
                 return;
             }
@@ -861,14 +862,15 @@ class Product extends JobImport
                 ]
             );
         }
-
-        if ($connection->tableColumnExists($tmpTable, 'type_id')) {
+        /** @var string $productMappingAttribute */
+        $productMappingAttribute = $this->configHelper->getMappingAttribute();
+        if ($connection->tableColumnExists($tmpTable, $productMappingAttribute)) {
             /** @var string $types */
             $types = $connection->quote($this->allowedTypeId);
             $connection->update(
                 $tmpTable,
                 [
-                    '_type_id' => new Expr("IF(`type_id` IN ($types), `type_id`, 'simple')"),
+                    '_type_id' => new Expr("IF($productMappingAttribute IN ($types), $productMappingAttribute, 'simple')"),
                 ]
             );
         }
