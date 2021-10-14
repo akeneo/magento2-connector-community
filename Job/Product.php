@@ -387,7 +387,7 @@ class Product extends JobImport
                     __('The family %1 is not imported yet, please run Family import.', $this->getFamily()),
                     $this->logger
                 );
-                $this->afterRun(true);
+                $this->jobExecutor->afterRun(true);
 
                 return;
             }
