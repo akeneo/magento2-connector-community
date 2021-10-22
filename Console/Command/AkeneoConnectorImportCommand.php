@@ -41,7 +41,7 @@ class AkeneoConnectorImportCommand extends Command
     /**
      * Description $jobExecutor field
      *
-     * @var JobExecutor $jobExecutor
+     * @var JobExecutor\Proxy $jobExecutor
      */
     protected $jobExecutor;
     /**
@@ -54,16 +54,16 @@ class AkeneoConnectorImportCommand extends Command
     /**
      * AkeneoConnectorImportCommand constructor
      *
-     * @param State         $appState
-     * @param ConfigHelper  $configHelper
-     * @param JobExecutor   $jobExecutor
-     * @param JobRepository $jobRepository
-     * @param null          $name
+     * @param State             $appState
+     * @param ConfigHelper      $configHelper
+     * @param JobExecutor\Proxy $jobExecutor
+     * @param JobRepository     $jobRepository
+     * @param null              $name
      */
     public function __construct(
         State $appState,
         ConfigHelper $configHelper,
-        JobExecutor $jobExecutor,
+        JobExecutor\Proxy $jobExecutor,
         JobRepository $jobRepository,
         $name = null
     ) {
