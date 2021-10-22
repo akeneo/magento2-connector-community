@@ -417,4 +417,10 @@
             </argument>
         </arguments>
     </type>
+
+    <type name="Akeneo\Connector\Console\Command\AkeneoConnectorImportCommand">
+        <arguments>
+            <argument name="jobExecutor" xsi:type="object">Akeneo\Connector\Executor\JobExecutor\Proxy</argument>
+        </arguments>
+    </type>
 </config>
