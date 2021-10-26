@@ -600,8 +600,6 @@ class Category extends Import
             $values['row_id'] = 'IFNULL (p.row_id, _entity_id)'; // on category creation, row_id is null
         }
 
-        /** @var \Magento\Framework\DB\Select $parents */
-        $parents = $connection->select()->from($tmpTable, $values);
         $connection->query(
             $connection->insertFromSelect(
                 $parents,
