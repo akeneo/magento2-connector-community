@@ -263,19 +263,26 @@ class JobExecutor implements JobExecutorInterface
 
         /** @var string[] $entities */
         $entities = explode(',', $code);
-        if (count($entities) > 1) {
-            $entities = $this->sortJobs($entities);
+        $entities = $this->sortJobs($entities);
 
-            /** @var string $jobCode */
-            foreach ($entities as $jobCode) {
-                $this->execute($jobCode, $output);
-            }
-
-            return true;
+        /** @var string $jobCode */
+        foreach ($entities as $jobCode) {
+            $this->runImport($code);
         }
 
         $this->output = $output;
+        $this->eventManager->dispatch('akeneo_connector_all_imports_finished');
+    }
 
+    /**
+     * Run a single job
+     *
+     * @param string $code
+     * @return bool
+     * @throws AlreadyExistsException
+     */
+    public function runImport(string $code)
+    {
         /** @var Job $job */
         $job = $this->jobRepository->getByCode($code);
         if (!$job->getData()) {
