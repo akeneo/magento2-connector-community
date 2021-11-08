@@ -16,5 +16,9 @@
             <!-- Every minute -->
             <schedule>*/1 * * * *</schedule>
         </job>
+        <job name="akeneo_connector_clean_logs" instance="Akeneo\Connector\Cron\CleanLogs" method="execute">
+            <!-- At 2AM every morning -->
+            <schedule>0 2 * * *</schedule>
+        </job>
     </group>
 </config>
