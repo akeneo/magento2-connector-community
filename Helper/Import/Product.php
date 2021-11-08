@@ -20,7 +20,7 @@ use Zend_Db_Expr as Expr;
  * @category  Class
  * @package   Akeneo\Connector\Helper\Import
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
@@ -371,8 +371,9 @@ class Product extends Entities
      */
     public function isFieldInAttributeMapping($field)
     {
-        /** @var string|array $matches */
+        /** @var string $matches */
         $matches = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING);
+        /** @var mixed[] $matches */
         $matches = $this->jsonSerializer->unserialize($matches);
         if (!is_array($matches)) {
             return false;

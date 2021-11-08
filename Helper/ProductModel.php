@@ -10,10 +10,11 @@ use Akeneo\Connector\Helper\Import\Entities as EntitiesHelper;
 use Akeneo\Connector\Helper\Import\Product;
 use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
-use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
+use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Magento\Eav\Model\Config;
-use Magento\Framework\Serialize\Serializer\Json as MagentoJsonSerializer;
+use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\Serialize\Serializer\Json;
 
 /**
  * Class ProductModel
@@ -51,11 +52,11 @@ class ProductModel
      */
     protected $productFilters;
     /**
-     * This variable contains a MagentoJsonSerializer
+     * This variable contains a Json
      *
-     * @var MagentoJsonSerializer $magentoSerializer
+     * @var Json $jsonSerializer
      */
-    protected $magentoSerializer;
+    protected $jsonSerializer;
     /**
      * This variable contains entities
      *
@@ -78,14 +79,14 @@ class ProductModel
     /**
      * ProductModel constructor
      *
-     * @param Product                         $entitiesHelper
-     * @param ConfigHelper                    $configHelper
-     * @param Config                          $eavConfig
-     * @param ProductFilters                  $productFilters
-     * @param Store                           $storeHelper
-     * @param MagentoJsonSerializer           $magentoSerializer
-     * @param EntitiesHelper                  $entities
-     * @param AttributeMetrics                $attributeMetrics
+     * @param Product          $entitiesHelper
+     * @param ConfigHelper     $configHelper
+     * @param Config           $eavConfig
+     * @param ProductFilters   $productFilters
+     * @param Store            $storeHelper
+     * @param Json             $jsonSerializer
+     * @param EntitiesHelper   $entities
+     * @param AttributeMetrics $attributeMetrics
      */
     public function __construct(
         Product $entitiesHelper,
@@ -93,18 +94,18 @@ class ProductModel
         Config $eavConfig,
         ProductFilters $productFilters,
         StoreHelper $storeHelper,
-        MagentoJsonSerializer $magentoSerializer,
+        Json $jsonSerializer,
         Entities $entities,
         AttributeMetrics $attributeMetrics
     ) {
-        $this->entitiesHelper          = $entitiesHelper;
-        $this->configHelper            = $configHelper;
-        $this->eavConfig               = $eavConfig;
-        $this->entities                = $entities;
-        $this->productFilters          = $productFilters;
-        $this->storeHelper             = $storeHelper;
-        $this->magentoSerializer       = $magentoSerializer;
-        $this->attributeMetrics        = $attributeMetrics;
+        $this->entitiesHelper   = $entitiesHelper;
+        $this->configHelper     = $configHelper;
+        $this->eavConfig        = $eavConfig;
+        $this->entities         = $entities;
+        $this->productFilters   = $productFilters;
+        $this->storeHelper      = $storeHelper;
+        $this->jsonSerializer   = $jsonSerializer;
+        $this->attributeMetrics = $attributeMetrics;
     }
 
     /**
@@ -369,12 +370,16 @@ class ProductModel
             $connection->addColumn($tmpTable, $this->_columnName($column), 'text');
         }
         if (!$connection->tableColumnExists($tmpTable, 'axis')) {
-            $connection->addColumn($tmpTable, 'axis', [
-                'type' => 'text',
-                'length' => 255,
-                'default' => '',
-                'COMMENT' => ' ',
-            ]);
+            $connection->addColumn(
+                $tmpTable,
+                'axis',
+                [
+                    'type'    => 'text',
+                    'length'  => 255,
+                    'default' => '',
+                    'COMMENT' => ' ',
+                ]
+            );
         }
     }
 }

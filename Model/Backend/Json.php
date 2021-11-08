@@ -6,7 +6,7 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\Exception\ValidatorException;
-use Akeneo\Connector\Helper\Serializer as Serializer;
+use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry;
@@ -18,45 +18,44 @@ use Magento\Framework\App\Config\Value;
  * @category  Class
  * @package   Akeneo\Connector\Model\Backend
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Json extends Value
 {
-
     /**
-     * This variable contains a json serializer
+     * This variable contains a JsonSerializer
      *
-     * @var Serializer $serializer
+     * @var JsonSerializer $jsonSerializer
      */
-    protected $serializer;
+    protected $jsonSerializer;
 
     /**
      * Json constructor.
      *
-     * @param Context $context
-     * @param Registry $registry
-     * @param ScopeConfigInterface $config
-     * @param TypeListInterface $cacheTypeList
-     * @param Serializer $serializer
+     * @param Context               $context
+     * @param Registry              $registry
+     * @param ScopeConfigInterface  $config
+     * @param TypeListInterface     $cacheTypeList
+     * @param JsonSerializer        $jsonSerializer
      * @param AbstractResource|null $resource
-     * @param AbstractDb|null $resourceCollection
-     * @param array $data
+     * @param AbstractDb|null       $resourceCollection
+     * @param array                 $data
      */
     public function __construct(
         Context $context,
         Registry $registry,
         ScopeConfigInterface $config,
         TypeListInterface $cacheTypeList,
-        Serializer $serializer,
+        JsonSerializer $jsonSerializer,
         AbstractResource $resource = null,
         AbstractDb $resourceCollection = null,
         array $data = []
     ) {
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
 
-        $this->serializer = $serializer;
+        $this->jsonSerializer = $jsonSerializer;
     }
 
     /**
@@ -73,7 +72,7 @@ class Json extends Value
 
         try {
             if ($json) {
-                $this->serializer->unserialize($json);
+                $this->jsonSerializer->unserialize($json);
             }
         } catch (\Exception $exception) {
             throw new ValidatorException(__("%1 is not a valid json", $label));
