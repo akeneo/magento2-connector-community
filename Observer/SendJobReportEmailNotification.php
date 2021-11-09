@@ -15,16 +15,17 @@ use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\MailException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\Mail\Template\TransportBuilder;
 use Magento\Framework\Mail\Template\SenderResolverInterface;
+use Magento\Framework\Mail\Template\TransportBuilder;
 use Magento\Framework\Mail\TransportInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
- * Class SendEmailNotification
+ * Class SendJobReportEmailNotification
  *
- * @package   Dnd\Document\Observer
+ * @package   Akeneo\Connector\Observer
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
@@ -74,9 +75,15 @@ class SendJobReportEmailNotification implements ObserverInterface
      * @var UrlInterface $url
      */
     protected $url;
+    /**
+     * Description $logger field
+     *
+     * @var LoggerInterface $logger
+     */
+    protected $logger;
 
     /**
-     * SendEmailNotification constructor
+     * SendJobReportEmailNotification constructor
      *
      * @param Config                  $config
      * @param SenderResolverInterface $senderResolver
@@ -84,6 +91,7 @@ class SendJobReportEmailNotification implements ObserverInterface
      * @param StoreManagerInterface   $storeManager
      * @param LogRepository           $logRepository
      * @param UrlInterface            $url
+     * @param LoggerInterface         $logger
      */
     public function __construct(
         Config $config,
@@ -91,7 +99,8 @@ class SendJobReportEmailNotification implements ObserverInterface
         TransportBuilder $transportBuilder,
         StoreManagerInterface $storeManager,
         LogRepository $logRepository,
-        UrlInterface $url
+        UrlInterface $url,
+        LoggerInterface $logger
     ) {
         $this->config                = $config;
         $this->senderResolver        = $senderResolver;
@@ -99,6 +108,7 @@ class SendJobReportEmailNotification implements ObserverInterface
         $this->storeManagerInterface = $storeManager;
         $this->logRepository         = $logRepository;
         $this->url                   = $url;
+        $this->logger                = $logger;
     }
 
     /**
@@ -106,19 +116,26 @@ class SendJobReportEmailNotification implements ObserverInterface
      *
      * @param Observer $observer
      *
-     * @return void
+     * @return SendJobReportEmailNotification
+     * @throws LocalizedException
+     * @throws MailException
+     * @throws NoSuchEntityException
      */
-    public function execute(Observer $observer): void
+    public function execute(Observer $observer): SendJobReportEmailNotification
     {
-        /** @var JobExecutorInterface $executor */
-        $executor = $observer->getEvent()->getExecutor();
-        /** @var LogInterface $log */
-        $log = $this->logRepository->getByIdentifier($executor->getIdentifier());
+        if ($this->config->getJobReportEnabled()) {
+            /** @var JobExecutorInterface $executor */
+            $executor = $observer->getEvent()->getExecutor();
+            /** @var LogInterface $log */
+            $log = $this->logRepository->getByIdentifier($executor->getIdentifier());
 
-        $recipients = $this->config->getJobReportRecipient();
-        if ($recipients) {
-            $this->sendEmail($recipients, $log, $executor);
+            $recipients = $this->config->getJobReportRecipient();
+            if ($recipients) {
+                $this->sendEmail($recipients, $log, $executor);
+            }
         }
+
+        return $this;
     }
 
     /**
@@ -128,13 +145,16 @@ class SendJobReportEmailNotification implements ObserverInterface
      * @param LogInterface         $log
      * @param JobExecutorInterface $executor
      *
-     * @return void
+     * @return SendJobReportEmailNotification
      * @throws LocalizedException
      * @throws MailException
      * @throws NoSuchEntityException
      */
-    private function sendEmail(array $recipients, LogInterface $log, JobExecutorInterface $executor): void
-    {
+    private function sendEmail(
+        array $recipients,
+        LogInterface $log,
+        JobExecutorInterface $executor
+    ): SendJobReportEmailNotification {
         /** @var JobInterface $currentJob */
         $currentJob = $executor->getCurrentJob();
         /** @var string $jobStatus */
@@ -146,7 +166,7 @@ class SendJobReportEmailNotification implements ObserverInterface
         /** @var string $emailFrom */
         $emailFrom = $this->config->getStoreEmail();
         /** @var string $emailName */
-        $emailName = $this->config->getStorename();
+        $emailName = $this->config->getStoreName();
 
         /** @var TransportBuilder $transportBuilder */
         $transportBuilder = $this->transportBuilder->setTemplateIdentifier(self::JOB_REPORT_NOTIFICATION_EMAIL_TEMPLATE)
@@ -160,7 +180,7 @@ class SendJobReportEmailNotification implements ObserverInterface
                 [
                     'link'      => $link,
                     'jobStatus' => $jobStatus,
-                    'jobName' => $currentJob->getName()
+                    'jobName'   => $currentJob->getName(),
                 ]
             )
             ->setFromByScope(['email' => $emailFrom, 'name' => $emailName]);
@@ -170,9 +190,14 @@ class SendJobReportEmailNotification implements ObserverInterface
             $transportBuilder->addTo($recipient);
         }
 
-        /** @var TransportInterface $transport */
-        $transport = $transportBuilder->getTransport();
+        try {
+            /** @var TransportInterface $transport */
+            $transport = $transportBuilder->getTransport();
+            $transport->sendMessage();
+        } catch (\Exception $exception) {
+            $this->logger->warning($exception->getMessage());
+        }
 
-        $transport->sendMessage();
+        return $this;
     }
 }

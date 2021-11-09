@@ -1732,11 +1732,11 @@ class Config
     }
 
     /**
-     * Description getStorename function
+     * Description getStoreName function
      *
      * @return string|null
      */
-    public function getStorename()
+    public function getStoreName()
     {
         return $this->scopeConfig->getValue(
             self::EMAIL_JOB_REPORT_FROM_NAME,

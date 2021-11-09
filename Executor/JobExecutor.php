@@ -688,13 +688,6 @@ class JobExecutor implements JobExecutorInterface
             );
         }
 
-        if ($this->configHelper->getJobReportEnabled()) {
-            $this->eventManager->dispatch(
-                'akeneo_connector_send_job_report_notification',
-                ['executor' => $this]
-            );
-        }
-
         $this->eventManager->dispatch(
             'akeneo_connector_import_finish',
             ['import' => $this->currentJobClass, 'executor' => $this]
