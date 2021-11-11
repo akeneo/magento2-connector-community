@@ -271,7 +271,10 @@ class JobExecutor implements JobExecutorInterface
         }
 
         $this->output = $output;
-        $this->eventManager->dispatch('akeneo_connector_all_imports_finished');
+
+        if (!empty($entities)) {
+            $this->eventManager->dispatch('akeneo_connector_all_imports_finished');
+        }
     }
 
     /**
