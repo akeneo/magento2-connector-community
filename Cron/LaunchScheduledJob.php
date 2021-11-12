@@ -59,15 +59,12 @@ class LaunchScheduledJob
             JobInterface::STATUS,
             JobInterface::JOB_SCHEDULED
         )->addOrder(JobInterface::POSITION);
-        /** @var string $codes */
-        $codes = '';
 
-        /** @var JobInterface $job */
-        foreach ($scheduledJobs as $job) {
-            /** @var string $code */
-            $codes .= ',' . $job->getCode();
+        /** @var array $codes */
+        $codes = $scheduledJobs->addFieldToSelect('code')->toArray()['items'];
+
+        if (count($codes)) {
+            $this->jobExecutor->execute(implode(',', $codes[0] ?? []));
         }
-
-        $this->jobExecutor->execute($codes);
     }
 }
