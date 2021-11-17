@@ -388,9 +388,13 @@ class JobExecutor implements JobExecutorInterface
             $this->setStep(0);
             if ($family) {
                 $this->currentJobClass->setFamily($family);
+                $this->setJobStatus(JobInterface::JOB_PROCESSING);
             }
 
-            while ($this->canExecute() && $this->currentJob->getStatus() !== JobInterface::JOB_ERROR) {
+            while ($this->canExecute()) {
+                if ($this->currentJob->getStatus() === JobInterface::JOB_ERROR) {
+                    return true;
+                }
                 /** @var string $comment */
                 $comment = $this->getComment();
                 $this->displayInfo($comment);
@@ -400,7 +404,7 @@ class JobExecutor implements JobExecutorInterface
                 /** @var string $message */
                 $message = $this->getMessage();
                 if ($this->currentJob->getStatus() === JobInterface::JOB_ERROR) {
-                    $this->displayError((string)$message);
+                    $this->displayError($message);
                 } else {
                     $this->displayComment($message);
                 }
