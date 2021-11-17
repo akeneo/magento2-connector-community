@@ -480,6 +480,30 @@ class Config
      */
     public const INDEX_PRODUCT = 'akeneo_connector/index/index_product';
     /**
+     * Email job report enabled path
+     *
+     * @var string EMAIL_JOB_REPORT_ENABLED
+     */
+    const EMAIL_JOB_REPORT_ENABLED = 'akeneo_connector/advanced/email_job_report_enabled';
+    /**
+     * Email job report recicipient path
+     *
+     * @var string EMAIL_JOB_REPORT_RECIPIENT
+     */
+    const EMAIL_JOB_REPORT_RECIPIENT = 'akeneo_connector/advanced/email_job_report_recipient';
+    /**
+     * Email name job report from
+     *
+     * @var string EMAIL_JOB_REPORT_FROM_NAME
+     */
+    const EMAIL_JOB_REPORT_FROM_NAME = 'trans_email/ident_general/name';
+    /**
+     * Email job report from
+     *
+     * @var string EMAIL_JOB_REPORT_FROM
+     */
+    const EMAIL_JOB_REPORT_FROM = 'trans_email/ident_general/email';
+    /**
      * This variable contains a Encryptor
      *
      * @var Encryptor $encryptor
@@ -1774,5 +1798,66 @@ class Config
     public function getIndexProduct(): ?string
     {
         return $this->scopeConfig->getValue(self::INDEX_PRODUCT);
+    }
+
+
+    /**
+     * Description getJobReportEnabled function
+     *
+     * @return string|null
+     */
+    public function getJobReportEnabled()
+    {
+        return $this->scopeConfig->getValue(self::EMAIL_JOB_REPORT_ENABLED);
+    }
+
+    /**
+     * Description getJobReportRecipient function
+     *
+     * @return string[]|null
+     */
+    public function getJobReportRecipient()
+    {
+        /** @var string $recipients */
+        $recipients = $this->scopeConfig->getValue(self::EMAIL_JOB_REPORT_RECIPIENT);
+        /** @var string[] $matches */
+        $matches = [];
+        preg_match_all(
+            '/[a-zA-Z0-9\-.]*@[.a-zA-Z0-9\-]*/',
+            $recipients,
+            $matches
+        );
+
+        if (!$matches) {
+            return null;
+        }
+
+        return $matches;
+    }
+
+    /**
+     * Description getStoreName function
+     *
+     * @return string|null
+     */
+    public function getStoreName()
+    {
+        return $this->scopeConfig->getValue(
+            self::EMAIL_JOB_REPORT_FROM_NAME,
+            ScopeInterface::SCOPE_STORE
+        );
+    }
+
+    /**
+     * Description getStoreEmail function
+     *
+     * @return string|null
+     */
+    public function getStoreEmail()
+    {
+        return $this->scopeConfig->getValue(
+            self::EMAIL_JOB_REPORT_FROM,
+            ScopeInterface::SCOPE_STORE
+        );
     }
 }
