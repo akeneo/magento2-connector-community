@@ -404,7 +404,7 @@ class JobExecutor implements JobExecutorInterface
                 /** @var string $message */
                 $message = $this->getMessage();
                 if ($this->currentJob->getStatus() === JobInterface::JOB_ERROR) {
-                    $this->displayError($message);
+                    $this->displayError((string)$message);
                 } else {
                     $this->displayComment($message);
                 }
