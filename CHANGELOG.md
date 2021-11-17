@@ -274,3 +274,6 @@
 * Fix processing label display in log grid
 * Update API Secret configuration to obscure type
 * Update all connector configuration scopes to "Global"
+
+### Version 102.1.1 :
+* Fix Product job execution per family not continuing after a job error occurs in a specific family
