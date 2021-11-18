@@ -598,12 +598,12 @@ For example :<br/>
                         <field id="enable_clean_logs">1</field>
                     </depends>
                 </field>
-                <field id="email_job_report_enabled" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="email_job_report_enabled" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Enable Job Report By Email</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>Send job report by email</comment>
                 </field>
-                <field id="email_job_report_recipient" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="email_job_report_recipient" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Job Report Recipient Emails</label>
                     <comment>Email addresses of job reports recipients separated by commas ','</comment>
                     <validate>no-whitespace</validate>

@@ -597,7 +597,7 @@ class Config
      *
      * @return string
      */
-    public function getAkeneoApiBaseUrl(): string
+    public function getAkeneoApiBaseUrl()
     {
         return $this->scopeConfig->getValue(self::AKENEO_API_BASE_URL);
     }
@@ -607,7 +607,7 @@ class Config
      *
      * @return string
      */
-    public function getAkeneoApiUsername(): string
+    public function getAkeneoApiUsername()
     {
         return $this->scopeConfig->getValue(self::AKENEO_API_USERNAME);
     }
@@ -618,7 +618,7 @@ class Config
      * @return string
      * @throws Exception
      */
-    public function getAkeneoApiPassword(): string
+    public function getAkeneoApiPassword()
     {
         /** @var string $password */
         $password = $this->scopeConfig->getValue(self::AKENEO_API_PASSWORD);
@@ -631,7 +631,7 @@ class Config
      *
      * @return string
      */
-    public function getAkeneoApiClientId(): string
+    public function getAkeneoApiClientId()
     {
         return $this->scopeConfig->getValue(self::AKENEO_API_CLIENT_ID);
     }
@@ -642,7 +642,7 @@ class Config
      * @return string
      * @throws Exception
      */
-    public function getAkeneoApiClientSecret(): string
+    public function getAkeneoApiClientSecret()
     {
         /** @var string $apiClientSecret */
         $apiClientSecret = $this->scopeConfig->getValue(self::AKENEO_API_CLIENT_SECRET);
@@ -656,7 +656,7 @@ class Config
      * @return bool
      * @throws Exception
      */
-    public function checkAkeneoApiCredentials(): bool
+    public function checkAkeneoApiCredentials()
     {
         if (!$this->getAkeneoApiBaseUrl() || !$this->getAkeneoApiClientId() || !$this->getAkeneoApiClientSecret(
             ) || !$this->getAkeneoApiPassword() || !$this->getAkeneoApiUsername()) {
@@ -671,7 +671,7 @@ class Config
      *
      * @return string
      */
-    public function getEdition(): string
+    public function getEdition()
     {
         return $this->scopeConfig->getValue(self::AKENEO_API_EDITION);
     }
@@ -683,7 +683,7 @@ class Config
      * @see \Akeneo\Connector\Model\Source\Filters\Mode
      *
      */
-    public function getFilterMode(): string
+    public function getFilterMode()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_MODE);
     }
@@ -695,7 +695,7 @@ class Config
      * @see \Akeneo\Connector\Model\Source\Filters\Completeness
      *
      */
-    public function getCompletenessTypeFilter(): string
+    public function getCompletenessTypeFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_COMPLETENESS_TYPE);
     }
@@ -705,7 +705,7 @@ class Config
      *
      * @return string
      */
-    public function getCompletenessValueFilter(): string
+    public function getCompletenessValueFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_COMPLETENESS_VALUE);
     }
@@ -715,7 +715,7 @@ class Config
      *
      * @return string
      */
-    public function getCompletenessLocalesFilter(): string
+    public function getCompletenessLocalesFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_COMPLETENESS_LOCALES);
     }
@@ -725,7 +725,7 @@ class Config
      *
      * @return string
      */
-    public function getModelCompletenessLocalesFilter(): string
+    public function getModelCompletenessLocalesFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_COMPLETENESS_LOCALES);
     }
@@ -737,7 +737,7 @@ class Config
      * @see \Akeneo\Connector\Model\Source\Filters\ModelCompleteness
      *
      */
-    public function getModelCompletenessTypeFilter(): string
+    public function getModelCompletenessTypeFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_COMPLETENESS_TYPE);
     }
@@ -749,7 +749,7 @@ class Config
      * @see \Akeneo\Connector\Model\Source\Filters\Status
      *
      */
-    public function getStatusFilter(): string
+    public function getStatusFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_STATUS);
     }
@@ -759,7 +759,7 @@ class Config
      *
      * @return string
      */
-    public function getUpdatedMode(): string
+    public function getUpdatedMode()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_MODE);
     }
@@ -769,7 +769,7 @@ class Config
      *
      * @return string
      */
-    public function getUpdatedLowerFilter(): string
+    public function getUpdatedLowerFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_LOWER);
     }
@@ -779,7 +779,7 @@ class Config
      *
      * @return string
      */
-    public function getUpdatedGreaterFilter(): string
+    public function getUpdatedGreaterFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_GREATER);
     }
@@ -789,7 +789,7 @@ class Config
      *
      * @return string
      */
-    public function getUpdatedBetweenAfterFilter(): string
+    public function getUpdatedBetweenAfterFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_BETWEEN_AFTER);
     }
@@ -799,7 +799,7 @@ class Config
      *
      * @return string
      */
-    public function getUpdatedBetweenBeforeFilter(): string
+    public function getUpdatedBetweenBeforeFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_BETWEEN_BEFORE);
     }
@@ -809,7 +809,7 @@ class Config
      *
      * @return string
      */
-    public function getUpdatedSinceFilter(): string
+    public function getUpdatedSinceFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_SINCE);
     }
@@ -819,7 +819,7 @@ class Config
      *
      * @return string
      */
-    public function getUpdatedSinceLastHoursFilter(): string
+    public function getUpdatedSinceLastHoursFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_UPDATED_SINCE_LAST_HOURS);
     }
@@ -829,7 +829,7 @@ class Config
      *
      * @return string
      */
-    public function getAttributeUpdatedMode(): string
+    public function getAttributeUpdatedMode()
     {
         return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_UPDATED_MODE);
     }
@@ -839,7 +839,7 @@ class Config
      *
      * @return string
      */
-    public function getAttributeUpdatedGreaterFilter(): string
+    public function getAttributeUpdatedGreaterFilter()
     {
         return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_UPDATED_GREATER);
     }
@@ -849,7 +849,7 @@ class Config
      *
      * @return bool
      */
-    public function getAttributeFilterByCodeMode(): bool
+    public function getAttributeFilterByCodeMode()
     {
         return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_BY_CODE_MODE);
     }
@@ -859,7 +859,7 @@ class Config
      *
      * @return array
      */
-    public function getAttributeFilterByCode(): array
+    public function getAttributeFilterByCode()
     {
         return $this->scopeConfig->getValue(self::ATTRIBUTE_FILTERS_BY_CODE);
     }
@@ -869,7 +869,7 @@ class Config
      *
      * @return string
      */
-    public function getFamiliesFilter(): string
+    public function getFamiliesFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_FAMILIES);
     }
@@ -879,7 +879,7 @@ class Config
      *
      * @return array
      */
-    public function getAdvancedFilters(): array
+    public function getAdvancedFilters()
     {
         $filters = $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_ADVANCED_FILTER);
 
@@ -891,7 +891,7 @@ class Config
      *
      * @return array
      */
-    public function getModelAdvancedFilters(): array
+    public function getModelAdvancedFilters()
     {
         $filters = $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER);
 
@@ -903,7 +903,7 @@ class Config
      *
      * @return string
      */
-    public function getIsCategoryActive(): string
+    public function getIsCategoryActive()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_IS_ACTIVE);
     }
@@ -913,7 +913,7 @@ class Config
      *
      * @return string
      */
-    public function getIsCategoryInMenu(): string
+    public function getIsCategoryInMenu()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_INCLUDE_IN_MENU);
     }
@@ -923,7 +923,7 @@ class Config
      *
      * @return string
      */
-    public function getIsCategoryAnchor(): string
+    public function getIsCategoryAnchor()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_IS_ANCHOR);
     }
@@ -933,7 +933,7 @@ class Config
      *
      * @return string
      */
-    public function getCategoriesFilter(): string
+    public function getCategoriesFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_CATEGORIES);
     }
@@ -943,7 +943,7 @@ class Config
      *
      * @return string
      */
-    public function getCategoriesIsOverrideContentStaging(): string
+    public function getCategoriesIsOverrideContentStaging()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_OVERRIDE_CONTENT_STAGING);
     }
@@ -953,7 +953,7 @@ class Config
      *
      * @return string
      */
-    public function getAdminDefaultChannel(): string
+    public function getAdminDefaultChannel()
     {
         return $this->scopeConfig->getValue(self::AKENEO_API_ADMIN_CHANNEL);
     }
@@ -963,7 +963,7 @@ class Config
      *
      * @return string
      */
-    public function getWebsiteAttribute(): ?string
+    public function getWebsiteAttribute()
     {
         return $this->scopeConfig->getValue(self::PRODUCT_WEBSITE_ATTRIBUTE);
     }
@@ -988,7 +988,7 @@ class Config
      * @throws Exception
      *
      */
-    public function getWebsiteMapping($withDefault = true): array
+    public function getWebsiteMapping($withDefault = true)
     {
         /** @var mixed[] $mapping */
         $mapping = [];
@@ -1029,7 +1029,7 @@ class Config
      * @return string[]
      * @throws Exception
      */
-    public function getMappedChannels(): array
+    public function getMappedChannels()
     {
         /** @var mixed[] $mapping */
         $mapping = $this->getWebsiteMapping();
@@ -1046,7 +1046,7 @@ class Config
      *
      * @return string
      */
-    public function getDefaultLocale($storeId = null): string
+    public function getDefaultLocale($storeId = null)
     {
         return $this->scopeConfig->getValue(
             DirectoryHelper::XML_PATH_DEFAULT_LOCALE,
@@ -1062,7 +1062,7 @@ class Config
      *
      * @return string
      */
-    public function getDefaultCurrency($storeId = null): string
+    public function getDefaultCurrency($storeId = null)
     {
         return $this->scopeConfig->getValue(
             Currency::XML_PATH_CURRENCY_DEFAULT,
@@ -1095,7 +1095,7 @@ class Config
      * @return int
      * @throws LocalizedException
      */
-    public function getEntityTypeId($entity): int
+    public function getEntityTypeId($entity)
     {
         return $this->eavConfig->getEntityType($entity)->getEntityTypeId();
     }
@@ -1109,7 +1109,7 @@ class Config
      * @return AbstractAttribute
      * @throws LocalizedException
      */
-    public function getAttribute($entityType, $code): AbstractAttribute
+    public function getAttribute($entityType, $code)
     {
         return $this->eavConfig->getAttribute($entityType, $code);
     }
@@ -1119,7 +1119,7 @@ class Config
      *
      * @return string
      */
-    public function getProductActivation(): string
+    public function getProductActivation()
     {
         return $this->scopeConfig->getValue(self::PRODUCT_ACTIVATION);
     }
@@ -1160,7 +1160,7 @@ class Config
      * @return array
      * @throws NoSuchEntityException
      */
-    public function getProductTaxClasses(): array
+    public function getProductTaxClasses()
     {
         /** @var mixed[] $stores */
         $stores = $this->storeManager->getStores(true);
@@ -1208,7 +1208,7 @@ class Config
      * @return int
      * @throws NoSuchEntityException
      */
-    public function getDefaultWebsiteId(): int
+    public function getDefaultWebsiteId()
     {
         return $this->storeManager->getStore()->getWebsiteId();
     }
@@ -1218,7 +1218,7 @@ class Config
      *
      * @return int
      */
-    public function getDefaultScopeId(): int
+    public function getDefaultScopeId()
     {
         return $this->catalogInventoryConfiguration->getDefaultScopeId();
     }
@@ -1228,7 +1228,7 @@ class Config
      *
      * @return bool
      */
-    public function isMediaImportEnabled(): bool
+    public function isMediaImportEnabled()
     {
         return $this->scopeConfig->isSetFlag(self::PRODUCT_MEDIA_ENABLED);
     }
@@ -1238,7 +1238,7 @@ class Config
      *
      * @return bool
      */
-    public function isUrlGenerationEnabled(): bool
+    public function isUrlGenerationEnabled()
     {
         return $this->scopeConfig->isSetFlag(self::PRODUCT_URL_GENERATION_ENABLED);
     }
@@ -1248,7 +1248,7 @@ class Config
      *
      * @return bool
      */
-    public function isAkeneoMaster(): bool
+    public function isAkeneoMaster()
     {
         return $this->scopeConfig->isSetFlag(self::PRODUCT_AKENEO_MASTER);
     }
@@ -1258,7 +1258,7 @@ class Config
      *
      * @return array
      */
-    public function getMediaImportImagesColumns(): array
+    public function getMediaImportImagesColumns()
     {
         /** @var mixed[] $images */
         $images = [];
@@ -1282,7 +1282,7 @@ class Config
      *
      * @return bool
      */
-    public function isFileImportEnabled(): bool
+    public function isFileImportEnabled()
     {
         return $this->scopeConfig->isSetFlag(self::PRODUCT_FILE_ENABLED);
     }
@@ -1292,7 +1292,7 @@ class Config
      *
      * @return array
      */
-    public function getFileImportColumns(): array
+    public function getFileImportColumns()
     {
         /** @var mixed[] $fileAttributes */
         $fileAttributes = [];
@@ -1323,7 +1323,7 @@ class Config
      *
      * @return array
      */
-    public function getMediaImportGalleryColumns(): array
+    public function getMediaImportGalleryColumns()
     {
         /** @var mixed[] $images */
         $images = [];
@@ -1357,7 +1357,7 @@ class Config
      *
      * @return array|mixed[]
      */
-    public function getMetricsColumns($returnVariant = null, $returnConcat = null): array
+    public function getMetricsColumns($returnVariant = null, $returnConcat = null)
     {
         /** @var mixed[] $metrics */
         $metrics = [];
@@ -1405,7 +1405,7 @@ class Config
      *
      * @return bool
      */
-    public function mediaFileExists($filePath): bool
+    public function mediaFileExists($filePath)
     {
         return $this->mediaDirectory->isFile($filePath);
     }
@@ -1418,7 +1418,7 @@ class Config
      *
      * @return string
      */
-    public function getMediaFullPath($fileName, $subDirectory = null): string
+    public function getMediaFullPath($fileName, $subDirectory = null)
     {
         if ($subDirectory) {
             return $subDirectory . $this->getMediaFilePath($fileName);
@@ -1436,7 +1436,7 @@ class Config
      * @return void
      * @throws FileSystemException
      */
-    public function saveMediaFile($filePath, $content): void
+    public function saveMediaFile($filePath, $content)
     {
         $this->mediaDirectory->writeFile($filePath, $content);
     }
@@ -1446,7 +1446,7 @@ class Config
      *
      * @return string
      */
-    public function getFilesMediaDirectory(): string
+    public function getFilesMediaDirectory()
     {
         return $this->filesMediaFile;
     }
@@ -1458,7 +1458,7 @@ class Config
      *
      * @return string
      */
-    public function getMediaFilePath($filename): string
+    public function getMediaFilePath($filename)
     {
         return Uploader::getDispretionPath($filename) . '/' . Uploader::getCorrectFileName($filename);
     }
@@ -1470,7 +1470,7 @@ class Config
      *
      * @return bool
      */
-    public function isCategoryUsedInProductUrl($storeId = null): bool
+    public function isCategoryUsedInProductUrl($storeId = null)
     {
         return $this->scopeConfig->isSetFlag(
             ProductHelper::XML_PATH_PRODUCT_URL_USE_CATEGORY,
@@ -1484,7 +1484,7 @@ class Config
      *
      * @return bool
      */
-    public function isUrlKeyMapped(): bool
+    public function isUrlKeyMapped()
     {
         /** @var mixed $matches */
         $matches = $this->getAttributeMapping();
@@ -1535,7 +1535,7 @@ class Config
      *
      * @return string[]
      */
-    public function getGroupedFamiliesToImport(): array
+    public function getGroupedFamiliesToImport()
     {
         /** @var string $familiesSerialized */
         $familiesSerialized = $this->scopeConfig->getValue(self::GROUPED_PRODUCTS_FAMILIES_MAPPING);
@@ -1556,7 +1556,7 @@ class Config
      *
      * @return string[]
      */
-    public function getGroupedAssociationsToImport(): array
+    public function getGroupedAssociationsToImport()
     {
         /** @var string $associationsSerialized */
         $associationsSerialized = $this->scopeConfig->getValue(self::GROUPED_PRODUCTS_FAMILIES_MAPPING);
@@ -1573,7 +1573,7 @@ class Config
      *
      * @return mixed[]
      */
-    public function getGroupedAssociationsForFamily(string $family): array
+    public function getGroupedAssociationsForFamily(string $family)
     {
         /** @var string[] $allAssociations */
         $allAssociations = $this->getGroupedAssociationsToImport();
@@ -1598,7 +1598,7 @@ class Config
      * @return int
      * @throws LocalizedException
      */
-    public function getDefaultAttributeSetId($entity): int
+    public function getDefaultAttributeSetId($entity)
     {
         return $this->eavConfig->getEntityType($entity)->getDefaultAttributeSetId();
     }
@@ -1608,7 +1608,7 @@ class Config
      *
      * @return string|null
      */
-    public function getFamiliesUpdatedMode(): ?string
+    public function getFamiliesUpdatedMode()
     {
         return $this->scopeConfig->getValue(self::FAMILIES_FILTERS_UPDATED_MODE);
     }
@@ -1618,7 +1618,7 @@ class Config
      *
      * @return string|null
      */
-    public function getFamiliesUpdatedGreater(): ?string
+    public function getFamiliesUpdatedGreater()
     {
         return $this->scopeConfig->getValue(self::FAMILIES_FILTERS_UPDATED_GREATER);
     }
@@ -1628,7 +1628,7 @@ class Config
      *
      * @return string[]
      */
-    public function getAssociationTypes(): array
+    public function getAssociationTypes()
     {
         /** @var string $relatedCode */
         $relatedCode = $this->scopeConfig->getValue(self::PRODUCT_ASSOCIATION_RELATED);
@@ -1665,7 +1665,7 @@ class Config
      *
      * @return string|null
      */
-    public function isAdvancedLogActivated(): ?string
+    public function isAdvancedLogActivated()
     {
         return $this->scopeConfig->getValue(self::ADVANCED_LOG);
     }
@@ -1675,7 +1675,7 @@ class Config
      *
      * @return string|null
      */
-    public function getCleanLogs(): ?string
+    public function getCleanLogs()
     {
         return $this->scopeConfig->getValue(self::CLEAN_LOGS);
     }
@@ -1685,7 +1685,7 @@ class Config
      *
      * @return string|null
      */
-    public function getEnableCleanLogs(): ?string
+    public function getEnableCleanLogs()
     {
         return $this->scopeConfig->getValue(self::ENABLE_CLEAN_LOGS);
     }
@@ -1695,7 +1695,7 @@ class Config
      *
      * @return bool
      */
-    public function getOptionCodeAsAdminLabel(): bool
+    public function getOptionCodeAsAdminLabel()
     {
         return $this->scopeConfig->getValue(self::ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL);
     }
@@ -1705,7 +1705,7 @@ class Config
      *
      * @return string|null
      */
-    public function getCacheTypeAttribute(): ?string
+    public function getCacheTypeAttribute()
     {
         return $this->scopeConfig->getValue(self::CACHE_TYPE_ATTRIBUTE);
     }
@@ -1715,7 +1715,7 @@ class Config
      *
      * @return string|null
      */
-    public function getCacheTypeCategory(): ?string
+    public function getCacheTypeCategory()
     {
         return $this->scopeConfig->getValue(self::CACHE_TYPE_CATEGORY);
     }
@@ -1725,7 +1725,7 @@ class Config
      *
      * @return string|null
      */
-    public function getCacheTypeFamily(): ?string
+    public function getCacheTypeFamily()
     {
         return $this->scopeConfig->getValue(self::CACHE_TYPE_FAMILY);
     }
@@ -1735,7 +1735,7 @@ class Config
      *
      * @return string
      */
-    public function getCacheTypeProduct(): string
+    public function getCacheTypeProduct()
     {
         return $this->scopeConfig->getValue(self::CACHE_TYPE_PRODUCT);
     }
@@ -1745,7 +1745,7 @@ class Config
      *
      * @return string|null
      */
-    public function getCacheTypeOption(): ?string
+    public function getCacheTypeOption()
     {
         return $this->scopeConfig->getValue(self::CACHE_TYPE_OPTION);
     }
@@ -1755,7 +1755,7 @@ class Config
      *
      * @return string|null
      */
-    public function getIndexCategory(): ?string
+    public function getIndexCategory()
     {
         return $this->scopeConfig->getValue(self::INDEX_CATEGORY);
     }
@@ -1765,7 +1765,7 @@ class Config
      *
      * @return string|null
      */
-    public function getIndexAttribute(): ?string
+    public function getIndexAttribute()
     {
         return $this->scopeConfig->getValue(self::INDEX_ATTRIBUTE);
     }
@@ -1775,7 +1775,7 @@ class Config
      *
      * @return string|null
      */
-    public function getIndexFamily(): ?string
+    public function getIndexFamily()
     {
         return $this->scopeConfig->getValue(self::INDEX_FAMILY);
     }
@@ -1785,7 +1785,7 @@ class Config
      *
      * @return string|null
      */
-    public function getIndexOption(): ?string
+    public function getIndexOption()
     {
         return $this->scopeConfig->getValue(self::INDEX_OPTION);
     }
@@ -1795,7 +1795,7 @@ class Config
      *
      * @return string|null
      */
-    public function getIndexProduct(): ?string
+    public function getIndexProduct()
     {
         return $this->scopeConfig->getValue(self::INDEX_PRODUCT);
     }

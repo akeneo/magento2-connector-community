@@ -1725,7 +1725,7 @@ class Product extends JobImport
             $completenessConfig = $this->configHelper->getEnableSimpleProductsPerWebsite();
             while (($row = $completQuery->fetch())) {
                 /** @var string[] $completenesses */
-                $completenesses = $this->serializer->unserialize($row['completenesses']);
+                $completenesses = $this->jsonSerializer->unserialize($row['completenesses']);
                 /** @var int $status */
                 $status = 1;
                 /** @var string[] $completeness */
