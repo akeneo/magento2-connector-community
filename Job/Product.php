@@ -3031,40 +3031,40 @@ class Product extends JobImport
                         /** @var string $metadata */
                         $metadata = $path['metadata'];
 
-                        /** @var string|null $rewriteId */
-                        $rewriteId = $connection->fetchOne(
-                            $connection->select()->from(
-                                $this->entitiesHelper->getTable('url_rewrite'),
-                                ['url_rewrite_id']
-                            )->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)->where(
+                        /** @var string|null $rewriteEntity */
+                        $rewriteEntity = $connection->fetchRow(
+                            $connection->select()->from($this->entitiesHelper->getTable('url_rewrite'))->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)->where(
                                 'target_path = ?',
                                 $targetPath
-                            )->where('entity_id = ?', $product->getEntityId())->where(
-                                'store_id = ?',
-                                $product->getStoreId()
-                            )
+                            )->where('entity_id = ?', $product->getEntityId())->where('store_id = ?', $product->getStoreId())
                         );
 
-                        if ($rewriteId) {
+                        $rewriteId = isset($rewriteEntity["url_rewrite_id"]) ? $rewriteEntity["url_rewrite_id"] : false;
+                        $isNeedUrlForOldUrl = false;
+                        if ($rewriteEntity) {
                             try {
-                                $connection->update(
-                                    $this->entitiesHelper->getTable('url_rewrite'),
-                                    ['request_path' => $requestPath, 'metadata' => $metadata],
-                                    ['url_rewrite_id = ?' => $rewriteId]
-                                );
+                                if ($requestPath !== $rewriteEntity["request_path"]) {
+                                    $isNeedUrlForOldUrl = true;
+                                    $connection->update(
+                                        $this->entitiesHelper->getTable('url_rewrite'),
+                                        ['target_path' =>  $requestPath, 'redirect_type' => 301, 'metadata' => $metadata],
+                                        ['url_rewrite_id = ?' => $rewriteEntity["url_rewrite_id"]]
+                                    );
+                                }
                             } catch (\Exception $e) {
-                                $this->jobExecutor->setAdditionalMessage(
+                                $this->setAdditionalMessage(
                                     __(
                                         sprintf(
                                             'Tried to update url_rewrite_id %s : request path (%s) already exists for the store_id.',
-                                            $rewriteId,
+                                            $rewriteEntity["url_rewrite_id"],
                                             $requestPath
                                         )
-                                    ),
-                                    $this->logger
+                                    )
                                 );
                             }
-                        } else {
+                        }
+
+                        if(!$rewriteEntity || $isNeedUrlForOldUrl) {
                             /** @var array $data */
                             $data = [
                                 'entity_type'      => ProductUrlRewriteGenerator::ENTITY_TYPE,
@@ -3086,16 +3086,26 @@ class Product extends JobImport
                             if ($isCategoryUsedInProductUrl && $path['category_id']) {
                                 /** @var int $rewriteId */
                                 $rewriteId = $connection->fetchOne(
-                                    $connection->select()->from(
-                                        $this->entitiesHelper->getTable('url_rewrite'),
-                                        ['url_rewrite_id']
-                                    )->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)->where(
-                                        'target_path = ?',
-                                        $targetPath
-                                    )->where('entity_id = ?', $product->getEntityId())->where(
-                                        'store_id = ?',
-                                        $product->getStoreId()
-                                    )
+                                    $connection->select()
+                                        ->from($this->entitiesHelper->getTable('url_rewrite'), ['url_rewrite_id'])
+                                        ->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)
+                                        ->where('target_path = ?', $targetPath)
+                                        ->where('entity_id = ?', $product->getEntityId())
+                                        ->where('store_id = ?', $product->getStoreId())
+                                );
+                            }
+
+                            if (isset($metadata)) {
+                                $connection->update(
+                                    $this->entitiesHelper->getTable('url_rewrite'),
+                                    ['target_path' => $requestPath],
+                                    ['store_id = ?' => $product->getStoreId(), 'entity_id = ?' => $product->getEntityId(), 'redirect_type = ?' => 301, 'metadata = ?' => $metadata]
+                                );
+                            } else {
+                                $connection->update(
+                                    $this->entitiesHelper->getTable('url_rewrite'),
+                                    ['target_path' => $requestPath],
+                                    ['store_id = ?' => $product->getStoreId(), 'entity_id = ?' => $product->getEntityId(), 'redirect_type = ?' => 301, 'metadata IS NULL']
                                 );
                             }
                         }
