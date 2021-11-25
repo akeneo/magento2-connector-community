@@ -11,6 +11,7 @@ use Akeneo\Connector\Model\Source\Edition;
 use Magento\Config\Model\Config\Backend\Serialized\ArraySerialized;
 use Magento\Eav\Model\Entity\Attribute;
 use Magento\Framework\App\Area;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
@@ -235,16 +236,22 @@ class ConfigManagement
     protected $attributeModel;
 
     /**
+     * @var ScopeConfigInterface
+     */
+    protected $scopeConfig;
+
+    /**
      * ConfigManagement constructor
      *
-     * @param ResourceConnection  $resourceConnection
-     * @param Edition             $sourceEdition
-     * @param Reader              $moduleReader
-     * @param ConfigHelper        $configHelper
-     * @param Repository          $assetRepository
-     * @param DirectoryList       $directoryList
+     * @param ResourceConnection $resourceConnection
+     * @param Edition $sourceEdition
+     * @param Reader $moduleReader
+     * @param ConfigHelper $configHelper
+     * @param Repository $assetRepository
+     * @param DirectoryList $directoryList
      * @param SerializerInterface $serializer
-     * @param Website             $websiteFormField
+     * @param Website $websiteFormField
+     * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
         ResourceConnection $resourceConnection,
@@ -255,7 +262,8 @@ class ConfigManagement
         DirectoryList $directoryList,
         SerializerInterface $serializer,
         Website $websiteFormField,
-        Attribute $attributeModel
+        Attribute $attributeModel,
+        ScopeConfigInterface $scopeConfig
     ) {
         $this->resourceConnection = $resourceConnection;
         $this->sourceEdition      = $sourceEdition;
@@ -267,6 +275,7 @@ class ConfigManagement
         $this->websiteFormField   = $websiteFormField;
         $this->assetRepository    = $assetRepository;
         $this->attributeModel     = $attributeModel;
+        $this->scopeConfig        = $scopeConfig;
     }
 
     /**
@@ -287,7 +296,7 @@ class ConfigManagement
         $group         = '';
 
         /**
-         * @var int      $index
+         * @var int $index
          * @var string[] $config
          */
         foreach ($configs as $index => $config) {
@@ -295,7 +304,7 @@ class ConfigManagement
             $labelAndGroup = $this->getSystemConfigAttribute($config['path'], 'label');
             /** @var string $label */
             $label = (string)$labelAndGroup[self::SYSTEM_ATTRIBUTE_VALUE_ARRAY_KEY];
-            if (!$label) {
+            if ( ! $label) {
                 continue;
             }
             /** @var string $currentGroup */
@@ -322,7 +331,7 @@ class ConfigManagement
                 /** @var string[] $firstElement */
                 $firstElement = reset($configValueUnserialized);
 
-                if (!$firstElement) {
+                if ( ! $firstElement) {
                     $value = $this->renderValue('', $config['path']);
                     $this->page->drawText(
                         $value,
@@ -352,7 +361,7 @@ class ConfigManagement
                 /** @var string[] $lines */
                 $lines = str_split($cleanValue, 89);
 
-                if (!$cleanValue) {
+                if ( ! $cleanValue) {
                     $value = $this->renderValue('', $config['path']);
                     $this->page->drawText(
                         $value,
@@ -373,7 +382,7 @@ class ConfigManagement
                 continue;
             }
 
-            if ($config['value'] && strpos($config['value'], ',') !== false && !$backendModelAttributeValue) {
+            if ($config['value'] && strpos($config['value'], ',') !== false && ! $backendModelAttributeValue) {
                 $this->insertMultiselect($config['value'], $config['path']);
                 continue;
             }
@@ -415,7 +424,7 @@ class ConfigManagement
      * Description setPageStyle function
      *
      * @param string $font
-     * @param float  $fontSize
+     * @param float $fontSize
      *
      * @return void
      * @throws Zend_Pdf_Exception
@@ -435,8 +444,8 @@ class ConfigManagement
      * Description drawBoldText function
      *
      * @param string $value
-     * @param float  $x
-     * @param float  $y
+     * @param float $x
+     * @param float $y
      *
      * @return void
      * @throws Zend_Pdf_Exception
@@ -518,7 +527,7 @@ class ConfigManagement
      * Description loadAttributeCode function
      *
      * @param mixed[] $values
-     * @param string  $field
+     * @param string $field
      *
      * @return mixed[]
      */
@@ -619,6 +628,20 @@ class ConfigManagement
     }
 
     /**
+     * @return SimpleXMLElement
+     */
+    protected function getSystemConfigXml(): SimpleXMLElement
+    {
+        /** @var string $etcDir */
+        $etcDir = $this->moduleReader->getModuleDir(
+            Dir::MODULE_ETC_DIR,
+            'Akeneo_Connector'
+        );
+
+        return simplexml_load_file($etcDir . '/adminhtml/system.xml');
+    }
+
+    /**
      * Description getSystemConfigAttribute function
      *
      * @param string $path
@@ -629,33 +652,19 @@ class ConfigManagement
     protected function getSystemConfigAttribute(string $path, string $attributeName)
     {
         /** @var string[] $path */
-        $path = explode('/', $path);
-        /** @var string $etcDir */
-        $etcDir = $this->moduleReader->getModuleDir(
-            Dir::MODULE_ETC_DIR,
-            'Akeneo_Connector'
-        );
-        /** @var mixed[] $xml */
-        $xml = simplexml_load_file($etcDir . '/adminhtml/system.xml');
+        [$section, $group, $field] = explode('/', $path);
+
+        $xml = $this->getSystemConfigXml();
         /** @var string $label */
         $label = '';
         /** @var string $attributeGroup */
         $attributeGroup = '';
 
-        /** @var SimpleXMLElement $group */
-        foreach ($xml->{'system'}->{'section'}->{'group'} as $group) {
-            /** @var string[] $attributes */
-            $attributes = $group->attributes();
-            if ((string)$attributes['id'] === $path[1]) {
-                foreach ($group->{'field'} as $field) {
-                    /** @var string[] $attributexs */
-                    $attributes = $field->attributes();
-                    if ((string)$attributes['id'] === $path[2]) {
-                        $label          = $field->{$attributeName};
-                        $attributeGroup = $group->{'label'};
-                    }
-                }
-            }
+        $field = current($xml->xpath(sprintf('//section/group[@id="%s"]/field[@id="%s"]', $group, $field)));
+        $group = current($field->xpath('parent::*'));
+        if ($field) {
+            $label          = $field->{$attributeName};
+            $attributeGroup = $group->{'label'};
         }
 
         return [
@@ -671,16 +680,26 @@ class ConfigManagement
      */
     protected function getAllAkeneoConfigs()
     {
-        /** @var AdapterInterface $connection */
-        $connection = $this->resourceConnection->getConnection();
-        /** @var Select $select */
-        $select = $connection->select()->from(
-            [
-                'ccd' => 'core_config_data',
-            ]
-        )->where('path like ?', '%akeneo_connector%')->order('path ASC');
+        $xml     = $this->getSystemConfigXml();
+        $configs = [];
 
-        return $connection->fetchAll($select);
+        /** @var SimpleXMLElement $field */
+        foreach ($xml->xpath('//section/group/field') as $field) {
+            $group = current($field->xpath('parent::*'));
+            /** @var string[] $groupAttributes */
+            $groupAttributes = $group->attributes();
+            /** @var string[] $fieldAttributes */
+            $fieldAttributes = $field->attributes();
+            $path            = 'akeneo_connector/' . $groupAttributes['id'] . '/' . $fieldAttributes['id'];
+            $configs[]       = [
+                'path'     => $path,
+                'value'    => (string)$this->scopeConfig->getValue($path),
+                'scope'    => 'default',
+                'scope_id' => 1
+            ];
+        }
+
+        return $configs;
     }
 
     /**
@@ -787,8 +806,8 @@ class ConfigManagement
      * Description addArrayLine function
      *
      * @param string[] $values
-     * @param float    $cellLength
-     * @param float    $rowLength
+     * @param float $cellLength
+     * @param float $rowLength
      *
      * @return void
      * @throws Zend_Pdf_Exception
@@ -809,7 +828,7 @@ class ConfigManagement
         );
 
         /**
-         * @var int    $index
+         * @var int $index
          * @var string $value
          */
         foreach ($values as $index => $value) {
@@ -842,13 +861,13 @@ class ConfigManagement
      * Description manageBooleanValue function
      *
      * @param string $value
-     * @param bool   $bypassBoolean
+     * @param bool $bypassBoolean
      *
      * @return string
      */
     protected function manageBooleanValue(string $value, bool $bypassBoolean)
     {
-        if (!$bypassBoolean && is_numeric($value) && preg_match("/^[0|1]$/", $value)) {
+        if ( ! $bypassBoolean && is_numeric($value) && preg_match("/^[0|1]$/", $value)) {
             if (preg_match("/^[1]$/", $value)) {
                 return (string)__('Yes');
             } else {
@@ -862,15 +881,15 @@ class ConfigManagement
     /**
      * Description renderValue function
      *
-     * @param string      $value
-     * @param string      $field
+     * @param string $value
+     * @param string $field
      * @param null|string $fieldType
      *
      * @return string
      */
     protected function renderValue(string $value, string $field, $fieldType = null)
     {
-        if (!$value && !is_numeric($value)) {
+        if ( ! $value && ! is_numeric($value)) {
             return (string)__('Empty');
         }
 
