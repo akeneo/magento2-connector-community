@@ -681,6 +681,10 @@ class JobExecutor implements JobExecutorInterface
                 'akeneo_connector_import_on_error',
                 ['executor' => $this, 'error' => $this->getMessage()]
             );
+            $this->eventManager->dispatch(
+                'akeneo_connector_import_on_error_' . strtolower($this->currentJob->getCode()),
+                ['executor' => $this, 'error' => $this->getMessage()]
+            );
         }
 
         if ($error === null && $this->currentJob->getStatus() !== JobInterface::JOB_ERROR) {
@@ -689,6 +693,10 @@ class JobExecutor implements JobExecutorInterface
             $this->setJobStatus(JobInterface::JOB_SUCCESS);
             $this->eventManager->dispatch(
                 'akeneo_connector_import_on_success',
+                ['executor' => $this]
+            );
+            $this->eventManager->dispatch(
+                'akeneo_connector_import_on_success_' . strtolower($this->currentJob->getCode()),
                 ['executor' => $this]
             );
         }
