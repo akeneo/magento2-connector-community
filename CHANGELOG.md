@@ -277,3 +277,6 @@
 
 ### Version 102.1.1 :
 * Fix Product job execution per family not continuing after a job error occurs in a specific family
+
+### Version 102.1.2 :
+* Fix URL rewrite generation when mapping a scopable attribute to the url_key attribute

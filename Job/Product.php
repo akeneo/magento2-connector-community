@@ -2860,7 +2860,9 @@ class Product extends JobImport
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $stores */
         $stores = array_merge(
-            $this->storeHelper->getStores(['lang']) // en_US
+            $this->storeHelper->getStores(['lang']), // en_US
+            $this->storeHelper->getStores(['lang', 'channel_code']), // en_US-channel
+            $this->storeHelper->getStores(['channel_code']) // channel
         );
 
         /** @var bool $isUrlMapped */
@@ -2869,14 +2871,16 @@ class Product extends JobImport
         foreach ($stores as $local => $affected) {
             if ($connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
                 $isUrlMapped = true;
-                $stores      = array_merge(
-                    $this->storeHelper->getStores(['lang']), // en_US
-                    $this->storeHelper->getStores(['lang', 'channel_code']), // en_US-channel
-                    $this->storeHelper->getStores(['channel_code']) // channel
-                );
 
                 break;
             }
+        }
+
+        // Reset stores variable to generate a column per store when nothing is mapped or url_key is global
+        if (!$isUrlMapped) {
+            $stores = array_merge(
+                $this->storeHelper->getStores(['lang']) // en_US
+            );
         }
 
         /**
