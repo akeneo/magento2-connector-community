@@ -12,7 +12,7 @@
     "http-interop/http-factory-guzzle": "^1.0"
   },
   "type": "magento2-module",
-  "version": "102.1.1",
+  "version": "102.1.2",
   "license": [
     "OSL-3.0",
     "AFL-3.0"
