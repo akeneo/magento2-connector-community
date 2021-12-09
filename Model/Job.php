@@ -7,6 +7,7 @@ namespace Akeneo\Connector\Model;
 use Akeneo\Connector\Api\Data\JobInterface;
 use Magento\Framework\DataObject\IdentityInterface;
 use Magento\Framework\Model\AbstractModel;
+use Magento\Framework\Phrase;
 
 /**
  * Class Job
@@ -249,5 +250,35 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
     public function setName($name)
     {
         return $this->setData(self::NAME, $name);
+    }
+
+    /**
+     * Description getStatusLabel function
+     *
+     * @return Phrase|string
+     */
+    public function getStatusLabel()
+    {
+        /** @var string $status */
+        $status = "";
+        switch ($this->getStatus()) {
+            case JobInterface::JOB_SUCCESS:
+                $status = __('Success');
+                break;
+            case JobInterface::JOB_ERROR:
+                $status = __('Error');
+                break;
+            case JobInterface::JOB_PROCESSING:
+                $status = __('Processing');
+                break;
+            case JobInterface::JOB_PENDING:
+                $status = __('Pending');
+                break;
+            case JobInterface::JOB_SCHEDULED:
+                $status = __('Scheduled');
+                break;
+        }
+
+        return $status;
     }
 }

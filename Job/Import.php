@@ -120,35 +120,6 @@ abstract class Import extends DataObject implements ImportInterface
     }
 
     /**
-     * Description getStatusLabel function
-     *
-     * @return Phrase|string
-     */
-    public function getStatusLabel()
-    {
-        $status = "";
-        switch ($this->getStatus()) {
-            case JobInterface::JOB_SUCCESS:
-                $status = __('Success');
-                break;
-            case JobInterface::JOB_ERROR:
-                $status = __('Error');
-                break;
-            case JobInterface::JOB_PROCESSING:
-                $status = __('Processing');
-                break;
-            case JobInterface::JOB_PENDING:
-                $status = __('Pending');
-                break;
-            case JobInterface::JOB_SCHEDULED:
-                $status = __('Scheduled');
-                break;
-        }
-
-        return $status;
-    }
-
-    /**
      * Get import name
      *
      * @return string
