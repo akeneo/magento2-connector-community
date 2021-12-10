@@ -266,3 +266,17 @@
 
 ### Version 102.0.2 :
 * Fix website mapping not working when product job is scheduled and if "Set attribute option code as Admin label for attribute options" configuration is set to "Yes"
+
+### Version 102.1.0 :
+* Add "Since last successful import" filter for product job (https://help.akeneo.com/magento2-connector/articles/03-products-filter-configuration.html#how-to-import-only-updated-products)
+* Add product type attribute mapping for virtual products (https://help.akeneo.com/magento2-connector/articles/05-configure-products.html#product-type-mapping)
+* Add Akeneo Connector CRON group (https://help.akeneo.com/magento2-connector/articles/trigger.html#how-to-manually-schedule-and-trigger-each-job)
+* Fix processing label display in log grid
+* Update API Secret configuration to obscure type
+* Update all connector configuration scopes to "Global"
+
+### Version 102.1.1 :
+* Fix Product job execution per family not continuing after a job error occurs in a specific family
+
+### Version 102.1.2 :
+* Fix URL rewrite generation when mapping a scopable attribute to the url_key attribute

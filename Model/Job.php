@@ -100,7 +100,7 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
      */
     public function getLastExecutedDate()
     {
-        return $this->getData(self::SCHEDULED_AT);
+        return $this->getData(self::LAST_EXECUTED_DATE);
     }
 
     /**
@@ -142,6 +142,16 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
     public function getName()
     {
         return $this->getData(self::NAME);
+    }
+
+    /**
+     * Description getLastSuccessExecutedDate function
+     *
+     * @return string|null
+     */
+    public function getLastSuccessExecutedDate()
+    {
+        return $this->getData(self::LAST_SUCCESS_EXECUTED_DATE);
     }
 
     /**
@@ -231,7 +241,7 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
     /**
      * Description setJobClass function
      *
-     * @param $class
+     * @param string $class
      *
      * @return Job
      */
@@ -243,13 +253,25 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
     /**
      * Description setName function
      *
-     * @param $name
+     * @param string $name
      *
      * @return Job
      */
     public function setName($name)
     {
         return $this->setData(self::NAME, $name);
+    }
+
+    /**
+     * Description setLastSuccessExecutedDate function
+     *
+     * @param string $date
+     *
+     * @return Job
+     */
+    public function setLastSuccessExecutedDate($date)
+    {
+        return $this->setData(self::LAST_SUCCESS_EXECUTED_DATE, $date);
     }
 
     /**
