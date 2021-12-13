@@ -87,6 +87,7 @@ class Attribute
             'pim_catalog_multiselect'      => 'multiselect',
             'pim_catalog_price_collection' => 'price',
             'pim_catalog_tax'              => 'tax',
+            'pim_catalog_table'            => 'textarea'
         ];
 
         $types = array_merge($types, $this->getAdditionalTypes());

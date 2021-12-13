@@ -4,16 +4,16 @@ namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Serializer as JsonSerializer;
-use Akeneo\Connector\Helper\Import\Entities;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\DeploymentConfig;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Zend_Db_Expr as Expr;
+use Zend_Db_Statement_Exception;
 
 /**
  * Class Product
@@ -21,7 +21,7 @@ use Zend_Db_Expr as Expr;
  * @category  Class
  * @package   Akeneo\Connector\Helper\Import
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
@@ -210,26 +210,33 @@ class Product extends Entities
                     continue;
                 }
                 // Attribute is a multiselect
-                if (isset($attributeValue['data'][0]) && (!is_array($attributeValue['data'][0]) || !array_key_exists(
-                            'amount',
-                            $attributeValue['data'][0]
-                        ))) {
+                if ((isset($attributeValue['data'][0]) && !is_array($attributeValue['data'][0]))) {
                     $columns[$key] = join(',', $attributeValue['data']);
 
                     continue;
                 }
-                // Attribute is a price
-                /** @var array $price */
-                foreach ($attributeValue['data'] as $price) {
-                    if (!is_array($price) || !array_key_exists('currency', $price) || !array_key_exists(
-                            'amount',
-                            $price
-                        )) {
+                // Attribute is a price or table
+                /** @var string[] $table */
+                $table = [];
+                /** @var array $attr */
+                foreach ($attributeValue['data'] as $attr) {
+                    if (!is_array($attr)) {
                         continue;
                     }
-                    /** @var string $priceKey */
-                    $priceKey           = $key . '-' . $price['currency'];
-                    $columns[$priceKey] = $price['amount'];
+
+                    // Table attribute
+                    if (!array_key_exists('currency', $attr) || !array_key_exists('amount', $attr)) {
+                        $table[] = json_encode(
+                            $attr,
+                            JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT
+                        );
+
+                        $columns[$key] = implode(',', $table);
+                    } else { // Price attribute
+                        /** @var string $priceKey */
+                        $priceKey           = $key . '-' . $attr['currency'];
+                        $columns[$priceKey] = $attr['amount'];
+                    }
                 }
             }
         }
@@ -240,8 +247,8 @@ class Product extends Entities
     /**
      * Format associations field
      *
-     * @param mixed[] $values
-     * @param ?string  $assoKey
+     * @param mixed[]     $values
+     * @param string|null $assoKey
      *
      * @return array
      */
@@ -347,11 +354,12 @@ class Product extends Entities
      * @param string $import
      * @param string $prefix
      *
-     * @return \Akeneo\Connector\Helper\Import\Product
+     * @return Product
+     * @throws Zend_Db_Statement_Exception
      */
     public function matchEntity($pimKey, $entityTable, $entityKey, $import, $prefix = null)
     {
-        /** @var \Magento\Framework\DB\Adapter\AdapterInterface $connection */
+        /** @var AdapterInterface $connection */
         $connection = $this->connection;
         /** @var string $tableName */
         $tableName = $this->getTableName($import);

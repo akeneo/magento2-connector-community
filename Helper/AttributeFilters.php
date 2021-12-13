@@ -32,6 +32,12 @@ class AttributeFilters
      */
     const ATTRIBUTE_TYPE_CATALOG_METRIC = 'pim_catalog_metric';
     /**
+     * Attribute type for catalog table
+     *
+     * @var string ATTRIBUTE_TYPE_CATALOG_TABLE
+     */
+    const ATTRIBUTE_TYPE_CATALOG_TABLE = 'pim_catalog_table';
+    /**
      * Attribute type for reference entity
      *
      * @var string ATTRIBUTE_TYPE_REFERENCE_ENTITY
@@ -65,14 +71,14 @@ class AttributeFilters
     /**
      * AttributeFilters constructor
      *
-     * @param ConfigHelper $configHelper
+     * @param ConfigHelper         $configHelper
      * @param SearchBuilderFactory $searchBuilderFactory
      */
     public function __construct(
         ConfigHelper $configHelper,
         SearchBuilderFactory $searchBuilderFactory
     ) {
-        $this->configHelper = $configHelper;
+        $this->configHelper         = $configHelper;
         $this->searchBuilderFactory = $searchBuilderFactory;
     }
 
@@ -82,9 +88,9 @@ class AttributeFilters
      * @param string[] $attributeTypes
      * @param bool     $isConfig
      *
-     * @return void
+     * @return mixed[]
      */
-    public function createAttributeTypeFilter($attributeTypes, $isConfig = false)
+    public function createAttributeTypeFilter($attributeTypes, $isConfig = false): array
     {
         /** @var mixed[] $filters */
         $filters = [];
