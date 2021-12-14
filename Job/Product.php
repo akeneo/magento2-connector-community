@@ -26,6 +26,7 @@ use Akeneo\Connector\Model\Source\Filters\ModelCompleteness;
 use Akeneo\Connector\Model\Source\StatusMode;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Exception;
 use Magento\Catalog\Model\Category as CategoryModel;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
@@ -352,7 +353,10 @@ class Product extends JobImport
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
-            $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->jobExecutor->setAdditionalMessage(
+                __('Path to log file : %1', $this->handler->getFilename()),
+                $this->logger
+            );
         }
 
         if (empty($this->configHelper->getMappedChannels())) {
@@ -547,7 +551,10 @@ class Product extends JobImport
                 }
 
                 /** @var bool $result */
-                $result = $this->entitiesHelper->insertDataFromApi($product, $this->jobExecutor->getCurrentJob()->getCode());
+                $result = $this->entitiesHelper->insertDataFromApi(
+                    $product,
+                    $this->jobExecutor->getCurrentJob()->getCode()
+                );
 
                 if (!$result) {
                     $this->jobExecutor->setMessage('Could not insert Product data in temp table', $this->logger);
@@ -1606,6 +1613,7 @@ class Product extends JobImport
      * @return void
      * @throws LocalizedException
      * @throws Zend_Db_Statement_Exception
+     * @throws Exception
      */
     public function setValues()
     {
@@ -1617,8 +1625,6 @@ class Product extends JobImport
         $attributeScopeMapping = $this->entitiesHelper->getAttributeScopeMapping();
         /** @var array $stores */
         $stores = $this->storeHelper->getAllStores();
-        /** @var string[] $columns */
-        $columns = array_keys($connection->describeTable($tmpTable));
 
         // Format url_key columns
         /** @var string|array $matches */
@@ -1672,8 +1678,22 @@ class Product extends JobImport
         $pKeyColumn = 'a._entity_id';
         /** @var string[] $columnsForStatus */
         $columnsForStatus = ['entity_id' => $pKeyColumn, '_entity_id', '_is_new' => 'a._is_new'];
+        /** @var mixed[] $mappings */
+        $mappings = $this->configHelper->getWebsiteMapping();
         /** @var string[] $columnsForCompleteness */
-        $columnsForCompleteness = ['entity_id' => $pKeyColumn, '_entity_id', 'completenesses' => 'a.completenesses'];
+        $columnsForCompleteness = ['entity_id' => $pKeyColumn, '_entity_id'];
+        /** @var string[] $mapping */
+        foreach ($mappings as $mapping) {
+            /** @var string $filterCompletenesses */
+            $filterCompletenesses = 'a.completenesses_' . $mapping['channel'];
+            if (!in_array($filterCompletenesses, $columnsForCompleteness) && $connection->tableColumnExists(
+                    $tmpTable,
+                    'completenesses_' . $mapping['channel']
+                )) {
+                /** @var string[] $columnsForCompleteness */
+                $columnsForCompleteness['completenesses_' . $mapping['channel']] = $filterCompletenesses;
+            }
+        }
 
         /** @var bool $rowIdExists */
         $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productTable);
@@ -1709,34 +1729,56 @@ class Product extends JobImport
             $completQuery = $connection->query($selectComplet);
             /** @var string $completenessConfig */
             $completenessConfig = $this->configHelper->getEnableSimpleProductsPerWebsite();
+            /** @var string[] $completenesses */
+            $completenesses = [];
             while (($row = $completQuery->fetch())) {
-                /** @var string[] $completenesses */
-                $completenesses = $this->serializer->unserialize($row['completenesses']);
-                /** @var int $status */
-                $status = 1;
-                /** @var string[] $completeness */
-                foreach ($completenesses as $completeness) {
-                    /**
-                     * @var string $local
-                     * @var string $store
-                     */
-                    foreach ($stores as $local => $store) {
-                        if ($local === $completeness['locale'] && $completeness['data'] < $completenessConfig) {
-                            $status = 2;
+                /** @var string[] $mapping */
+                foreach ($mappings as $mapping) {
+                    if ($connection->tableColumnExists(
+                        $tmpTable,
+                        'completenesses_' . $mapping['channel']
+                    )) {
+                        /** @var string $map */
+                        $map = $this->serializer->unserialize($row['completenesses_' . $mapping['channel']]);
+
+                        if (!in_array($map, $completenesses)) {
+                            $completenesses[$mapping['channel']] = $map;
+                        }
+                        /** @var string[] $completeness */
+                        foreach ($completenesses[$mapping['channel']] as $completeness) {
+                            $connection->addColumn(
+                                $tmpTable,
+                                'status-' . $completeness['scope'],
+                                [
+                                    'type'     => 'integer',
+                                    'length'   => 11,
+                                    'default'  => 2,
+                                    'COMMENT'  => ' ',
+                                    'nullable' => false,
+                                ]
+                            );
+                            /** @var int $status */
+                            $status = 1;
+                            if ($completeness['data'] < $completenessConfig) {
+                                $status = 2;
+                            }
+
+                            $valuesToInsert = [
+                                'status-' . $completeness['scope'] => $status,
+                            ];
+
+                            $connection->update(
+                                $tmpTable,
+                                $valuesToInsert,
+                                ['_entity_id = ?' => $row['_entity_id']]
+                            );
                         }
                     }
-                    $valuesToInsert = [
-                        '_status' => $status,
-                    ];
-
-                    $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
                 }
             }
         } else {
             while (($row = $oldStatus->fetch())) {
-                $valuesToInsert = [
-                    '_status' => $row['value'],
-                ];
+                $valuesToInsert = ['_status' => $row['value']];
 
                 $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
             }
@@ -2540,7 +2582,11 @@ class Product extends JobImport
             /** @var Select $select */
             $select = $connection->select()->from(['c' => $entitiesTable], [])->joinInner(
                 ['d' => $tmpTable],
-                sprintf('FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"', $concat, $this->jobExecutor->getCurrentJob()->getCode()),
+                sprintf(
+                    'FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"',
+                    $concat,
+                    $this->jobExecutor->getCurrentJob()->getCode()
+                ),
                 $columsToSelect
             );
 
@@ -3131,7 +3177,7 @@ class Product extends JobImport
                                     ['request_path' => $requestPath, 'metadata' => $metadata],
                                     ['url_rewrite_id = ?' => $rewriteId]
                                 );
-                            } catch (\Exception $e) {
+                            } catch (Exception $e) {
                                 $this->jobExecutor->setAdditionalMessage(
                                     __(
                                         sprintf(
@@ -3461,7 +3507,7 @@ class Product extends JobImport
      * Refresh index
      *
      * @return void
-     * @throws \Exception
+     * @throws Exception
      */
     public function refreshIndex()
     {
