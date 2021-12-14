@@ -1738,6 +1738,10 @@ class Product extends JobImport
                         $tmpTable,
                         'completenesses_' . $mapping['channel']
                     )) {
+                        if (!$row['completenesses_' . $mapping['channel']]) {
+                            continue;
+                        }
+
                         /** @var string $map */
                         $map = $this->serializer->unserialize($row['completenesses_' . $mapping['channel']]);
 
