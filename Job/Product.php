@@ -874,7 +874,9 @@ class Product extends JobImport
             $connection->update(
                 $tmpTable,
                 [
-                    '_type_id' => new Expr("IF($productMappingAttribute IN ($types), $productMappingAttribute, 'simple')"),
+                    '_type_id' => new Expr(
+                        "IF($productMappingAttribute IN ($types), $productMappingAttribute, 'simple')"
+                    ),
                 ]
             );
         }
@@ -1724,6 +1726,10 @@ class Product extends JobImport
             /** @var string $completenessConfig */
             $completenessConfig = $this->configHelper->getEnableSimpleProductsPerWebsite();
             while (($row = $completQuery->fetch())) {
+                if (!$row['completenesses']) {
+                    continue;
+                }
+
                 /** @var string[] $completenesses */
                 $completenesses = $this->jsonSerializer->unserialize($row['completenesses']);
                 /** @var int $status */
