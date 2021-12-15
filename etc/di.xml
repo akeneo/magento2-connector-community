@@ -423,4 +423,13 @@
             <argument name="jobExecutor" xsi:type="object">Akeneo\Connector\Executor\JobExecutor\Proxy</argument>
         </arguments>
     </type>
+
+    <type name="Magento\Config\Model\Config\TypePool">
+        <arguments>
+            <argument name="sensitive" xsi:type="array">
+                <item name="akeneo_connector/akeneo_api/password" xsi:type="string">1</item>
+                <item name="akeneo_connector/akeneo_api/client_secret" xsi:type="string">1</item>
+            </argument>
+        </arguments>
+    </type>
 </config>
