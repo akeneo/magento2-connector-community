@@ -226,12 +226,12 @@ class Product extends Entities
 
                     // Table attribute
                     if (!array_key_exists('currency', $attr) || !array_key_exists('amount', $attr)) {
-                        $table[] = json_encode(
-                            $attr,
+                        $table[] = $attr;
+
+                        $columns[$key] = json_encode(
+                            $table,
                             JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT
                         );
-
-                        $columns[$key] = implode(',', $table);
                     } else { // Price attribute
                         /** @var string $priceKey */
                         $priceKey           = $key . '-' . $attr['currency'];
