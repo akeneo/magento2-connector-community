@@ -161,7 +161,6 @@ class ProductFilters
             $this->searchBuilder = $this->searchBuilderFactory->create();
             $this->addCompletenessFilter();
             $this->addStatusFilter();
-            $this->addFamiliesFilter();
             $this->addUpdatedFilter($jobExecutor);
             $search = $this->searchBuilder->getFilters();
         }
@@ -438,26 +437,5 @@ class ProductFilters
     protected function getLastImportDateFilter($jobExecutor)
     {
         return $jobExecutor->getCurrentJob()->getLastSuccessExecutedDate();
-    }
-
-    /**
-     * Add families filter for Akeneo API
-     *
-     * @return void
-     */
-    protected function addFamiliesFilter()
-    {
-        /** @var mixed $filter */
-        $filter = $this->configHelper->getFamiliesFilter();
-        if (!$filter) {
-            return;
-        }
-
-        /** @var string[] $filter */
-        $filter = explode(',', $filter);
-
-        $this->searchBuilder->addFilter('family', 'NOT IN', $filter);
-
-        return;
     }
 }
