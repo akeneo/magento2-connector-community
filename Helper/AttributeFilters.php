@@ -90,7 +90,7 @@ class AttributeFilters
      *
      * @return mixed[]
      */
-    public function createAttributeTypeFilter($attributeTypes, $isConfig = false): array
+    public function createAttributeTypeFilter($attributeTypes, $isConfig = false)
     {
         /** @var mixed[] $filters */
         $filters = [];
