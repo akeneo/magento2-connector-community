@@ -126,6 +126,12 @@ class Attribute extends Import
      * @var IndexerFactory $indexFactory
      */
     protected $indexFactory;
+    /**
+     * Code of pim table attribute type
+     *
+     * @var string PIM_CATALOG_TABLE
+     */
+    public const PIM_CATALOG_TABLE = 'pim_catalog_table';
 
     /**
      * Attribute constructor
@@ -186,7 +192,10 @@ class Attribute extends Import
         /** @var mixed[] $filters */
         $filters = $this->getFilters();
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->jobExecutor->setAdditionalMessage(
+                __('Path to log file : %1', $this->handler->getFilename()),
+                $this->logger
+            );
             $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
             $this->logger->addDebug(__('Attribute API call Filters : ') . print_r($filters, true));
         }
@@ -278,7 +287,10 @@ class Attribute extends Import
         $localeCode = $this->configHelper->getDefaultLocale();
 
         if (!$connection->tableColumnExists($tmpTable, 'labels-' . $localeCode)) {
-            $this->jobExecutor->setMessage(__('No attributes with label in the admin locale %1 found.', $localeCode), $this->logger);
+            $this->jobExecutor->setMessage(
+                __('No attributes with label in the admin locale %1 found.', $localeCode),
+                $this->logger
+            );
             $this->jobExecutor->afterRun(1);
 
             return;
@@ -363,7 +375,12 @@ class Attribute extends Import
             )
         );
 
-        $this->entitiesHelper->matchEntity('code', 'eav_attribute', 'attribute_id', $this->jobExecutor->getCurrentJob()->getCode());
+        $this->entitiesHelper->matchEntity(
+            'code',
+            'eav_attribute',
+            'attribute_id',
+            $this->jobExecutor->getCurrentJob()->getCode()
+        );
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logImportedEntities($this->logger, true);
         }
@@ -552,10 +569,10 @@ class Attribute extends Import
             /* Retrieve attribute scope */
             /** @var int $global */
             $global = ScopedAttributeInterface::SCOPE_GLOBAL; // Global
-            if ($row['scopable'] == 1) {
+            if ($row['scopable'] === 1) {
                 $global = ScopedAttributeInterface::SCOPE_WEBSITE; // Website
             }
-            if ($row['localizable'] == 1) {
+            if ($row['localizable'] === 1 || $row['type'] === self::PIM_CATALOG_TABLE) {
                 $global = ScopedAttributeInterface::SCOPE_STORE; // Store View
             }
             /** @var array $data */
