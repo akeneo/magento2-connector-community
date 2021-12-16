@@ -21,10 +21,8 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Indexer\IndexerInterface;
 use Magento\Indexer\Model\IndexerFactory;
-use Akeneo\Connector\Job\Import;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Interface;
 
@@ -186,7 +184,10 @@ class Option extends Import
     public function createTable()
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->jobExecutor->setAdditionalMessage(
+                __('Path to log file : %1', $this->handler->getFilename()),
+                $this->logger
+            );
             $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
         }
         /** @var PageInterface $attributes */
@@ -195,7 +196,7 @@ class Option extends Import
         $hasOptions = false;
         /** @var array $attribute */
         foreach ($attributes as $attribute) {
-            if ($attribute['type'] == 'pim_catalog_multiselect' || $attribute['type'] == 'pim_catalog_simpleselect') {
+            if ($attribute['type'] === 'pim_catalog_multiselect' || $attribute['type'] === 'pim_catalog_simpleselect') {
                 if (!$this->akeneoClient) {
                     $this->akeneoClient = $this->jobExecutor->getAkeneoClient();
                 }
@@ -247,7 +248,7 @@ class Option extends Import
         $lines = 0;
         /** @var array $attribute */
         foreach ($attributes as $attribute) {
-            if ($attribute['type'] == 'pim_catalog_multiselect' || $attribute['type'] == 'pim_catalog_simpleselect') {
+            if ($attribute['type'] === 'pim_catalog_multiselect' || $attribute['type'] === 'pim_catalog_simpleselect') {
                 $lines += $this->processAttributeOption($attribute['code'], $paginationSize);
             }
         }
@@ -285,7 +286,8 @@ class Option extends Import
                             $row['code'],
                             $row['attribute'],
                             $localeCode
-                        ), $this->logger
+                        ),
+                        $this->logger
                     );
                 }
             }
@@ -323,7 +325,13 @@ class Option extends Import
      */
     public function matchEntities()
     {
-        $this->optionHelper->matchEntity('code', 'eav_attribute_option', 'option_id', $this->jobExecutor->getCurrentJob()->getCode(), 'attribute');
+        $this->optionHelper->matchEntity(
+            'code',
+            'eav_attribute_option',
+            'option_id',
+            $this->jobExecutor->getCurrentJob()->getCode(),
+            'attribute'
+        );
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logImportedEntities($this->logger, true);
         }
@@ -398,17 +406,17 @@ class Option extends Import
 
                 /** @var Select $options */
                 $options = $connection->select()->from(
-                        ['a' => $tmpTable],
-                        [
-                            'option_id' => '_entity_id',
-                            'store_id'  => new Expr($store['store_id']),
-                            'value'     => $value,
-                        ]
-                    )->joinInner(
-                        ['b' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
-                        'a.attribute = b.code AND b.import = "attribute"',
-                        []
-                    );
+                    ['a' => $tmpTable],
+                    [
+                        'option_id' => '_entity_id',
+                        'store_id'  => new Expr($store['store_id']),
+                        'value'     => $value,
+                    ]
+                )->joinInner(
+                    ['b' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
+                    'a.attribute = b.code AND b.import = "attribute"',
+                    []
+                );
                 $connection->query(
                     $connection->insertFromSelect(
                         $options,
