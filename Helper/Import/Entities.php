@@ -302,11 +302,16 @@ class Entities
                     if (!is_numeric($local)) {
                         $data = $v;
                         if (is_array($data)) {
-                            $data = join(',', $data);
+                            $data = implode(',', $data);
                         }
                         $columns[$key . '-' . $local] = $data;
                     } else {
-                        $columns[$key] = join(',', $value);
+                        if (isset($value[0]['code'])) {
+                            // Skip attribute of table attributes to manage table attribute
+                            continue;
+                        }
+
+                        $columns[$key] = implode(',', $value);
                     }
                 }
             }

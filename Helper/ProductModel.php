@@ -10,6 +10,7 @@ use Akeneo\Connector\Helper\Import\Entities as EntitiesHelper;
 use Akeneo\Connector\Helper\Import\Product;
 use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
+use Akeneo\Connector\Model\Source\Attribute\Tables as AttributeTables;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Magento\Eav\Model\Config;
@@ -75,6 +76,12 @@ class ProductModel
      * @var AttributeMetrics $attributeMetrics
      */
     protected $attributeMetrics;
+    /**
+     * This variable contains an $attributeTables
+     *
+     * @var AttributeTables $attributeTables
+     */
+    protected $attributeTables;
 
     /**
      * ProductModel constructor
@@ -87,6 +94,7 @@ class ProductModel
      * @param Json             $jsonSerializer
      * @param EntitiesHelper   $entities
      * @param AttributeMetrics $attributeMetrics
+     * @param AttributeTables                 $attributeTables
      */
     public function __construct(
         Product $entitiesHelper,
@@ -96,7 +104,8 @@ class ProductModel
         StoreHelper $storeHelper,
         Json $jsonSerializer,
         Entities $entities,
-        AttributeMetrics $attributeMetrics
+        AttributeMetrics $attributeMetrics,
+        AttributeTables $attributeTables
     ) {
         $this->entitiesHelper   = $entitiesHelper;
         $this->configHelper     = $configHelper;
@@ -106,6 +115,7 @@ class ProductModel
         $this->storeHelper      = $storeHelper;
         $this->jsonSerializer   = $jsonSerializer;
         $this->attributeMetrics = $attributeMetrics;
+        $this->attributeTables         = $attributeTables;
     }
 
     /**
@@ -174,6 +184,10 @@ class ProductModel
 
         /** @var string[] $attributeMetrics */
         $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
+        /** @var string[] $attributeTables */
+        $attributeTables = $this->attributeTables->getTablesAttributes();
+        /** @var string[] $localesAvailable */
+        $localesAvailable = $this->storeHelper->getMappedWebsitesStoreLangs();
         /** @var mixed[] $metricsConcatSettings */
         $metricsConcatSettings = $this->configHelper->getMetricsColumns(null, true);
         /** @var string[] $metricSymbols */
@@ -201,6 +215,87 @@ class ProductModel
              * @var array $productModel
              */
             foreach ($productModels as $productModel) {
+
+                /**
+                 * @var string[] $attributeTable
+                 */
+                foreach ($attributeTables as $attributeTable) {
+                    if (!isset($productModel['values'][$attributeTable['code']])) {
+                        continue;
+                    }
+                    /** @var string[][][] $tableConfiguration */
+                    $tableConfiguration = $attributeTable['table_configuration'];
+                    /** @var bool $isTableLocalisable */
+                    $isTableLocalisable = $attributeTable['localizable'];
+                    /** @var bool $isTableScopable */
+                    $isTableScopable = $attributeTable['scopable'];
+
+                    if (!$isTableLocalisable) {
+                        /** @var string[] $toInsert */
+                        $toInsert = [];
+                        if (!$isTableScopable) {
+                            /** @var string[] $globalData */
+                            $globalData = $productModel['values'][$attributeTable['code']][0];
+                            /** @var int $i */
+                            $i = 0;
+                            /** @var string[] $localeAvailable */
+                            foreach ($localesAvailable as $localeAvailable) {
+                                $toInsert[$i] = $globalData;
+                                $toInsert[$i]['locale'] = $localeAvailable;
+                                $i++;
+                            }
+                        } else {
+                            foreach ($productModel['values'][$attributeTable['code']] as $tableValuePerScope) {
+                                /** @var int $i */
+                                $i = 0;
+                                /** @var string[] $localesPerChannel */
+                                $localesPerChannel = $this->storeHelper->getChannelStoreLangs($tableValuePerScope['scope']);
+                                /** @var string[] $localePerChannel */
+                                foreach ($localesPerChannel as $localePerChannel) {
+                                    $toInsert[$i] = $tableValuePerScope;
+                                    $toInsert[$i]['locale'] = $localePerChannel;
+                                    $i++;
+                                }
+                            }
+                        }
+                        $productModel['values'][$attributeTable['code']] = $toInsert;
+                    }
+
+                    /** @var string[][][] $table */
+                    foreach ($productModel['values'][$attributeTable['code']] as $key => $table) {
+                        /** @var string|null $locale */
+                        $locale = $table['locale'];
+                        /** @var int $i */
+                        $i = 0;
+                        /** @var string[] $data */
+                        foreach ($table['data'] as $data) {
+                            /** @var string $label */
+                            foreach ($data as $label => $newData) {
+                                /** @var string[] $config */
+                                foreach ($tableConfiguration as $config) {
+                                    if (isset($locale, $config['labels'][$locale]) && $locale !== null && ($config['code'] === $label)) {
+                                        /** @var string $newLabel */
+                                        $newLabel = $config['labels'][$locale];
+                                        if (isset($table['data'][$i][$label], $newLabel)) {
+                                            $table['data'][$i][$label] = [$newLabel => $table['data'][$i][$label]];
+                                            if (isset($config['options'])) {
+                                                /** @var string[][] $option */
+                                                foreach ($config['options'] as $option) {
+                                                    if ($option['code'] === $newData || $option['code'] === $label) {
+                                                        $table['data'][$i][$label] = [$newLabel => $option['labels'][$locale]];
+                                                    }
+                                                }
+                                            }
+                                            $productModel['values'][$attributeTable['code']][$key]['data'] = $table['data'];
+                                        }
+                                    }
+                                }
+                            }
+                            $i++;
+                        }
+                    }
+                }
+
                 /** @var string $attributeMetric */
                 foreach ($attributeMetrics as $attributeMetric) {
                     if (!isset($productModel['values'][$attributeMetric])) {
