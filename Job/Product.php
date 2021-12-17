@@ -1844,6 +1844,9 @@ class Product extends JobImport
             }
         }
 
+        /** @var string[] $columns */
+        $columns = array_keys($connection->describeTable($tmpTable));
+
         /** @var string $column */
         foreach ($columns as $column) {
             /** @var string[] $columnParts */
