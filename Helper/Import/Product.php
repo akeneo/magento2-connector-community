@@ -323,9 +323,10 @@ class Product extends Entities
 
         /** @var string[] $finalProducts */
         $finalProducts = [];
+
         /**
-         * @var array  $values
-         * @var string $product
+         * @var array    $values
+         * @var string[] $product
          */
         foreach ($values as $product) {
             if (empty($product)) {
@@ -337,7 +338,7 @@ class Product extends Entities
         }
 
         if (isset($finalProducts)) {
-            $completeness['completenesses'] = $this->jsonSerializer->serialize($finalProducts);
+            $completeness['completenesses_' . $product['scope']] = $this->jsonSerializer->serialize($finalProducts);
         }
 
         if (empty($completeness)) {
