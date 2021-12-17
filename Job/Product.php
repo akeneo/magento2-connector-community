@@ -1848,7 +1848,7 @@ class Product extends JobImport
                         }
 
                         /** @var string $map */
-                        $map = $this->serializer->unserialize($row['completenesses_' . $mapping['channel']]);
+                        $map = $this->jsonSerializer->unserialize($row['completenesses_' . $mapping['channel']]);
 
                         if (!in_array($map, $completenesses)) {
                             $completenesses[$mapping['channel']] = $map;

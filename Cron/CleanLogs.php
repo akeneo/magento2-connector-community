@@ -100,7 +100,7 @@ class CleanLogs
         $logTable = $this->entitiesHelper->getTable(LogInterface::AKENEO_CONNECTOR_IMPORT_LOG);
 
         /** @var Select $select */
-        $select = $connection->select()->from($logTable, LogInterface::IDENTIFIER)->where('created_at >= ?', $date);
+        $select = $connection->select()->from($logTable, LogInterface::IDENTIFIER)->where('created_at <= ?', $date);
 
         /** @var Mysql $query */
         $query = $connection->query($select);
