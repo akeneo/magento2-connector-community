@@ -19,6 +19,7 @@ use Akeneo\Connector\Job\Option as JobOption;
 use Akeneo\Connector\Logger\Handler\ProductHandler;
 use Akeneo\Connector\Logger\ProductLogger;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
+use Akeneo\Connector\Model\Source\Attribute\Tables as AttributeTables;
 use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Connector\Model\Source\Filters\Mode;
 use Akeneo\Connector\Model\Source\Filters\ModelCompleteness;
@@ -31,7 +32,6 @@ use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ProductLink\Link as ProductLink;
-use Magento\Catalog\Model\Product\Type;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Eav\Model\Config as EavConfig;
@@ -236,6 +236,12 @@ class Product extends JobImport
      */
     protected $attributeMetrics;
     /**
+     * This variable contains an $attributeTables
+     *
+     * @var AttributeTables $attributeTables
+     */
+    protected $attributeTables;
+    /**
      * This variable contains an StoreManagerInterface
      *
      * @var StoreManagerInterface $storeManager
@@ -290,6 +296,7 @@ class Product extends JobImport
      * @param Entities                $entities
      * @param Option                  $jobOption
      * @param AttributeMetrics        $attributeMetrics
+     * @param AttributeTables         $attributeTables
      * @param StoreManagerInterface   $storeManager
      * @param IndexerFactory          $indexFactory
      * @param JobExecutorFactory      $jobExecutorFactory
@@ -317,6 +324,7 @@ class Product extends JobImport
         Entities $entities,
         JobOption $jobOption,
         AttributeMetrics $attributeMetrics,
+        AttributeTables $attributeTables,
         StoreManagerInterface $storeManager,
         IndexerFactory $indexFactory,
         JobExecutorFactory $jobExecutorFactory,
@@ -339,6 +347,7 @@ class Product extends JobImport
         $this->jobOption               = $jobOption;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
         $this->attributeMetrics        = $attributeMetrics;
+        $this->attributeTables         = $attributeTables;
         $this->storeManager            = $storeManager;
         $this->entities                = $entities;
         $this->indexFactory            = $indexFactory;
@@ -484,8 +493,12 @@ class Product extends JobImport
         $metricSymbols = $this->getMetricsSymbols();
         /** @var string[] $attributeMetrics */
         $attributeMetrics = $this->attributeMetrics->getMetricsAttributes();
+        /** @var string[] $attributeTables */
+        $attributeTables = $this->attributeTables->getTablesAttributes();
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
+        /** @var string[] $localesAvailable */
+        $localesAvailable = $this->storeHelper->getMappedWebsitesStoreLangs();
 
         if ($connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
             return;
@@ -503,6 +516,88 @@ class Product extends JobImport
              * @var mixed[] $product
              */
             foreach ($products as $product) {
+                /**
+                 * @var string[] $attributeTable
+                 */
+                foreach ($attributeTables as $attributeTable) {
+                    if (!isset($product['values'][$attributeTable['code']])) {
+                        continue;
+                    }
+                    /** @var string[][][] $tableConfiguration */
+                    $tableConfiguration = $attributeTable['table_configuration'];
+                    /** @var bool $isTableLocalisable */
+                    $isTableLocalisable = $attributeTable['localizable'];
+                    /** @var bool $isTableScopable */
+                    $isTableScopable = $attributeTable['scopable'];
+
+                    if (!$isTableLocalisable) {
+                        /** @var string[][] $toInsert */
+                        $toInsert = [];
+                        if (!$isTableScopable) {
+                            /** @var string[] $globalData */
+                            $globalData = $product['values'][$attributeTable['code']][0];
+                            /** @var int $i */
+                            $i = 0;
+                            /** @var string[] $localeAvailable */
+                            foreach ($localesAvailable as $localeAvailable) {
+                                $toInsert[$i]           = $globalData;
+                                $toInsert[$i]['locale'] = $localeAvailable;
+                                $i++;
+                            }
+                        } else {
+                            foreach ($product['values'][$attributeTable['code']] as $tableValuePerScope) {
+                                /** @var int $i */
+                                $i = 0;
+                                /** @var string[] $localesPerChannel */
+                                $localesPerChannel = $this->storeHelper->getChannelStoreLangs(
+                                    $tableValuePerScope['scope']
+                                );
+                                /** @var string[] $localePerChannel */
+                                foreach ($localesPerChannel as $localePerChannel) {
+                                    $toInsert[$i]           = $tableValuePerScope;
+                                    $toInsert[$i]['locale'] = $localePerChannel;
+                                    $i++;
+                                }
+                            }
+                        }
+                        $product['values'][$attributeTable['code']] = $toInsert;
+                    }
+
+                    /** @var string[][][] $table */
+                    foreach ($product['values'][$attributeTable['code']] as $key => $table) {
+                        /** @var string|null $locale */
+                        $locale = $table['locale'];
+                        /** @var int $i */
+                        $i = 0;
+                        /** @var string[] $data */
+                        foreach ($table['data'] as $data) {
+                            /** @var string $label */
+                            foreach ($data as $label => $newData) {
+                                /** @var string[] $config */
+                                foreach ($tableConfiguration as $config) {
+                                    if (isset($locale, $config['labels'][$locale]) && $locale !== null && ($config['code'] === $label)) {
+                                        /** @var string $newLabel */
+                                        $newLabel = $config['labels'][$locale];
+                                        if (isset($table['data'][$i][$label], $newLabel)) {
+                                            $table['data'][$i][$label] = [$newLabel => $table['data'][$i][$label]];
+                                            if (isset($config['options'])) {
+                                                /** @var string[][] $option */
+                                                foreach ($config['options'] as $option) {
+                                                    if ($option['code'] === $newData || $option['code'] === $label) {
+                                                        $table['data'][$i][$label] = [$newLabel => $option['labels'][$locale]];
+                                                    }
+                                                }
+                                            }
+                                            $product['values'][$attributeTable['code']][$key]['data'] = $table['data'];
+                                        }
+                                    }
+                                }
+                            }
+                            $i++;
+                        }
+                    }
+                }
+
                 /**
                  * @var string $attributeMetric
                  */
@@ -657,7 +752,7 @@ class Product extends JobImport
     }
 
     /**
-     * Import Family Variant : update temporrary product model table with the correct axis
+     * Import Family Variant : update temporary product model table with the correct axis
      *
      * @return void
      */
@@ -2958,7 +3053,9 @@ class Product extends JobImport
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $stores */
         $stores = array_merge(
-            $this->storeHelper->getStores(['lang']) // en_US
+            $this->storeHelper->getStores(['lang']), // en_US
+            $this->storeHelper->getStores(['lang', 'channel_code']), // en_US-channel
+            $this->storeHelper->getStores(['channel_code']) // channel
         );
 
         /** @var bool $isUrlMapped */
@@ -2967,14 +3064,16 @@ class Product extends JobImport
         foreach ($stores as $local => $affected) {
             if ($connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
                 $isUrlMapped = true;
-                $stores      = array_merge(
-                    $this->storeHelper->getStores(['lang']), // en_US
-                    $this->storeHelper->getStores(['lang', 'channel_code']), // en_US-channel
-                    $this->storeHelper->getStores(['channel_code']) // channel
-                );
 
                 break;
             }
+        }
+
+        // Reset stores variable to generate a column per store when nothing is mapped or url_key is global
+        if (!$isUrlMapped) {
+            $stores = array_merge(
+                $this->storeHelper->getStores(['lang']) // en_US
+            );
         }
 
         /**

@@ -277,3 +277,10 @@
 
 ### Version 102.1.1 :
 * Fix Product job execution per family not continuing after a job error occurs in a specific family
+
+### Version 102.1.2 :
+* Fix URL rewrite generation when mapping a scopable attribute to the url_key attribute
+* Fix Product job execution per family not continuing after a job error occurs in a specific family
+
+### Version 102.1.4 :
+* Add compatibility with the new Akeneo table attribute type (https://help.akeneo.com/magento2-connector/articles/what-data.html#attribute-types)
