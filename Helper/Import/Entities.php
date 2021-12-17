@@ -842,7 +842,7 @@ class Entities
     }
 
     /**
-     * Format media filename, removing hash and stoppig at 90 characters
+     * Format media filename, removing hash and stopping at 200 characters
      *
      * @param string $filename
      *
@@ -864,7 +864,7 @@ class Entities
         $filename  = implode('_', $filename);
         // Form the final file name
         /** @var string $shortName */
-        $shortName = substr($filename, 0, 79);
+        $shortName = substr($filename, 0, 189);
         /** @var string $finalName */
         $finalName = $shortName . '_' . $shortHash . '.' . $extension;
 
