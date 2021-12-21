@@ -109,7 +109,7 @@ class CleanLogs
         $logRecords = $query->fetchAll();
 
         /** @var string[] $value */
-        foreach ($logRecords as $key => $value) {
+        foreach ($logRecords as $value) {
             $connection->delete(
                 LogInterface::AKENEO_CONNECTOR_IMPORT_LOG,
                 ['identifier = ?' => $value[LogInterface::IDENTIFIER]]
