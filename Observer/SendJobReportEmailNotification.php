@@ -158,7 +158,7 @@ class SendJobReportEmailNotification implements ObserverInterface
         /** @var JobInterface $currentJob */
         $currentJob = $executor->getCurrentJob();
         /** @var string $jobStatus */
-        $jobStatus = $executor->getCurrentJobClass()->getStatusLabel();
+        $jobStatus = $currentJob->getStatusLabel();
         /** @var int $logId */
         $logId = $log->getId();
         /** @var string $link */
