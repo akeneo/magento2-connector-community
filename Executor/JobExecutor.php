@@ -317,7 +317,9 @@ class JobExecutor implements JobExecutorInterface
                 $this->run($family);
                 $this->setIdentifier(null);
             }
-            $this->afterRun();
+            if ($this->continue) {
+                $this->afterRun();
+            }
 
             return true;
         }
@@ -325,7 +327,9 @@ class JobExecutor implements JobExecutorInterface
         // Run the import normally
         $this->beforeRun();
         $this->run();
-        $this->afterRun();
+        if ($this->continue) {
+            $this->afterRun();
+        }
 
         return true;
     }
