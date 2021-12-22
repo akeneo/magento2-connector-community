@@ -284,3 +284,6 @@
 
 ### Version 102.1.4 :
 * Add compatibility with the new Akeneo table attribute type (https://help.akeneo.com/magento2-connector/articles/what-data.html#attribute-types)
+
+### Version 102.1.5 :
+* Remove "NOT IN" family filter in API call during product job when using Standard filter
