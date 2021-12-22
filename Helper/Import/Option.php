@@ -2,13 +2,12 @@
 
 namespace Akeneo\Connector\Helper\Import;
 
-use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
-use Magento\Catalog\Model\Product as BaseProductModel;
-use Magento\Framework\App\DeploymentConfig;
-use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
+use Magento\Framework\Exception\LocalizedException;
 use Zend_Db_Expr as Expr;
+use Zend_Db_Statement_Exception;
 
 /**
  * Class Option
@@ -16,29 +15,12 @@ use Zend_Db_Expr as Expr;
  * @category  Class
  * @package   Akeneo\Connector\Helper\Import
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Option extends Entities
 {
-    /**
-     * Option constructor
-     *
-     * @param ResourceConnection $connection
-     * @param DeploymentConfig   $deploymentConfig
-     * @param BaseProductModel   $product
-     * @param ConfigHelper       $configHelper
-     */
-    public function __construct(
-        ResourceConnection $connection,
-        DeploymentConfig $deploymentConfig,
-        BaseProductModel $product,
-        ConfigHelper $configHelper
-    ) {
-        parent::__construct($connection, $deploymentConfig, $product, $configHelper);
-    }
-
     /**
      * Match Magento Id with code
      *
@@ -48,14 +30,15 @@ class Option extends Entities
      * @param string $import
      * @param string $prefix
      *
-     * @return \Akeneo\Connector\Helper\Import\Entities
-     * @throws \Exception
+     * @return Entities
+     * @throws LocalizedException
+     * @throws Zend_Db_Statement_Exception
      */
     public function matchEntity($pimKey, $entityTable, $entityKey, $import, $prefix = null)
     {
         /** @var string $localeCode */
         $localeCode = $this->configHelper->getDefaultLocale();
-        /** @var \Magento\Framework\DB\Adapter\AdapterInterface $connection */
+        /** @var AdapterInterface $connection */
         $connection = $this->connection;
         /** @var string $tableName */
         $tableName = $this->getTableName($import);
@@ -82,8 +65,7 @@ class Option extends Entities
             $entityKey = $this->getColumnIdentifier($entityTable);
         }
 
-        /* Connect existing Magento options to new Akeneo items */
-        // Get existing entities from Akeneo table
+        /* Connect existing Magento options to new Akeneo items */ // Get existing entities from Akeneo table
         /** @var Select $select */
         $select = $connection->select()->from($akeneoConnectorTable, ['entity_id' => 'entity_id'])->where(
             'import = ?',
