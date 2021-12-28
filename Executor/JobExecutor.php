@@ -307,6 +307,9 @@ class JobExecutor implements JobExecutorInterface
             }
 
             $this->beforeRun();
+
+            /** @var bool $isError */
+            $isError = null;
             /** @var string $family */
             foreach ($productFamiliesToImport as $family) {
                 $this->eventManager->dispatch(
@@ -316,9 +319,13 @@ class JobExecutor implements JobExecutorInterface
 
                 $this->run($family);
                 $this->setIdentifier(null);
+
+                if ($this->currentJob->getStatus() === JobInterface::JOB_ERROR) {
+                    $isError = true;
+                }
             }
             if ($this->continue) {
-                $this->afterRun();
+                $this->afterRun($isError);
             }
 
             return true;
