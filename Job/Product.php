@@ -1921,53 +1921,50 @@ class Product extends JobImport
         // Update existing configurable status
         /** @var Zend_Db_Statement_Pdo $oldConfigurableStatus */
         $oldConfigurableStatus = $connection->query($select);
-        if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
-            $selectComplet = $connection->select()->from(['a' => $tmpTable], $columnsForCompleteness)->where(
-                'a._type_id = ?',
-                'configurable'
-            );
-            /** @var Zend_Db_Statement_Pdo $completQuery */
-            $completQuery = $connection->query($selectComplet);
-            while (($row = $completQuery->fetch())) {
-                /** @var string[] $mapping */
+        while (($row = $oldConfigurableStatus->fetch())) {
+            /** @var string $status */
+            $status = $row['value'];
+            // Update existing configurable status scopable
+            if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
                 foreach ($mappings as $mapping) {
                     if ($connection->tableColumnExists(
                         $tmpTable,
-                        'completenesses_' . $mapping['channel']
+                        'status-' . $mapping['channel']
                     )) {
-                        /** @var string $status */
-                        $status = $this->configHelper->getDefaultConfigurableProductStatus();
-
-                        /** @var string[] $valuesToInsert */
-                        $valuesToInsert = [
-                            'status-' . $mapping['channel'] => $status,
-                        ];
-
                         $connection->update(
                             $tmpTable,
-                            $valuesToInsert,
+                            ['status-' . $mapping['channel'] => $status],
                             ['_entity_id = ?' => $row['_entity_id']]
                         );
                     }
                 }
             }
-        } else {
-            while (($row = $oldConfigurableStatus->fetch())) {
-                /** @var string $status */
-                $status         = $row['value'];
-                $valuesToInsert = [
-                    '_status' => $status,
-                ];
-                $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
-            }
+            // Update existing configurable status
+            $valuesToInsert = [
+                '_status' => $status,
+            ];
+            $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
         }
 
         /** @var string $status */
         $status = $this->configHelper->getProductActivation();
         if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
-            // Update new configurable status
+            // Update new configurable status scopable
             $status = $this->configHelper->getDefaultConfigurableProductStatus();
+            foreach ($mappings as $mapping) {
+                if ($connection->tableColumnExists(
+                    $tmpTable,
+                    'status-' . $mapping['channel']
+                )) {
+                    $connection->update(
+                        $tmpTable,
+                        ['status-' . $mapping['channel'] => $status],
+                        ['_is_new = ?' => 1, '_type_id = ?' => 'configurable']
+                    );
+                }
+            }
         }
+        // Update new configurable status
         $connection->update(
             $tmpTable,
             ['_status' => $status],
