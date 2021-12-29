@@ -598,6 +598,7 @@ For example :<br/>
                 <field id="enable_clean_logs" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Enable Job Logs Cleaning</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>By default, the logs older than the number of days configured will be cleaned every day at 2AM</comment>
                 </field>
                 <field id="clean_logs" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Clear job logs after X days</label>
