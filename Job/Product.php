@@ -1829,7 +1829,10 @@ class Product extends JobImport
         $status = $this->configHelper->getProductActivation();
         if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
             /** @var Select $selectComplet */
-            $selectComplet = $connection->select()->from(['a' => $tmpTable], $columnsForCompleteness);
+            $selectComplet = $connection->select()->from(['a' => $tmpTable], $columnsForCompleteness)->where(
+                'a._type_id = ?',
+                'simple'
+            );
             /** @var Zend_Db_Statement_Pdo $completQuery */
             $completQuery = $connection->query($selectComplet);
             /** @var string $completenessConfig */
@@ -1872,6 +1875,7 @@ class Product extends JobImport
                                 $status = 2;
                             }
 
+                            /** @var string[] $valuesToInsert */
                             $valuesToInsert = [
                                 'status-' . $completeness['scope'] => $status,
                             ];
@@ -1917,16 +1921,45 @@ class Product extends JobImport
         // Update existing configurable status
         /** @var Zend_Db_Statement_Pdo $oldConfigurableStatus */
         $oldConfigurableStatus = $connection->query($select);
-        while (($row = $oldConfigurableStatus->fetch())) {
-            /** @var string $status */
-            $status = $row['value'];
-            if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
-                $status = $this->configHelper->getDefaultConfigurableProductStatus();
+        if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
+            $selectComplet = $connection->select()->from(['a' => $tmpTable], $columnsForCompleteness)->where(
+                'a._type_id = ?',
+                'configurable'
+            );
+            /** @var Zend_Db_Statement_Pdo $completQuery */
+            $completQuery = $connection->query($selectComplet);
+            while (($row = $completQuery->fetch())) {
+                /** @var string[] $mapping */
+                foreach ($mappings as $mapping) {
+                    if ($connection->tableColumnExists(
+                        $tmpTable,
+                        'completenesses_' . $mapping['channel']
+                    )) {
+                        /** @var string $status */
+                        $status = $this->configHelper->getDefaultConfigurableProductStatus();
+
+                        /** @var string[] $valuesToInsert */
+                        $valuesToInsert = [
+                            'status-' . $mapping['channel'] => $status,
+                        ];
+
+                        $connection->update(
+                            $tmpTable,
+                            $valuesToInsert,
+                            ['_entity_id = ?' => $row['_entity_id']]
+                        );
+                    }
+                }
             }
-            $valuesToInsert = [
-                '_status' => $status,
-            ];
-            $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
+        } else {
+            while (($row = $oldConfigurableStatus->fetch())) {
+                /** @var string $status */
+                $status         = $row['value'];
+                $valuesToInsert = [
+                    '_status' => $status,
+                ];
+                $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
+            }
         }
 
         /** @var string $status */
