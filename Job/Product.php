@@ -1918,7 +1918,6 @@ class Product extends JobImport
             $statusAttributeId
         );
 
-        // Update existing configurable status
         /** @var Zend_Db_Statement_Pdo $oldConfigurableStatus */
         $oldConfigurableStatus = $connection->query($select);
         while (($row = $oldConfigurableStatus->fetch())) {
