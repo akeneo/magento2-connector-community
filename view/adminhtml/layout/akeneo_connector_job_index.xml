@@ -40,6 +40,9 @@
                     </arguments>
                 </block>
                 <block class="Magento\Backend\Block\Widget\Grid\ColumnSet" name="adminhtml.akeneo_connector.job.container.container.grid.columnSet" as="grid.columnSet">
+                    <arguments>
+                        <argument name="filter_visibility" xsi:type="string">0</argument>
+                    </arguments>
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="name">
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Name</argument>
@@ -87,7 +90,6 @@
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Actions</argument>
                             <argument name="sortable" xsi:type="string">0</argument>
-                            <argument name="filter" xsi:type="string">0</argument>
                             <argument name="renderer" xsi:type="string">Akeneo\Connector\Block\Adminhtml\Job\JobActions</argument>
                         </arguments>
                     </block>
