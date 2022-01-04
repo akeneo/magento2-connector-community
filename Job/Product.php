@@ -1798,6 +1798,19 @@ class Product extends JobImport
                 /** @var string[] $columnsForCompleteness */
                 $columnsForCompleteness['completenesses_' . $mapping['channel']] = $filterCompletenesses;
             }
+            if ($this->configHelper->getProductStatusMode() === StatusMode::ATTRIBUTE_PRODUCT_MAPPING) {
+                $connection->addColumn(
+                    $tmpTable,
+                    'status-' . $mapping['channel'],
+                    [
+                        'type'     => 'integer',
+                        'length'   => 11,
+                        'default'  => 2,
+                        'COMMENT'  => ' ',
+                        'nullable' => false,
+                    ]
+                );
+            }
         }
 
         /** @var bool $rowIdExists */
@@ -1889,6 +1902,107 @@ class Product extends JobImport
                     }
                 }
             }
+        } else if ($this->configHelper->getProductStatusMode() === StatusMode::ATTRIBUTE_PRODUCT_MAPPING) {
+            /** @var string $attributeCodeSimple */
+            $attributeCodeSimple = strtolower($this->configHelper->getAttributeCodeForSimpleProductStatuses());
+            if (!empty($attributeCodeSimple)) {
+                try {
+                    /** @var string[] $attributeSimple */
+                    $attributeSimple = $this->akeneoClient->getAttributeApi()->get($attributeCodeSimple);
+                    if (!isset($attributeSimple['code']) || $attributeSimple['type'] !== 'pim_catalog_boolean' || $attributeSimple['localizable']) {
+                        $this->jobExecutor->setAdditionalMessage(
+                            __(
+                                'Akeneo Attribute code for simple product statuses is not type YES/NO or is localizable , only scopable or global'
+                            ),
+                            $this->logger
+                        );
+                        /** @var int $status */
+                        $status = 2;
+                    } else {
+                        /** @var string[] $pKeyColumn */
+                        $pKeyColumn = 'a._entity_id';
+                        /** @var string[] $columnsForMapping */
+                        $columnsForMapping = ['entity_id' => $pKeyColumn, '_entity_id'];
+                        /** @var string[] $mapping */
+                        foreach ($mappings as $mapping) {
+                            /** @var string[] $attributeSimple */
+                            if ($attributeSimple['scopable']) {
+                                /** @var string $filterMapping */
+                                $filterMapping = 'a.' . $attributeCodeSimple . '-' . $mapping['channel'];
+                                if (!in_array($filterMapping, $columnsForMapping) && $connection->tableColumnExists(
+                                        $tmpTable,
+                                        $attributeCodeSimple . '-' . $mapping['channel']
+                                    )) {
+                                    $columnsForMapping[$attributeCodeSimple . '-' . $mapping['channel']] = $filterMapping;
+                                }
+                            } else {
+                                /** @var string $filterMapping */
+                                $filterMapping = 'a.' . $attributeCodeSimple;
+                                if (!in_array($filterMapping, $columnsForMapping) && $connection->tableColumnExists(
+                                        $tmpTable,
+                                        $attributeCodeSimple
+                                    )) {
+                                    /** @var string[] $filterMapping */
+                                    $columnsForMapping[$attributeCodeSimple] = $filterMapping;
+                                }
+                            }
+                        }
+
+                        /** @var Select $selectSimple */
+                        $selectSimple = $connection->select()->from(['a' => $tmpTable], $columnsForMapping)->where(
+                            'a._type_id = ?',
+                            'simple'
+                        );
+
+                        /** @var Zend_Db_Statement_Pdo $simpleQuery */
+                        $simpleQuery = $connection->query($selectSimple);
+                        while (($row = $simpleQuery->fetch())) {
+                            /** @var string[] $mapping */
+                            foreach ($mappings as $mapping) {
+                                /** @var string $attributeCodeSimpleScopable */
+                                $attributeCodeSimpleScopable = $attributeCodeSimple . '-' . $mapping['channel'];
+                                if ($connection->tableColumnExists(
+                                        $tmpTable,
+                                        $attributeCodeSimpleScopable
+                                    ) || $connection->tableColumnExists(
+                                        $tmpTable,
+                                        $attributeCodeSimple
+                                    )) {
+
+                                    /** @var int $status */
+                                    $status = 2;
+                                    if ((isset($row[$attributeCodeSimple]) && $row[$attributeCodeSimple]) || (isset($row[$attributeCodeSimpleScopable]) && $row[$attributeCodeSimpleScopable])) {
+                                        $status = 1;
+                                    }
+
+                                    /** @var mixed[] $valuesToInsert */
+                                    $valuesToInsert = ['status-' . $mapping['channel'] => $status];
+
+                                    $connection->update(
+                                        $tmpTable,
+                                        $valuesToInsert,
+                                        ['_entity_id = ?' => $row['_entity_id']]
+                                    );
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception $exception) {
+                    $this->jobExecutor->setAdditionalMessage(
+                        __('Akeneo Attribute code is not valid for Simple product statuses'),
+                        $this->logger
+                    );
+                    /** @var int $status */
+                    $status = 2;
+                }
+            } else {
+                $this->jobExecutor->setAdditionalMessage(
+                    __('Akeneo Attribute code for Simple product statuses is empty'),
+                    $this->logger
+                );
+                /** @var int $status */
+                $status = 2;
+            }
         } else {
             while (($row = $oldStatus->fetch())) {
                 $valuesToInsert = ['_status' => $row['value']];
@@ -1920,6 +2034,122 @@ class Product extends JobImport
 
         /** @var Zend_Db_Statement_Pdo $oldConfigurableStatus */
         $oldConfigurableStatus = $connection->query($select);
+        /** @var int $isNoError */
+        $isNoError = 1;
+        // Update existing configurable status scopable
+        if ($this->configHelper->getProductStatusMode() === StatusMode::ATTRIBUTE_PRODUCT_MAPPING) {
+            /** @var string $attributeCodeConfigurable */
+            $attributeCodeConfigurable = strtolower(
+                $this->configHelper->getAttributeCodeForConfigurableProductStatuses()
+            );
+            if (!empty($attributeCodeConfigurable)) {
+                try {
+                    $attributeConfigurable = $this->akeneoClient->getAttributeApi()->get(
+                        $attributeCodeConfigurable
+                    );
+                    if (!isset($attributeConfigurable['code']) || $attributeConfigurable['type'] !== 'pim_catalog_boolean' || $attributeConfigurable['localizable']) {
+                        $this->jobExecutor->setAdditionalMessage(
+                            __(
+                                'Akeneo Attribute code for configurable product statuses is not type YES/NO or is localizable , only scopable or global'
+                            ),
+                            $this->logger
+                        );
+                        /** @var int $isNoError */
+                        $isNoError = 2;
+                    } else {
+                        /** @var string[] $pKeyColumn */
+                        $pKeyColumn = 'a._entity_id';
+                        /** @var string[] $columnsForMapping */
+                        $columnsForMapping = ['entity_id' => $pKeyColumn, '_entity_id'];
+                        /** @var string[] $mapping */
+                        foreach ($mappings as $mapping) {
+                            /** @var string[] $attributeConfigurable */
+                            if ($attributeConfigurable['scopable']) {
+                                /** @var string $filterMapping */
+                                $filterMapping = 'a.' . $attributeCodeConfigurable . '-' . $mapping['channel'];
+                                if (!in_array(
+                                        $filterMapping,
+                                        $columnsForMapping
+                                    ) && $connection->tableColumnExists(
+                                        $tmpTable,
+                                        $attributeCodeConfigurable . '-' . $mapping['channel']
+                                    )) {
+                                    $columnsForMapping[$attributeCodeConfigurable . '-' . $mapping['channel']] = $filterMapping;
+                                }
+                            } else {
+                                /** @var string $filterMapping */
+                                $filterMapping = 'a.' . $attributeCodeConfigurable;
+                                if (!in_array(
+                                        $filterMapping,
+                                        $columnsForMapping
+                                    ) && $connection->tableColumnExists(
+                                        $tmpTable,
+                                        $attributeCodeConfigurable
+                                    )) {
+                                    $columnsForMapping[$attributeCodeConfigurable] = $filterMapping;
+                                }
+                            }
+                        }
+
+                        /** @var Select $selectConfigurable */
+                        $selectConfigurable = $connection->select()->from(
+                            ['a' => $tmpTable],
+                            $columnsForMapping
+                        )->where(
+                            'a._type_id = ?',
+                            'configurable'
+                        );
+
+                        /** @var Zend_Db_Statement_Pdo $configurableQuery */
+                        $configurableQuery = $connection->query($selectConfigurable);
+                        while (($row = $configurableQuery->fetch())) {
+                            /** @var string[] $mapping */
+                            foreach ($mappings as $mapping) {
+                                /** @var string $attributeCodeConfigurableScopable */
+                                $attributeCodeConfigurableScopable = $attributeCodeConfigurable . '-' . $mapping['channel'];
+                                if ($connection->tableColumnExists(
+                                        $tmpTable,
+                                        $attributeCodeConfigurableScopable
+                                    ) || $connection->tableColumnExists(
+                                        $tmpTable,
+                                        $attributeCodeConfigurable
+                                    )) {
+
+                                    /** @var int $status */
+                                    $status = 2;
+                                    if ((isset($row[$attributeCodeConfigurable]) && $row[$attributeCodeConfigurable]) || (isset($row[$attributeCodeConfigurableScopable]) && $row[$attributeCodeConfigurableScopable])) {
+                                        $status = 1;
+                                    }
+
+                                    /** @var mixed[] $valuesToInsert */
+                                    $valuesToInsert = ['status-' . $mapping['channel'] => $status];
+
+                                    $connection->update(
+                                        $tmpTable,
+                                        $valuesToInsert,
+                                        ['_entity_id = ?' => $row['_entity_id']]
+                                    );
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception $exception) {
+                    $this->jobExecutor->setAdditionalMessage(
+                        __('Akeneo Attribute code is not valid for Configurable product statuses'),
+                        $this->logger
+                    );
+                    /** @var int $isNoError */
+                    $isNoError = 2;
+                }
+            } else {
+                $this->jobExecutor->setAdditionalMessage(
+                    __('Akeneo Attribute code for Configurable product statuses is empty'),
+                    $this->logger
+                );
+                /** @var int $isNoError */
+                $isNoError = 2;
+            }
+        }
         while (($row = $oldConfigurableStatus->fetch())) {
             /** @var string $status */
             $status = $row['value'];
@@ -1962,6 +2192,8 @@ class Product extends JobImport
                     );
                 }
             }
+        } else if ($this->configHelper->getProductStatusMode() === StatusMode::ATTRIBUTE_PRODUCT_MAPPING) {
+            $status = $isNoError;
         }
         // Update new configurable status
         $connection->update(
