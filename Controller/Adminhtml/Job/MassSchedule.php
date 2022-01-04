@@ -58,7 +58,6 @@ class MassSchedule extends Action
         CollectionFactory $collectionFactory,
         JobExecutor $jobExecutor,
         Config $configHelper
-
     ) {
         parent::__construct($context);
 
@@ -89,12 +88,12 @@ class MassSchedule extends Action
                         $job->getName()
                     )
                 );
-                if ($this->configHelper->getJobReportEnabled()) {
-                    $this->messageManager->addSuccessMessage(
-                        __('You will receive an email when the job is completed.')
-                    );
-                }
             }
+        }
+        if ($this->configHelper->getJobReportEnabled()) {
+            $this->messageManager->addSuccessMessage(
+                __('You will receive an email when the job is completed.')
+            );
         }
 
         /** @var Redirect $resultRedirect */
