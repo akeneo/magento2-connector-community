@@ -786,7 +786,9 @@ class Product extends JobImport
             }
             $this->familyVariantHelper->updateAxis();
             $this->familyVariantHelper->updateProductModel();
-            $this->familyVariantHelper->dropTable();
+            if (!$this->configHelper->isAdvancedLogActivated()) {
+                $this->familyVariantHelper->dropTable();
+            }
             $this->jobExecutor->displayMessages($messages, $this->logger);
         }
     }
@@ -3800,8 +3802,10 @@ class Product extends JobImport
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
-        $this->productModelHelper->dropTable();
+        if (!$this->configHelper->isAdvancedLogActivated()) {
+            $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
+            $this->productModelHelper->dropTable();
+        }
     }
 
     /**
