@@ -287,3 +287,10 @@
 
 ### Version 102.1.5 :
 * Remove "NOT IN" family filter in API call during product job when using Standard filter
+
+### Version 102.2.0 :
+* Add new "Status mode" in order to assign simple product status from a completeness level (https://help.akeneo.com/magento2-connector/articles/05-configure-products.html#product-status-mode)
+* Add job logs cleaning task (https://help.akeneo.com/magento2-connector/articles/17-configure-logs-cleaning.html)
+* Add email reporting for job execution (https://help.akeneo.com/magento2-connector/articles/18-configure-job-email-reports.md.html)
+* Use PHP short syntax and escape translations in templates
+* Fix Magento 2 serializer usage to encode and decode JSON
