@@ -3,7 +3,6 @@
 namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
@@ -12,6 +11,7 @@ use Magento\Framework\App\DeploymentConfig;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
+use Magento\Framework\Serialize\Serializer\Json;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Exception;
 
@@ -40,6 +40,10 @@ class Product extends Entities
      */
     const VALUES_KEY = 'values';
     /**
+     * @var string COMPLETENESS_KEY
+     */
+    const COMPLETENESS_KEY = 'completenesses';
+    /**
      * QUANTIFIED_ASSOCIATIONS_KEY const
      *
      * @var string QUANTIFIED_ASSOCIATIONS_KEY
@@ -52,11 +56,11 @@ class Product extends Entities
      */
     public const ALL_ASSOCIATIONS_KEY = [self::QUANTIFIED_ASSOCIATIONS_KEY, self::ASSOCIATIONS_KEY];
     /**
-     * This variable contains a JsonSerializer
+     * This variable contains a Json
      *
-     * @var JsonSerializer $serializer
+     * @var Json $jsonSerializer
      */
-    protected $serializer;
+    protected $jsonSerializer;
     /**
      * This variable contains a ProductUrlPathGenerator
      *
@@ -78,7 +82,7 @@ class Product extends Entities
      * @param BaseProductModel        $product
      * @param ProductUrlPathGenerator $productUrlPathGenerator
      * @param ConfigHelper            $configHelper
-     * @param JsonSerializer          $serializer
+     * @param Json                    $jsonSerializer
      * @param ScopeConfigInterface    $scopeConfig
      */
     public function __construct(
@@ -87,12 +91,12 @@ class Product extends Entities
         BaseProductModel $product,
         ProductUrlPathGenerator $productUrlPathGenerator,
         ConfigHelper $configHelper,
-        JsonSerializer $serializer,
+        Json $jsonSerializer,
         ScopeConfigInterface $scopeConfig
     ) {
         parent::__construct($connection, $deploymentConfig, $product, $configHelper);
 
-        $this->serializer              = $serializer;
+        $this->jsonSerializer          = $jsonSerializer;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
         $this->scopeConfig             = $scopeConfig;
     }
@@ -121,6 +125,16 @@ class Product extends Entities
             if (in_array($key, self::ALL_ASSOCIATIONS_KEY, true)) {
                 /** @var array $values */
                 $values = $this->formatAssociations($value, $key);
+                /** @var array $columns */
+                $columns = $columns + $values;
+
+                continue;
+            }
+
+            if ($key === self::COMPLETENESS_KEY) {
+                /** @var array $values */
+                $values = $this->formatCompleteness($value, $key);
+
                 /** @var array $columns */
                 $columns = $columns + $values;
 
@@ -295,6 +309,46 @@ class Product extends Entities
     }
 
     /**
+     * Format completeness field
+     *
+     * @param mixed[]     $values
+     * @param string|null $assoKey
+     *
+     * @return array
+     */
+    public function formatCompleteness(array $values, ?string $assoKey = null)
+    {
+        /** @var array $completeness */
+        $completeness = [];
+
+        /** @var string[] $finalProducts */
+        $finalProducts = [];
+
+        /**
+         * @var array    $values
+         * @var string[] $product
+         */
+        foreach ($values as $product) {
+            if (empty($product)) {
+                continue;
+            }
+            if ($assoKey === self::COMPLETENESS_KEY) {
+                $finalProducts[] = $product;
+            }
+        }
+
+        if (isset($finalProducts)) {
+            $completeness['completenesses_' . $product['scope']] = $this->jsonSerializer->serialize($finalProducts);
+        }
+
+        if (empty($completeness)) {
+            return [];
+        }
+
+        return $completeness;
+    }
+
+    /**
      * Get attribute key to be inserted as a column
      *
      * @param string $attribute
@@ -326,9 +380,10 @@ class Product extends Entities
      */
     public function isFieldInAttributeMapping($field)
     {
-        /** @var string|array $matches */
+        /** @var string $matches */
         $matches = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING);
-        $matches = $this->serializer->unserialize($matches);
+        /** @var mixed[] $matches */
+        $matches = $this->jsonSerializer->unserialize($matches);
         if (!is_array($matches)) {
             return false;
         }

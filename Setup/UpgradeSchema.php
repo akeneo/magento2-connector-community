@@ -4,12 +4,12 @@ namespace Akeneo\Connector\Setup;
 
 use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Magento\Framework\App\Config\ConfigResource\ConfigInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Ddl\Table;
 use Magento\Framework\Encryption\Encryptor;
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\SchemaSetupInterface;
 use Magento\Framework\Setup\UpgradeSchemaInterface;
@@ -39,11 +39,11 @@ class UpgradeSchema implements UpgradeSchemaInterface
      */
     protected $resourceConfig;
     /**
-     * This variable contains a JsonSerializer
+     * This variable contains a Json
      *
-     * @var JsonSerializer $serializer
+     * @var Json $jsonSerializer
      */
-    protected $serializer;
+    protected $jsonSerializer;
     /**
      * This variable contains a Encryptor
      *
@@ -56,18 +56,18 @@ class UpgradeSchema implements UpgradeSchemaInterface
      *
      * @param ScopeConfigInterface $scopeConfig
      * @param ConfigInterface      $resourceConfig
-     * @param JsonSerializer       $serializer
+     * @param Json                 $jsonSerializer
      * @param Encryptor            $encryptor
      */
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         ConfigInterface $resourceConfig,
-        JsonSerializer $serializer,
+        Json $jsonSerializer,
         Encryptor $encryptor
     ) {
         $this->scopeConfig    = $scopeConfig;
         $this->resourceConfig = $resourceConfig;
-        $this->serializer     = $serializer;
+        $this->jsonSerializer = $jsonSerializer;
         $this->encryptor      = $encryptor;
     }
 
@@ -95,17 +95,18 @@ class UpgradeSchema implements UpgradeSchemaInterface
         }
 
         if (version_compare($context->getVersion(), '1.0.1', '<')) {
-            /** @var string|array $configurable */
+            /** @var string $configurable */
             $configurable = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES);
 
             if ($configurable) {
-                $configurable = $this->serializer->unserialize($configurable);
+                /** @var mixed[] $configurable */
+                $configurable = $this->jsonSerializer->unserialize($configurable);
 
                 if (!is_array($configurable)) {
                     $configurable = [];
                 }
 
-                /** @var array $attribute */
+                /** @var mixed[] $attribute */
                 foreach ($configurable as $key => $attribute) {
                     if (!isset($attribute['attribute'], $attribute['value'])) {
                         continue;
@@ -122,7 +123,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
 
                 $this->resourceConfig->saveConfig(
                     ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES,
-                    json_encode($configurable)
+                    $this->jsonSerializer->serialize($configurable)
                 );
             }
         }
@@ -134,17 +135,18 @@ class UpgradeSchema implements UpgradeSchemaInterface
         }
 
         if (version_compare($context->getVersion(), '1.0.3', '<')) {
-            /** @var string|array $configurable */
+            /** @var string $configurable */
             $configurable = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES);
 
             if ($configurable) {
-                $configurable = $this->serializer->unserialize($configurable);
+                /** @var mixed[] $configurable */
+                $configurable = $this->jsonSerializer->unserialize($configurable);
 
                 if (!is_array($configurable)) {
                     $configurable = [];
                 }
 
-                /** @var array $attribute */
+                /** @var mixed[] $attribute */
                 foreach ($configurable as $key => $attribute) {
                     if (!isset($attribute['attribute'], $configurable[$key]['type'])) {
                         continue;
@@ -157,7 +159,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
 
                 $this->resourceConfig->saveConfig(
                     ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES,
-                    json_encode($configurable)
+                    $this->jsonSerializer->serialize($configurable)
                 );
             }
         }

@@ -17,7 +17,7 @@ use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Module\Dir;
 use Magento\Framework\Module\Dir\Reader;
-use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\View\Asset\File;
 use Magento\Framework\View\Asset\Repository;
 use SimpleXMLElement;
@@ -77,11 +77,11 @@ class ConfigManagement
      */
     protected $directoryList;
     /**
-     * Description $serializer field
+     * Description $jsonSerializer field
      *
-     * @var SerializerInterface $serializer
+     * @var JsonSerializer $jsonSerializer
      */
-    protected $serializer;
+    protected $jsonSerializer;
     /**
      * Description $websiteFormField field
      *
@@ -237,14 +237,15 @@ class ConfigManagement
     /**
      * ConfigManagement constructor
      *
-     * @param ResourceConnection  $resourceConnection
-     * @param Edition             $sourceEdition
-     * @param Reader              $moduleReader
-     * @param ConfigHelper        $configHelper
-     * @param Repository          $assetRepository
-     * @param DirectoryList       $directoryList
-     * @param SerializerInterface $serializer
-     * @param Website             $websiteFormField
+     * @param ResourceConnection $resourceConnection
+     * @param Edition            $sourceEdition
+     * @param Reader             $moduleReader
+     * @param ConfigHelper       $configHelper
+     * @param Repository         $assetRepository
+     * @param DirectoryList      $directoryList
+     * @param JsonSerializer     $jsonSerializer
+     * @param Website            $websiteFormField
+     * @param Attribute          $attributeModel
      */
     public function __construct(
         ResourceConnection $resourceConnection,
@@ -253,7 +254,7 @@ class ConfigManagement
         ConfigHelper $configHelper,
         Repository $assetRepository,
         DirectoryList $directoryList,
-        SerializerInterface $serializer,
+        JsonSerializer $jsonSerializer,
         Website $websiteFormField,
         Attribute $attributeModel
     ) {
@@ -263,7 +264,7 @@ class ConfigManagement
         $this->configHelper       = $configHelper;
         $this->assetRepository    = $assetRepository;
         $this->directoryList      = $directoryList;
-        $this->serializer         = $serializer;
+        $this->jsonSerializer     = $jsonSerializer;
         $this->websiteFormField   = $websiteFormField;
         $this->assetRepository    = $assetRepository;
         $this->attributeModel     = $attributeModel;
@@ -318,7 +319,7 @@ class ConfigManagement
             if ($backendModelAttributeValue === ArraySerialized::class) {
                 // Get array labels
                 /** @var string[] $configValueUnserialized */
-                $configValueUnserialized = $this->serializer->unserialize($config['value']);
+                $configValueUnserialized = $this->jsonSerializer->unserialize($config['value']);
                 /** @var string[] $firstElement */
                 $firstElement = reset($configValueUnserialized);
 

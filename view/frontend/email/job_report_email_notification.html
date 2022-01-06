@@ -1,0 +1,47 @@
+<!--
+/**
+ * @author    Agence Dn'D <contact@dnd.fr>
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @link      https://www.dnd.fr/
+ */
+-->
+<!--@subject {{trans "Magento Akeneo Connector - %jobName Activity Report: %jobStatus" jobName=$jobName jobStatus=$jobStatus}} @-->
+<!--@vars {
+    "var link":"Link to admin"
+    "var jobStatus":"Job status"
+    "var jobName":"Job name"
+} @-->
+{{template config_path="design/email/header_template"}}
+
+<p>
+    {{trans
+"Hello,"
+    }}
+</p>
+<p>
+    {{trans
+"Please find your report activities on the import:"
+    }}
+</p>
+<p>
+    Import : {{var jobName}} <br>
+    Status : {{var jobStatus}}
+</p>
+<p>
+    {{trans
+    "If you need more information, please refer to the Akeneo Connector logs in Magento2."
+    }}
+</p>
+<p>{{trans
+"Please do not hesitate to reach out to us if you have any questions."
+    }}
+</p>
+<p>
+    {{trans
+"Akeneo Team."
+    }}
+</p>
+
+{{template config_path="design/email/footer_template"}}
+

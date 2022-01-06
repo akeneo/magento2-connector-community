@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Api\Data\JobInterface;
 use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Helper\Config;
 use Akeneo\Connector\Helper\Import\Entities;

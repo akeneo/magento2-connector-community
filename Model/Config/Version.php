@@ -2,7 +2,19 @@
 
 namespace Akeneo\Connector\Model\Config;
 
+use Magento\Framework\App\Cache\TypeListInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Value;
+use Magento\Framework\Component\ComponentRegistrar;
+use Magento\Framework\Component\ComponentRegistrarInterface;
+use Magento\Framework\Data\Collection\AbstractDb;
+use Magento\Framework\Exception\FileSystemException;
+use Magento\Framework\Filesystem\Directory\ReadFactory;
+use Magento\Framework\Filesystem\Directory\ReadInterface;
+use Magento\Framework\Model\Context;
+use Magento\Framework\Model\ResourceModel\AbstractResource;
+use Magento\Framework\Registry;
+use Magento\Framework\Serialize\Serializer\Json;
 
 /**
  * Class Version
@@ -17,40 +29,56 @@ use Magento\Framework\App\Config\Value;
 class Version extends Value
 {
     /**
-     * @var \Magento\Framework\Component\ComponentRegistrarInterface
+     * @var ComponentRegistrarInterface
      */
     protected $componentRegistrar;
     /**
-     * @var \Magento\Framework\Filesystem\Directory\ReadFactory
+     * @var ReadFactory
      */
     protected $readFactory;
+    /**
+     * Description $jsonSerializer field
+     *
+     * @var Json $jsonSerializer
+     */
+    protected $jsonSerializer;
+    /**
+     * Default Version
+     *
+     * @var string VERSION
+     */
+    public const VERSION = '0.0.0';
 
     /**
      * Version constructor
      *
-     * @param \Magento\Framework\Model\Context                             $context
-     * @param \Magento\Framework\Registry                                  $registry
-     * @param \Magento\Framework\App\Config\ScopeConfigInterface           $config
-     * @param \Magento\Framework\App\Cache\TypeListInterface               $cacheTypeList
-     * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
-     * @param \Magento\Framework\Data\Collection\AbstractDb|null           $resourceCollection
-     * @param \Magento\Framework\Component\ComponentRegistrarInterface     $componentRegistrar
-     * @param \Magento\Framework\Filesystem\Directory\ReadFactory          $readFactory
-     * @param array                                                        $data
+     * @param Context                     $context
+     * @param Registry                    $registry
+     * @param ScopeConfigInterface        $config
+     * @param TypeListInterface           $cacheTypeList
+     * @param AbstractResource|null       $resource
+     * @param AbstractDb|null             $resourceCollection
+     * @param ComponentRegistrarInterface $componentRegistrar
+     * @param ReadFactory                 $readFactory
+     * @param Json                        $jsonSerializer
+     * @param array                       $data
      */
     public function __construct(
-        \Magento\Framework\Model\Context $context,
-        \Magento\Framework\Registry $registry,
-        \Magento\Framework\App\Config\ScopeConfigInterface $config,
-        \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList,
-        \Magento\Framework\Model\ResourceModel\AbstractResource $resource,
-        \Magento\Framework\Data\Collection\AbstractDb $resourceCollection,
-        \Magento\Framework\Component\ComponentRegistrarInterface $componentRegistrar,
-        \Magento\Framework\Filesystem\Directory\ReadFactory $readFactory,
+        Context $context,
+        Registry $registry,
+        ScopeConfigInterface $config,
+        TypeListInterface $cacheTypeList,
+        AbstractResource $resource,
+        AbstractDb $resourceCollection,
+        ComponentRegistrarInterface $componentRegistrar,
+        ReadFactory $readFactory,
+        Json $jsonSerializer,
         array $data = []
     ) {
         $this->componentRegistrar = $componentRegistrar;
         $this->readFactory        = $readFactory;
+        $this->jsonSerializer     = $jsonSerializer;
+
         parent::__construct(
             $context,
             $registry,
@@ -66,15 +94,13 @@ class Version extends Value
      * Get current module version from composer.json
      *
      * @return string
-     * @throws \Magento\Framework\Exception\FileSystemException
+     * @throws FileSystemException
      */
     public function getModuleVersion()
     {
-        /** @var string $version */
-        $version = '0.0.0';
-        /** @var null|string $path */
+        /** @var string|null $path */
         $path = $this->componentRegistrar->getPath(
-            \Magento\Framework\Component\ComponentRegistrar::MODULE,
+            ComponentRegistrar::MODULE,
             'Akeneo_Connector'
         );
         /** @var ReadInterface $directoryRead */
@@ -82,18 +108,16 @@ class Version extends Value
         /** @var string $composerJsonData */
         $composerJsonData = $directoryRead->readFile('composer.json');
         /** @var string[] $data */
-        $data = json_decode($composerJsonData);
-        if (!empty($data->version)) {
-            $version = $data->version;
-        }
-        return $version;
+        $data = $this->jsonSerializer->unserialize($composerJsonData);
+
+        return $data['version'] ?? self::VERSION;
     }
 
     /**
      * Inject current installed module version as the config value.
      *
      * @return void
-     * @throws \Magento\Framework\Exception\FileSystemException
+     * @throws FileSystemException
      */
     public function afterLoad()
     {

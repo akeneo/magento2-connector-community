@@ -5,8 +5,8 @@ use Akeneo\Connector\Block\Adminhtml\System\Config\ExportPdf;
 /** @var ExportPdf $block */
 ?>
 <a href="<?= $block->getExportUrl() ?>">
-    <button id="config_export_pdf" title="<?php echo __('Export PDF'); ?>" type="button"
+    <button id="config_export_pdf" title="<?= $block->escapeHtml(__('Export PDF')) ?>" type="button"
             class="action-default scalable">
-        <?= __('Export PDF'); ?>
+        <?= $block->escapeHtml(__('Export PDF')) ?>
     </button>
 </a>

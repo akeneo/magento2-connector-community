@@ -30,6 +30,8 @@
             </products_filters>
             <product>
                 <url_generation_enabled>1</url_generation_enabled>
+                <product_status_mode>default_product_status</product_status_mode>
+                <default_configurable_product_status>2</default_configurable_product_status>
                 <activation>2</activation>
                 <association_related>SUBSTITUTION</association_related>
                 <association_upsell>UPSELL</association_upsell>
@@ -45,6 +47,8 @@
             </category>
             <advanced>
                 <advanced_log>0</advanced_log>
+                <enable_clean_logs>1</enable_clean_logs>
+                <clean_logs>30</clean_logs>
             </advanced>
             <attribute>
                 <option_code_as_admin_label>0</option_code_as_admin_label>

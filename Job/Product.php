@@ -13,7 +13,6 @@ use Akeneo\Connector\Helper\Import\Product as ProductImportHelper;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Helper\ProductFilters;
 use Akeneo\Connector\Helper\ProductModel;
-use Akeneo\Connector\Helper\Serializer as JsonSerializer;
 use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Job\Import as JobImport;
 use Akeneo\Connector\Job\Option as JobOption;
@@ -24,8 +23,10 @@ use Akeneo\Connector\Model\Source\Attribute\Tables as AttributeTables;
 use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Connector\Model\Source\Filters\Mode;
 use Akeneo\Connector\Model\Source\Filters\ModelCompleteness;
+use Akeneo\Connector\Model\Source\StatusMode;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Exception;
 use Magento\Catalog\Model\Category as CategoryModel;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
@@ -44,6 +45,7 @@ use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Indexer\IndexerInterface;
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Indexer\Model\IndexerFactory;
 use Magento\Staging\Model\VersionManager;
 use Magento\Store\Model\StoreManagerInterface;
@@ -58,7 +60,7 @@ use Zend_Db_Statement_Pdo;
  * @category  Class
  * @package   Akeneo\Connector\Job
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
@@ -192,11 +194,11 @@ class Product extends JobImport
      */
     protected $scopeConfig;
     /**
-     * This variable contains a JsonSerializer
+     * This variable contains a Json
      *
-     * @var JsonSerializer $serializer
+     * @var Json $jsonSerializer
      */
-    protected $serializer;
+    protected $jsonSerializer;
     /**
      * This variable contains a ProductModel
      *
@@ -286,7 +288,7 @@ class Product extends JobImport
      * @param EavAttribute            $eavAttribute
      * @param ProductFilters          $productFilters
      * @param ScopeConfigInterface    $scopeConfig
-     * @param JsonSerializer          $serializer
+     * @param Json                    $jsonSerializer
      * @param BaseProductModel        $product
      * @param ProductUrlPathGenerator $productUrlPathGenerator
      * @param TypeListInterface       $cacheTypeList
@@ -314,7 +316,7 @@ class Product extends JobImport
         EavAttribute $eavAttribute,
         ProductFilters $productFilters,
         ScopeConfigInterface $scopeConfig,
-        JsonSerializer $serializer,
+        Json $jsonSerializer,
         BaseProductModel $product,
         ProductUrlPathGenerator $productUrlPathGenerator,
         TypeListInterface $cacheTypeList,
@@ -338,7 +340,7 @@ class Product extends JobImport
         $this->eavAttribute            = $eavAttribute;
         $this->productFilters          = $productFilters;
         $this->scopeConfig             = $scopeConfig;
-        $this->serializer              = $serializer;
+        $this->jsonSerializer          = $jsonSerializer;
         $this->product                 = $product;
         $this->cacheTypeList           = $cacheTypeList;
         $this->storeHelper             = $storeHelper;
@@ -504,6 +506,9 @@ class Product extends JobImport
 
         /** @var mixed[] $filter */
         foreach ($filters as $filter) {
+            if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
+                $filter['with_completenesses'] = 'true'; //enable with_completenesses on call api
+            }
             /** @var ResourceCursorInterface $products */
             $products = $this->akeneoClient->getProductApi()->all($paginationSize, $filter);
 
@@ -1190,9 +1195,10 @@ class Product extends JobImport
             }
         }
 
-        /** @var string|array $additional */
+        /** @var string $additional */
         $additional = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES);
-        $additional = $this->serializer->unserialize($additional);
+        /** @var mixed[] $additional */
+        $additional = $this->jsonSerializer->unserialize($additional);
         if (!is_array($additional)) {
             $additional = [];
         }
@@ -1711,6 +1717,8 @@ class Product extends JobImport
      *
      * @return void
      * @throws LocalizedException
+     * @throws Zend_Db_Statement_Exception
+     * @throws Exception
      */
     public function setValues()
     {
@@ -1722,8 +1730,6 @@ class Product extends JobImport
         $attributeScopeMapping = $this->entitiesHelper->getAttributeScopeMapping();
         /** @var array $stores */
         $stores = $this->storeHelper->getAllStores();
-        /** @var string[] $columns */
-        $columns = array_keys($connection->describeTable($tmpTable));
 
         // Format url_key columns
         /** @var string|array $matches */
@@ -1777,6 +1783,22 @@ class Product extends JobImport
         $pKeyColumn = 'a._entity_id';
         /** @var string[] $columnsForStatus */
         $columnsForStatus = ['entity_id' => $pKeyColumn, '_entity_id', '_is_new' => 'a._is_new'];
+        /** @var mixed[] $mappings */
+        $mappings = $this->configHelper->getWebsiteMapping();
+        /** @var string[] $columnsForCompleteness */
+        $columnsForCompleteness = ['entity_id' => $pKeyColumn, '_entity_id'];
+        /** @var string[] $mapping */
+        foreach ($mappings as $mapping) {
+            /** @var string $filterCompletenesses */
+            $filterCompletenesses = 'a.completenesses_' . $mapping['channel'];
+            if (!in_array($filterCompletenesses, $columnsForCompleteness) && $connection->tableColumnExists(
+                    $tmpTable,
+                    'completenesses_' . $mapping['channel']
+                )) {
+                /** @var string[] $columnsForCompleteness */
+                $columnsForCompleteness['completenesses_' . $mapping['channel']] = $filterCompletenesses;
+            }
+        }
 
         /** @var bool $rowIdExists */
         $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productTable);
@@ -1803,17 +1825,82 @@ class Product extends JobImport
         // Update existing simple status
         /** @var Zend_Db_Statement_Pdo $oldStatus */
         $oldStatus = $connection->query($select);
-        while (($row = $oldStatus->fetch())) {
-            $valuesToInsert = [
-                '_status' => $row['value'],
-            ];
-            $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
+        /** @var string $status */
+        $status = $this->configHelper->getProductActivation();
+        if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
+            /** @var Select $selectComplet */
+            $selectComplet = $connection->select()->from(['a' => $tmpTable], $columnsForCompleteness)->where(
+                'a._type_id = ?',
+                'simple'
+            );
+            /** @var Zend_Db_Statement_Pdo $completQuery */
+            $completQuery = $connection->query($selectComplet);
+            /** @var string $completenessConfig */
+            $completenessConfig = $this->configHelper->getEnableSimpleProductsPerWebsite();
+            /** @var string[] $completenesses */
+            $completenesses = [];
+            while (($row = $completQuery->fetch())) {
+                /** @var string[] $mapping */
+                foreach ($mappings as $mapping) {
+                    if ($connection->tableColumnExists(
+                        $tmpTable,
+                        'completenesses_' . $mapping['channel']
+                    )) {
+                        if (!$row['completenesses_' . $mapping['channel']]) {
+                            continue;
+                        }
+
+                        /** @var string $map */
+                        $map = $this->jsonSerializer->unserialize($row['completenesses_' . $mapping['channel']]);
+
+                        if (!in_array($map, $completenesses)) {
+                            $completenesses[$mapping['channel']] = $map;
+                        }
+                        /** @var string[] $completeness */
+                        foreach ($completenesses[$mapping['channel']] as $completeness) {
+                            $connection->addColumn(
+                                $tmpTable,
+                                'status-' . $completeness['scope'],
+                                [
+                                    'type'     => 'integer',
+                                    'length'   => 11,
+                                    'default'  => 2,
+                                    'COMMENT'  => ' ',
+                                    'nullable' => false,
+                                ]
+                            );
+                            /** @var int $status */
+                            $status = 1;
+                            if ($completeness['data'] < $completenessConfig) {
+                                $status = 2;
+                            }
+
+                            /** @var string[] $valuesToInsert */
+                            $valuesToInsert = [
+                                'status-' . $completeness['scope'] => $status,
+                            ];
+
+                            $connection->update(
+                                $tmpTable,
+                                $valuesToInsert,
+                                ['_entity_id = ?' => $row['_entity_id']]
+                            );
+                        }
+                    }
+                }
+            }
+        } else {
+            while (($row = $oldStatus->fetch())) {
+                $valuesToInsert = ['_status' => $row['value']];
+
+                $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
+            }
         }
 
         // Update new simple status
         $connection->update(
             $tmpTable,
-            ['_status' => $this->configHelper->getProductActivation()],
+            ['_status' => $status],
             ['_is_new = ?' => 1, '_status = ?' => 1, '_type_id = ?' => 'simple']
         );
 
@@ -1831,20 +1918,55 @@ class Product extends JobImport
             $statusAttributeId
         );
 
-        // Update existing configurable status
         /** @var Zend_Db_Statement_Pdo $oldConfigurableStatus */
         $oldConfigurableStatus = $connection->query($select);
         while (($row = $oldConfigurableStatus->fetch())) {
+            /** @var string $status */
+            $status = $row['value'];
+            // Update existing configurable status scopable
+            if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
+                foreach ($mappings as $mapping) {
+                    if ($connection->tableColumnExists(
+                        $tmpTable,
+                        'status-' . $mapping['channel']
+                    )) {
+                        $connection->update(
+                            $tmpTable,
+                            ['status-' . $mapping['channel'] => $status],
+                            ['_entity_id = ?' => $row['_entity_id']]
+                        );
+                    }
+                }
+            }
+            // Update existing configurable status
             $valuesToInsert = [
-                '_status' => $row['value'],
+                '_status' => $status,
             ];
             $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
         }
 
+        /** @var string $status */
+        $status = $this->configHelper->getProductActivation();
+        if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
+            // Update new configurable status scopable
+            $status = $this->configHelper->getDefaultConfigurableProductStatus();
+            foreach ($mappings as $mapping) {
+                if ($connection->tableColumnExists(
+                    $tmpTable,
+                    'status-' . $mapping['channel']
+                )) {
+                    $connection->update(
+                        $tmpTable,
+                        ['status-' . $mapping['channel'] => $status],
+                        ['_is_new = ?' => 1, '_type_id = ?' => 'configurable']
+                    );
+                }
+            }
+        }
         // Update new configurable status
         $connection->update(
             $tmpTable,
-            ['_status' => $this->configHelper->getProductActivation()],
+            ['_status' => $status],
             ['_is_new = ?' => 1, '_type_id = ?' => 'configurable']
         );
 
@@ -1855,6 +1977,9 @@ class Product extends JobImport
                 $values[$storeId]['tax_class_id'] = new Expr($taxClassId);
             }
         }
+
+        /** @var string[] $columns */
+        $columns = array_keys($connection->describeTable($tmpTable));
 
         /** @var string $column */
         foreach ($columns as $column) {
@@ -3153,7 +3278,7 @@ class Product extends JobImport
                                     ['request_path' => $requestPath, 'metadata' => $metadata],
                                     ['url_rewrite_id = ?' => $rewriteId]
                                 );
-                            } catch (\Exception $e) {
+                            } catch (Exception $e) {
                                 $this->jobExecutor->setAdditionalMessage(
                                     __(
                                         sprintf(
@@ -3483,7 +3608,7 @@ class Product extends JobImport
      * Refresh index
      *
      * @return void
-     * @throws \Exception
+     * @throws Exception
      */
     public function refreshIndex()
     {
