@@ -1459,7 +1459,7 @@ class Product extends JobImport
             'url_key',
         ];
         if ($websiteAttribute) {
-            $except[] = $websiteAttribute;
+            $except[] = strtolower($websiteAttribute);
         }
         $except = array_merge($except, $this->excludedColumns);
 
