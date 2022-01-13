@@ -294,3 +294,6 @@
 * Add email reporting for job execution (https://help.akeneo.com/magento2-connector/articles/18-configure-job-email-reports.md.html)
 * Use PHP short syntax and escape translations in templates
 * Fix Magento 2 serializer usage to encode and decode JSON
+
+### Version 102.2.1 :
+* Fix website mapping with uppercase attribute code in Akeneo
