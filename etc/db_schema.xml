@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+  <table name="akeneo_connector_entities" resource="default" engine="innodb" comment="Akeneo Connector Entities Relation">
+    <column xsi:type="int" name="id" padding="11" unsigned="false" nullable="false" identity="true" comment="ID"/>
+    <column xsi:type="varchar" name="import" nullable="false" length="255" comment="Import type"/>
+    <column xsi:type="varchar" name="code" nullable="false" length="255" comment="Akeneo Code"/>
+    <column xsi:type="int" name="entity_id" padding="11" unsigned="false" nullable="true" identity="false" comment="Magento Entity Id"/>
+    <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Creation Time"/>
+    <constraint xsi:type="primary" referenceId="PRIMARY">
+      <column name="id"/>
+    </constraint>
+    <constraint xsi:type="unique" referenceId="AKENEO_CONNECTOR_ENTITIES_IMPORT_CODE_ENTITY_ID">
+      <column name="import"/>
+      <column name="code"/>
+      <column name="entity_id"/>
+    </constraint>
+  </table>
+  <table name="akeneo_connector_family_attribute_relations" resource="default" engine="innodb" comment="Akeneo Connector Family Attribute Relations">
+    <column xsi:type="int" name="id" padding="11" unsigned="false" nullable="false" identity="true" comment="ID"/>
+    <column xsi:type="int" name="family_entity_id" padding="11" unsigned="false" nullable="false" identity="false" comment="Family Entity ID"/>
+    <column xsi:type="varchar" name="attribute_code" nullable="false" length="255" comment="Attribute Code"/>
+    <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Creation Time"/>
+    <constraint xsi:type="primary" referenceId="PRIMARY">
+      <column name="id"/>
+    </constraint>
+  </table>
+  <table name="akeneo_connector_import_log" resource="default" engine="innodb" comment="Akeneo Connector Import Log">
+    <column xsi:type="int" name="log_id" padding="11" unsigned="false" nullable="false" identity="true" comment="Import ID"/>
+    <column xsi:type="varchar" name="identifier" nullable="false" length="13" comment="Identifier ID"/>
+    <column xsi:type="varchar" name="code" nullable="false" length="255" comment="Code"/>
+    <column xsi:type="varchar" name="name" nullable="false" length="255" comment="Name"/>
+    <column xsi:type="smallint" name="status" padding="6" unsigned="false" nullable="false" identity="false" default="1" comment="Status"/>
+    <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Creation Time"/>
+    <constraint xsi:type="primary" referenceId="PRIMARY">
+      <column name="log_id"/>
+    </constraint>
+  </table>
+  <table name="akeneo_connector_import_log_step" resource="default" engine="innodb" comment="Akeneo Connector Import Log Step">
+    <column xsi:type="int" name="step_id" padding="11" unsigned="false" nullable="false" identity="true" comment="Import ID"/>
+    <column xsi:type="int" name="log_id" padding="11" unsigned="false" nullable="false" identity="false" comment="Log ID"/>
+    <column xsi:type="varchar" name="identifier" nullable="false" length="13" comment="Identifier ID"/>
+    <column xsi:type="int" name="number" padding="10" unsigned="true" nullable="false" identity="false" default="0" comment="Number"/>
+    <column xsi:type="varchar" name="method" nullable="false" length="255" default="" comment="Method"/>
+    <column xsi:type="varchar" name="message" nullable="false" length="255" default="" comment="Message"/>
+    <column xsi:type="smallint" name="continue" padding="6" unsigned="false" nullable="false" identity="false" default="1" comment="Continue"/>
+    <column xsi:type="smallint" name="status" padding="6" unsigned="false" nullable="false" identity="false" default="1" comment="Status"/>
+    <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Creation Time"/>
+    <constraint xsi:type="primary" referenceId="PRIMARY">
+      <column name="step_id"/>
+    </constraint>
+    <constraint xsi:type="foreign" referenceId="FK_67D13951C1CAB0735DCC5949E04964BD" table="akeneo_connector_import_log_step" column="log_id" referenceTable="akeneo_connector_import_log" referenceColumn="log_id" onDelete="CASCADE"/>
+  </table>
+  <table name="eav_attribute_option_value" resource="default">
+    <constraint xsi:type="unique" referenceId="EAV_ATTRIBUTE_OPTION_VALUE_OPTION_ID_STORE_ID">
+      <column name="option_id"/>
+      <column name="store_id"/>
+    </constraint>
+  </table>
+  <table name="akeneo_connector_job" resource="default" engine="innodb" comment="Akeneo Connector Job">
+    <column xsi:type="int" name="entity_id" padding="11" unsigned="false" nullable="false" identity="true" comment="Job ID"/>
+    <column xsi:type="varchar" name="code" nullable="false" length="255" comment="Code"/>
+    <column xsi:type="varchar" name="status" nullable="false" length="255" default="PENDING" comment="Status"/>
+    <column xsi:type="datetime" name="scheduled_at" on_update="false" nullable="true" comment="Date scheduled to launch the job"/>
+    <column xsi:type="datetime" name="last_executed_date" on_update="false" nullable="true" comment="Last executed date"/>
+    <column xsi:type="datetime" name="last_success_date" on_update="false" nullable="true" comment="Last date the job was executed correctly"/>
+    <column xsi:type="varchar" name="job_class" nullable="false" length="255" comment="Job import class"/>
+    <column xsi:type="varchar" name="name" nullable="false" length="255" comment="Job import name"/>
+    <column xsi:type="int" name="position" padding="11" unsigned="false" nullable="false" identity="false" comment="Job position to priorize launch"/>
+    <column xsi:type="datetime" name="last_success_executed_date" on_update="false" nullable="false" default="NULL" comment="Last executed success date"/>
+    <constraint xsi:type="primary" referenceId="PRIMARY">
+      <column name="entity_id"/>
+    </constraint>
+  </table>
+  <table name="akeneo_connector_product_model" disabled="true"/>
+</schema>
