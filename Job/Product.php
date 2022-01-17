@@ -981,7 +981,7 @@ class Product extends JobImport
             $connection->update(
                 $tmpTable,
                 ['_status' => new Expr('IF(`enabled` <> 1, 2, 1)')],
-                ['_type_id = ?' => 'simple']
+                ['_type_id IN (?)' => $this->allowedTypeId]
             );
         }
 
