@@ -42,6 +42,13 @@ class UpdateConfigurableAttributes implements DataPatchInterface
      */
     private $resourceConfig;
 
+    /**
+     * UpdateConfigurableAttributes constructor
+     *
+     * @param ScopeConfigInterface $scopeConfig
+     * @param SerializerInterface  $serializer
+     * @param ConfigInterface      $resourceConfig
+     */
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         SerializerInterface $serializer,

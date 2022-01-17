@@ -41,6 +41,13 @@ class EncryptApiSecret implements DataPatchInterface, PatchVersionInterface
      */
     private $encryptor;
 
+    /**
+     * EncryptApiSecret constructor
+     *
+     * @param ConfigInterface      $resourceConfig
+     * @param EncryptorInterface   $encryptor
+     * @param ScopeConfigInterface $scopeConfig
+     */
     public function __construct(
         ConfigInterface $resourceConfig,
         EncryptorInterface $encryptor,
