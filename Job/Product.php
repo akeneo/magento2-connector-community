@@ -1765,7 +1765,6 @@ class Product extends JobImport
         $values = [
             0 => [
                 'options_container' => '_options_container',
-                'tax_class_id'      => '_tax_class_id',
                 'visibility'        => '_visibility',
             ],
         ];
