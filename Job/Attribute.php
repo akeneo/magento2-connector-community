@@ -569,10 +569,10 @@ class Attribute extends Import
             /* Retrieve attribute scope */
             /** @var int $global */
             $global = ScopedAttributeInterface::SCOPE_GLOBAL; // Global
-            if ((int) $row['scopable'] === 1) {
+            if ((int)$row['scopable'] === 1) {
                 $global = ScopedAttributeInterface::SCOPE_WEBSITE; // Website
             }
-            if ((int) $row['localizable'] === 1 || $row['type'] === self::PIM_CATALOG_TABLE) {
+            if ((int)$row['localizable'] === 1 || $row['type'] === self::PIM_CATALOG_TABLE) {
                 $global = ScopedAttributeInterface::SCOPE_STORE; // Store View
             }
             /** @var array $data */
