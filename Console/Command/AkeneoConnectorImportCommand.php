@@ -143,7 +143,7 @@ class AkeneoConnectorImportCommand extends Command
         $code = $job->getCode();
         if ($code) {
             $this->displayComment(__('Example:'), $output);
-            $this->displayInfo(__('akeneo-connector:import --code=%1', $code), $output);
+            $this->displayInfo(__('akeneo_connector:import --code=%1', $code), $output);
         }
     }
 
