@@ -3270,12 +3270,12 @@ class Product extends JobImport
                         );
 
                         /** @var false|mixed|string $rewriteId */
-                        $rewriteId = $rewriteEntity["url_rewrite_id"] ?? false;
+                        $rewriteId = $rewriteEntity['url_rewrite_id'] ?? false;
                         /** @var bool $isNeedUrlForOldUrl */
                         $isNeedUrlForOldUrl = false;
                         if ($rewriteEntity) {
                             try {
-                                if ($requestPath !== $rewriteEntity["request_path"]) {
+                                if ($requestPath !== $rewriteEntity['request_path']) {
                                     $isNeedUrlForOldUrl = true;
                                     $connection->update(
                                         $this->entitiesHelper->getTable('url_rewrite'),
@@ -3284,7 +3284,7 @@ class Product extends JobImport
                                             'redirect_type' => 301,
                                             'metadata' => $metadata
                                         ],
-                                        ['url_rewrite_id = ?' => $rewriteEntity["url_rewrite_id"]]
+                                        ['url_rewrite_id = ?' => $rewriteEntity['url_rewrite_id']]
                                     );
                                 }
                             } catch (Exception $e) {
@@ -3292,7 +3292,7 @@ class Product extends JobImport
                                     __(
                                         sprintf(
                                             'Tried to update url_rewrite_id %s : request path (%s) already exists for the store_id.',
-                                            $rewriteEntity["url_rewrite_id"],
+                                            $rewriteEntity['rl_rewrite_id'],
                                             $requestPath
                                         )
                                     )
