@@ -12,6 +12,8 @@
     <menu>
         <add id="Akeneo_Connector::akeneo_connector" title="Akeneo Connector" module="Akeneo_Connector" sortOrder="110" parent="Magento_Backend::system" resource="Akeneo_Connector::akeneo_connector"/>
         <add id="Akeneo_Connector::akeneo_connector_job" title="Jobs" module="Akeneo_Connector" sortOrder="10" parent="Akeneo_Connector::akeneo_connector" resource="Akeneo_Connector::akeneo_connector_job" action="akeneo_connector/job"/>
+        <add id="Akeneo_Connector::akeneo_connector_jobui" title="Jobs ui" module="Akeneo_Connector" sortOrder="10" parent="Akeneo_Connector::akeneo_connector" resource="Akeneo_Connector::akeneo_connector_job" action="akeneo_connector/jobui"/>
         <add id="Akeneo_Connector::akeneo_connector_log" title="Logs" module="Akeneo_Connector" sortOrder="20" parent="Akeneo_Connector::akeneo_connector" resource="Akeneo_Connector::akeneo_connector_log" action="akeneo_connector/log" />
     </menu>
+    
 </config>
