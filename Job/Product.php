@@ -32,6 +32,7 @@ use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ProductLink\Link as ProductLink;
+use Magento\Catalog\Model\ResourceModel\Category\Collection;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Eav\Model\Config as EavConfig;
@@ -3130,7 +3131,10 @@ class Product extends JobImport
              * @var array $store
              */
             foreach ($affected as $store) {
-                if (!$store['store_id'] || !$connection->tableColumnExists($tmpTable, 'url_key-' . $local)) {
+                if (!$store['store_id'] || !$connection->tableColumnExists(
+                        $tmpTable,
+                        'url_key-' . $local
+                    )) {
                     continue;
                 }
                 /** @var Select $select */
@@ -3205,7 +3209,7 @@ class Product extends JobImport
                     );
 
                     if ($isCategoryUsedInProductUrl) {
-                        /** @var \Magento\Catalog\Model\ResourceModel\Category\Collection $categories */
+                        /** @var Collection $categories */
                         $categories = $product->getCategoryCollection();
                         $categories->addAttributeToSelect('url_key');
 
@@ -3265,7 +3269,9 @@ class Product extends JobImport
                             )->where('entity_id = ?', $product->getEntityId())->where('store_id = ?', $product->getStoreId())
                         );
 
-                        $rewriteId = isset($rewriteEntity["url_rewrite_id"]) ? $rewriteEntity["url_rewrite_id"] : false;
+                        /** @var false|mixed|string $rewriteId */
+                        $rewriteId = $rewriteEntity["url_rewrite_id"] ?? false;
+                        /** @var bool $isNeedUrlForOldUrl */
                         $isNeedUrlForOldUrl = false;
                         if ($rewriteEntity) {
                             try {
@@ -3294,7 +3300,7 @@ class Product extends JobImport
                             }
                         }
 
-                        if(!$rewriteEntity || $isNeedUrlForOldUrl) {
+                        if (!$rewriteEntity || $isNeedUrlForOldUrl) {
                             /** @var array $data */
                             $data = [
                                 'entity_type'      => ProductUrlRewriteGenerator::ENTITY_TYPE,
