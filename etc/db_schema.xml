@@ -52,7 +52,7 @@
     <column xsi:type="varchar" name="identifier" nullable="false" length="13" comment="Identifier ID"/>
     <column xsi:type="int" name="number" padding="10" unsigned="true" nullable="false" identity="false" default="0" comment="Number"/>
     <column xsi:type="varchar" name="method" nullable="false" length="255" default="" comment="Method"/>
-    <column xsi:type="varchar" name="message" nullable="false" length="255" default="" comment="Message"/>
+    <column xsi:type="text" name="message" nullable="false" default="" comment="Message"/>
     <column xsi:type="smallint" name="continue" padding="6" unsigned="false" nullable="false" identity="false" default="1" comment="Continue"/>
     <column xsi:type="smallint" name="status" padding="6" unsigned="false" nullable="false" identity="false" default="1" comment="Status"/>
     <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Creation Time"/>

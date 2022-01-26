@@ -52,9 +52,7 @@ class UpdateConfigurableAttributes implements DataPatchInterface
         ScopeConfigInterface $scopeConfig,
         SerializerInterface $serializer,
         ConfigInterface $resourceConfig
-
-    )
-    {
+    ) {
         $this->scopeConfig     = $scopeConfig;
         $this->jsonSerializer  = $serializer;
         $this->resourceConfig  = $resourceConfig;
