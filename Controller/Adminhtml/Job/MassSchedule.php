@@ -6,6 +6,7 @@ namespace Akeneo\Connector\Controller\Adminhtml\Job;
 
 use Akeneo\Connector\Api\Data\JobInterface;
 use Akeneo\Connector\Executor\JobExecutor;
+use Akeneo\Connector\Helper\Config;
 use Akeneo\Connector\Model\ResourceModel\Job\Collection;
 use Akeneo\Connector\Model\ResourceModel\Job\CollectionFactory;
 use Magento\Backend\App\Action;
@@ -37,6 +38,12 @@ class MassSchedule extends Action
      * @var JobExecutor $jobExecutor
      */
     protected $jobExecutor;
+    /**
+     * This variable contains a Config
+     *
+     * @var Config $configHelper
+     */
+    protected $configHelper;
 
     /**
      * MassSchedule constructor
@@ -44,16 +51,19 @@ class MassSchedule extends Action
      * @param Context           $context
      * @param CollectionFactory $collectionFactory
      * @param JobExecutor       $jobExecutor
+     * @param Config            $configHelper
      */
     public function __construct(
         Context $context,
         CollectionFactory $collectionFactory,
-        JobExecutor $jobExecutor
+        JobExecutor $jobExecutor,
+        Config $configHelper
     ) {
         parent::__construct($context);
 
         $this->collectionFactory = $collectionFactory;
         $this->jobExecutor       = $jobExecutor;
+        $this->configHelper      = $configHelper;
     }
 
     /**
@@ -72,10 +82,19 @@ class MassSchedule extends Action
         foreach ($collection->getItems() as $job) {
             if ($this->jobExecutor->checkStatusConditions($job, true)) {
                 $this->jobExecutor->setJobStatus(JobInterface::JOB_SCHEDULED, $job);
-                $this->messageManager->addSuccessMessage(__('Job %1 correctly scheduled', $job->getName()));
+                $this->messageManager->addSuccessMessage(
+                    __(
+                        'Job %1 correctly scheduled. Please refresh the page in a few minutes to check the progress.',
+                        $job->getName()
+                    )
+                );
             }
         }
-
+        if ($this->configHelper->getJobReportEnabled()) {
+            $this->messageManager->addSuccessMessage(
+                __('You will receive an email when the job is completed.')
+            );
+        }
 
         /** @var Redirect $resultRedirect */
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
