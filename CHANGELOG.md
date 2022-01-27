@@ -297,3 +297,14 @@
 
 ### Version 102.2.1 :
 * Fix website mapping with uppercase attribute code in Akeneo
+
+### Version 102.3.0 :
+* Fix "is_null()" and "empty()" usage
+* Fix "akeneo_connector:import" command help usage
+* Fix product job status to error and don't update import success date when one of the families in the job fails
+* Fix localizable and scopable attributes being created with wrong scope
+* Remove filters on the admin job grid
+* Update success messages when scheduling a job from the admin grid
+* Update connector tables definition to "db_schema.xml"
+* Update setup scripts to patch format
+* Fix message column format from "akeneo_connector_import_log_step" table to text in order to see full log messages
