@@ -52,8 +52,7 @@ class EncryptApiSecret implements DataPatchInterface, PatchVersionInterface
         ConfigInterface $resourceConfig,
         EncryptorInterface $encryptor,
         ScopeConfigInterface $scopeConfig
-    )
-    {
+    ) {
         $this->resourceConfig = $resourceConfig;
         $this->encryptor      = $encryptor;
         $this->scopeConfig    = $scopeConfig;

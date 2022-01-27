@@ -52,9 +52,7 @@ class UpdateConfigurableAttributes implements DataPatchInterface
         ScopeConfigInterface $scopeConfig,
         SerializerInterface $serializer,
         ConfigInterface $resourceConfig
-
-    )
-    {
+    ) {
         $this->scopeConfig     = $scopeConfig;
         $this->jsonSerializer  = $serializer;
         $this->resourceConfig  = $resourceConfig;
@@ -69,25 +67,27 @@ class UpdateConfigurableAttributes implements DataPatchInterface
     {
         /** @var mixed|null $configurable */
         $configurable = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES);
-        /** @var mixed[] $configurable */
-        $configurable = $this->jsonSerializer->unserialize($configurable);
-        if (!is_array($configurable)) {
-            $configurable = [];
-        }
-        foreach ($configurable as $key => $attribute) {
-            if (!isset($attribute['attribute'], $attribute['value'])) {
-                continue;
+        if ($configurable !== null) {
+            /** @var mixed[] $configurable */
+            $configurable = $this->jsonSerializer->unserialize($configurable);
+            if (!is_array($configurable)) {
+                $configurable = [];
             }
-            if ($attribute['value'] && !$attribute['type']) {
-                $configurable[$key]['type'] = TypeField::TYPE_VALUE;
+            foreach ($configurable as $key => $attribute) {
+                if (!isset($attribute['attribute'], $attribute['value'])) {
+                    continue;
+                }
+                if ($attribute['value'] && !$attribute['type']) {
+                    $configurable[$key]['type'] = TypeField::TYPE_VALUE;
+                }
+                if ($configurable[$key]['type'] === TypeField::TYPE_DEFAULT) {
+                    unset($configurable[$key]);
+                }
+                $this->resourceConfig->saveConfig(
+                    ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES,
+                    $this->jsonSerializer->serialize($configurable)
+                );
             }
-            if ($configurable[$key]['type'] === TypeField::TYPE_DEFAULT) {
-                unset($configurable[$key]);
-            }
-            $this->resourceConfig->saveConfig(
-                ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES,
-                $this->jsonSerializer->serialize($configurable)
-            );
         }
     }
 
