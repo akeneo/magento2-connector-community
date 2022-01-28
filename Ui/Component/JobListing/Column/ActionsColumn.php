@@ -54,30 +54,19 @@ class ActionsColumn extends Column
                 if (isset($item['entity_id'])) {
                     /** @var string $scheduleJobPath */
                     $scheduleJobPath = $this->getData('config/scheduleJobPath') ?: '#';
+                    /** @var string $scheduleJobUrl */
+                    $scheduleJobUrl =  $this->urlBuilder->getUrl($scheduleJobPath,['entity_id' => $item['entity_id']]);
                     /** @var string $viewJobLogPath */
                     $viewJobLogPath = $this->getData('config/viewJobLogPath') ?: '#';
                     /** @var string $viewJobLogPathFilter */
                     $viewJobLogPathFilter = base64_encode(JobInterface::CODE . '=' . $item['code']);
-                    $item['actions'] = [
-                        'schedule' => [
-                            'href' => $this->urlBuilder->getUrl(
-                                $scheduleJobPath,
-                                [
-                                    'entity_id' => $item['entity_id']
-                                ]
-                            ),
-                            'label' => __('Schedule Job')
-                        ],
-                        'viewLogs' => [
-                            'href' => $this->urlBuilder->getUrl(
-                                $viewJobLogPath,
-                                [
-                                    'filter' => $viewJobLogPathFilter
-                                ]
-                            ),
-                            'label' => __('View Logs')
-                        ]
-                    ];
+                    /** @var string $viewJobLogUrl */
+                    $viewJobLogUrl =  $this->urlBuilder->getUrl($viewJobLogPath, ['filter' => $viewJobLogPathFilter]);
+
+                    /** @var string $html */
+                    $html = '<a href="' . $scheduleJobUrl . '">' . __('Schedule Job') . '</a> / ';
+                    $html .= '<a href="' . $viewJobLogUrl . '">' . __('View Logs') . '</a>';
+                    $item['actions'] = $html;
                 }
             }
         }

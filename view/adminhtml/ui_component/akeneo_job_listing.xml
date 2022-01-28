@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * @package   Akeneo\Connector\view\adminhtml\ui_component
+ * @author    Agence Dn'D <contact@dnd.fr>
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @link      https://www.dnd.fr/
  */
 -->
 <listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
@@ -59,17 +63,17 @@
         </selectionsColumn>
         <column name="name">
             <settings>
-                <label translate="true">name</label>
+                <label translate="true">Name</label>
             </settings>
         </column>
         <column name="code">
             <settings>
-                <label translate="true">code</label>
+                <label translate="true">Code</label>
             </settings>
         </column>
         <column name="status" class="Akeneo\Connector\Ui\Component\JobListing\Column\Status">
             <settings>
-                <label translate="true">status</label>
+                <label translate="true">Status</label>
                 <bodyTmpl>ui/grid/cells/html</bodyTmpl>
             </settings>
         </column>
@@ -88,7 +92,7 @@
                 <label translate="true">Last success date</label>
             </settings>
         </column>
-        <actionsColumn name="actions" class="Akeneo\Connector\Ui\Component\JobListing\Column\ActionsColumn">
+        <column name="actions" class="Akeneo\Connector\Ui\Component\JobListing\Column\ActionsColumn">
             <argument name="data" xsi:type="array">
                 <item name="config" xsi:type="array">
                     <item name="scheduleJobPath" xsi:type="string">akeneo_connector/job/massSchedule</item>
@@ -96,8 +100,9 @@
                 </item>
             </argument>
             <settings>
-                <indexField>entity_id</indexField>
+                <label translate="true">Actions</label>
+                <bodyTmpl>ui/grid/cells/html</bodyTmpl>
             </settings>
-        </actionsColumn>
+        </column>
     </columns>
 </listing>
