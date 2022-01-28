@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Akeneo\Connector\Ui\Component\AkeneoJobListing\Column;
+namespace Akeneo\Connector\Ui\Component\JobListing\Column;
 
 use Akeneo\Connector\Api\Data\JobInterface;
 use Magento\Ui\Component\Listing\Columns\Column;
@@ -21,9 +21,9 @@ class Status extends Column
     /**
      * Description prepareDataSource function
      *
-     * @param mixed[] $dataSource
+     * @param mixed[][] $dataSource
      *
-     * @return mixed[]
+     * @return mixed[][]
      */
     public function prepareDataSource(array $dataSource): array {
 

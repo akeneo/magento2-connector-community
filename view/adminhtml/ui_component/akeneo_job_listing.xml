@@ -67,7 +67,7 @@
                 <label translate="true">code</label>
             </settings>
         </column>
-        <column name="status" class="Akeneo\Connector\Ui\Component\AkeneoJobListing\Column\Status">
+        <column name="status" class="Akeneo\Connector\Ui\Component\JobListing\Column\Status">
             <settings>
                 <label translate="true">status</label>
                 <bodyTmpl>ui/grid/cells/html</bodyTmpl>
@@ -88,5 +88,16 @@
                 <label translate="true">Last success date</label>
             </settings>
         </column>
+        <actionsColumn name="actions" class="Akeneo\Connector\Ui\Component\JobListing\Column\ActionsColumn">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="scheduleJobPath" xsi:type="string">akeneo_connector/job/massSchedule</item>
+                    <item name="viewJobLogPath" xsi:type="string">akeneo_connector/log/index</item>
+                </item>
+            </argument>
+            <settings>
+                <indexField>entity_id</indexField>
+            </settings>
+        </actionsColumn>
     </columns>
 </listing>

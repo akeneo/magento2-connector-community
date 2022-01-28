@@ -65,7 +65,8 @@ class MassSchedule extends Action
     public function execute()
     {
         /** @var int[] $ids */
-        $ids = $this->getRequest()->getParam('selected');
+        $ids = $this->getRequest()->getParam('selected') ?? [];
+        $ids[] = $this->getRequest()->getParam('entity_id');
         /** @var Collection $collection */
         $collection = $this->collectionFactory->create();
         if (!$this->getRequest()->getParam('excluded')) {
