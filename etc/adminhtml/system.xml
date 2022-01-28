@@ -618,6 +618,11 @@ For example :<br/>
                         <field id="email_job_report_enabled">1</field>
                     </depends>
                 </field>
+                <field id="enable_job_grid_auto_reload" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Job grid auto reload</label>
+                    <comment>Job grid will refresh itself every 5 seconds</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
             </group>
         </section>
     </system>

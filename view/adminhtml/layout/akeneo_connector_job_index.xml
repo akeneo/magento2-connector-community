@@ -15,6 +15,11 @@
     </head>
     <body>
         <referenceContainer name="content">
+            <block template="Akeneo_Connector::jobgrid/autoReload.phtml">
+                <arguments>
+                    <argument name="akeneo_connector_jobgrid_autoreloadconfig_view_model" xsi:type="object">Akeneo\Connector\ViewModel\Jobgrid\AutoReloadConfig</argument>
+                </arguments>
+            </block>
             <uiComponent name="akeneo_job_listing"/>
         </referenceContainer>
     </body>
