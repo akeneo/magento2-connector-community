@@ -29,7 +29,8 @@ class Status extends Column
 
         if (isset($dataSource['data']['items'])) {
             foreach ($dataSource['data']['items'] as & $item) {
-                $item['status'] = $this->getLabel($item['status']); //Here you can do anything with actual data
+                $item['raw_status'] = $item['status'];
+                $item['status'] = $this->getLabel($item['status']);
             }
         }
 

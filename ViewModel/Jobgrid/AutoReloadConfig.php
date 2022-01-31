@@ -78,4 +78,14 @@ class AutoReloadConfig implements ArgumentInterface
 
         return count($watchableJobs) && $this->scopeConfig->getValue(self::IS_AUTO_RELOAD_CONFIG_PATH);
     }
+
+    /**
+     * Description getWatchableStatusIds function
+     *
+     * @return string
+     */
+    public function getWatchableStatusIds(): string
+    {
+        return json_encode(self::SCHEDULING_AND_PROCESSING_STATUS_IDS);
+    }
 }

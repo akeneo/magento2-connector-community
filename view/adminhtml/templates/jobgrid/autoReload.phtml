@@ -22,7 +22,8 @@ $viewModel = $block->getAkeneoConnectorJobgridAutoreloadconfigViewModel();
     {
         "*": {
             "Akeneo_Connector/js/autoReload": {
-                "autoReloadEnabled": "<?= $viewModel->isAutoReloadEnabled() ?>"
+                "autoReloadEnabled": "<?= $viewModel->isAutoReloadEnabled() ?>",
+                "watchableStatusIds": "<?= $viewModel->getWatchableStatusIds() ?>"
             }
         }
     }

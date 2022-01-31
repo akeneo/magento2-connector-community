@@ -4,11 +4,24 @@ define([
     'use strict';
     return function (config) {
         if (config.autoReloadEnabled) {
-            setInterval(
+            const watchableStatusIds = JSON.parse(config.watchableStatusIds);
+            const autoReloadInterval = setInterval(
                 () => {
-                    registry.get('index = akeneo_job_listing')
-                    .source
-                    .reload({'refresh': true})
+                    const registrySource = registry.get('index = akeneo_job_listing')
+                        .source;
+                    registrySource.reload({'refresh': true})
+                    const rows = registrySource.data.items;
+                    const watchableRows = rows.filter(
+                        row => {
+                            for (let id of watchableStatusIds) {
+                                if (parseInt(row.raw_status) === id) return true;
+                            }
+                            return false;
+                        }
+                    );
+                    if (!watchableRows.length) {
+                        clearInterval(autoReloadInterval);
+                    }
                 }, 5000
             )
         }
