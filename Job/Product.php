@@ -3292,7 +3292,7 @@ class Product extends JobImport
                                     __(
                                         sprintf(
                                             'Tried to update url_rewrite_id %s : request path (%s) already exists for the store_id.',
-                                            $rewriteEntity['rl_rewrite_id'],
+                                            $rewriteEntity['url_rewrite_id'],
                                             $requestPath
                                         )
                                     )
