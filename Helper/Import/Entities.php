@@ -47,6 +47,18 @@ class Entities
      */
     const IMPORT_CODE_PRODUCT = 'product';
     /**
+     * Akeneo Connector version 2.4.1 or inferior constant
+     *
+     * @var string VERSION_2_4_1_OR_INFERIOR
+     */
+    const VERSION_2_4_1_OR_INFERIOR = 79;
+    /**
+     * Akeneo Connector version 2.4.2 or superior constant
+     *
+     * @var string VERSION_2_4_2_OR_SUPERIOR
+     */
+    const VERSION_2_4_2_OR_SUPERIOR = 189;
+    /**
      * This variable contains a ResourceConnection
      *
      * @var ResourceConnection $connection
@@ -854,9 +866,9 @@ class Entities
     public function formatMediaName($filename, $originalFilename = null)
     {
         /** @var int $lengthLimit */
-        $lengthLimit = 79;
+        $lengthLimit = self::VERSION_2_4_1_OR_INFERIOR;
         if ($this->configHelper->getMaxCharacterMediaFileName() === MaxCharacter::ONE_HUNDRED_EIGHTY_NINE_CHARACTERS) {
-            $lengthLimit = 189;
+            $lengthLimit = self::VERSION_2_4_2_OR_SUPERIOR;
         }
         /** @var string[] $filenameParts */
         $filenameParts = explode('.', $filename);
