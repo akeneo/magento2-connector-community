@@ -1687,7 +1687,7 @@ class Product extends JobImport
                 /** @var array $file */
                 $file = $this->akeneoClient->getProductMediaFileApi()->get($row[$attribute]);
                 /** @var string $name */
-                $name = $this->entitiesHelper->formatMediaName(basename($file['code']));
+                $name = $this->entitiesHelper->formatMediaName(basename($file['code']),basename($file['original_filename']));
                 /** @var string $filePath */
                 $filePath = $this->configHelper->getMediaFullPath($name, $this->configHelper->getFilesMediaDirectory());
 
@@ -3323,7 +3323,7 @@ class Product extends JobImport
                     $medias[$row[$image]] = $this->akeneoClient->getProductMediaFileApi()->get($row[$image]);
                 }
                 /** @var string $name */
-                $name = $this->entitiesHelper->formatMediaName(basename($medias[$row[$image]]['code']));
+                $name = $this->entitiesHelper->formatMediaName(basename($medias[$row[$image]]['code']), basename($medias[$row[$image]]['original_filename']));
                 /** @var string $filePath */
                 $filePath = $this->configHelper->getMediaFullPath($name);
                 /** @var bool|string[] $databaseRecords */

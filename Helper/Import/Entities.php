@@ -3,6 +3,7 @@
 namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Model\Source\MaxCharacter;
 use Exception;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Catalog\Model\Product as BaseProductModel;
@@ -842,14 +843,21 @@ class Entities
     }
 
     /**
-     * Format media filename, removing hash and stopping at 200 characters
+     * Format media filename, removing hash and stopping stopping at 90 or 200 characters
      *
      * @param string $filename
      *
+     * @param null   $originalFilename
+     *
      * @return string
      */
-    public function formatMediaName($filename)
+    public function formatMediaName($filename, $originalFilename = null)
     {
+        /** @var int $lengthLimit */
+        $lengthLimit = 79;
+        if ($this->configHelper->getMaxCharacterMediaFileName() === MaxCharacter::ONE_HUNDRED_EIGHTY_NINE_CHARACTERS) {
+            $lengthLimit = 189;
+        }
         /** @var string[] $filenameParts */
         $filenameParts = explode('.', $filename);
         // Get the extention
@@ -862,9 +870,21 @@ class Entities
         $shortHash = array_shift($filename);
         $shortHash = substr($shortHash, 0, 4);
         $filename  = implode('_', $filename);
+        if (isset($originalFilename)) {
+            $originalFilename = str_replace('-', '_', $originalFilename);
+            /** @var string[] $filenameParts */
+            $filenameParts = explode('.', $originalFilename);
+            if (is_array($filenameParts) && count($filenameParts) > 1) {
+                array_pop($filenameParts);
+            }
+            // Get the hash
+            $filename = implode('.', $filenameParts);
+            $filename = explode('_', $filename);
+            $filename = implode('_', $filename);
+        }
         // Form the final file name
         /** @var string $shortName */
-        $shortName = substr($filename, 0, 189);
+        $shortName = substr($filename, 0, $lengthLimit);
         /** @var string $finalName */
         $finalName = $shortName . '_' . $shortHash . '.' . $extension;
 

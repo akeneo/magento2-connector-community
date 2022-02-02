@@ -45,6 +45,7 @@
             </category>
             <advanced>
                 <advanced_log>0</advanced_log>
+                <product_max_character_media_file_name>seventy_nine_characters</product_max_character_media_file_name>
             </advanced>
             <attribute>
                 <option_code_as_admin_label>0</option_code_as_admin_label>

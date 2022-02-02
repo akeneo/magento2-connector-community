@@ -566,6 +566,10 @@ For example :<br/>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>Activating advanced log may slow down the imports. Temporary tables won't be deleted at the end of their imports. Logs will be placed in var/log/akeneo_connector</comment>
                 </field>
+                <field id="product_max_character_media_file_name" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Maximum characters for product image and asset file names</label>
+                    <source_model>Akeneo\Connector\Model\Source\MaxCharacter</source_model>
+                </field>
             </group>
         </section>
     </system>
