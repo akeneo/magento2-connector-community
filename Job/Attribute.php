@@ -126,6 +126,12 @@ class Attribute extends Import
      * @var IndexerFactory $indexFactory
      */
     protected $indexFactory;
+    /**
+     * Code of pim table attribute type
+     *
+     * @var string PIM_CATALOG_TABLE
+     */
+    public const PIM_CATALOG_TABLE = 'pim_catalog_table';
 
     /**
      * Attribute constructor
@@ -186,8 +192,11 @@ class Attribute extends Import
         /** @var mixed[] $filters */
         $filters = $this->getFilters();
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->jobExecutor->setAdditionalMessage(
+                __('Path to log file : %1', $this->handler->getFilename()),
+                $this->logger
+            );
+            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
             $this->logger->addDebug(__('Attribute API call Filters : ') . print_r($filters, true));
         }
         /** @var PageInterface $attributes */
@@ -195,13 +204,13 @@ class Attribute extends Import
         /** @var array $attribute */
         $attribute = $attributes->getItems();
         if (empty($attribute)) {
-            $this->setMessage(__('No results from Akeneo'), $this->logger);
-            $this->stop(1);
+            $this->jobExecutor->setMessage(__('No results from Akeneo'), $this->logger);
+            $this->jobExecutor->afterRun(1);
 
             return;
         }
         $attribute = reset($attribute);
-        $this->entitiesHelper->createTmpTableFromApi($attribute, $this->getCode());
+        $this->entitiesHelper->createTmpTableFromApi($attribute, $this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -214,7 +223,7 @@ class Attribute extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
         /** @var mixed[] $filters */
@@ -231,7 +240,7 @@ class Attribute extends Import
         foreach ($attributes as $index => $attribute) {
             // If the attribute starts with a number, skip
             if (ctype_digit(substr($attribute['code'], 0, 1))) {
-                $this->setAdditionalMessage(
+                $this->jobExecutor->setAdditionalMessage(
                     __(
                         'The attribute %1 was not imported because it starts with a number. Update it in Akeneo and retry.',
                         $attribute['code']
@@ -249,7 +258,7 @@ class Attribute extends Import
                     $metricsSetting
                 )) {
                 if ($attribute['scopable'] || $attribute['localizable']) {
-                    $this->setAdditionalMessage(
+                    $this->jobExecutor->setAdditionalMessage(
                         __(
                             'Attribute %1 is scopable or localizable please change configuration at Stores > Configuration > Catalog > Akeneo Connector > Products > Metrics management.',
                             $attributeCode
@@ -260,12 +269,13 @@ class Attribute extends Import
                 }
                 $attribute['type'] .= '_select';
             }
-            $this->entitiesHelper->insertDataFromApi($attribute, $this->getCode());
+            $this->entitiesHelper->insertDataFromApi($attribute, $this->jobExecutor->getCurrentJob()->getCode());
         }
         $index++;
 
-        $this->setAdditionalMessage(
-            __('%1 line(s) found', $index)
+        $this->jobExecutor->setAdditionalMessage(
+            __('%1 line(s) found', $index),
+            $this->logger
         );
 
         if ($this->configHelper->isAdvancedLogActivated()) {
@@ -277,8 +287,11 @@ class Attribute extends Import
         $localeCode = $this->configHelper->getDefaultLocale();
 
         if (!$connection->tableColumnExists($tmpTable, 'labels-' . $localeCode)) {
-            $this->setMessage(__('No attributes with label in the admin locale %1 found.', $localeCode), $this->logger);
-            $this->stop(1);
+            $this->jobExecutor->setMessage(
+                __('No attributes with label in the admin locale %1 found.', $localeCode),
+                $this->logger
+            );
+            $this->jobExecutor->afterRun(1);
 
             return;
         }
@@ -297,7 +310,7 @@ class Attribute extends Import
         /** @var array $row */
         while (($row = $query->fetch())) {
             if (!isset($row['label']) || $row['label'] === null) {
-                $this->setAdditionalMessage(
+                $this->jobExecutor->setAdditionalMessage(
                     __(
                         'The attribute %1 was not imported because it did not have a translation in admin store language : %2',
                         $row['code'],
@@ -362,7 +375,12 @@ class Attribute extends Import
             )
         );
 
-        $this->entitiesHelper->matchEntity('code', 'eav_attribute', 'attribute_id', $this->getCode());
+        $this->entitiesHelper->matchEntity(
+            'code',
+            'eav_attribute',
+            'attribute_id',
+            $this->jobExecutor->getCurrentJob()->getCode()
+        );
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logImportedEntities($this->logger, true);
         }
@@ -378,7 +396,7 @@ class Attribute extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $columns */
         $columns = $this->attributeHelper->getSpecificColumns();
         /**
@@ -421,7 +439,7 @@ class Attribute extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string $familyAttributeRelationsTable */
         $familyAttributeRelationsTable = $this->entitiesHelper->getTable('akeneo_connector_family_attribute_relations');
 
@@ -463,7 +481,7 @@ class Attribute extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         /** @var string $adminLang */
         $adminLang = $this->storeHelper->getAdminLang();
@@ -514,7 +532,7 @@ class Attribute extends Import
                     'The attribute %1 was skipped because its type is not the same between Akeneo and Magento. Please delete it in Magento and try a new import',
                     $row['code']
                 );
-                $this->setAdditionalMessage($message, $this->logger);
+                $this->jobExecutor->setAdditionalMessage($message, $this->logger);
 
                 continue;
             }
@@ -551,10 +569,10 @@ class Attribute extends Import
             /* Retrieve attribute scope */
             /** @var int $global */
             $global = ScopedAttributeInterface::SCOPE_GLOBAL; // Global
-            if ($row['scopable'] == 1) {
+            if ((int)$row['scopable'] === 1) {
                 $global = ScopedAttributeInterface::SCOPE_WEBSITE; // Website
             }
-            if ($row['localizable'] == 1) {
+            if ((int)$row['localizable'] === 1 || $row['type'] === self::PIM_CATALOG_TABLE) {
                 $global = ScopedAttributeInterface::SCOPE_STORE; // Store View
             }
             /** @var array $data */
@@ -770,7 +788,7 @@ class Attribute extends Import
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->getCode());
+        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -784,7 +802,7 @@ class Attribute extends Import
         $configurations = $this->configHelper->getCacheTypeAttribute();
 
         if (!$configurations) {
-            $this->setMessage(__('No cache cleaned'), $this->logger);
+            $this->jobExecutor->setMessage(__('No cache cleaned'), $this->logger);
 
             return;
         }
@@ -799,7 +817,7 @@ class Attribute extends Import
             $this->cacheTypeList->cleanType($type);
         }
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('Cache cleaned for: %1', join(', ', array_intersect_key($cacheTypeLabels, array_flip($types)))),
             $this->logger
         );
@@ -817,7 +835,7 @@ class Attribute extends Import
         $configurations = $this->configHelper->getIndexAttribute();
 
         if (!$configurations) {
-            $this->setMessage(__('No index refreshed'), $this->logger);
+            $this->jobExecutor->setMessage(__('No index refreshed'), $this->logger);
 
             return;
         }
@@ -835,7 +853,7 @@ class Attribute extends Import
             $typesFlushed[] = $index->getTitle();
         }
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('Index refreshed for: %1', join(', ', $typesFlushed)),
             $this->logger
         );
@@ -865,12 +883,22 @@ class Attribute extends Import
         /** @var mixed[] $filters */
         $filters = $this->attributeFilters->getFilters();
         if (array_key_exists('error', $filters)) {
-            $this->setMessage($filters['error'], $this->logger);
-            $this->stop(true);
+            $this->jobExecutor->setMessage($filters['error'], $this->logger);
+            $this->jobExecutor->afterRun(true);
         }
 
         $this->filters = $filters;
 
         return $this->filters;
+    }
+
+    /**
+     * Description getLogger function
+     *
+     * @return AttributeLogger
+     */
+    public function getLogger()
+    {
+        return $this->logger;
     }
 }

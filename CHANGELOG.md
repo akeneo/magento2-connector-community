@@ -250,3 +250,64 @@
 
 ### Version 101.8.2 :
 * Fix issue on temporary table indexes when a column is missing
+
+### Version 102.0.0 :
+* Add new asynchronous import system: (https://help.akeneo.com/magento2-connector/articles/trigger.html#how-to-trigger-import-jobs)
+    * Remove old console import in "System > Akeneo Connector > Jobs"
+    * Add new "akeneo_connector_job" table to manage job entity
+    * Add new cron task "akeneo_connector_launch_scheduled_job" to run jobs in background
+    * Add new job grid under "System > Akeneo Connector > Jobs" in order to manually schedule and run jobs
+    * Prevent concurrent job trigger if a job is already scheduled or running
+
+**Warning :** *In order to use the new import system, please make sure that Magento 2 CRON are correctly running (https://help.akeneo.com/magento2-connector/articles/all-pre-requisite.html#configure-your-magento-2)*
+
+### Version 102.0.1 :
+* Fix content staging scheduled update for a product, or a category without end date being updated wrongfully when "Does Akeneo data override content staging" configuration is set to "No"
+
+### Version 102.0.2 :
+* Fix website mapping not working when product job is scheduled and if "Set attribute option code as Admin label for attribute options" configuration is set to "Yes"
+
+### Version 102.1.0 :
+* Add "Since last successful import" filter for product job (https://help.akeneo.com/magento2-connector/articles/03-products-filter-configuration.html#how-to-import-only-updated-products)
+* Add product type attribute mapping for virtual products (https://help.akeneo.com/magento2-connector/articles/05-configure-products.html#product-type-mapping)
+* Add Akeneo Connector CRON group (https://help.akeneo.com/magento2-connector/articles/trigger.html#how-to-manually-schedule-and-trigger-each-job)
+* Fix processing label display in log grid
+* Update API Secret configuration to obscure type
+* Update all connector configuration scopes to "Global"
+
+### Version 102.1.1 :
+* Fix Product job execution per family not continuing after a job error occurs in a specific family
+
+### Version 102.1.2 :
+* Fix URL rewrite generation when mapping a scopable attribute to the url_key attribute
+* Fix Product job execution per family not continuing after a job error occurs in a specific family
+
+### Version 102.1.4 :
+* Add compatibility with the new Akeneo table attribute type (https://help.akeneo.com/magento2-connector/articles/what-data.html#attribute-types)
+
+### Version 102.1.5 :
+* Remove "NOT IN" family filter in API call during product job when using Standard filter
+
+### Version 102.2.0 :
+* Add new "Status mode" in order to assign simple product status from a completeness level (https://help.akeneo.com/magento2-connector/articles/05-configure-products.html#product-status-mode)
+* Add job logs cleaning task (https://help.akeneo.com/magento2-connector/articles/17-configure-logs-cleaning.html)
+* Add email reporting for job execution (https://help.akeneo.com/magento2-connector/articles/18-configure-job-email-reports.md.html)
+* Use PHP short syntax and escape translations in templates
+* Fix Magento 2 serializer usage to encode and decode JSON
+
+### Version 102.2.1 :
+* Fix website mapping with uppercase attribute code in Akeneo
+
+### Version 102.3.0 :
+* Fix "is_null()" and "empty()" usage
+* Fix "akeneo_connector:import" command help usage
+* Fix product job status to error and don't update import success date when one of the families in the job fails
+* Fix localizable and scopable attributes being created with wrong scope
+* Remove filters on the admin job grid
+* Update success messages when scheduling a job from the admin grid
+* Update connector tables definition to "db_schema.xml"
+* Update setup scripts to patch format
+* Fix message column format from "akeneo_connector_import_log_step" table to text in order to see full log messages
+
+### Version 102.3.1 :
+* Improve option job performance by optimizing existing option mapping requests and process

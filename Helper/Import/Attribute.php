@@ -2,18 +2,17 @@
 
 namespace Akeneo\Connector\Helper\Import;
 
-use Composer\EventDispatcher\EventDispatcher;
+use Akeneo\Connector\Helper\Config;
 use Magento\Catalog\Model\Product\Attribute\Backend\Price;
 use Magento\Eav\Model\Entity\Attribute\Backend\ArrayBackend;
 use Magento\Eav\Model\Entity\Attribute\Backend\Datetime;
 use Magento\Eav\Model\Entity\Attribute\Source\Boolean;
 use Magento\Eav\Model\Entity\Attribute\Source\Table;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface as EventManager;
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Weee\Model\Attribute\Backend\Weee\Tax;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Akeneo\Connector\Helper\Config;
-use Akeneo\Connector\Helper\Serializer;
 
 /**
  * Class Attribute
@@ -21,7 +20,7 @@ use Akeneo\Connector\Helper\Serializer;
  * @category  Class
  * @package   Akeneo\Connector\Helper\Import
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
@@ -30,9 +29,9 @@ class Attribute
     /**
      * Description $serializer field
      *
-     * @var Serializer $serializer
+     * @var Json $jsonSerializer
      */
-    protected $serializer;
+    protected $jsonSerializer;
     /**
      * Description $eventManager field
      *
@@ -49,18 +48,18 @@ class Attribute
     /**
      * Attribute constructor
      *
-     * @param Serializer           $serializer
+     * @param Json                 $jsonSerializer
      * @param EventManager         $eventManager
      * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
-        Serializer $serializer,
+        Json $jsonSerializer,
         EventManager $eventManager,
         ScopeConfigInterface $scopeConfig
     ) {
-        $this->serializer   = $serializer;
-        $this->eventManager = $eventManager;
-        $this->scopeConfig  = $scopeConfig;
+        $this->jsonSerializer = $jsonSerializer;
+        $this->eventManager   = $eventManager;
+        $this->scopeConfig    = $scopeConfig;
     }
 
     /**
@@ -87,6 +86,7 @@ class Attribute
             'pim_catalog_multiselect'      => 'multiselect',
             'pim_catalog_price_collection' => 'price',
             'pim_catalog_tax'              => 'tax',
+            'pim_catalog_table'            => 'textarea'
         ];
 
         $types = array_merge($types, $this->getAdditionalTypes());
@@ -101,14 +101,15 @@ class Attribute
      */
     public function getAdditionalTypes()
     {
-        /** @var string|array $types */
+        /** @var string $types */
         $types = $this->scopeConfig->getValue(Config::ATTRIBUTE_TYPES);
-        /** @var array $additional */
+        /** @var mixed[] $additional */
         $additional = [];
         if (!$types) {
             return $additional;
         }
-        $types = $this->serializer->unserialize($types);
+        /** @var mixed[] $types */
+        $types = $this->jsonSerializer->unserialize($types);
         if (is_array($types)) {
             /** @var array $type */
             foreach ($types as $type) {

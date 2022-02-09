@@ -2,13 +2,12 @@
 
 namespace Akeneo\Connector\Helper\Import;
 
-use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
-use Magento\Catalog\Model\Product as BaseProductModel;
-use Magento\Framework\App\DeploymentConfig;
-use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
+use Magento\Framework\Exception\LocalizedException;
 use Zend_Db_Expr as Expr;
+use Zend_Db_Statement_Exception;
 
 /**
  * Class Option
@@ -16,29 +15,12 @@ use Zend_Db_Expr as Expr;
  * @category  Class
  * @package   Akeneo\Connector\Helper\Import
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Option extends Entities
 {
-    /**
-     * Option constructor
-     *
-     * @param ResourceConnection $connection
-     * @param DeploymentConfig   $deploymentConfig
-     * @param BaseProductModel   $product
-     * @param ConfigHelper       $configHelper
-     */
-    public function __construct(
-        ResourceConnection $connection,
-        DeploymentConfig $deploymentConfig,
-        BaseProductModel $product,
-        ConfigHelper $configHelper
-    ) {
-        parent::__construct($connection, $deploymentConfig, $product, $configHelper);
-    }
-
     /**
      * Match Magento Id with code
      *
@@ -48,30 +30,20 @@ class Option extends Entities
      * @param string $import
      * @param string $prefix
      *
-     * @return \Akeneo\Connector\Helper\Import\Entities
-     * @throws \Exception
+     * @return Entities
+     * @throws LocalizedException
+     * @throws Zend_Db_Statement_Exception
      */
     public function matchEntity($pimKey, $entityTable, $entityKey, $import, $prefix = null)
     {
         /** @var string $localeCode */
         $localeCode = $this->configHelper->getDefaultLocale();
-        /** @var \Magento\Framework\DB\Adapter\AdapterInterface $connection */
+        /** @var AdapterInterface $connection */
         $connection = $this->connection;
         /** @var string $tableName */
         $tableName = $this->getTableName($import);
 
-        if ($connection->tableColumnExists($tableName, 'code')) {
-            /** @var string $codeIndexName */
-            $codeIndexName = $connection->getIndexName($tableName, 'code');
-            $connection->query('CREATE INDEX ' . $codeIndexName . ' ON ' . $tableName . ' (code(255));');
-        }
-
-        if ($connection->tableColumnExists($tableName, 'attribute')) {
-            /** @var string $attributeIndexName */
-            $attributeIndexName = $connection->getIndexName($tableName, 'attribute');
-            $connection->query('CREATE INDEX ' . $attributeIndexName . ' ON ' . $tableName . ' (attribute(255));');
-        }
-
+        // Delete empty
         $connection->delete($tableName, [$pimKey . ' = ?' => '']);
         /** @var string $akeneoConnectorTable */
         $akeneoConnectorTable = $this->getTable('akeneo_connector_entities');
@@ -82,8 +54,7 @@ class Option extends Entities
             $entityKey = $this->getColumnIdentifier($entityTable);
         }
 
-        /* Connect existing Magento options to new Akeneo items */
-        // Get existing entities from Akeneo table
+        /* Connect existing Magento options to new Akeneo items */ // Get existing entities from Akeneo table
         /** @var Select $select */
         $select = $connection->select()->from($akeneoConnectorTable, ['entity_id' => 'entity_id'])->where(
             'import = ?',
@@ -108,35 +79,49 @@ class Option extends Entities
         }
 
         if ($connection->tableColumnExists($tableName, $adminColumnValue)) {
-            // Get all entities that are being imported and already present in Magento
+            // Add index to admin label column
+            /** @var string $labelIndexName */
+            $labelIndexName = $connection->getIndexName($tableName, $adminColumnValue);
+            $connection->query('CREATE INDEX `' . $labelIndexName . '` ON ' . $tableName . ' (`' . $adminColumnValue . '`(255));');
+
+            // Get all entities that are being imported and have a corresponding label in Magento
             $select = $connection->select()->from(
                 ['t' => $tableName],
                 $columnToSelect
             )->joinInner(
                 ['e' => 'eav_attribute_option_value'],
-                $condition
+                $condition,
+                []
             )->joinInner(
                 ['o' => 'eav_attribute_option'],
-                'o.`option_id` = e.`option_id`'
+                'o.`option_id` = e.`option_id`',
+                ['option_id']
             )->joinInner(
                 ['a' => 'eav_attribute'],
-                'o.`attribute_id` = a.`attribute_id` AND t.`attribute` = a.`attribute_code`'
+                'o.`attribute_id` = a.`attribute_id` AND t.`attribute` = a.`attribute_code`',
+                []
             )->where('e.store_id = ?', 0)->where('a.entity_type_id', $entityTypeId);
-            /** @var string $query */
-            $query = $connection->query($select);
+            /** @var string[] $existingMagentoOptions */
+            $existingMagentoOptions = $connection->query($select)->fetchAll();
+            /** @var string[] $existingMagentoOptionIds */
+            $existingMagentoOptionIds = array_column($existingMagentoOptions, 'option_id');
+            /** @var string[] $entitiesToCreate */
+            $entitiesToCreate = array_diff($existingMagentoOptionIds, $existingEntities);
 
-            /** @var mixed $row */
-            while ($row = $query->fetch()) {
-                // Create a row in Akeneo table for options present in Magento and Akeneo that were never imported before
-                if (!in_array($row['option_id'], $existingEntities)) {
-                    /** @var string[] $values */
-                    $values = [
-                        'import'    => 'option',
-                        'code'      => $row['attribute'] . '-' . $row['code'],
-                        'entity_id' => $row['option_id'],
-                    ];
-                    $connection->insertOnDuplicate($akeneoConnectorTable, $values);
-                }
+            /**
+             * @var string $entityToCreateKey
+             * @var string $entityOptionId
+             */
+            foreach ($entitiesToCreate as $entityToCreateKey => $entityOptionId) {
+                /** @var string[] $currentEntity */
+                $currentEntity = $existingMagentoOptions[$entityToCreateKey];
+                /** @var string[] $values */
+                $values = [
+                    'import'    => 'option',
+                    'code'      => $currentEntity['attribute'] . '-' . $currentEntity['code'],
+                    'entity_id' => $entityOptionId,
+                ];
+                $connection->insertOnDuplicate($akeneoConnectorTable, $values);
             }
         }
 

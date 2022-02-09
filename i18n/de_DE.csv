@@ -171,3 +171,8 @@ The attribute %1 was not imported because it starts with a number. Update it in 
 "Empty","Leer"
 "Yes","Ja"
 "No","Nein"
+"Job(s) successfully reset","Jobs werden korrekt zurückgesetzt"
+"The job %1 is already running","Der Job %1 läuft bereits"
+"The job %1 is already scheduled","Der Job %1 ist bereits eingeplant"
+"Job %1 correctly scheduled. Please refresh the page in a few minutes to check the progress.","Job %1 korrekt geplant. Bitte aktualisieren Sie die Seite in einigen Minuten, um den Fortschritt zu überprüfen."
+"You will receive an email when the job is completed.","Sie erhalten eine E-Mail, wenn der Auftrag abgeschlossen ist."

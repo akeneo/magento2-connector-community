@@ -10,20 +10,7 @@
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-    <preference for="Akeneo\Connector\Api\ImportRepositoryInterface" type="Akeneo\Connector\Job\ImportRepository"/>
     <preference for="Akeneo\Connector\Api\LogRepositoryInterface" type="Akeneo\Connector\Model\LogRepository"/>
-
-    <type name="Akeneo\Connector\Job\ImportRepository">
-        <arguments>
-            <argument name="data" xsi:type="array">
-                <item name="category" xsi:type="object">\Akeneo\Connector\Job\Category</item>
-                <item name="family" xsi:type="object">\Akeneo\Connector\Job\Family</item>
-                <item name="attribute" xsi:type="object">\Akeneo\Connector\Job\Attribute</item>
-                <item name="option" xsi:type="object">\Akeneo\Connector\Job\Option</item>
-                <item name="product" xsi:type="object">\Akeneo\Connector\Job\Product</item>
-            </argument>
-        </arguments>
-    </type>
 
     <type name="Akeneo\Connector\Job\Category">
         <arguments>
@@ -364,11 +351,6 @@
             <argument name="readFactory" xsi:type="object">Magento\Framework\Filesystem\Directory\ReadFactory</argument>
         </arguments>
     </type>
-    <type name="Akeneo\Connector\Console\Command\AkeneoConnectorImportCommand">
-        <arguments>
-            <argument name="importRepository" xsi:type="object">Akeneo\Connector\Api\ImportRepositoryInterface\Proxy</argument>
-        </arguments>
-    </type>
 
     <type name="Akeneo\Connector\Logger\Handler\AttributeHandler">
         <arguments>
@@ -433,6 +415,12 @@
             <argument name="handlers" xsi:type="array">
                 <item name="system" xsi:type="object">Akeneo\Connector\Logger\Handler\ProductHandler</item>
             </argument>
+        </arguments>
+    </type>
+
+    <type name="Akeneo\Connector\Console\Command\AkeneoConnectorImportCommand">
+        <arguments>
+            <argument name="jobExecutor" xsi:type="object">Akeneo\Connector\Executor\JobExecutor\Proxy</argument>
         </arguments>
     </type>
 </config>

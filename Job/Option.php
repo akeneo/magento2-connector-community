@@ -21,10 +21,8 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Indexer\IndexerInterface;
 use Magento\Indexer\Model\IndexerFactory;
-use Akeneo\Connector\Job\Import;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Interface;
 
@@ -186,8 +184,11 @@ class Option extends Import
     public function createTable()
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            $this->logger->addDebug(__('Import identifier : %1', $this->getIdentifier()));
+            $this->jobExecutor->setAdditionalMessage(
+                __('Path to log file : %1', $this->handler->getFilename()),
+                $this->logger
+            );
+            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
         }
         /** @var PageInterface $attributes */
         $attributes = $this->getAllAttributes(true);
@@ -195,9 +196,9 @@ class Option extends Import
         $hasOptions = false;
         /** @var array $attribute */
         foreach ($attributes as $attribute) {
-            if ($attribute['type'] == 'pim_catalog_multiselect' || $attribute['type'] == 'pim_catalog_simpleselect') {
+            if ($attribute['type'] === 'pim_catalog_multiselect' || $attribute['type'] === 'pim_catalog_simpleselect') {
                 if (!$this->akeneoClient) {
-                    $this->akeneoClient = $this->getAkeneoClient();
+                    $this->akeneoClient = $this->jobExecutor->getAkeneoClient();
                 }
                 /** @var PageInterface $options */
                 $options = $this->akeneoClient->getAttributeOptionApi()->listPerPage($attribute['code']);
@@ -211,21 +212,21 @@ class Option extends Import
             }
         }
         if ($hasOptions === false) {
-            $this->setMessage(__('No options found'), $this->logger);
-            $this->stop();
+            $this->jobExecutor->setMessage(__('No options found'), $this->logger);
+            $this->jobExecutor->afterRun();
 
             return;
         }
         /** @var array $option */
         $option = $options->getItems();
         if (empty($option)) {
-            $this->setMessage(__('No results from Akeneo'), $this->logger);
-            $this->stop(1);
+            $this->jobExecutor->setMessage(__('No results from Akeneo'), $this->logger);
+            $this->jobExecutor->afterRun(1);
 
             return;
         }
         $option = reset($option);
-        $this->entitiesHelper->createTmpTableFromApi($option, $this->getCode());
+        $this->entitiesHelper->createTmpTableFromApi($option, $this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -238,7 +239,7 @@ class Option extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
         /** @var PageInterface $attributes */
@@ -247,11 +248,11 @@ class Option extends Import
         $lines = 0;
         /** @var array $attribute */
         foreach ($attributes as $attribute) {
-            if ($attribute['type'] == 'pim_catalog_multiselect' || $attribute['type'] == 'pim_catalog_simpleselect') {
+            if ($attribute['type'] === 'pim_catalog_multiselect' || $attribute['type'] === 'pim_catalog_simpleselect') {
                 $lines += $this->processAttributeOption($attribute['code'], $paginationSize);
             }
         }
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('%1 line(s) found', $lines),
             $this->logger
         );
@@ -279,13 +280,14 @@ class Option extends Import
             while (($row = $query->fetch())) {
                 if (!isset($row['label']) || $row['label'] === null) {
                     $connection->delete($tmpTable, ['code = ?' => $row['code'], 'attribute = ?' => $row['attribute']]);
-                    $this->setAdditionalMessage(
+                    $this->jobExecutor->setAdditionalMessage(
                         __(
                             'The option %1 from attribute %2 was not imported because it did not have a translation in admin store language : %3',
                             $row['code'],
                             $row['attribute'],
                             $localeCode
-                        ), $this->logger
+                        ),
+                        $this->logger
                     );
                 }
             }
@@ -323,7 +325,13 @@ class Option extends Import
      */
     public function matchEntities()
     {
-        $this->optionHelper->matchEntity('code', 'eav_attribute_option', 'option_id', $this->getCode(), 'attribute');
+        $this->optionHelper->matchEntity(
+            'code',
+            'eav_attribute_option',
+            'option_id',
+            $this->jobExecutor->getCurrentJob()->getCode(),
+            'attribute'
+        );
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logImportedEntities($this->logger, true);
         }
@@ -339,7 +347,7 @@ class Option extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $columns */
         $columns = [
             'option_id'  => 'a._entity_id',
@@ -376,7 +384,7 @@ class Option extends Import
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
-        $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $stores */
         $stores = $this->storeHelper->getStores('lang');
         /**
@@ -398,17 +406,17 @@ class Option extends Import
 
                 /** @var Select $options */
                 $options = $connection->select()->from(
-                        ['a' => $tmpTable],
-                        [
-                            'option_id' => '_entity_id',
-                            'store_id'  => new Expr($store['store_id']),
-                            'value'     => $value,
-                        ]
-                    )->joinInner(
-                        ['b' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
-                        'a.attribute = b.code AND b.import = "attribute"',
-                        []
-                    );
+                    ['a' => $tmpTable],
+                    [
+                        'option_id' => '_entity_id',
+                        'store_id'  => new Expr($store['store_id']),
+                        'value'     => $value,
+                    ]
+                )->joinInner(
+                    ['b' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
+                    'a.attribute = b.code AND b.import = "attribute"',
+                    []
+                );
                 $connection->query(
                     $connection->insertFromSelect(
                         $options,
@@ -428,7 +436,7 @@ class Option extends Import
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->getCode());
+        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
     }
 
     /**
@@ -442,7 +450,7 @@ class Option extends Import
         $configurations = $this->configHelper->getCacheTypeOption();
 
         if (!$configurations) {
-            $this->setMessage(__('No cache cleaned'), $this->logger);
+            $this->jobExecutor->setMessage(__('No cache cleaned'), $this->logger);
 
             return;
         }
@@ -457,7 +465,7 @@ class Option extends Import
             $this->cacheTypeList->cleanType($type);
         }
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('Cache cleaned for: %1', join(', ', array_intersect_key($cacheTypeLabels, array_flip($types)))),
             $this->logger
         );
@@ -475,7 +483,7 @@ class Option extends Import
         $configurations = $this->configHelper->getIndexOption();
 
         if (!$configurations) {
-            $this->setMessage(__('No index refreshed'), $this->logger);
+            $this->jobExecutor->setMessage(__('No index refreshed'), $this->logger);
 
             return;
         }
@@ -493,7 +501,7 @@ class Option extends Import
             $typesFlushed[] = $index->getTitle();
         }
 
-        $this->setMessage(
+        $this->jobExecutor->setMessage(
             __('Index refreshed for: %1', join(', ', $typesFlushed)),
             $this->logger
         );
@@ -510,7 +518,7 @@ class Option extends Import
     protected function processAttributeOption($attributeCode, $paginationSize)
     {
         if (!$this->akeneoClient) {
-            $this->akeneoClient = $this->getAkeneoClient();
+            $this->akeneoClient = $this->jobExecutor->getAkeneoClient();
         }
         /** @var ResourceCursorInterface $options */
         $options = $this->akeneoClient->getAttributeOptionApi()->all($attributeCode, $paginationSize);
@@ -518,7 +526,7 @@ class Option extends Import
         $index = 0;
         /** @var array $option */
         foreach ($options as $index => $option) {
-            $this->entitiesHelper->insertDataFromApi($option, $this->getCode());
+            $this->entitiesHelper->insertDataFromApi($option, $this->jobExecutor->getCurrentJob()->getCode());
         }
         $index++;
 
@@ -536,7 +544,7 @@ class Option extends Import
     {
         if (!$this->attributes) {
             if (!$this->akeneoClient) {
-                $this->akeneoClient = $this->getAkeneoClient();
+                $this->akeneoClient = $this->jobExecutor->getAkeneoClient();
             }
             /** @var string|int $paginationSize */
             $paginationSize = $this->configHelper->getPaginationSize();
@@ -549,5 +557,15 @@ class Option extends Import
         }
 
         return $this->attributes;
+    }
+
+    /**
+     * Description getLogger function
+     *
+     * @return OptionLogger
+     */
+    public function getLogger()
+    {
+        return $this->logger;
     }
 }
