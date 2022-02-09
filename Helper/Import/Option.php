@@ -43,18 +43,7 @@ class Option extends Entities
         /** @var string $tableName */
         $tableName = $this->getTableName($import);
 
-        if ($connection->tableColumnExists($tableName, 'code')) {
-            /** @var string $codeIndexName */
-            $codeIndexName = $connection->getIndexName($tableName, 'code');
-            $connection->query('CREATE INDEX ' . $codeIndexName . ' ON ' . $tableName . ' (code(255));');
-        }
-
-        if ($connection->tableColumnExists($tableName, 'attribute')) {
-            /** @var string $attributeIndexName */
-            $attributeIndexName = $connection->getIndexName($tableName, 'attribute');
-            $connection->query('CREATE INDEX ' . $attributeIndexName . ' ON ' . $tableName . ' (attribute(255));');
-        }
-
+        // Delete empty
         $connection->delete($tableName, [$pimKey . ' = ?' => '']);
         /** @var string $akeneoConnectorTable */
         $akeneoConnectorTable = $this->getTable('akeneo_connector_entities');
@@ -90,35 +79,49 @@ class Option extends Entities
         }
 
         if ($connection->tableColumnExists($tableName, $adminColumnValue)) {
-            // Get all entities that are being imported and already present in Magento
+            // Add index to admin label column
+            /** @var string $labelIndexName */
+            $labelIndexName = $connection->getIndexName($tableName, $adminColumnValue);
+            $connection->query('CREATE INDEX `' . $labelIndexName . '` ON ' . $tableName . ' (`' . $adminColumnValue . '`(255));');
+
+            // Get all entities that are being imported and have a corresponding label in Magento
             $select = $connection->select()->from(
                 ['t' => $tableName],
                 $columnToSelect
             )->joinInner(
                 ['e' => 'eav_attribute_option_value'],
-                $condition
+                $condition,
+                []
             )->joinInner(
                 ['o' => 'eav_attribute_option'],
-                'o.`option_id` = e.`option_id`'
+                'o.`option_id` = e.`option_id`',
+                ['option_id']
             )->joinInner(
                 ['a' => 'eav_attribute'],
-                'o.`attribute_id` = a.`attribute_id` AND t.`attribute` = a.`attribute_code`'
+                'o.`attribute_id` = a.`attribute_id` AND t.`attribute` = a.`attribute_code`',
+                []
             )->where('e.store_id = ?', 0)->where('a.entity_type_id', $entityTypeId);
-            /** @var string $query */
-            $query = $connection->query($select);
+            /** @var string[] $existingMagentoOptions */
+            $existingMagentoOptions = $connection->query($select)->fetchAll();
+            /** @var string[] $existingMagentoOptionIds */
+            $existingMagentoOptionIds = array_column($existingMagentoOptions, 'option_id');
+            /** @var string[] $entitiesToCreate */
+            $entitiesToCreate = array_diff($existingMagentoOptionIds, $existingEntities);
 
-            /** @var mixed $row */
-            while ($row = $query->fetch()) {
-                // Create a row in Akeneo table for options present in Magento and Akeneo that were never imported before
-                if (!in_array($row['option_id'], $existingEntities)) {
-                    /** @var string[] $values */
-                    $values = [
-                        'import'    => 'option',
-                        'code'      => $row['attribute'] . '-' . $row['code'],
-                        'entity_id' => $row['option_id'],
-                    ];
-                    $connection->insertOnDuplicate($akeneoConnectorTable, $values);
-                }
+            /**
+             * @var string $entityToCreateKey
+             * @var string $entityOptionId
+             */
+            foreach ($entitiesToCreate as $entityToCreateKey => $entityOptionId) {
+                /** @var string[] $currentEntity */
+                $currentEntity = $existingMagentoOptions[$entityToCreateKey];
+                /** @var string[] $values */
+                $values = [
+                    'import'    => 'option',
+                    'code'      => $currentEntity['attribute'] . '-' . $currentEntity['code'],
+                    'entity_id' => $entityOptionId,
+                ];
+                $connection->insertOnDuplicate($akeneoConnectorTable, $values);
             }
         }
 
