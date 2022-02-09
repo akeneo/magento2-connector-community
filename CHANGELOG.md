@@ -308,3 +308,6 @@
 * Update connector tables definition to "db_schema.xml"
 * Update setup scripts to patch format
 * Fix message column format from "akeneo_connector_import_log_step" table to text in order to see full log messages
+
+### Version 102.3.1 :
+* Improve option job performance by optimizing existing option mapping requests and process
