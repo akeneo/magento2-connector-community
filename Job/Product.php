@@ -3048,10 +3048,7 @@ class Product extends JobImport
                         $this->setMessage(__('Info: No value found in the current batch for the attribute %1', $image));
                         continue;
                     }
-                    $data[$image . self::SUFFIX_SEPARATOR . $suffix] = strtolower(
-                                                                           $image
-                                                                       ) . self::SUFFIX_SEPARATOR . $suffix;
-
+                    $data[$image . self::SUFFIX_SEPARATOR . $suffix] = strtolower($image) . self::SUFFIX_SEPARATOR . $suffix;
                     $dataToImport[strtolower($image) . self::SUFFIX_SEPARATOR . $suffix] = $suffix;
                 }
                 continue;
