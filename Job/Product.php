@@ -3742,6 +3742,8 @@ class Product extends JobImport
         }
         /** @var string[] $families */
         $families = [];
+        /** @var string[] $familiesIN */
+        $familiesIN = [];
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
         /** @var string[] $apiFamilies */
@@ -3787,6 +3789,12 @@ class Product extends JobImport
                             }
                         }
                     }
+
+                    if (isset($familyFilter['operator']) && $familyFilter['operator'] === 'IN') {
+                        foreach ($familyFilter['value'] as $familyToKeep) {
+                            $familiesIN[] = $familyToKeep;
+                        }
+                    }
                 }
             }
         }
@@ -3805,7 +3813,7 @@ class Product extends JobImport
 
         $families = array_values($families);
 
-        return $families;
+        return $familiesIN ?: $families;
     }
 
     /**
