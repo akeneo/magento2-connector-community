@@ -323,6 +323,13 @@ class JobExecutor implements JobExecutorInterface
                 if ($this->currentJob->getStatus() === JobInterface::JOB_ERROR) {
                     $isError = true;
                 }
+
+                // If last family, force proceed with after run steps
+                if (array_slice($productFamiliesToImport, -1)[0] === $family
+                    && $this->currentJob->getStatus() !== JobInterface::JOB_ERROR)
+                {
+                    $this->continue = true;
+                }
             }
             if ($this->continue) {
                 $this->afterRun($isError);
