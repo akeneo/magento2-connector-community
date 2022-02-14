@@ -420,6 +420,12 @@ class Config
      */
     public const ENABLE_CLEAN_LOGS = 'akeneo_connector/advanced/enable_clean_logs';
     /**
+     * Product max character image & asset file name path
+     *
+     * @var string PRODUCT_MAX_CHARACTER_MEDIA_FILE_NAME
+     */
+    const PRODUCT_MAX_CHARACTER_MEDIA_FILE_NAME = 'akeneo_connector/advanced/product_max_character_media_file_name';
+    /**
      * Cache type category config path
      *
      * @var string CACHE_TYPE_CATEGORY
@@ -1668,6 +1674,16 @@ class Config
     public function isAdvancedLogActivated()
     {
         return $this->scopeConfig->getValue(self::ADVANCED_LOG);
+    }
+
+    /**
+     * Description getMaxCharacterMediaFileName function
+     *
+     * @return string|null
+     */
+    public function getMaxCharacterMediaFileName()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCT_MAX_CHARACTER_MEDIA_FILE_NAME);
     }
 
     /**

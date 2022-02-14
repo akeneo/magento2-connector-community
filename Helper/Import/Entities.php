@@ -3,6 +3,7 @@
 namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Model\Source\MaxCharacter;
 use Exception;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Catalog\Model\Product as BaseProductModel;
@@ -45,6 +46,18 @@ class Entities
      * @var string IMPORT_CODE_PRODUCT
      */
     const IMPORT_CODE_PRODUCT = 'product';
+    /**
+     * Akeneo Connector version 2.4.1 or inferior constant
+     *
+     * @var string VERSION_2_4_1_OR_INFERIOR
+     */
+    const VERSION_2_4_1_OR_INFERIOR = 79;
+    /**
+     * Akeneo Connector version 2.4.2 or superior constant
+     *
+     * @var string VERSION_2_4_2_OR_SUPERIOR
+     */
+    const VERSION_2_4_2_OR_SUPERIOR = 189;
     /**
      * This variable contains a ResourceConnection
      *
@@ -842,14 +855,21 @@ class Entities
     }
 
     /**
-     * Format media filename, removing hash and stoppig at 90 characters
+     * Format media filename, removing hash and stopping stopping at 90 or 200 characters
      *
      * @param string $filename
      *
+     * @param null   $originalFilename
+     *
      * @return string
      */
-    public function formatMediaName($filename)
+    public function formatMediaName($filename, $originalFilename = null)
     {
+        /** @var int $lengthLimit */
+        $lengthLimit = self::VERSION_2_4_1_OR_INFERIOR;
+        if ($this->configHelper->getMaxCharacterMediaFileName() === MaxCharacter::ONE_HUNDRED_EIGHTY_NINE_CHARACTERS) {
+            $lengthLimit = self::VERSION_2_4_2_OR_SUPERIOR;
+        }
         /** @var string[] $filenameParts */
         $filenameParts = explode('.', $filename);
         // Get the extention
@@ -862,9 +882,21 @@ class Entities
         $shortHash = array_shift($filename);
         $shortHash = substr($shortHash, 0, 4);
         $filename  = implode('_', $filename);
+        if (isset($originalFilename)) {
+            $originalFilename = str_replace('-', '_', $originalFilename);
+            /** @var string[] $filenameParts */
+            $filenameParts = explode('.', $originalFilename);
+            if (is_array($filenameParts) && count($filenameParts) > 1) {
+                array_pop($filenameParts);
+            }
+            // Get the hash
+            $filename = implode('.', $filenameParts);
+            $filename = explode('_', $filename);
+            $filename = implode('_', $filename);
+        }
         // Form the final file name
         /** @var string $shortName */
-        $shortName = substr($filename, 0, 79);
+        $shortName = substr($filename, 0, $lengthLimit);
         /** @var string $finalName */
         $finalName = $shortName . '_' . $shortHash . '.' . $extension;
 
