@@ -3561,13 +3561,13 @@ class Product extends JobImport
                         }
 
                         // Get potential record_id from gallery value table
-                /** @var int $databaseRecords */
-                $databaseRecords = $connection->fetchOne(
-                    $connection->select()->from($galleryValueTable, [new Expr('MAX(`record_id`)')])->where(
-                        'value_id = ?',
-                        $valueId
-                    )->where(
-                        'store_id = ?',
+                        /** @var int $databaseRecords */
+                        $databaseRecords = $connection->fetchOne(
+                            $connection->select()->from($galleryValueTable, [new Expr('MAX(`record_id`)')])->where(
+                                'value_id = ?',
+                                $valueId
+                            )->where(
+                                'store_id = ?',
                                 $store['store_id']
                             )->where($columnIdentifier . ' = ?', $row[$columnIdentifier])
                         );
