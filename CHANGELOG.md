@@ -311,3 +311,6 @@
 
 ### Version 102.3.1 :
 * Improve option job performance by optimizing existing option mapping requests and process
+
+### Version 102.3.2 :
+* Fix product job status still being "Processing" if the last family imported have no product to update
