@@ -38,8 +38,8 @@ class MaxCharacter implements ArrayInterface
     public function toOptionArray()
     {
         return [
-            self::SEVENTY_NINE_CHARACTERS            => __('79 characters (Magento 2.4.1 or inferior)'),
-            self::ONE_HUNDRED_EIGHTY_NINE_CHARACTERS => __('189 characters (Magento 2.4.2 or superior)'),
+            self::SEVENTY_NINE_CHARACTERS            => __('79 characters'),
+            self::ONE_HUNDRED_EIGHTY_NINE_CHARACTERS => __('189 characters (Magento 2.4.2)'),
         ];
     }
 }
