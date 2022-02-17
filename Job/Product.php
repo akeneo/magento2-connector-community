@@ -3596,7 +3596,9 @@ class Product extends JobImport
                         $columns = $this->configHelper->getMediaImportImagesColumns();
 
                         foreach ($columns as $column) {
-                            if ($column['column'] !== $image) {
+                            /** @var string $columnName */
+                            $columnName = $column['column'] . self::SUFFIX_SEPARATOR . $suffix;
+                            if ($columnName !== $image) {
                                 continue;
                             }
                             /** @var string[] $data */
