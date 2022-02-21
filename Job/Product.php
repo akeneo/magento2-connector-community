@@ -1907,7 +1907,7 @@ class Product extends JobImport
         } else if ($this->configHelper->getProductStatusMode() === StatusMode::ATTRIBUTE_PRODUCT_MAPPING) {
             /** @var string $attributeCodeSimple */
             $attributeCodeSimple = strtolower($this->configHelper->getAttributeCodeForSimpleProductStatuses());
-            $this->setProductStatuses($attributeCodeSimple, $mappings, $connection, $tmpTable, 'simple');
+            $status = $this->setProductStatuses($attributeCodeSimple, $mappings, $connection, $tmpTable, 'simple');
         } else {
             while (($row = $oldStatus->fetch())) {
                 $valuesToInsert = ['_status' => $row['value']];
