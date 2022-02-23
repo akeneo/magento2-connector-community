@@ -119,7 +119,7 @@ class Category implements ArrayInterface
                 $isRootFilter = $this->searchBuilderFactory->create()
                     ->addFilter('is_root', '=', true)
                     ->getFilters();
-                /** @var ResourceCursorInterface $categories */
+                /** @var ResourceCursorInterface $akeneoCategories */
                 $akeneoCategories = $client->getCategoryApi()->all(
                     $paginationSize,
                     ['search' => $isRootFilter]
@@ -132,7 +132,7 @@ class Category implements ArrayInterface
                     $categories[$category['code']] = $category['code'];
                 }
             } else {
-                /** @var ResourceCursorInterface $categories */
+                /** @var ResourceCursorInterface $akeneoCategories */
                 $akeneoCategories = $client->getCategoryApi()->all($paginationSize);
                 /** @var mixed[] $category */
                 foreach ($akeneoCategories as $category) {
