@@ -3964,7 +3964,7 @@ class Product extends JobImport
                 if (!isset($attribute['code']) || $attribute['type'] !== 'pim_catalog_boolean' || $attribute['localizable']) {
                     $this->jobExecutor->setAdditionalMessage(
                         __(
-                            'Akeneo Attribute code for ' . $type . ' product statuses is not type YES/NO or is localizable , only scopable or global'
+                            'Akeneo Attribute code for ' . $type . ' product statuses is not a type YES/NO or is localizable. It can only be scopable or global.'
                         ),
                         $this->logger
                     );
