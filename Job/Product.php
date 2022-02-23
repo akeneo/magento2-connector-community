@@ -4046,14 +4046,14 @@ class Product extends JobImport
                 }
             } catch (Exception $exception) {
                 $this->jobExecutor->setAdditionalMessage(
-                    __('Akeneo Attribute code is not valid for' . ucfirst($type) . 'product statuses'),
+                    __('Akeneo Attribute code is not valid for ' . ucfirst($type) . ' product statuses'),
                     $this->logger
                 );
                 $isNoError = 2;
             }
         } else {
             $this->jobExecutor->setAdditionalMessage(
-                __('Akeneo Attribute code for' . ucfirst($type) . 'product statuses is empty'),
+                __('Akeneo Attribute code for ' . ucfirst($type) . ' product statuses is empty'),
                 $this->logger
             );
             $isNoError = 2;
