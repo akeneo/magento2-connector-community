@@ -247,7 +247,7 @@ class Entities
                 $table->addColumn(
                     $column,
                     Table::TYPE_TEXT,
-                    null,
+                    '2M',
                     [],
                     $column
                 );
@@ -393,7 +393,16 @@ class Entities
          */
         foreach ($result as $key => $value) {
             if (!$this->connection->tableColumnExists($tableName, $key)) {
-                $this->connection->addColumn($tableName, $key, 'text');
+                $this->connection->addColumn(
+                    $tableName,
+                    $key,
+                    [
+                        'type'    => 'text',
+                        'length'  => '2M',
+                        'default' => '',
+                        'COMMENT' => ' '
+                    ]
+                );
             }
         }
 
@@ -748,7 +757,16 @@ class Entities
         $connection = $this->getConnection();
 
         if ($connection->tableColumnExists($tableName, $source)) {
-            $connection->addColumn($tableName, $target, 'text');
+            $connection->addColumn(
+                $tableName,
+                $target,
+                [
+                    'type'     => 'text',
+                    'length'   => '2M',
+                    'default' => '',
+                    'COMMENT' => ' '
+                ]
+            );
             $connection->update(
                 $tableName,
                 [$target => new Expr('`' . $source . '`')]
