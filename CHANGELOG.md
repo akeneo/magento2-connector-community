@@ -314,3 +314,7 @@
 
 ### Version 102.3.2 :
 * Fix product job status still being "Processing" if the last family imported have no product to update
+
+### Version 102.4.0 :
+* Update temporary tables default column type from "text" to "mediumtext" in order to manage maximum field size for "textfield" attributes in Magento
+* Fix "IN" family filter for advanced product filter mode importing every family instead of only one
