@@ -3395,6 +3395,7 @@ class Product extends JobImport
      * @throws LocalizedException
      * @throws \Magento\Framework\Exception\FileSystemException
      * @throws \Zend_Db_Statement_Exception
+     * @throws Exception
      */
     public function importMedia()
     {
@@ -3629,17 +3630,29 @@ class Product extends JobImport
                         foreach ($columns as $column) {
                             /** @var string $columnName */
                             $columnName = $column['column'] . self::SUFFIX_SEPARATOR . $suffix;
-                            if ($columnName !== $image) {
-                                continue;
+                            /** @var mixed[] $mappings */
+                            $mappings = $this->configHelper->getWebsiteMapping();
+                            /** @var string[] $suffixs */
+                            $suffixs = explode('-', $suffix);
+                            /** @var string $locale */
+                            $locale = $suffixs[0];
+                            /** @var string $scope */
+                            $scope = $suffixs[1];
+
+                            foreach ($mappings as $mapping) {
+                                if ($columnName !== $image || $store['website_code'] !== $mapping['website'] || $store['channel_code'] !== $scope || $store['lang'] !== $locale) {
+                                    continue;
+                                }
+
+                                /** @var string[] $data */
+                                $data = [
+                                    'attribute_id'    => $column['attribute'],
+                                    'store_id'        => $store['store_id'],
+                                    $columnIdentifier => $row[$columnIdentifier],
+                                    'value'           => $file,
+                                ];
+                                $connection->insertOnDuplicate($productImageTable, $data, array_keys($data));
                             }
-                            /** @var string[] $data */
-                            $data = [
-                                'attribute_id'    => $column['attribute'],
-                                'store_id'        => $store['store_id'],
-                                $columnIdentifier => $row[$columnIdentifier],
-                                'value'           => $file,
-                            ];
-                            $connection->insertOnDuplicate($productImageTable, $data, array_keys($data));
                         }
                     }
                 }
