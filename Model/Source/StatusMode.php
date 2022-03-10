@@ -29,6 +29,12 @@ class StatusMode implements ArrayInterface
      * @var string STATUS_BASED_ON_COMPLETENESS_LEVEL
      */
     const STATUS_BASED_ON_COMPLETENESS_LEVEL = 'status_based_on_completeness_level';
+    /**
+     * Attribute product mapping constant
+     *
+     * @var string ATTRIBUTE_PRODUCT_MAPPING
+     */
+    const ATTRIBUTE_PRODUCT_MAPPING = 'attribute_product_mapping';
 
     /**
      * Return array of options for the status mode filter
@@ -40,6 +46,7 @@ class StatusMode implements ArrayInterface
         return [
             self::DEFAULT_PRODUCT_STATUS             => __('Default status'),
             self::STATUS_BASED_ON_COMPLETENESS_LEVEL => __('Status based on completeness level'),
+            self::ATTRIBUTE_PRODUCT_MAPPING          => __('Attribute mapping')
         ];
     }
 }
