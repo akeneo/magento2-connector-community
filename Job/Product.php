@@ -3437,6 +3437,8 @@ class Product extends JobImport
         $stores = $this->storeHelper->getAllStores();
         /** @var string[] $dataToImport */
         $dataToImport = [];
+        /** @var bool $valueFound */
+        $valueFound = false;
         foreach ($gallery as $image) {
             if (!$connection->tableColumnExists($tmpTable, strtolower($image))) {
                 // If not exist, check for each store if the field exist
@@ -3449,14 +3451,17 @@ class Product extends JobImport
                         $tmpTable,
                         strtolower($image) . self::SUFFIX_SEPARATOR . $suffix
                     )) {
-                        $this->jobExecutor->setMessage(
-                            __('Info: No value found in the current batch for the attribute %1', $image),
-                            $this->logger
-                        );
                         continue;
                     }
+                    $valueFound = true;
                     $data[$image . self::SUFFIX_SEPARATOR . $suffix] = strtolower($image) . self::SUFFIX_SEPARATOR . $suffix;
                     $dataToImport[strtolower($image) . self::SUFFIX_SEPARATOR . $suffix] = $suffix;
+                }
+                if(!$valueFound) {
+                    $this->jobExecutor->setMessage(
+                        __('Info: No value found in the current batch for the attribute %1', $image),
+                        $this->logger
+                    );
                 }
                 continue;
             }
