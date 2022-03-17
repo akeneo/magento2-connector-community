@@ -123,8 +123,6 @@ class ProductFilters
         $filters = [];
         /** @var mixed[] $search */
         $search = [];
-        /** @var  $productFilterAdded */
-        $productFilterAdded = false;
         /** @var string $mode */
         $mode = $this->configHelper->getFilterMode();
         if ($mode == Mode::ADVANCED) {
@@ -133,25 +131,11 @@ class ProductFilters
             // If product import gave a family, add it to the filter
             if ($productFamily) {
                 if (isset($advancedFilters['search']['family'])) {
-                    /**
-                     * @var int      $key
-                     * @var string[] $familyFilter
-                     */
-                    foreach ($advancedFilters['search']['family'] as $key => $familyFilter) {
-                        if (isset($familyFilter['operator']) && $familyFilter['operator'] == 'IN') {
-                            $advancedFilters['search']['family'][$key]['value'][] = $productFamily;
-                            $productFilterAdded                                   = true;
-
-                            break;
-                        }
-                    }
+                    unset($advancedFilters['search']['family']);
                 }
-
-                if (!$productFilterAdded) {
-                    /** @var string[] $familyFilter */
-                    $familyFilter                          = ['operator' => 'IN', 'value' => [$productFamily]];
-                    $advancedFilters['search']['family'][] = $familyFilter;
-                }
+                /** @var string[] $familyFilter */
+                $familyFilter                          = ['operator' => 'IN', 'value' => [$productFamily]];
+                $advancedFilters['search']['family'][] = $familyFilter;
             }
 
             return [$advancedFilters];
@@ -170,6 +154,9 @@ class ProductFilters
             $familyFilter       = ['operator' => 'IN', 'value' => [$productFamily]];
             $search['family'][] = $familyFilter;
         }
+
+        /** @var string[] $akeneoLocales */
+        $akeneoLocales = $this->localesHelper->getAkeneoLocales();
 
         /** @var string $channel */
         foreach ($mappedChannels as $channel) {
@@ -197,8 +184,6 @@ class ProductFilters
             /** @var string[] $locales */
             $locales = $this->storeHelper->getChannelStoreLangs($channel);
             if (!empty($locales)) {
-                /** @var string $locales */
-                $akeneoLocales = $this->localesHelper->getAkeneoLocales();
                 if (!empty($akeneoLocales)) {
                     $locales = array_intersect($locales, $akeneoLocales);
                 }
