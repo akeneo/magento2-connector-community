@@ -322,3 +322,6 @@
 ### Version 102.5.0 :
 * Add product status mode "Attribute mapping" in order to map a Yes/No attribute to the status attribute (https://help.akeneo.com/magento2-connector/articles/05-configure-products.html#attribute-mapping-for-status)
 * Use "is_root" Akeneo API parameter for category endpoint in order to generate options for the category import configuration in the admin page
+
+### Version 102.5.1 :
+* Fix every family being fetched while using IN family search with advanced filter mode
