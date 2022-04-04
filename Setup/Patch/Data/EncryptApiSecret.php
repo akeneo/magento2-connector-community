@@ -101,6 +101,6 @@ class EncryptApiSecret implements DataPatchInterface, PatchVersionInterface
      */
     public static function getVersion(): string
     {
-        return '1.0.5';
+        return '1.0.6';
     }
 }
