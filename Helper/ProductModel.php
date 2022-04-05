@@ -462,7 +462,16 @@ class ProductModel
             if (in_array($column, $except)) {
                 continue;
             }
-            $connection->addColumn($tmpTable, $this->_columnName($column), 'text');
+            $connection->addColumn(
+                $tmpTable,
+                $this->_columnName($column),
+                [
+                    'type'    => 'text',
+                    'length'  => '2M',
+                    'default' => '',
+                    'COMMENT' => ' '
+                ]
+            );
         }
         if (!$connection->tableColumnExists($tmpTable, 'axis')) {
             $connection->addColumn(
