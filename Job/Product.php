@@ -3457,7 +3457,7 @@ class Product extends JobImport
                     $data[$image . self::SUFFIX_SEPARATOR . $suffix] = strtolower($image) . self::SUFFIX_SEPARATOR . $suffix;
                     $dataToImport[strtolower($image) . self::SUFFIX_SEPARATOR . $suffix] = $suffix;
                 }
-                if(!$valueFound) {
+                if (!$valueFound) {
                     $this->jobExecutor->setMessage(
                         __('Info: No value found in the current batch for the attribute %1', $image),
                         $this->logger
@@ -3611,7 +3611,7 @@ class Product extends JobImport
                         /** @var int $recordId */
                         $recordId = 0;
                         if (!empty($databaseRecords)) {
-                    $recordId = $databaseRecords;
+                            $recordId = $databaseRecords;
                         }
 
                         /** @var string[] $data */
@@ -3637,15 +3637,34 @@ class Product extends JobImport
                             $columnName = $column['column'] . self::SUFFIX_SEPARATOR . $suffix;
                             /** @var mixed[] $mappings */
                             $mappings = $this->configHelper->getWebsiteMapping();
-                            /** @var string[] $suffixs */
-                            $suffixs = explode('-', $suffix);
-                            /** @var string $locale */
-                            $locale = $suffixs[0];
-                            /** @var string $scope */
-                            $scope = $suffixs[1];
+                            /** @var string|null $locale */
+                            $locale = null;
+                            /** @var string|null $scope */
+                            $scope = null;
+                            if (str_contains($suffix, '-')) {
+                                /** @var string[] $suffixs */
+                                $suffixs = explode('-', $suffix);
+                                if (isset($suffixs[0])) {
+                                    $locale = $suffixs[0];
+                                }
+                                if (isset($suffixs[1])) {
+                                    $scope = $suffixs[1];
+                                }
+                            } elseif (str_contains($suffix, '_')) {
+                                if (isset($suffix)) {
+                                    $locale = $suffix;
+                                }
+                            } else {
+                                if (isset($suffix)) {
+                                    $scope = $suffix;
+                                }
+                            }
 
                             foreach ($mappings as $mapping) {
-                                if ($columnName !== $image || $store['website_code'] !== $mapping['website'] || $store['channel_code'] !== $scope || $store['lang'] !== $locale) {
+                                if (((isset($scope, $locale)) && ($columnName !== $image || $store['website_code'] !== $mapping['website'] || $store['channel_code'] !== $scope || $store['lang'] !== $locale))
+                                    || ((isset($scope)) && ($columnName !== $image || $store['website_code'] !== $mapping['website'] || $store['channel_code'] !== $scope))
+                                    || ((isset($locale)) && ($columnName !== $image || $store['website_code'] !== $mapping['website'] || $store['lang'] !== $locale))
+                                ) {
                                     continue;
                                 }
 
