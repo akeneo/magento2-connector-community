@@ -325,3 +325,7 @@
 
 ### Version 102.5.1 :
 * Fix every family being fetched while using IN family search with advanced filter mode
+
+### Version 102.6.0 :
+* Add automatic 301 redirect when the url_key of a product is updated (https://help.akeneo.com/magento2-connector/articles/05-configure-products.html#regenerate-url-rewrites)
+* Fix data patch to correctly encrypt API Client secret when upgrading from previous version
