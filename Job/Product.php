@@ -27,6 +27,7 @@ use Akeneo\Connector\Model\Source\StatusMode;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Exception;
+use Magento\Bundle\Model\Product\Type as BundleType;
 use Magento\Catalog\Model\Category as CategoryModel;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
@@ -47,6 +48,7 @@ use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Indexer\IndexerInterface;
 use Magento\Framework\Serialize\Serializer\Json;
+use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedType;
 use Magento\Indexer\Model\IndexerFactory;
 use Magento\Staging\Model\VersionManager;
 use Magento\Store\Model\StoreManagerInterface;
@@ -2330,9 +2332,33 @@ class Product extends JobImport
             }
 
             if (!isset($row['parent']) && $row['_type_id'] === 'simple') {
-                // Check if relations exists for this product and delete the relations
-                $connection->delete($productRelationTable, ['child_id = ?' => $row['_entity_id']]);
-                $connection->delete($productSuperLinkTable, ['product_id = ?' => $row['_entity_id']]);
+                /** @var string[] $productEntityIds */
+                $productEntityIds = $connection->fetchAll(
+                    $connection->select()
+                        ->from($entityTable, [$pKeyColumn, 'type_id'])
+                        ->where(
+                            $pKeyColumn . ' IN (?)',
+                            $connection->fetchAll(
+                                $connection->select()
+                                    ->from($productRelationTable, 'parent_id')
+                                    ->where('child_id = ?', $row['_entity_id'])
+                            )
+                        )
+                );
+
+                if (!$productEntityIds) {
+                    // Check if relations exists for this product and delete the relations
+                    $connection->delete($productRelationTable, ['child_id = ?' => $row['_entity_id']]);
+                    $connection->delete($productSuperLinkTable, ['product_id = ?' => $row['_entity_id']]);
+                } else {
+                    foreach ($productEntityIds as $productEntityId) {
+                        if ($productEntityId['type_id'] !== BundleType::TYPE_CODE && $productEntityId['type_id'] !== GroupedType::TYPE_CODE) {
+                            // If relation ≠ type bundle/grouped delete
+                            $connection->delete($productRelationTable, ['parent_id = ?' => $productEntityId[$pKeyColumn]]);
+                            $connection->delete($productSuperLinkTable, ['parent_id = ?' => $productEntityId[$pKeyColumn]]);
+                        }
+                    }
+                }
             }
 
             /** @var string $productModelEntityId */
