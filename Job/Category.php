@@ -14,8 +14,10 @@ use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Catalog\Model\Category as CategoryModel;
+use Magento\CatalogUrlRewrite\Model\Category\ChildrenCategoriesProvider;
 use Magento\CatalogUrlRewrite\Model\CategoryUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\CategoryUrlRewriteGenerator;
+use Magento\CatalogUrlRewrite\Model\UrlRewriteBunchReplacer;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
@@ -113,26 +115,47 @@ class Category extends Import
      * @var IndexerFactory $indexFactory
      */
     protected $indexFactory;
+    /**
+     * This variable contains a ChildrenCategoriesProvider
+     *
+     * @var ChildrenCategoriesProvider $childrenCategoriesProvider
+     */
+    protected $childrenCategoriesProvider;
+    /**
+     * This variable contains a CategoryUrlRewriteGenerator
+     *
+     * @var CategoryUrlRewriteGenerator $categoryUrlRewriteGenerator
+     */
+    protected $categoryUrlRewriteGenerator;
+    /**
+     * This variable contains a UrlRewriteBunchReplacer
+     *
+     * @var UrlRewriteBunchReplacer $urlRewriteBunchReplacer
+     */
+    protected UrlRewriteBunchReplacer $urlRewriteBunchReplacer;
 
     /**
      * Category constructor
      *
-     * @param CategoryLogger           $logger
-     * @param CategoryHandler          $handler
-     * @param OutputHelper             $outputHelper
-     * @param ManagerInterface         $eventManager
-     * @param Authenticator            $authenticator
-     * @param TypeListInterface        $cacheTypeList
-     * @param Entities                 $entitiesHelper
-     * @param StoreHelper              $storeHelper
-     * @param ConfigHelper             $configHelper
-     * @param CategoryModel            $categoryModel
-     * @param CategoryUrlPathGenerator $categoryUrlPathGenerator
-     * @param CategoryFilters          $categoryFilters
-     * @param Edition                  $editionSource
-     * @param Entities                 $entities
-     * @param IndexerFactory           $indexFactory
-     * @param array                    $data
+     * @param CategoryLogger              $logger
+     * @param CategoryHandler             $handler
+     * @param OutputHelper                $outputHelper
+     * @param ManagerInterface            $eventManager
+     * @param Authenticator               $authenticator
+     * @param TypeListInterface           $cacheTypeList
+     * @param Entities                    $entitiesHelper
+     * @param StoreHelper                 $storeHelper
+     * @param ConfigHelper                $configHelper
+     * @param CategoryModel               $categoryModel
+     * @param CategoryUrlPathGenerator    $categoryUrlPathGenerator
+     * @param CategoryFilters             $categoryFilters
+     * @param Edition                     $editionSource
+     * @param Entities                    $entities
+     * @param IndexerFactory              $indexFactory
+     * @param ChildrenCategoriesProvider  $childrenCategoriesProvider
+     * @param CategoryUrlRewriteGenerator $categoryUrlRewriteGenerator
+     * @param UrlRewriteBunchReplacer     $urlRewriteBunchReplacer
+     * @param array                       $data
      */
     public function __construct(
         CategoryLogger $logger,
@@ -150,20 +173,26 @@ class Category extends Import
         Edition $editionSource,
         Entities $entities,
         IndexerFactory $indexFactory,
+        ChildrenCategoriesProvider $childrenCategoriesProvider,
+        CategoryUrlRewriteGenerator $categoryUrlRewriteGenerator,
+        UrlRewriteBunchReplacer $urlRewriteBunchReplacer,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
 
-        $this->storeHelper              = $storeHelper;
-        $this->logger                   = $logger;
-        $this->handler                  = $handler;
-        $this->cacheTypeList            = $cacheTypeList;
-        $this->categoryModel            = $categoryModel;
-        $this->categoryUrlPathGenerator = $categoryUrlPathGenerator;
-        $this->categoryFilters          = $categoryFilters;
-        $this->editionSource            = $editionSource;
-        $this->entities                 = $entities;
-        $this->indexFactory             = $indexFactory;
+        $this->storeHelper                 = $storeHelper;
+        $this->logger                      = $logger;
+        $this->handler                     = $handler;
+        $this->cacheTypeList               = $cacheTypeList;
+        $this->categoryModel               = $categoryModel;
+        $this->categoryUrlPathGenerator    = $categoryUrlPathGenerator;
+        $this->categoryFilters             = $categoryFilters;
+        $this->editionSource               = $editionSource;
+        $this->entities                    = $entities;
+        $this->indexFactory                = $indexFactory;
+        $this->childrenCategoriesProvider  = $childrenCategoriesProvider;
+        $this->categoryUrlRewriteGenerator = $categoryUrlRewriteGenerator;
+        $this->urlRewriteBunchReplacer     = $urlRewriteBunchReplacer;
     }
 
     /**
@@ -874,11 +903,19 @@ class Category extends Import
 
                     if ($rewriteId) {
                         try {
+                            $oldUrlRewrite = $this->getOldUrlRewrite($rewriteId);
+
                             $connection->update(
                                 $this->entitiesHelper->getTable('url_rewrite'),
                                 ['request_path' => $requestPath],
                                 ['url_rewrite_id = ?' => $rewriteId]
                             );
+
+                            if ($oldUrlRewrite['request_path'] === $requestPath) {
+                                continue;
+                            }
+
+                            $this->updateUrlRewrite($category);
                         } catch (\Exception $e) {
                             $this->jobExecutor->setAdditionalMessage(
                                 __(
@@ -1070,5 +1107,63 @@ class Category extends Import
     public function getLogger()
     {
         return $this->logger;
+    }
+
+    /**
+     * Get old reference from url rewrite
+     *
+     * @param $rewriteId
+     * @return array|mixed
+     */
+    public function getOldUrlRewrite($rewriteId)
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tableName */
+        $select = $connection->select()->from(
+            $this->entitiesHelper->getTable('url_rewrite'),
+            [
+                'request_path' => 'request_path',
+                'entity_id' => 'entity_id',
+            ]
+        )->where('url_rewrite_id = ?', $rewriteId);
+
+        return $connection->fetchRow($select);
+    }
+
+    /**
+     * Update Url Path for Category
+     *
+     * @param CategoryModel $category
+     * @param CategoryModel|null $parentCategory
+     * @return void
+     */
+    private function updateUrlPathForCategory(CategoryModel $category, CategoryModel $parentCategory = null): void
+    {
+        $category->unsUrlPath();
+        $category->setUrlPath($this->categoryUrlPathGenerator->getUrlPath($category, $parentCategory));
+        $category->getResource()->saveAttribute($category, 'url_path');
+    }
+
+    /**
+     * Updates all url rewrites under the current category
+     *
+     * @param CategoryModel $category
+     * @return void
+     */
+    private function updateUrlRewrite(CategoryModel $category): void
+    {
+        $category->setPath($category->getUrlPath());
+        $children = $this->childrenCategoriesProvider->getChildren($category, true);
+        foreach ($children as $child) {
+            $child->setStoreId($category->getStoreId());
+            if ($child->getParentId() === $category->getId()) {
+                $this->updateUrlPathForCategory($child, $category);
+            } else {
+                $this->updateUrlPathForCategory($child);
+            }
+        }
+        $categoryUrlRewriteResult = $this->categoryUrlRewriteGenerator->generate($category);
+        $this->urlRewriteBunchReplacer->doBunchReplace($categoryUrlRewriteResult);
     }
 }
