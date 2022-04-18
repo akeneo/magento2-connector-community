@@ -3486,6 +3486,7 @@ class Product extends JobImport
         while (($row = $query->fetch())) {
             /** @var array $files */
             $files = [];
+            $positionCounter = 0;
             foreach ($gallery as $image) {
                 if (!isset($row[$image])) {
                     continue;
@@ -3570,9 +3571,10 @@ class Product extends JobImport
                     'store_id'        => 0,
                     $columnIdentifier => $row[$columnIdentifier],
                     'label'           => '',
-                    'position'        => 0,
+                    'position'        => $positionCounter,
                     'disabled'        => 0,
                 ];
+                $positionCounter++;
 
                 if ($recordId != 0) {
                     $data['record_id'] = $recordId;
