@@ -2349,16 +2349,16 @@ class Product extends JobImport
                 if (!$productEntityIds) {
                     // Check if relations exists for this product and delete the relations
                     $connection->delete($productRelationTable, ['child_id = ?' => $row['_entity_id']]);
-                    $connection->delete($productSuperLinkTable, ['product_id = ?' => $row['_entity_id']]);
                 } else {
                     foreach ($productEntityIds as $productEntityId) {
                         if ($productEntityId['type_id'] !== BundleType::TYPE_CODE && $productEntityId['type_id'] !== GroupedType::TYPE_CODE) {
                             // If relation ≠ type bundle/grouped delete
                             $connection->delete($productRelationTable, ['parent_id = ?' => $productEntityId[$pKeyColumn]]);
-                            $connection->delete($productSuperLinkTable, ['parent_id = ?' => $productEntityId[$pKeyColumn]]);
                         }
                     }
                 }
+
+                $connection->delete($productSuperLinkTable, ['product_id = ?' => $row['_entity_id']]);
             }
 
             /** @var string $productModelEntityId */
