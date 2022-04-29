@@ -6,14 +6,16 @@ use Akeneo\Connector\Api\Data\JobInterface;
 use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Model\JobRepository;
+use Akeneo\Pim\ApiClient\Exception\HttpException;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Framework\Data\Collection;
+use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\LocalizedException;
-use \Symfony\Component\Console\Command\Command;
-use \Symfony\Component\Console\Input\InputInterface;
-use \Symfony\Component\Console\Output\OutputInterface;
-use \Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class AkeneoConnectorImportCommand
@@ -54,11 +56,11 @@ class AkeneoConnectorImportCommand extends Command
     /**
      * AkeneoConnectorImportCommand constructor
      *
-     * @param State         $appState
-     * @param ConfigHelper  $configHelper
-     * @param JobExecutor   $jobExecutor
+     * @param State $appState
+     * @param ConfigHelper $configHelper
+     * @param JobExecutor $jobExecutor
      * @param JobRepository $jobRepository
-     * @param null          $name
+     * @param null $name
      */
     public function __construct(
         State $appState,
@@ -69,9 +71,9 @@ class AkeneoConnectorImportCommand extends Command
     ) {
         parent::__construct($name);
 
-        $this->appState      = $appState;
-        $this->configHelper  = $configHelper;
-        $this->jobExecutor   = $jobExecutor;
+        $this->appState = $appState;
+        $this->configHelper = $configHelper;
+        $this->jobExecutor = $jobExecutor;
         $this->jobRepository = $jobRepository;
     }
 
@@ -90,6 +92,7 @@ class AkeneoConnectorImportCommand extends Command
 
     /**
      * {@inheritdoc}
+     * @throws AlreadyExistsException
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -100,14 +103,18 @@ class AkeneoConnectorImportCommand extends Command
             $message = __('Area code already set')->getText();
             $output->writeln($message);
         }
-
-        /** @var string $code */
-        $code = $input->getOption(self::IMPORT_CODE);
-
-        if (!$code) {
-            $this->usage($output);
-        } else {
-            $this->jobExecutor->execute($code, $output);
+        try {
+            /** @var string $code */
+            $code = $input->getOption(self::IMPORT_CODE);
+            if (!$code) {
+                $this->usage($output);
+            } else {
+                $this->jobExecutor->execute($code, $output);
+            }
+        } catch (HttpException $e) {
+            $this->jobExecutor->displayError($e->getMessage());
+            $currentJob = $this->jobExecutor->getCurrentJob();
+            $this->jobExecutor->setJobStatus(JobInterface::JOB_ERROR, $currentJob);
         }
     }
 
@@ -150,7 +157,7 @@ class AkeneoConnectorImportCommand extends Command
     /**
      * Display info in console
      *
-     * @param string          $message
+     * @param string $message
      * @param OutputInterface $output
      *
      * @return void
@@ -167,7 +174,7 @@ class AkeneoConnectorImportCommand extends Command
     /**
      * Display comment in console
      *
-     * @param string          $message
+     * @param string $message
      * @param OutputInterface $output
      *
      * @return void
@@ -184,7 +191,7 @@ class AkeneoConnectorImportCommand extends Command
     /**
      * Display error in console
      *
-     * @param string          $message
+     * @param string $message
      * @param OutputInterface $output
      *
      * @return void
