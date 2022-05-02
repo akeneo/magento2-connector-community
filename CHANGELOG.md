@@ -329,3 +329,9 @@
 ### Version 102.6.0 :
 * Add automatic 301 redirect when the url_key of a product is updated (https://help.akeneo.com/magento2-connector/articles/05-configure-products.html#regenerate-url-rewrites)
 * Fix data patch to correctly encrypt API Client secret when upgrading from previous version
+
+### Version 102.6.1 :
+* Fix "Product Status Mode" not displaying if Akeneo version is different from "Serenity" or "Growth" edition
+* Fix "Since last successful import" mode not working on first product job without successful date
+* Fix relations from "catalog_product_relation" table for grouped and bundle products being deleted during the product job
+* Fix job status to "Error" if missing or wrong API credentials are set in the connector configuration
