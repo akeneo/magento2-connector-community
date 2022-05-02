@@ -377,6 +377,9 @@ For example :<br/>
                 <field id="product_status_mode" translate="label" type="select" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Product Status Mode</label>
                     <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
+                    <comment>
+                        <![CDATA[The "Status based on Completeness level" mode is only available for Akeneo version Growth and Serenity.]]>
+                    </comment>
                 </field>
                 <field id="attribute_code_for_simple_product_statuses" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Akeneo Attribute code for Simple product statuses</label>
