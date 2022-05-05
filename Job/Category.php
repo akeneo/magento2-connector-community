@@ -836,6 +836,7 @@ class Category extends Import
                         'store_id'  => new Expr($store['store_id']),
                         'parent_id' => 'parent_id',
                         'level'     => 'level',
+                        'name'      => 'labels-' . $local,
                     ]
                 );
 
