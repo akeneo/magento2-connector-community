@@ -182,7 +182,7 @@ class AttributeFilters
         if (!$codes || empty($codes)) {
             return;
         }
-        $codes = explode(',', $codes);
+        $codes = explode(',', $codes ?? '');
         $this->searchBuilder->addFilter('code', 'IN', $codes);
 
         return;

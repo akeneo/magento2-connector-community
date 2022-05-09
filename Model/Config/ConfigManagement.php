@@ -461,7 +461,7 @@ class ConfigManagement
     protected function insertMultiselect($values, string $field)
     {
         /** @var string[] $valuesArray */
-        $valuesArray = explode(',', $values);
+        $valuesArray = explode(',', $values ?? '');
         /** @var string $value */
         foreach ($valuesArray as $value) {
             $this->addLineBreak(self::LINE_BREAK);
@@ -630,7 +630,7 @@ class ConfigManagement
     protected function getSystemConfigAttribute(string $path, string $attributeName)
     {
         /** @var string[] $path */
-        $path = explode('/', $path);
+        $path = explode('/', $path ?? '');
         /** @var string $etcDir */
         $etcDir = $this->moduleReader->getModuleDir(
             Dir::MODULE_ETC_DIR,

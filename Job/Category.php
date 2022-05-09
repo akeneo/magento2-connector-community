@@ -740,7 +740,7 @@ class Category extends Import
         $tableName = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var AdapterInterface $connection */
         $connection         = $this->entitiesHelper->getConnection();
-        $filteredCategories = explode(',', $filteredCategories);
+        $filteredCategories = explode(',', $filteredCategories ?? '');
         /** @var mixed[]|null $categoriesToDelete */
         $categoriesToDelete = $connection->fetchAll(
             $connection->select()->from($tableName)->where('code IN (?)', $filteredCategories)
@@ -977,7 +977,7 @@ class Category extends Import
         /** @var string $rootCategoryId */
         $currentRootCategoryId = $rootCategoriesAndStores[$storeId];
         /** @var string[] $currentCategoryPath */
-        $currentCategoryPath = explode('/', $categoriesPath[$categoryId]);
+        $currentCategoryPath = explode('/', $categoriesPath[$categoryId] ?? '');
 
         return in_array($currentRootCategoryId, $currentCategoryPath, false);
     }
@@ -1011,7 +1011,7 @@ class Category extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $types */
         $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
@@ -1044,7 +1044,7 @@ class Category extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $typesFlushed */
         $typesFlushed = [];
 

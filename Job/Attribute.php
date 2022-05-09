@@ -640,7 +640,7 @@ class Attribute extends Import
 
             /* Add Attribute to group and family */
             if ($row['_attribute_set_id'] && $row['group']) {
-                $attributeSetIds = explode(',', $row['_attribute_set_id']);
+                $attributeSetIds = explode(',', $row['_attribute_set_id'] ?? '');
 
                 if (is_numeric($row['group'])) {
                     $row['group'] = 'PIM' . $row['group'];
@@ -810,7 +810,7 @@ class Attribute extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $types */
         $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
@@ -843,7 +843,7 @@ class Attribute extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $typesFlushed */
         $typesFlushed = [];
 

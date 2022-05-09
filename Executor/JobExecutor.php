@@ -262,7 +262,7 @@ class JobExecutor implements JobExecutorInterface
         }
 
         /** @var string[] $entities */
-        $entities = explode(',', $code);
+        $entities = explode(',', $code ?? '');
         if (count($entities) > 1) {
             $entities = $this->sortJobs($entities);
 

@@ -802,7 +802,7 @@ class Entities
         $newValues = [];
         foreach ($values as $key => $data) {
             /** @var string[] $keyParts */
-            $keyParts    = explode('-', $key, 2);
+            $keyParts    = explode('-', $key ?? '', 2);
             $keyParts[0] = strtolower($keyParts[0]);
             if (count($keyParts) > 1) {
                 $newValues[$keyParts[0] . '-' . $keyParts[1]] = $data;
@@ -869,13 +869,13 @@ class Entities
     public function formatMediaName($filename)
     {
         /** @var string[] $filenameParts */
-        $filenameParts = explode('.', $filename);
+        $filenameParts = explode('.', $filename ?? '');
         // Get the extention
         /** @var string $extension */
         $extension = array_pop($filenameParts);
         // Get the hash
         $filename = implode('.', $filenameParts);
-        $filename = explode('_', $filename);
+        $filename = explode('_', $filename ?? '');
         /** @var string $shortHash */
         $shortHash = array_shift($filename);
         $shortHash = substr($shortHash, 0, 4);

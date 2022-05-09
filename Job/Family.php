@@ -313,7 +313,7 @@ class Family extends Import
         /** @var array $row */
         while ($row = $query->fetch()) {
             /** @var array $attributes */
-            $attributes = explode(',', $row['attribute_code']);
+            $attributes = explode(',', $row['attribute_code'] ?? '');
             /** @var string $attribute */
             foreach ($attributes as $attribute) {
                 $connection->insert(
@@ -393,7 +393,7 @@ class Family extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $types */
         $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
@@ -426,7 +426,7 @@ class Family extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $typesFlushed */
         $typesFlushed = [];
 
