@@ -349,7 +349,7 @@ class ConfigManagement
                 /** @var string $text */
                 $text = $config['value'];
                 /** @var string $cleanValue */
-                $cleanValue = preg_replace("/<br>|\n|\r|\r?|\s\s+/", "", $text);
+                $cleanValue = preg_replace("/<br>|\n|\r|\r?|\s\s+/", "", $text ?? '');
                 /** @var string[] $lines */
                 $lines = str_split($cleanValue, 89);
 
