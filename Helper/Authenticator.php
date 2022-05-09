@@ -5,9 +5,9 @@ namespace Akeneo\Connector\Helper;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\AkeneoPimClientBuilder;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Http\Adapter\Guzzle6\Client;
 use Http\Factory\Guzzle\StreamFactory;
 use Http\Factory\Guzzle\RequestFactory;
+use GuzzleHttp\Client;
 
 /**
  * Class Authenticator
