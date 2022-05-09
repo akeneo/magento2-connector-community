@@ -154,8 +154,8 @@ class Family extends Import
         $filters = $this->familyFilters->getFilters();
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
-            $this->logger->addDebug(__('Family API call Filters : ') . print_r($filters, true));
+            $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
+            $this->logger->debug(__('Family API call Filters : ') . print_r($filters, true));
         }
         /** @var PageInterface $families */
         $families = $this->akeneoClient->getFamilyApi()->listPerPage(1, false, $filters);

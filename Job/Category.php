@@ -175,8 +175,8 @@ class Category extends Import
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
-            $this->logger->addDebug(
+            $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
+            $this->logger->debug(
                 __('Category API call Filters : ') . print_r($this->categoryFilters->getParentFilters(), true)
             );
         }

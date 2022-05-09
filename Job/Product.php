@@ -365,7 +365,7 @@ class Product extends JobImport
     public function createTable()
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
+            $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
             $this->jobExecutor->setAdditionalMessage(
                 __('Path to log file : %1', $this->handler->getFilename()),
                 $this->logger
@@ -410,7 +410,7 @@ class Product extends JobImport
         /** @var mixed[] $filters */
         $filters = $this->getFilters($this->getFamily());
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->logger->addDebug(__('Product API call Filters : ') . print_r($filters, true));
+            $this->logger->debug(__('Product API call Filters : ') . print_r($filters, true));
         }
 
         foreach ($filters as $filter) {
@@ -729,7 +729,7 @@ class Product extends JobImport
         /** @var mixed[] $filters */
         $filters = $this->getProductModelFilters($this->getFamily());
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->logger->addDebug(__('Product Model API call Filters : ') . print_r($filters, true));
+            $this->logger->debug(__('Product Model API call Filters : ') . print_r($filters, true));
         }
         /** @var mixed[] $step */
         $step = $this->productModelHelper->createTable($this->akeneoClient, $filters);

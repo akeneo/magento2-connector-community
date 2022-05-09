@@ -633,7 +633,7 @@ class JobExecutor implements JobExecutorInterface
     {
         $this->message = $message;
         if ($logger && $this->configHelper->isAdvancedLogActivated()) {
-            $this->currentJobClass->getLogger()->addDebug($message);
+            $this->currentJobClass->getLogger()->debug($message);
         }
 
         return $this;
@@ -801,7 +801,7 @@ class JobExecutor implements JobExecutorInterface
     {
         $this->message = $this->getMessageWithoutPrefix() . PHP_EOL . $message;
         if ($logger && $this->configHelper->isAdvancedLogActivated()) {
-            $this->currentJobClass->getLogger()->addDebug($message);
+            $this->currentJobClass->getLogger()->debug($message);
         }
 
         return $this;

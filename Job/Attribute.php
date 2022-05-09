@@ -196,8 +196,8 @@ class Attribute extends Import
                 __('Path to log file : %1', $this->handler->getFilename()),
                 $this->logger
             );
-            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
-            $this->logger->addDebug(__('Attribute API call Filters : ') . print_r($filters, true));
+            $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
+            $this->logger->debug(__('Attribute API call Filters : ') . print_r($filters, true));
         }
         /** @var PageInterface $attributes */
         $attributes = $this->akeneoClient->getAttributeApi()->listPerPage(1, false, $filters);
