@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Helper;
 
-use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
-use Akeneo\Pim\ApiClient\AkeneoPimClientBuilder;
+use Akeneo\Connector\Model\AkeneoPimClientBuilderFactory;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Http\Adapter\Guzzle6\Client;
 use Http\Factory\Guzzle\StreamFactory;
 use Http\Factory\Guzzle\RequestFactory;
@@ -21,22 +23,20 @@ use Http\Factory\Guzzle\RequestFactory;
  */
 class Authenticator
 {
-    /**
-     * This variable contains a ConfigHelper
-     *
-     * @var ConfigHelper $configHelper
-     */
-    protected $configHelper;
+    /** @var ConfigHelper $configHelper */
+    private $configHelper;
+
+    /** @var AkeneoPimClientBuilderFactory $clientBuilderFactory */
+    private $clientBuilderFactory;
 
     /**
-     * Authenticator constructor
-     *
-     * @param ConfigHelper $configHelper
+     * @param Config $configHelper
+     * @param AkeneoPimClientBuilderFactory $clientBuilderFactory
      */
-    public function __construct(
-        ConfigHelper $configHelper
-    ) {
+    public function __construct(ConfigHelper $configHelper, AkeneoPimClientBuilderFactory $clientBuilderFactory)
+    {
         $this->configHelper = $configHelper;
+        $this->clientBuilderFactory = $clientBuilderFactory;
     }
 
     /**
@@ -46,24 +46,17 @@ class Authenticator
      */
     public function getAkeneoApiClient()
     {
-        /** @var string $baseUri */
         $baseUri = $this->configHelper->getAkeneoApiBaseUrl();
-        /** @var string $clientId */
         $clientId = $this->configHelper->getAkeneoApiClientId();
-        /** @var string $secret */
         $secret = $this->configHelper->getAkeneoApiClientSecret();
-        /** @var string $username */
         $username = $this->configHelper->getAkeneoApiUsername();
-        /** @var string $password */
         $password = $this->configHelper->getAkeneoApiPassword();
 
         if (!$baseUri || !$clientId || !$secret || !$username || !$password) {
             return false;
         }
 
-        /** @var AkeneoPimClientBuilder $akeneoClientBuilder */
-        $akeneoClientBuilder = new AkeneoPimClientBuilder($baseUri);
-
+        $akeneoClientBuilder = $this->clientBuilderFactory->create(['baseUri' => $baseUri]);
         $akeneoClientBuilder->setHttpClient(new Client());
         $akeneoClientBuilder->setStreamFactory(new StreamFactory());
         $akeneoClientBuilder->setRequestFactory(new RequestFactory());
