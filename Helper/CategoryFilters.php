@@ -113,7 +113,7 @@ class CategoryFilters
         $categoriesToImport = [];
         if ($excludedCategories) {
             /** @var string[] $explodedCategories */
-            $explodedCategories = explode(',', $excludedCategories);
+            $explodedCategories = explode(',', $excludedCategories ?? '');
             $categoriesToImport = array_diff($allParentCategories, $explodedCategories);
         } else {
             $categoriesToImport = $allParentCategories;

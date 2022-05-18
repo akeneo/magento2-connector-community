@@ -365,7 +365,7 @@ class Product extends JobImport
     public function createTable()
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
+            $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
             $this->jobExecutor->setAdditionalMessage(
                 __('Path to log file : %1', $this->handler->getFilename()),
                 $this->logger
@@ -410,7 +410,7 @@ class Product extends JobImport
         /** @var mixed[] $filters */
         $filters = $this->getFilters($this->getFamily());
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->logger->addDebug(__('Product API call Filters : ') . print_r($filters, true));
+            $this->logger->debug(__('Product API call Filters : ') . print_r($filters, true));
         }
 
         foreach ($filters as $filter) {
@@ -729,7 +729,7 @@ class Product extends JobImport
         /** @var mixed[] $filters */
         $filters = $this->getProductModelFilters($this->getFamily());
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->logger->addDebug(__('Product Model API call Filters : ') . print_r($filters, true));
+            $this->logger->debug(__('Product Model API call Filters : ') . print_r($filters, true));
         }
         /** @var mixed[] $step */
         $step = $this->productModelHelper->createTable($this->akeneoClient, $filters);
@@ -1481,7 +1481,7 @@ class Product extends JobImport
             }
 
             /** @var string[] $columnParts */
-            $columnParts = explode('-', $column, 2);
+            $columnParts = explode('-', $column ?? '', 2);
             /** @var string $columnPrefix */
             $columnPrefix = reset($columnParts);
             $columnPrefix = sprintf('%s-', $columnPrefix);
@@ -2028,7 +2028,7 @@ class Product extends JobImport
         /** @var string $column */
         foreach ($columns as $column) {
             /** @var string[] $columnParts */
-            $columnParts = explode('-', $column, 2);
+            $columnParts = explode('-', $column ?? '', 2);
             /** @var string $columnPrefix */
             $columnPrefix = $columnParts[0];
 
@@ -2192,7 +2192,7 @@ class Product extends JobImport
             }
 
             /** @var array $attributes */
-            $attributes = explode(',', $row['_axis']);
+            $attributes = explode(',', $row['_axis'] ?? '');
             /** @var int $position */
             $position = 0;
 
@@ -2256,7 +2256,7 @@ class Product extends JobImport
                 }
 
                 /** @var array $children */
-                $children = explode(',', $row['_children']);
+                $children = explode(',', $row['_children'] ?? '');
                 /** @var string $child */
                 foreach ($children as $child) {
                     /** @var int $childId */
@@ -2461,7 +2461,7 @@ class Product extends JobImport
                         /** @var string[] $associatedWebsites */
                         $associatedWebsites = $row['associated_website'];
                         if ($associatedWebsites !== null) {
-                            $associatedWebsites = explode(',', $associatedWebsites);
+                            $associatedWebsites = explode(',', $associatedWebsites ?? '');
                             /** @var string $associatedWebsite */
                             foreach ($associatedWebsites as $associatedWebsite) {
                                 /** @var bool $websiteSet */
@@ -2965,12 +2965,12 @@ class Product extends JobImport
                     /** @var string[] $associationData */
                     $associationData = explode(
                         ',',
-                        $row[$familyAssociation['akeneo_quantity_association'] . '-models']
+                        $row[$familyAssociation['akeneo_quantity_association'] . '-models'] ?? ''
                     );
                     /** @var string $association */
                     foreach ($associationData as $association) {
                         /** @var string[] $modelAssociation */
-                        $modelAssociation = explode(';', $association);
+                        $modelAssociation = explode(';', $association ?? '');
                         $skuModels[] = $modelAssociation[0];
                     }
                     $skuModels = implode(', ', $skuModels);
@@ -3696,7 +3696,7 @@ class Product extends JobImport
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $types */
         $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
@@ -3729,7 +3729,7 @@ class Product extends JobImport
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $typesFlushed */
         $typesFlushed = [];
 
@@ -3824,7 +3824,7 @@ class Product extends JobImport
         /** @var mixed $locales */
         $locales = $this->configHelper->getModelCompletenessLocalesFilter();
         /** @var string[] $locales */
-        $locales = explode(',', $locales);
+        $locales = explode(',', $locales ?? '');
         if ($completenessType == ModelCompleteness::NO_CONDITION) {
             return false;
         }
@@ -3909,7 +3909,7 @@ class Product extends JobImport
             /** @var mixed $filter */
             $familiesFilter = $this->configHelper->getFamiliesFilter();
             if ($familiesFilter) {
-                $familiesFilter = explode(',', $familiesFilter);
+                $familiesFilter = explode(',', $familiesFilter ?? '');
                 foreach ($familiesFilter as $familyFilter) {
                     if (($key = array_search($familyFilter, $families)) !== false) {
                         unset($families[$key]);
@@ -3957,7 +3957,7 @@ class Product extends JobImport
     public function formatGroupedAssociationData($productAssociationData, $productIdentifier)
     {
         /** @var string[] $productAssociations */
-        $productAssociations = explode(',', $productAssociationData);
+        $productAssociations = explode(',', $productAssociationData ?? '');
         /** @var string[] $formatedAssociations */
         $formatedAssociations = [];
         /**
@@ -3966,7 +3966,7 @@ class Product extends JobImport
          */
         foreach ($productAssociations as $key => $association) {
             /** @var string[] $associationData */
-            $associationData = explode(';', $association);
+            $associationData = explode(';', $association ?? '');
             if (!isset($associationData[1])) {
                 return false;
             }
