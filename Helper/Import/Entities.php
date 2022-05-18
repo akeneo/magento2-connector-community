@@ -78,6 +78,8 @@ class Entities
      */
     protected $passIfEmpty = [
         'price',
+        'special_price',
+        'cost',
     ];
     /**
      * Mapped catalog attributes with relative scope
