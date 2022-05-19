@@ -335,3 +335,11 @@
 * Fix "Since last successful import" mode not working on first product job without successful date
 * Fix relations from "catalog_product_relation" table for grouped and bundle products being deleted during the product job
 * Fix job status to "Error" if missing or wrong API credentials are set in the connector configuration
+
+### Version 103.0.0 :
+* Add compatibility for Magento 2.4.4 and PHP 8.1: (https://help.akeneo.com/magento2-connector/articles/all-pre-requisite.html#compatibility)
+  * Bump Akeneo API client to version 9
+  * Replace Guzzle HTTP client by Symfony HTTP Client
+  * Fix function usage for PHP 8
+  * Update extension PHP compatibility to 7.4 and 8.1
+* Fix "special_price" and "cost" attribute being set to 0 when empty on MariaDB

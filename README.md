@@ -28,7 +28,7 @@ With Akeneo Connector for Magento 2, you can import:
 ### Requirements:
 
 * Akeneo PIM >= 3.2 (CE & EE) | Akeneo EE features are not included in this version of the Connector
-* Magento >= 2.3 (CE & EE)
+* Magento >= 2.3.7 (CE & EE)
 * Database encoding must be UTF-8
 
 ### Migration:
