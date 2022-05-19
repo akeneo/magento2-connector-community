@@ -249,11 +249,11 @@ abstract class Import extends DataObject implements ImportInterface
                 $identifierColumn
             );
             if ($newEntities) {
-                $logger->addDebug(__('Imported new entities : %1', implode(',', $existingEntities)));
+                $logger->debug(__('Imported new entities : %1', implode(',', $existingEntities)));
 
                 return;
             }
-            $logger->addDebug(__('Imported entities : %1', implode(',', $existingEntities)));
+            $logger->debug(__('Imported entities : %1', implode(',', $existingEntities)));
         }
     }
 }

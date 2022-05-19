@@ -300,7 +300,7 @@ class ProductFilters
             /** @var mixed $locales */
             $locales = $this->configHelper->getCompletenessLocalesFilter();
             /** @var string[] $locales */
-            $locales            = explode(',', $locales);
+            $locales            = explode(',', $locales ?? '');
             $options['locales'] = $locales;
         }
 
