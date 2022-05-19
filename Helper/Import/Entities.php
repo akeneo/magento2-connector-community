@@ -904,12 +904,12 @@ class Entities
         $select->joinLeft(
         // retrieve each product entity for each row_id.
         // We use "left join" to be able to create new product from Akeneo (they are not yet in catalog_product_entity)
-            ['p' => 'catalog_product_entity'],
+            ['p' => $this->getTable('catalog_product_entity')],
             '_entity_id = p.entity_id',
             $cols
         )
             ->joinLeft( // retrieve all the staging update for the givens entities. We use "join left" to get the original entity
-                ['s' => 'staging_update'],
+                ['s' => $this->getTable('staging_update')],
                 'p.created_in = s.id',
                 []
             );
@@ -946,12 +946,12 @@ class Entities
         $select->joinLeft(
         // retrieve each category entity for each row_id.
         // We use "left join" to be able to create new category from Akeneo (they are not yet in catalog_category_entity)
-            ['p' => 'catalog_category_entity'],
+            ['p' => $this->getTable('catalog_category_entity')],
             '_entity_id = p.entity_id',
             $cols
         )
             ->joinLeft( // retrieve all the staging update for the givens entities. We use "join left" to get the original entity
-                ['s' => 'staging_update'],
+                ['s' => $this->getTable('staging_update')],
                 'p.created_in = s.id',
                 []
             );

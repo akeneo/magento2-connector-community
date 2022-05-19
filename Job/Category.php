@@ -335,7 +335,7 @@ class Category extends Import
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tableName */
+        /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         $connection->addColumn(
@@ -405,7 +405,7 @@ class Category extends Import
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tableName */
+        /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $stores */
         $stores = $this->storeHelper->getStores('lang');
@@ -634,7 +634,7 @@ class Category extends Import
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tableName */
+        /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $values */
         $values = [
@@ -927,10 +927,10 @@ class Category extends Import
 
         /** @var string $select */
         $select = $connection->select()->from(
-            ['s' => $connection->getTableName('store')],
+            ['s' => $this->entitiesHelper->getTable('store')],
             ['store_id', 'g.root_category_id']
         )->join(
-            ['g' => $connection->getTableName('store_group')],
+            ['g' => $this->entitiesHelper->getTable('store_group')],
             "s.group_id = g.group_id",
             []
         );
@@ -951,7 +951,7 @@ class Category extends Import
 
         /** @var string $select */
         $select = $connection->select()->from(
-            ['c' => $connection->getTableName('catalog_category_entity')],
+            ['c' => $this->entitiesHelper->getTable('catalog_category_entity')],
             ['entity_id', 'path']
         );
 

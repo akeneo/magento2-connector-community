@@ -767,7 +767,7 @@ class Product extends JobImport
 
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        if ($connection->isTableExists($this->entitiesHelper->getTableName('product_model'))) {
+        if ($connection->isTableExists($this->entitiesHelper->getTable('product_model'))) {
             /** @var string[] $messages */
             $messages = [];
 
@@ -1783,7 +1783,7 @@ class Product extends JobImport
         /** @var string $statusAttributeId */
         $statusAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'status');
         /** @var string $identifierColumn */
-        $identifierColumn = $this->entitiesHelper->getColumnIdentifier('catalog_product_entity_int');
+        $identifierColumn = $this->entitiesHelper->getColumnIdentifier($this->entitiesHelper->getTable('catalog_product_entity_int'));
         /** @var string $productTable */
         $productTable = $this->entitiesHelper->getTable('catalog_product_entity');
         /** @var string[] $pKeyColumn */
@@ -2102,8 +2102,7 @@ class Product extends JobImport
                 'catalog_product_entity',
                 $data,
                 $entityTypeId,
-                $storeId,
-                AdapterInterface::INSERT_ON_DUPLICATE
+                $storeId
             );
         }
 
