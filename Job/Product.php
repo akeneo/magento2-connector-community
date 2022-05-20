@@ -37,6 +37,7 @@ use Magento\Catalog\Model\ResourceModel\Category\Collection;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Eav\Model\Config as EavConfig;
+use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
 use Magento\Eav\Model\ResourceModel\Entity\Attribute as EavAttribute;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -1452,7 +1453,7 @@ class Product extends JobImport
      * Replace option code by id
      *
      * @return void
-     * @throws \Zend_Db_Statement_Exception
+     * @throws Zend_Db_Statement_Exception
      */
     public function updateOption()
     {
@@ -2053,7 +2054,7 @@ class Product extends JobImport
 
             /** @var int $scope */
             $scope = (int)$attributeScopeMapping[$columnPrefix];
-            if ($scope === \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_GLOBAL && !empty($columnParts[1]) && $columnParts[1] === $adminBaseCurrency) {
+            if ($scope === ScopedAttributeInterface::SCOPE_GLOBAL && !empty($columnParts[1]) && $columnParts[1] === $adminBaseCurrency) {
                 // This attribute has global scope with a suffix: it is a price with its currency
                 // If Price scope is set to Website, it will be processed afterwards as any website scoped attribute
                 $values[0][$columnPrefix] = $column;
@@ -2073,11 +2074,11 @@ class Product extends JobImport
             /** @var mixed[] $store */
             foreach ($affectedStores as $store) {
                 // Handle website scope
-                if ($scope === \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_WEBSITE && !$store['is_website_default']) {
+                if ($scope === ScopedAttributeInterface::SCOPE_WEBSITE && !$store['is_website_default']) {
                     continue;
                 }
 
-                if ($scope === \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE || empty($store['siblings'])) {
+                if ($scope === ScopedAttributeInterface::SCOPE_STORE || empty($store['siblings'])) {
                     $values[$store['store_id']][$columnPrefix] = $column;
 
                     continue;
@@ -2119,7 +2120,7 @@ class Product extends JobImport
      * Link configurable with children
      *
      * @return void
-     * @throws \Zend_Db_Statement_Exception
+     * @throws Zend_Db_Statement_Exception
      * @throws LocalizedException
      */
     public function linkConfigurable()
@@ -2324,7 +2325,7 @@ class Product extends JobImport
         /** @var string $productSuperLinkTable */
         $productSuperLinkTable = $this->entitiesHelper->getTable('catalog_product_super_link');
 
-        /** @var \Magento\Framework\DB\Select $select */
+        /** @var Select $select */
         $select = $connection->select()->from($tmpTable, ['_entity_id', 'parent', '_type_id']);
 
         /** @var string $pKeyColumn */
@@ -2952,7 +2953,7 @@ class Product extends JobImport
             }
         }
 
-        /** @var \Magento\Framework\DB\Select $select */
+        /** @var Select $select */
         $select = $connection->select()->from(
             $tmpTable,
             $associationSelect
@@ -3491,8 +3492,8 @@ class Product extends JobImport
      *
      * @return void
      * @throws LocalizedException
-     * @throws \Magento\Framework\Exception\FileSystemException
-     * @throws \Zend_Db_Statement_Exception
+     * @throws FileSystemException
+     * @throws Zend_Db_Statement_Exception
      */
     public function importMedia()
     {
