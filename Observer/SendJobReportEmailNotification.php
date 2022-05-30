@@ -179,7 +179,7 @@ class SendJobReportEmailNotification implements ObserverInterface
             ->setTemplateVars(
                 [
                     'link'      => $link,
-                    'jobStatus' => $jobStatus,
+                    'jobStatus' => (string)$jobStatus,
                     'jobName'   => $currentJob->getName(),
                 ]
             )
