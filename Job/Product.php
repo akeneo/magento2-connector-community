@@ -624,6 +624,9 @@ class Product extends JobImport
                     }
                 }
 
+                //Delete duplicate config for Metric Attributes
+                $metricsConcatSettings = array_unique($metricsConcatSettings);
+
                 /**
                  * @var mixed[] $metricsConcatSetting
                  */
