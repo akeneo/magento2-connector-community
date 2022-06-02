@@ -37,10 +37,12 @@ use Magento\Catalog\Model\ResourceModel\Category\Collection;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Eav\Model\Config as EavConfig;
+use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
 use Magento\Eav\Model\ResourceModel\Entity\Attribute as EavAttribute;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\DB\Ddl\Table;
 use Magento\Framework\DB\Select;
 use Magento\Framework\DB\Statement\Pdo\Mysql;
 use Magento\Framework\Event\ManagerInterface;
@@ -53,7 +55,9 @@ use Magento\Indexer\Model\IndexerFactory;
 use Magento\Staging\Model\VersionManager;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Http\Message\ResponseInterface;
+use Zend_Db_Exception;
 use Zend_Db_Expr as Expr;
+use Zend_Db_Select;
 use Zend_Db_Statement_Exception;
 use Zend_Db_Statement_Pdo;
 
@@ -619,6 +623,9 @@ class Product extends JobImport
                         $product['values'][$attributeMetric][$key]['data']['amount'] = $amount;
                     }
                 }
+
+                //Delete duplicate config for Metric Attributes
+                $metricsConcatSettings = array_unique($metricsConcatSettings);
 
                 /**
                  * @var mixed[] $metricsConcatSetting
@@ -1449,7 +1456,7 @@ class Product extends JobImport
      * Replace option code by id
      *
      * @return void
-     * @throws \Zend_Db_Statement_Exception
+     * @throws Zend_Db_Statement_Exception
      */
     public function updateOption()
     {
@@ -2050,7 +2057,7 @@ class Product extends JobImport
 
             /** @var int $scope */
             $scope = (int)$attributeScopeMapping[$columnPrefix];
-            if ($scope === \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_GLOBAL && !empty($columnParts[1]) && $columnParts[1] === $adminBaseCurrency) {
+            if ($scope === ScopedAttributeInterface::SCOPE_GLOBAL && !empty($columnParts[1]) && $columnParts[1] === $adminBaseCurrency) {
                 // This attribute has global scope with a suffix: it is a price with its currency
                 // If Price scope is set to Website, it will be processed afterwards as any website scoped attribute
                 $values[0][$columnPrefix] = $column;
@@ -2070,11 +2077,11 @@ class Product extends JobImport
             /** @var mixed[] $store */
             foreach ($affectedStores as $store) {
                 // Handle website scope
-                if ($scope === \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_WEBSITE && !$store['is_website_default']) {
+                if ($scope === ScopedAttributeInterface::SCOPE_WEBSITE && !$store['is_website_default']) {
                     continue;
                 }
 
-                if ($scope === \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE || empty($store['siblings'])) {
+                if ($scope === ScopedAttributeInterface::SCOPE_STORE || empty($store['siblings'])) {
                     $values[$store['store_id']][$columnPrefix] = $column;
 
                     continue;
@@ -2116,7 +2123,7 @@ class Product extends JobImport
      * Link configurable with children
      *
      * @return void
-     * @throws \Zend_Db_Statement_Exception
+     * @throws Zend_Db_Statement_Exception
      * @throws LocalizedException
      */
     public function linkConfigurable()
@@ -2321,7 +2328,7 @@ class Product extends JobImport
         /** @var string $productSuperLinkTable */
         $productSuperLinkTable = $this->entitiesHelper->getTable('catalog_product_super_link');
 
-        /** @var \Magento\Framework\DB\Select $select */
+        /** @var Select $select */
         $select = $connection->select()->from($tmpTable, ['_entity_id', 'parent', '_type_id']);
 
         /** @var string $pKeyColumn */
@@ -2424,14 +2431,14 @@ class Product extends JobImport
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
+        $catalogProductWebsiteTablename = $this->entitiesHelper->getTable('catalog_product_website');
         /** @var string $websiteAttribute */
         $websiteAttribute = $this->configHelper->getWebsiteAttribute();
         if ($websiteAttribute !== null) {
             $websiteAttribute = strtolower($websiteAttribute);
             $attribute = $this->eavConfig->getAttribute('catalog_product', $websiteAttribute);
             if ($attribute->getAttributeId() !== null) {
-                /** @var array $websites */
-                $websites = $this->storeHelper->getStores('website_code');
+                $websites = $this->storeManager->getWebsites(false, true);
 
                 if ($connection->tableColumnExists($tmpTable, $websiteAttribute)) {
                     /** @var Select $select */
@@ -2445,66 +2452,12 @@ class Product extends JobImport
                     );
                     /** @var Mysql $query */
                     $query = $connection->query($select);
+                    $deletedRowId = [];
+                    $productWebsiteMapping = [];
                     /** @var array $row */
-                    while (($row = $query->fetch())) {
-                        /** @var Select $deleteSelect */
-                        $deleteSelect = $connection->select()->from(
-                            $this->entitiesHelper->getTable('catalog_product_website')
-                        )->where('product_id = ?', $row['entity_id']);
-
-                        $connection->query(
-                            $connection->deleteFromSelect(
-                                $deleteSelect,
-                                $this->entitiesHelper->getTable('catalog_product_website')
-                            )
-                        );
-                        /** @var string[] $associatedWebsites */
-                        $associatedWebsites = $row['associated_website'];
-                        if ($associatedWebsites !== null) {
-                            $associatedWebsites = explode(',', $associatedWebsites ?? '');
-                            /** @var string $associatedWebsite */
-                            foreach ($associatedWebsites as $associatedWebsite) {
-                                /** @var bool $websiteSet */
-                                $websiteSet = false;
-                                /**
-                                 * @var string $key
-                                 * @var string $website
-                                 */
-                                foreach ($websites as $key => $website) {
-                                    if ($associatedWebsite === $key && isset($website[0]['website_id'])) {
-                                        $websiteSet = true;
-                                        /** @var Select $insertSelect */
-                                        $insertSelect = $connection->select()->from(
-                                            $tmpTable,
-                                            [
-                                                'product_id' => new Expr($row['entity_id']),
-                                                'website_id' => new Expr($website[0]['website_id']),
-                                            ]
-                                        );
-
-                                        $connection->query(
-                                            $connection->insertFromSelect(
-                                                $insertSelect,
-                                                $this->entitiesHelper->getTable('catalog_product_website'),
-                                                ['product_id', 'website_id'],
-                                                AdapterInterface::INSERT_ON_DUPLICATE
-                                            )
-                                        );
-                                    }
-                                }
-
-                                if ($websiteSet === false) {
-                                    $this->jobExecutor->setAdditionalMessage(
-                                        __(
-                                            'Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.',
-                                            $row['identifier'],
-                                            $associatedWebsite
-                                        ),
-                                        $this->logger
-                                    );
-                                }
-                            }
-                        } else {
+                    while ($row = $query->fetch()) {
+                        $deletedRowId[] = $row['entity_id'];
+                        if (empty($row['associated_website'])) {
                             $this->jobExecutor->setAdditionalMessage(
                                 __(
                                     'Warning: The product with Akeneo id %1 has no associated website in the custom attribute.',
@@ -2512,33 +2465,60 @@ class Product extends JobImport
                                 ),
                                 $this->logger
                             );
+                            continue;
                         }
+
+                        $associatedWebsites = explode(',', $row['associated_website'] ?? '');
+                        /** @var string $associatedWebsite */
+                        foreach ($associatedWebsites as $associatedWebsite) {
+                            if (!isset($websites[$associatedWebsite])) {
+                                $this->jobExecutor->setAdditionalMessage(
+                                    __(
+                                        'Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.',
+                                        $row['identifier'],
+                                        $associatedWebsite
+                                    ),
+                                    $this->logger
+                                );
+                                continue;
+                            }
+
+                            $productWebsiteMapping[] = [
+                                'product_id' => new Expr($row['entity_id']),
+                                'website_id' => new Expr($websites[$associatedWebsite]->getId()),
+                            ];
+                        }
+                    }
+
+                    if (!empty($deletedRowId)) {
+                        $connection->delete($catalogProductWebsiteTablename, ['product_id IN (?)' => $deletedRowId]);
+                    }
+
+                    if (!empty($productWebsiteMapping)) {
+                        $connection->insertOnDuplicate($catalogProductWebsiteTablename, $productWebsiteMapping);
                     }
                 }
             } else {
                 $this->jobExecutor->setAdditionalMessage(
-                    __('Warning: The website attribute code given does not match any Magento attribute.'),
+                    __(
+                        'Warning: The website attribute code given does not match any Magento attribute.'
+                    ),
                     $this->logger
                 );
             }
         } else {
-            /** @var array $websites */
-            $websites = $this->storeHelper->getStores('website_id');
+            $websites = $this->storeManager->getWebsites();
             /**
              * @var int $websiteId
              * @var array $affected
              */
-            foreach ($websites as $websiteId => $affected) {
-                if ($websiteId === 0) {
-                    continue;
-                }
-
+            foreach ($websites as $id => $website) {
                 /** @var Select $select */
                 $select = $connection->select()->from(
                     $tmpTable,
                     [
                         'product_id' => '_entity_id',
-                        'website_id' => new Expr($websiteId),
+                        'website_id' => new Expr($id),
                     ]
                 );
 
@@ -2670,45 +2650,33 @@ class Product extends JobImport
      * Update related, up-sell and cross-sell products
      *
      * @return void
-     * @throws \Zend_Db_Exception
+     * @throws Zend_Db_Exception
      */
-    public function setRelated()
+    public function setRelated(): void
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
-        /** @var string $entitiesTable */
-        $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
-        /** @var string $productsTable */
         $productsTable = $this->entitiesHelper->getTable('catalog_product_entity');
-        /** @var string $linkTable */
         $linkTable = $this->entitiesHelper->getTable('catalog_product_link');
-        /** @var string $linkAttributeTable */
         $linkAttributeTable = $this->entitiesHelper->getTable('catalog_product_link_attribute');
-        /** @var mixed[] $related */
         $related = [];
-
-        /** @var string $columnIdentifier */
         $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($productsTable);
-
-        /** @var array $values */
-        $values = ['product_id' => '_entity_id'];
-
-        /** @var bool $rowIdExists */
         $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productsTable);
-        if ($rowIdExists) {
-            $values['product_id'] = 'p.row_id';
-        }
-        /** @var Select $productIds */
-        $productIds = $connection->select()->from($tmpTable, $values);
 
+        // we build query to delete old product links
+        $linkTableAlias = 'l';
+        $deleteQuery = $connection->select()->from([$linkTableAlias => $linkTable], null);
         if ($rowIdExists) {
-            $this->entities->addJoinForContentStaging($productIds, []);
+            $deleteQuery->joinInner(['p' => $productsTable], "$linkTableAlias.product_id = p.row_id", null)
+                ->joinInner(['tmp' => $tmpTable], 'p.entity_id = tmp._entity_id', null)
+                ->joinLeft(['s' => $this->entitiesHelper->getTable('staging_update')], 'p.created_in = s.id', null);
+        } else {
+            $deleteQuery->joinInner(['tmp' => $tmpTable], "$linkTableAlias.product_id = tmp._entity_id", null);
         }
 
-        /** @var string[] $associationTypes */
         $associationTypes = $this->configHelper->getAssociationTypes();
+
         /** @var int $linkType */
         /** @var string[] $associationNames */
         foreach ($associationTypes as $linkType => $associationNames) {
@@ -2716,66 +2684,107 @@ class Product extends JobImport
                 continue;
             }
 
+            // rewrite "WHERE" condition
+            $deleteQuery
+                ->reset(Zend_Db_Select::WHERE)
+                ->where("$linkTableAlias.link_type_id = ?", $linkType);
+
             /* Remove old link */
-            $connection->delete(
-                $linkTable,
-                ['link_type_id = ?' => $linkType, 'product_id IN (?)' => $productIds]
-            );
-            /** @var string $associationName */
+            $connection->query("DELETE $linkTableAlias $deleteQuery");
+
             foreach ($associationNames as $associationName) {
-                if (!empty($associationName) && $connection->tableColumnExists($tmpTable, $associationName)) {
-                    $related[$linkType][] = sprintf('`d`.`%s`', $associationName);
+                if (!empty($associationName) &&
+                    $connection->tableColumnExists($tmpTable, $associationName)
+                ) {
+                    $related[$linkType][] = $associationName;
                 }
             }
         }
 
-        /**
-         * @var int $typeId
-         * @var string[] $columns
-         */
-        foreach ($related as $typeId => $columns) {
-            /** @var mixed[] $columsToSelect */
-            $columsToSelect = [
-                'product_id' => 'd._entity_id',
-                'linked_product_id' => 'c.entity_id',
-                'link_type_id' => new Expr($typeId),
-            ];
-            if ($rowIdExists) {
-                $columsToSelect = [
-                    'product_id' => 'p.row_id',
-                    'linked_product_id' => 'c.entity_id',
-                    'link_type_id' => new Expr($typeId),
-                ];
-            }
-            /** @var string $concat */
-            $concat = sprintf('CONCAT_WS(",", %s)', implode(', ', $columns));
-            /** @var Select $select */
-            $select = $connection->select()->from(['c' => $entitiesTable], [])->joinInner(
-                ['d' => $tmpTable],
-                sprintf(
-                    'FIND_IN_SET(`c`.`code`, %s) AND `c`.`import` = "%s"',
-                    $concat,
-                    $this->jobExecutor->getCurrentJob()->getCode()
-                ),
-                $columsToSelect
-            );
-
-            if ($rowIdExists) {
-                $this->entities->addJoinForContentStaging($select, []);
-            } else {
-                $select->joinInner(['e' => $productsTable], sprintf('c.entity_id = e.%s', $columnIdentifier), []);
-            }
-
-            /* Insert new link */
-            $connection->query(
-                $connection->insertFromSelect(
-                    $select,
-                    $linkTable,
-                    ['product_id', 'linked_product_id', 'link_type_id'],
-                    AdapterInterface::INSERT_ON_DUPLICATE
+        // we create temp table to avoid FIND_IN_SET MySQL query which is a performance killer
+        $tempRelatedTable = 'temp_akeneo_connector_' . __FUNCTION__ . '_' . ($this->family ?: uniqid());
+        $connection->createTemporaryTable(
+            $connection->newTable($tempRelatedTable)
+                ->addColumn(
+                    'product_id',
+                    Table::TYPE_INTEGER
+                )->addColumn(
+                    'sku',
+                    Table::TYPE_TEXT,
+                    255,
+                )->addColumn(
+                    'link_type_id',
+                    Table::TYPE_INTEGER
                 )
-            );
+        );
 
+        // we create array of all the links we'll have to import
+        $linksToInsert = [];
+        foreach ($related as $typeId => $columns) {
+            foreach ($columns as $column) {
+                $links = $connection->fetchAll($connection->select()->from($tmpTable, ['_entity_id', $column]));
+                foreach ($links as $link) {
+                    if (empty($link[$column])) {
+                        continue;
+                    }
+
+                    $linksId = explode(',', $link[$column]);
+                    foreach ($linksId as $sku) {
+                        $linksToInsert[] = [
+                            'product_id' => $link['_entity_id'],
+                            'sku' => $sku,
+                            'link_type_id' => $typeId,
+                        ];
+                    }
+                }
+            }
+        }
+
+        // insert all links in tmp table and create index to improve next INSERT ON SELECT using join
+        $connection->insertOnDuplicate($tempRelatedTable, $linksToInsert);
+        $connection->addIndex(
+            $tempRelatedTable,
+            $connection->getIndexName($tempRelatedTable, 'product_id', AdapterInterface::INDEX_TYPE_INDEX),
+            'product_id'
+        );
+        $connection->addIndex(
+            $tempRelatedTable,
+            $connection->getIndexName($tempRelatedTable, 'sku', AdapterInterface::INDEX_TYPE_INDEX),
+            'sku'
+        );
+
+        $select = $connection->select()
+            ->from(['tmp' => $tempRelatedTable], ["p.$columnIdentifier", 'p_sku.entity_id', 'link_type_id'])
+            ->joinInner(
+                ['p_sku' => $productsTable],
+                'tmp.sku = p_sku.sku',
+                []
+            );
+        if ($rowIdExists) {
+            $this->entities->addJoinForContentStaging($select, []);
+            /** @var array $fromPart */
+            $fromPart = $select->getPart(Zend_Db_Select::FROM);
+            $fromPart['p']['joinCondition'] = 'product_id = p.entity_id';
+            $select->setPart(Zend_Db_Select::FROM, $fromPart);
+        } else {
+            $select->joinInner(
+                ['p' => $productsTable],
+                'product_id = p.entity_id',
+                []
+            );
+        }
+
+        // we finally insert the real links
+        $connection->query(
+            $connection->insertFromSelect(
+                $select,
+                $linkTable,
+                ['product_id', 'linked_product_id', 'link_type_id'],
+                AdapterInterface::INSERT_ON_DUPLICATE
+            )
+        );
+
+        foreach ($related as $typeId => $columns) {
             /* Insert position */
             $attributeId = $connection->fetchOne(
                 $connection->select()->from($linkAttributeTable, ['product_link_attribute_id'])->where(
@@ -2785,9 +2794,10 @@ class Product extends JobImport
             );
 
             if ($attributeId) {
-                $select = $connection->select()
-                    ->from($linkTable, [new Expr($attributeId), 'link_id', 'link_id'])
-                    ->where('link_type_id = ?', $typeId);
+                $select = $connection->select()->from(
+                    $linkTable,
+                    [new Expr($attributeId), 'link_id', 'link_id']
+                )->where('link_type_id = ?', $typeId);
 
                 $connection->query(
                     $connection->insertFromSelect(
@@ -2919,7 +2929,7 @@ class Product extends JobImport
             }
         }
 
-        /** @var \Magento\Framework\DB\Select $select */
+        /** @var Select $select */
         $select = $connection->select()->from(
             $tmpTable,
             $associationSelect
@@ -3458,8 +3468,8 @@ class Product extends JobImport
      *
      * @return void
      * @throws LocalizedException
-     * @throws \Magento\Framework\Exception\FileSystemException
-     * @throws \Zend_Db_Statement_Exception
+     * @throws FileSystemException
+     * @throws Zend_Db_Statement_Exception
      */
     public function importMedia()
     {

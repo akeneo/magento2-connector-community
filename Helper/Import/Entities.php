@@ -901,15 +901,18 @@ class Entities
      */
     public function addJoinForContentStaging($select, $cols)
     {
+        $productTable = $this->getTable('catalog_product_entity');
+        $stagingTable = $this->getTable('staging_update');
+
         $select->joinLeft(
         // retrieve each product entity for each row_id.
         // We use "left join" to be able to create new product from Akeneo (they are not yet in catalog_product_entity)
-            ['p' => 'catalog_product_entity'],
+            ['p' => $productTable],
             '_entity_id = p.entity_id',
             $cols
         )
             ->joinLeft( // retrieve all the staging update for the givens entities. We use "join left" to get the original entity
-                ['s' => 'staging_update'],
+                ['s' => $stagingTable],
                 'p.created_in = s.id',
                 []
             );
