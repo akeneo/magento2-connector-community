@@ -343,3 +343,8 @@
   * Fix function usage for PHP 8
   * Update extension PHP compatibility to 7.4 and 8.1
 * Fix "special_price" and "cost" attribute being set to 0 when empty on MariaDB
+
+### Version 103.0.1 :
+* Improve "setRelated" (Associations) and "setWebsites" (Website Attribute) steps performance for Product job
+* Fix job status not displaying in mail report
+* Fix metric unit being displayed twice if the same attribute is configured in "Metric Attributes"
