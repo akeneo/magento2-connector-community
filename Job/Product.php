@@ -2702,8 +2702,8 @@ class Product extends JobImport
         }
 
         // we create temp table to avoid FIND_IN_SET MySQL query which is a performance killer
-        $tempRelatedTable ='tmp_akeneo_' . strtolower(__FUNCTION__) . '_' . ($this->family ?: uniqid());
-        $tempRelatedTable = substr($tempRelatedTable,0, AdapterMysql::LENGTH_TABLE_NAME);
+        $tempRelatedTable = 'tmp_akeneo_' . strtolower(__FUNCTION__) . '_' . ($this->family ?: uniqid());
+        $tempRelatedTable = substr($tempRelatedTable, 0, AdapterMysql::LENGTH_TABLE_NAME);
         $connection->createTemporaryTable(
             $connection->newTable($tempRelatedTable)
                 ->addColumn(
