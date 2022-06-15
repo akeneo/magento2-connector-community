@@ -72,16 +72,6 @@ class Entities
      */
     protected $tablePrefix;
     /**
-     * Product attributes to pass if empty value
-     *
-     * @var string[] $passIfEmpty
-     */
-    protected $passIfEmpty = [
-        'price',
-        'special_price',
-        'cost',
-    ];
-    /**
      * Mapped catalog attributes with relative scope
      *
      * @var string[] $attributeScopeMapping
@@ -388,7 +378,7 @@ class Entities
                     [
                         'type'    => 'text',
                         'length'  => '2M',
-                        'default' => '',
+                        'default' => null,
                         'COMMENT' => ' '
                     ]
                 );
@@ -595,12 +585,6 @@ class Entities
                         $identifier    => '_entity_id',
                     ]
                 );
-            }
-
-            /** @var bool $columnExists */
-            $columnExists = $connection->tableColumnExists($tableName, $value);
-            if ($columnExists && ($import !== self::IMPORT_CODE_PRODUCT || in_array($code, $this->passIfEmpty))) {
-                $select->where(sprintf('TRIM(`%s`) > ?', $value), new Expr('""'));
             }
 
             /** @var string $insert */
