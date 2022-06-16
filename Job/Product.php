@@ -42,6 +42,7 @@ use Magento\Eav\Model\ResourceModel\Entity\Attribute as EavAttribute;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\DB\Adapter\Pdo\Mysql as AdapterMysql;
 use Magento\Framework\DB\Ddl\Table;
 use Magento\Framework\DB\Select;
 use Magento\Framework\DB\Statement\Pdo\Mysql;
@@ -2701,7 +2702,8 @@ class Product extends JobImport
         }
 
         // we create temp table to avoid FIND_IN_SET MySQL query which is a performance killer
-        $tempRelatedTable = 'temp_akeneo_connector_' . __FUNCTION__ . '_' . ($this->family ?: uniqid());
+        $tempRelatedTable = 'tmp_akeneo_' . strtolower(__FUNCTION__) . '_' . ($this->family ?: uniqid());
+        $tempRelatedTable = substr($tempRelatedTable, 0, AdapterMysql::LENGTH_TABLE_NAME);
         $connection->createTemporaryTable(
             $connection->newTable($tempRelatedTable)
                 ->addColumn(
