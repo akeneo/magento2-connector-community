@@ -348,3 +348,7 @@
 * Improve "setRelated" (Associations) and "setWebsites" (Website Attribute) steps performance for Product job
 * Fix job status not displaying in mail report
 * Fix metric unit being displayed twice if the same attribute is configured in "Metric Attributes"
+
+### Version 103.0.2 :
+* Fix "setRelated" temporary table name to MYSQL maximum table name length
+* Fix "price", "special_price" and "cost" attribute import by setting default value for every temporary table columns to `NULL`
