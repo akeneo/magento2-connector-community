@@ -17,7 +17,7 @@ use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Module\Dir;
 use Magento\Framework\Module\Dir\Reader;
-use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\View\Asset\File;
 use Magento\Framework\View\Asset\Repository;
 use SimpleXMLElement;
@@ -77,11 +77,11 @@ class ConfigManagement
      */
     protected $directoryList;
     /**
-     * Description $serializer field
+     * Description $jsonSerializer field
      *
-     * @var SerializerInterface $serializer
+     * @var JsonSerializer $jsonSerializer
      */
-    protected $serializer;
+    protected $jsonSerializer;
     /**
      * Description $websiteFormField field
      *
@@ -237,14 +237,15 @@ class ConfigManagement
     /**
      * ConfigManagement constructor
      *
-     * @param ResourceConnection  $resourceConnection
-     * @param Edition             $sourceEdition
-     * @param Reader              $moduleReader
-     * @param ConfigHelper        $configHelper
-     * @param Repository          $assetRepository
-     * @param DirectoryList       $directoryList
-     * @param SerializerInterface $serializer
-     * @param Website             $websiteFormField
+     * @param ResourceConnection $resourceConnection
+     * @param Edition            $sourceEdition
+     * @param Reader             $moduleReader
+     * @param ConfigHelper       $configHelper
+     * @param Repository         $assetRepository
+     * @param DirectoryList      $directoryList
+     * @param JsonSerializer     $jsonSerializer
+     * @param Website            $websiteFormField
+     * @param Attribute          $attributeModel
      */
     public function __construct(
         ResourceConnection $resourceConnection,
@@ -253,7 +254,7 @@ class ConfigManagement
         ConfigHelper $configHelper,
         Repository $assetRepository,
         DirectoryList $directoryList,
-        SerializerInterface $serializer,
+        JsonSerializer $jsonSerializer,
         Website $websiteFormField,
         Attribute $attributeModel
     ) {
@@ -263,7 +264,7 @@ class ConfigManagement
         $this->configHelper       = $configHelper;
         $this->assetRepository    = $assetRepository;
         $this->directoryList      = $directoryList;
-        $this->serializer         = $serializer;
+        $this->jsonSerializer     = $jsonSerializer;
         $this->websiteFormField   = $websiteFormField;
         $this->assetRepository    = $assetRepository;
         $this->attributeModel     = $attributeModel;
@@ -318,7 +319,7 @@ class ConfigManagement
             if ($backendModelAttributeValue === ArraySerialized::class) {
                 // Get array labels
                 /** @var string[] $configValueUnserialized */
-                $configValueUnserialized = $this->serializer->unserialize($config['value']);
+                $configValueUnserialized = $this->jsonSerializer->unserialize($config['value']);
                 /** @var string[] $firstElement */
                 $firstElement = reset($configValueUnserialized);
 
@@ -348,7 +349,7 @@ class ConfigManagement
                 /** @var string $text */
                 $text = $config['value'];
                 /** @var string $cleanValue */
-                $cleanValue = preg_replace("/<br>|\n|\r|\r?|\s\s+/", "", $text);
+                $cleanValue = preg_replace("/<br>|\n|\r|\r?|\s\s+/", "", $text ?? '');
                 /** @var string[] $lines */
                 $lines = str_split($cleanValue, 89);
 
@@ -460,7 +461,7 @@ class ConfigManagement
     protected function insertMultiselect($values, string $field)
     {
         /** @var string[] $valuesArray */
-        $valuesArray = explode(',', $values);
+        $valuesArray = explode(',', $values ?? '');
         /** @var string $value */
         foreach ($valuesArray as $value) {
             $this->addLineBreak(self::LINE_BREAK);
@@ -629,7 +630,7 @@ class ConfigManagement
     protected function getSystemConfigAttribute(string $path, string $attributeName)
     {
         /** @var string[] $path */
-        $path = explode('/', $path);
+        $path = explode('/', $path ?? '');
         /** @var string $etcDir */
         $etcDir = $this->moduleReader->getModuleDir(
             Dir::MODULE_ETC_DIR,
@@ -768,7 +769,7 @@ class ConfigManagement
      */
     protected function addLineBreak($nextElementHeight = null, $value = null)
     {
-        if (is_null($nextElementHeight)) {
+        if ($nextElementHeight === null) {
             $nextElementHeight = 0;
         }
 
@@ -776,7 +777,7 @@ class ConfigManagement
             $this->addNewPage();
         }
 
-        if (is_null($value)) {
+        if ($value === null) {
             $this->lastPosition -= self::LINE_BREAK;
         } else {
             $this->lastPosition -= $value;

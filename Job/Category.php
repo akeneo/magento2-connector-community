@@ -175,8 +175,8 @@ class Category extends Import
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
-            $this->logger->addDebug(
+            $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
+            $this->logger->debug(
                 __('Category API call Filters : ') . print_r($this->categoryFilters->getParentFilters(), true)
             );
         }
@@ -600,8 +600,6 @@ class Category extends Import
             $values['row_id'] = 'IFNULL (p.row_id, _entity_id)'; // on category creation, row_id is null
         }
 
-        /** @var \Magento\Framework\DB\Select $parents */
-        $parents = $connection->select()->from($tmpTable, $values);
         $connection->query(
             $connection->insertFromSelect(
                 $parents,
@@ -742,7 +740,7 @@ class Category extends Import
         $tableName = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var AdapterInterface $connection */
         $connection         = $this->entitiesHelper->getConnection();
-        $filteredCategories = explode(',', $filteredCategories);
+        $filteredCategories = explode(',', $filteredCategories ?? '');
         /** @var mixed[]|null $categoriesToDelete */
         $categoriesToDelete = $connection->fetchAll(
             $connection->select()->from($tableName)->where('code IN (?)', $filteredCategories)
@@ -979,7 +977,7 @@ class Category extends Import
         /** @var string $rootCategoryId */
         $currentRootCategoryId = $rootCategoriesAndStores[$storeId];
         /** @var string[] $currentCategoryPath */
-        $currentCategoryPath = explode('/', $categoriesPath[$categoryId]);
+        $currentCategoryPath = explode('/', $categoriesPath[$categoryId] ?? '');
 
         return in_array($currentRootCategoryId, $currentCategoryPath, false);
     }
@@ -991,7 +989,9 @@ class Category extends Import
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
+        if (!$this->configHelper->isAdvancedLogActivated()) {
+            $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
+        }
     }
 
     /**
@@ -1011,7 +1011,7 @@ class Category extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $types */
         $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
@@ -1044,7 +1044,7 @@ class Category extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $typesFlushed */
         $typesFlushed = [];
 

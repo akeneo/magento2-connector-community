@@ -10,15 +10,15 @@ use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Eav\Model\Entity\Attribute\Source\AbstractSource;
 
 /**
- * Class Metrics
+ * Class Tables
  *
  * @package   Akeneo\Connector\Model\Source\Attribute
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
+ * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Metrics extends AbstractSource
+class Tables extends AbstractSource
 {
     /**
      * This variable contains a mixed value
@@ -63,11 +63,11 @@ class Metrics extends AbstractSource
     }
 
     /**
-     * Generate array of all metrics options from connected akeneo
+     * Generate array of all tables options from connected akeneo
      *
      * @return array
      */
-    public function getAllOptions()
+    public function getAllOptions(): array
     {
         /** @var ResourceCursorInterface|mixed[] $attributes */
         $attributes = $this->getAttributes();
@@ -77,7 +77,7 @@ class Metrics extends AbstractSource
         }
 
         foreach ($attributes as $attribute) {
-            if ($attribute['type'] != AttributeFilters::ATTRIBUTE_TYPE_CATALOG_METRIC) {
+            if ($attribute['type'] !== AttributeFilters::ATTRIBUTE_TYPE_CATALOG_TABLE) {
                 continue;
             }
             $this->_options[] = ['label' => $attribute['code'], 'value' => $attribute['code']];
@@ -87,12 +87,14 @@ class Metrics extends AbstractSource
     }
 
     /**
-     * Generate cursor interface of pim metrics list
+     * Generate cursor interface of pim tables list
      *
      * @return ResourceCursorInterface|mixed[]
      */
     public function getAttributes()
     {
+        /** @var string|int $paginationSize */
+        $paginationSize = $this->configHelper->getPaginationSize();
         try {
             /** @var AkeneoPimClientInterface $akeneoClient */
             $akeneoClient = $this->akeneoAuthenticator->getAkeneoApiClient();
@@ -100,14 +102,16 @@ class Metrics extends AbstractSource
             if (!$akeneoClient) {
                 return $this->_options;
             }
-            /** @var string|int $paginationSize */
-            $paginationSize = $this->configHelper->getPaginationSize();
 
             /** @var string[] $attributeTypeFilter */
             $attributeTypeFilter = $this->attributeFilters->createAttributeTypeFilter(
-                [AttributeFilters::ATTRIBUTE_TYPE_CATALOG_METRIC],
+                [
+                    AttributeFilters::ATTRIBUTE_TYPE_CATALOG_TABLE,
+                ],
                 true
             );
+
+            $attributeTypeFilter['with_table_select_options'] = true;
 
             return $akeneoClient->getAttributeApi()->all($paginationSize, $attributeTypeFilter);
         } catch (\Exception $exception) {
@@ -116,14 +120,14 @@ class Metrics extends AbstractSource
     }
 
     /**
-     * Get list of all metric attributes only
+     * Get list of all table attributes only
      *
      * @return array|string[]
      */
-    public function getMetricsAttributes()
+    public function getTablesAttributes(): array
     {
-        /** @var string[] $metrics */
-        $metrics = [];
+        /** @var string[] $tables */
+        $tables = [];
         /** @var ResourceCursorInterface|mixed[] $attributes */
         $attributes = $this->getAttributes();
 
@@ -132,13 +136,13 @@ class Metrics extends AbstractSource
         }
 
         foreach ($attributes as $attribute) {
-            if ($attribute['type'] != AttributeFilters::ATTRIBUTE_TYPE_CATALOG_METRIC) {
+            if ($attribute['type'] !== AttributeFilters::ATTRIBUTE_TYPE_CATALOG_TABLE) {
                 continue;
             }
 
-            $metrics[] = $attribute['code'];
+            $tables[] = $attribute;
         }
 
-        return $metrics;
+        return $tables;
     }
 }

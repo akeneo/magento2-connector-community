@@ -374,14 +374,63 @@ For example :<br/>
                         <![CDATA[- Code of the select attribute that will be used to select product type<br />- If empty, every product that is not a product model will be created as a simple product<br />- If “virtual“ value is found, the product will be created as a virtual product]]>
                     </comment>
                 </field>
-                <field id="activation" translate="label comment" type="select" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="product_status_mode" translate="label" type="select" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Product Status Mode</label>
+                    <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
+                    <comment>
+                        <![CDATA[The "Status based on Completeness level" mode is only available for Akeneo version Growth and Serenity.]]>
+                    </comment>
+                </field>
+                <field id="attribute_code_for_simple_product_statuses" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Akeneo Attribute code for Simple product statuses</label>
+                    <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
+                    <depends>
+                        <field id="product_status_mode">attribute_product_mapping</field>
+                    </depends>
+                    <comment>
+                        <![CDATA[The Akeneo attribute has to be a global or a scopable Yes/No Attribute. Localizable values won’t be used as a products cannot be disabled at Store View level.]]>
+                    </comment>
+                </field>
+                <field id="attribute_code_for_configurable_product_statuses" translate="label" type="text" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Akeneo Attribute code for Configurable product statuses</label>
+                    <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
+                    <depends>
+                        <field id="product_status_mode">attribute_product_mapping</field>
+                    </depends>
+                    <comment>
+                        <![CDATA[The Akeneo attribute has to be a global or a scopable Yes/No Attribute. Localizable values won’t be used as a products cannot be disabled at Store View level.]]>
+                    </comment>
+                </field>
+                <field id="enable_simple_products_per_website" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Simple Products per website if completeness in channel is equal or greater than</label>
+                    <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
+                    <depends>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth</field>
+                        <field id="product_status_mode">status_based_on_completeness_level</field>
+                    </depends>
+                    <comment>
+                        <![CDATA[Completeness level should be a number between 0 and 100]]>
+                    </comment>
+                </field>
+                <field id="default_configurable_product_status" translate="label" type="select" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Default Configurable Products Status</label>
+                    <source_model>Akeneo\Connector\Model\Source\Activation</source_model>
+                    <depends>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth</field>
+                        <field id="product_status_mode">status_based_on_completeness_level</field>
+                    </depends>
+                </field>
+                <field id="activation" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Default Product Status</label>
                     <source_model>Akeneo\Connector\Model\Source\Activation</source_model>
+                    <depends>
+                        <field id="product_status_mode">default_product_status</field>
+                    </depends>
                     <comment>
                         <![CDATA[Default status for product creation<br/>If a product is updated, status won't be modified unless it is disabled in Akeneo]]>
                     </comment>
                 </field>
-                <field id="attribute_mapping" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="attribute_mapping" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Attribute Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Attribute</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -390,18 +439,18 @@ For example :<br/>
 "price" "special_price" and "cost" attributes won't be automatically mapped unless you explicitely declare them in this configuration.]]>
                     </comment>
                 </field>
-                <field id="metrics" translate="label" type="text" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="metrics" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Metric Attributes</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Metrics</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                 </field>
-                <field id="tax_class" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="tax_class" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Default Tax Class</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Tax</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>Set up default tax class for website</comment>
                 </field>
-                <field id="configurable_attributes" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="configurable_attributes" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Configurable</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -419,7 +468,7 @@ For example :<br/>
                         ]]>
                     </comment>
                 </field>
-                <field id="association_related" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0"
+                <field id="association_related" translate="label" type="text" sortOrder="55" showInDefault="1" showInWebsite="0"
                     showInStore="0">
                     <label>Akeneo association code for Related products</label>
                 </field>
@@ -565,6 +614,30 @@ For example :<br/>
                     <label>Enable Advanced Loging</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>Activating advanced log may slow down the imports. Temporary tables won't be deleted at the end of their imports. Logs will be placed in var/log/akeneo_connector</comment>
+                </field>
+                <field id="enable_clean_logs" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Job Logs Cleaning</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>By default, the logs older than the number of days configured will be cleaned every day at 2AM</comment>
+                </field>
+                <field id="clean_logs" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Clear job logs after X days</label>
+                    <depends>
+                        <field id="enable_clean_logs">1</field>
+                    </depends>
+                </field>
+                <field id="email_job_report_enabled" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Job Report By Email</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Send job report by email</comment>
+                </field>
+                <field id="email_job_report_recipient" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Job Report Recipient Emails</label>
+                    <comment>Email addresses of job reports recipients separated by commas ','</comment>
+                    <validate>no-whitespace</validate>
+                    <depends>
+                        <field id="email_job_report_enabled">1</field>
+                    </depends>
                 </field>
             </group>
         </section>
