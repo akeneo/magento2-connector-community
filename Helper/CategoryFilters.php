@@ -10,12 +10,9 @@ use Akeneo\Pim\ApiClient\Search\SearchBuilder;
 use Akeneo\Pim\ApiClient\Search\SearchBuilderFactory;
 
 /**
- * Class CategoryFilters
- *
- * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class CategoryFilters
@@ -80,7 +77,11 @@ class CategoryFilters
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
 
-        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY || $edition === Edition::GROWTH) {
+        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO
+            || $edition === Edition::GREATER_OR_FIVE ||
+            $edition === Edition::SERENITY ||
+            $edition === Edition::GROWTH
+        ) {
             $this->searchBuilder = $this->searchBuilderFactory->create();
             /** @var string[] $categoriesToImport */
             $categoriesToImport = $this->getCategoriesToImport();

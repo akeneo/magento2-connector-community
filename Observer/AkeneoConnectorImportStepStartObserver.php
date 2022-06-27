@@ -13,12 +13,9 @@ use Akeneo\Connector\Model\Log as LogModel;
 use Akeneo\Connector\Model\LogFactory;
 
 /**
- * Class AkeneoConnectorImportStepStartObserver
- *
- * @package   Akeneo\Connector\Observer
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class AkeneoConnectorImportStepStartObserver implements ObserverInterface

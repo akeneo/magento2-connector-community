@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Helper\AttributeFilters;
@@ -27,13 +29,9 @@ use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Interface;
 
 /**
- * Class Option
- *
- * @category  Class
- * @package   Akeneo\Connector\Job
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Option extends Import

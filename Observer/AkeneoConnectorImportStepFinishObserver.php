@@ -11,12 +11,9 @@ use Akeneo\Connector\Api\Data\LogInterface;
 use Akeneo\Connector\Api\LogRepositoryInterface;
 
 /**
- * Class AkeneoConnectorImportStepFinishObserver
- *
- * @package   Akeneo\Connector\Observer
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class AkeneoConnectorImportStepFinishObserver implements ObserverInterface
@@ -58,7 +55,9 @@ class AkeneoConnectorImportStepFinishObserver implements ObserverInterface
             return $this;
         }
 
-        if ($executor->getStep() + 1 == $executor->countSteps() - 1 || ($executor->isDone() && $currentJob->getStatus() != JobInterface::JOB_ERROR)) {
+        if ($executor->getStep() + 1 == $executor->countSteps() - 1
+            || ($executor->isDone() && $currentJob->getStatus() != JobInterface::JOB_ERROR)
+        ) {
             $log->setStatus(ImportInterface::IMPORT_SUCCESS); // Success
             $this->logRepository->save($log);
         }

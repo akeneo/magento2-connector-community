@@ -16,13 +16,9 @@ use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Exception;
 
 /**
- * Class Product
- *
- * @category  Class
- * @package   Akeneo\Connector\Helper\Import
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Product extends Entities
@@ -30,19 +26,19 @@ class Product extends Entities
     /**
      * @var array EXCLUDED_COLUMNS
      */
-    const EXCLUDED_COLUMNS = ['_links'];
+    public const EXCLUDED_COLUMNS = ['_links'];
     /**
      * @var string ASSOCIATIONS_KEY
      */
-    const ASSOCIATIONS_KEY = 'associations';
+    public const ASSOCIATIONS_KEY = 'associations';
     /**
      * @var string VALUES_KEY
      */
-    const VALUES_KEY = 'values';
+    public const VALUES_KEY = 'values';
     /**
      * @var string COMPLETENESS_KEY
      */
-    const COMPLETENESS_KEY = 'completenesses';
+    public const COMPLETENESS_KEY = 'completenesses';
     /**
      * QUANTIFIED_ASSOCIATIONS_KEY const
      *
@@ -577,7 +573,7 @@ class Product extends Entities
                     $product->getStoreId()
                 );
             }
-            $suffix += 1;
+            ++$suffix;
         } while ($exists);
 
         return $requestPath;
@@ -586,7 +582,7 @@ class Product extends Entities
     /**
      * Check if given family is a grouped family
      *
-     * @param $family
+     * @param string[] $family
      *
      * @return bool
      */

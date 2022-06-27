@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Helper\Authenticator;
@@ -26,13 +28,9 @@ use Magento\Indexer\Model\IndexerFactory;
 use Zend_Db_Expr as Expr;
 
 /**
- * Class Category
- *
- * @category  Class
- * @package   Akeneo\Connector\Job
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Category extends Import
@@ -40,7 +38,7 @@ class Category extends Import
     /**
      * @var int MAX_DEPTH
      */
-    const MAX_DEPTH = 10;
+    public const MAX_DEPTH = 10;
     /**
      * This variable contains a string value
      *
@@ -174,14 +172,20 @@ class Category extends Import
     public function createTable()
     {
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->jobExecutor->setAdditionalMessage(
+                __('Path to log file : %1', $this->handler->getFilename()),
+                $this->logger
+            );
             $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
             $this->logger->debug(
                 __('Category API call Filters : ') . print_r($this->categoryFilters->getParentFilters(), true)
             );
         }
         if (!$this->categoryFilters->getCategoriesToImport()) {
-            $this->jobExecutor->setMessage(__('No categories to import, check your category filter configuration'), $this->logger);
+            $this->jobExecutor->setMessage(
+                __('No categories to import, check your category filter configuration'),
+                $this->logger
+            );
             $this->jobExecutor->afterRun(1);
 
             return;
@@ -220,7 +224,11 @@ class Category extends Import
 
         /** @var ResourceCursorInterface $categories */
         $categories = [];
-        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY || $edition === Edition::GROWTH) {
+        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO
+            || $edition === Edition::GREATER_OR_FIVE
+            || $edition === Edition::SERENITY
+            || $edition === Edition::GROWTH
+        ) {
             /** @var ResourceCursorInterface $parentCategories */
             $parentCategories = $this->akeneoClient->getCategoryApi()->all(
                 $paginationSize,
@@ -722,7 +730,11 @@ class Category extends Import
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
 
-        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY || $edition === Edition::GROWTH) {
+        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO ||
+            $edition === Edition::GREATER_OR_FIVE ||
+            $edition === Edition::SERENITY ||
+            $edition === Edition::GROWTH
+        ) {
             return;
         }
 
@@ -883,7 +895,8 @@ class Category extends Import
                             $this->jobExecutor->setAdditionalMessage(
                                 __(
                                     sprintf(
-                                        'Tried to update url_rewrite_id %s : request path (%s) already exists for the store_id.',
+                                        'Tried to update url_rewrite_id %s : ' .
+                                        'request path (%s) already exists for the store_id.',
                                         $rewriteId,
                                         $requestPath
                                     )
@@ -959,7 +972,7 @@ class Category extends Import
     }
 
     /**
-     * return true if current category is present on current store
+     * Return true if current category is present on current store
      *
      * @param array $rootCategoriesAndStores
      * @param array $categoriesPath
