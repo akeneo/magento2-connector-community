@@ -3304,14 +3304,24 @@ class Product extends JobImport
                 }
                 /** @var Select $select */
                 $select = $connection->select()->from(
-                    $tmpTable,
+                    ['tmp' => $tmpTable],
                     [
                         'entity_id' => '_entity_id',
                         'url_key' => 'url_key-' . $local,
                         'store_id' => new Expr($store['store_id']),
                         'visibility' => '_visibility',
                     ]
-                );
+                )->where('_visibility != ?', Visibility::VISIBILITY_NOT_VISIBLE);
+
+                if (isset($store['website_id'])) {
+                    $select
+                        ->joinInner(
+                            ['pw' => $this->entitiesHelper->getTable('catalog_product_website')],
+                            'tmp._entity_id = pw.product_id',
+                            []
+                        )
+                        ->where('website_id = ?', $store['website_id']);
+                }
 
                 /** @var Mysql $query */
                 $query = $connection->query($select);
@@ -3322,31 +3332,10 @@ class Product extends JobImport
                     $product = $this->product;
                     $product->setData($row);
 
-                    if (isset($store['website_id'])) {
-                        /** @var Select $selectIsInWebsite */
-                        $selectIsInWebsite = $connection->select()->from(
-                            $this->entitiesHelper->getTable('catalog_product_website'),
-                            [
-                                'product_id' => 'product_id',
-                            ]
-                        )->where('website_id = ?', $store['website_id'])->where(
-                            'product_id = ?',
-                            $product->getEntityId()
-                        );
-                        /** @var Mysql $queryIsInWebsite */
-                        $queryIsInWebsite = $connection->query($selectIsInWebsite);
-                        /** @var string[] $isInWebsite */
-                        $isInWebsite = $queryIsInWebsite->fetchAll();
-
-                        if (empty($isInWebsite)) {
-                            continue;
-                        }
-                    }
-
                     /** @var string $urlPath */
                     $urlPath = $this->productUrlPathGenerator->getUrlPath($product);
 
-                    if (!$urlPath || $row['visibility'] < 2) {
+                    if (!$urlPath) {
                         continue;
                     }
 
