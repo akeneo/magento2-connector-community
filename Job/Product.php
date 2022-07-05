@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
@@ -1344,16 +1346,19 @@ class Product extends JobImport
         /** @var string $akeneoConnectorTable */
         $akeneoConnectorTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         /** @var string $entityTable */
-        $entityTable = $this->entitiesHelper->getTable(self::CATALOG_PRODUCT_ENTITY_TABLE_NAME);
-        /** @var Select $selectExistingEntities */
-        $selectExistingEntities = $connection->select()->from($entityTable, 'entity_id');
-        /** @var string[] $existingEntities */
-        $existingEntities = array_column($connection->query($selectExistingEntities)->fetchAll(), 'entity_id');
+        $entityTable = $this->entitiesHelper->getTable('catalog_product_entity');
 
-        $connection->delete(
-            $akeneoConnectorTable,
-            ['import = ?' => 'product', 'entity_id NOT IN (?)' => $existingEntities]
-        );
+        $alias = 'a';
+        $deleteQuery = $connection->select()
+            ->from([$alias => $akeneoConnectorTable], null)
+            ->joinLeft(
+                ['p' => $entityTable],
+                "$alias.entity_id = p.entity_id",
+                []
+            )
+            ->where("p.entity_id IS NULL AND $alias.import = 'product'");
+
+        $connection->query("DELETE $alias $deleteQuery");
     }
 
     /**
@@ -2367,7 +2372,7 @@ class Product extends JobImport
         $query = $connection->query($select);
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
-        
+
         if ($edition === Edition::SERENITY || $edition === Edition::GROWTH) {
             /** @var string[] $filters */
             $filters = [
