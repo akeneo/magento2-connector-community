@@ -2342,10 +2342,56 @@ class Product extends JobImport
         /** @var Mysql $query */
         $query = $connection->query($select);
 
+        if ($edition === Edition::SERENITY || $edition === Edition::GROWTH) {
+            /** @var string[] $filters */
+            $filters = [
+                'search' => [
+                    'parent' => [
+                        [
+                            'operator' => 'NOT EMPTY'
+                        ]
+                    ],
+                    'family' => [
+                        [
+                            'operator' => 'IN',
+                            'value' => [
+                                $this->family,
+                            ],
+                        ],
+                    ],
+                ]
+            ];
+            /** @var string|int $paginationSize */
+            $paginationSize = $this->configHelper->getPaginationSize();
+            /** @var ResourceCursorInterface $productModels */
+            $productModels = $this->akeneoClient->getProductModelApi()->all($paginationSize, $filters);
+            /** @var mixed[] $productModelsItems */
+            $productModelItems = [];
+
+            foreach ($productModels as $productModel) {
+                $productModelItems[$productModel['code']] = $productModel['parent'];
+            }
+        }
+
         /** @var array $row */
         while (($row = $query->fetch())) {
             if ((!isset($row['parent']) && $row['_type_id'] !== 'simple') || !isset($row['_entity_id'])) {
                 continue;
+            }
+
+            if ($edition === Edition::SERENITY || $edition === Edition::GROWTH) {
+                if (!empty($productModelItems) && array_key_exists($row['parent'], $productModelItems)) {
+                    $row['parent'] = $productModelItems[$row['parent']];
+                    $connection->update(
+                        $tmpTable,
+                        [
+                            'parent' => $row['parent'],
+                        ],
+                        [
+                            '_entity_id = ?' => $row['_entity_id'],
+                        ]
+                    );
+                }
             }
 
             /** @var string[] $productEntityIds */
