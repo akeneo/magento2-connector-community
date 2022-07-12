@@ -352,3 +352,6 @@
 ### Version 103.0.2 :
 * Fix "setRelated" temporary table name to MYSQL maximum table name length
 * Fix "price", "special_price" and "cost" attribute import by setting default value for every temporary table columns to `NULL`
+
+### Version 103.0.3 :
+* Fix simple product association with configurable product when a variation from a two-level family variant is imported without the product model
