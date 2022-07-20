@@ -2342,6 +2342,8 @@ class Product extends JobImport
         /** @var Mysql $query */
         $query = $connection->query($select);
 
+        /** @var string $edition */
+        $edition = $this->configHelper->getEdition();
         if ($edition === Edition::SERENITY || $edition === Edition::GROWTH) {
             /** @var string[] $filters */
             $filters = [
