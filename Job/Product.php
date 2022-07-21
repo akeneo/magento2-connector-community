@@ -2202,8 +2202,6 @@ class Product extends JobImport
             $position = 0;
             /** @var array $attributes */
             $attributes = explode(',', $row['_axis'] ?? '');
-            /** @var array $attributes */
-            $attributes = explode(',', $row['_axis'] ?? '');
             /** @var array[] $productExistingSuperAttributes */
             $existingSuperAttributes = $connection->fetchAll(
                 $connection->select()->from($productSuperAttrTable, ['attribute_id'])->where(
