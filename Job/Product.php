@@ -2198,10 +2198,34 @@ class Product extends JobImport
                 continue;
             }
 
-            /** @var array $attributes */
-            $attributes = explode(',', $row['_axis'] ?? '');
             /** @var int $position */
             $position = 0;
+            /** @var array $attributes */
+            $attributes = explode(',', $row['_axis'] ?? '');
+            /** @var array[] $productExistingSuperAttributes */
+            $existingSuperAttributes = $connection->fetchAll(
+                $connection->select()->from($productSuperAttrTable, ['attribute_id'])->where(
+                    'product_id = ?',
+                    $row[$pKeyColumn]
+                )
+            );
+            /** @var string[] $formattedExistingSuperAttributes */
+            $formattedExistingSuperAttributes = array_map('current', $existingSuperAttributes);
+
+            /** @var string $existingAttributeId */
+            foreach ($formattedExistingSuperAttributes as $existingAttributeId) {
+                if (in_array($existingAttributeId, $attributes)) {
+                    continue;
+                }
+                // Remove "ghost" super attributes that exists into Magento but didn't into Akeneo
+                $remove = $connection->delete(
+                    $productSuperAttrTable,
+                    [
+                        'product_id = ?' => $row[$pKeyColumn],
+                        'attribute_id = ?' => $existingAttributeId,
+                    ]
+                );
+            }
 
             /** @var int $id */
             foreach ($attributes as $id) {
@@ -2341,7 +2365,9 @@ class Product extends JobImport
 
         /** @var Mysql $query */
         $query = $connection->query($select);
-
+        /** @var string $edition */
+        $edition = $this->configHelper->getEdition();
+        
         if ($edition === Edition::SERENITY || $edition === Edition::GROWTH) {
             /** @var string[] $filters */
             $filters = [
@@ -2748,7 +2774,7 @@ class Product extends JobImport
         }
 
         // we create temp table to avoid FIND_IN_SET MySQL query which is a performance killer
-        $tempRelatedTable = 'tmp_akeneo_' . strtolower(__FUNCTION__) . '_' . ($this->family ?: uniqid());
+        $tempRelatedTable = 'tmp_akeneo_' . strtolower(__FUNCTION__) . '_' . uniqid();
         $tempRelatedTable = substr($tempRelatedTable, 0, AdapterMysql::LENGTH_TABLE_NAME);
         $connection->createTemporaryTable(
             $connection->newTable($tempRelatedTable)
