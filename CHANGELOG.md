@@ -355,3 +355,9 @@
 
 ### Version 103.0.3 :
 * Fix simple product association with configurable product when a variation from a two-level family variant is imported without the product model
+
+### Version 103.0.4 :
+* Fix "setRelated" temporary table name to unique value
+* Fix product model variant change in `catalog_product_super_attribute` table
+* Fix `Too few arguments to function Laminas\Diactoros\ResponseFactory::__construct()` issue by adding `nyholm/psr7` dependency
+* Fix missing "$edition" variable in `Job/Product.php`
