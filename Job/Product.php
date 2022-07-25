@@ -3541,7 +3541,7 @@ class Product extends JobImport
             return;
         }
 
-        $gallery = array_unique($gallery);
+        $gallery = array_intersect_key($gallery, array_unique(array_column($gallery, 'attribute')));
 
         /** @var string $table */
         $table = $this->entitiesHelper->getTable('catalog_product_entity');
@@ -3554,14 +3554,18 @@ class Product extends JobImport
             'sku' => 'identifier',
         ];
         foreach ($gallery as $image) {
-            if (!$connection->tableColumnExists($tmpTable, strtolower($image))) {
+            if (!$connection->tableColumnExists($tmpTable, strtolower($image['attribute']))) {
                 $this->jobExecutor->setMessage(
                     __('Info: No value found in the current batch for the attribute %1', $image),
                     $this->logger
                 );
                 continue;
             }
-            $data[$image] = strtolower($image);
+            $data[$image['attribute']] = strtolower($image['attribute']);
+
+            if (isset($image['image_alt'])) {
+                $data[$image['image_alt']] = $image['image_alt'];
+            }
         }
 
         /** @var bool $rowIdExists */
@@ -3598,19 +3602,19 @@ class Product extends JobImport
             /** @var array $files */
             $files = [];
             foreach ($gallery as $image) {
-                if (!isset($row[$image])) {
+                if (!isset($row[$image['attribute']])) {
                     continue;
                 }
 
-                if (!$row[$image]) {
+                if (!$row[$image['attribute']]) {
                     continue;
                 }
 
-                if (!isset($medias[$row[$image]])) {
-                    $medias[$row[$image]] = $this->akeneoClient->getProductMediaFileApi()->get($row[$image]);
+                if (!isset($medias[$row[$image['attribute']]])) {
+                    $medias[$row[$image['attribute']]] = $this->akeneoClient->getProductMediaFileApi()->get($row[$image['attribute']]);
                 }
                 /** @var string $name */
-                $name = $this->entitiesHelper->formatMediaName(basename($medias[$row[$image]]['code']));
+                $name = $this->entitiesHelper->formatMediaName(basename($medias[$row[$image['attribute']]]['code']));
                 /** @var string $filePath */
                 $filePath = $this->configHelper->getMediaFullPath($name);
                 /** @var bool|string[] $databaseRecords */
@@ -3618,7 +3622,7 @@ class Product extends JobImport
 
                 if (!$this->configHelper->mediaFileExists($filePath)) {
                     /** @var ResponseInterface $binary */
-                    $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
+                    $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image['attribute']]);
                     /** @var string $imageContent */
                     $imageContent = $binary->getBody()->getContents();
                     $this->configHelper->saveMediaFile($filePath, $imageContent);
@@ -3680,7 +3684,7 @@ class Product extends JobImport
                     'value_id' => $valueId,
                     'store_id' => 0,
                     $columnIdentifier => $row[$columnIdentifier],
-                    'label' => '',
+                    'label' => isset($row[$image['image_alt']]) ? $row[$image['image_alt']] : '',
                     'position' => 0,
                     'disabled' => 0,
                 ];
@@ -3694,7 +3698,7 @@ class Product extends JobImport
                 $columns = $this->configHelper->getMediaImportImagesColumns();
 
                 foreach ($columns as $column) {
-                    if ($column['column'] !== $image) {
+                    if ($column['column'] !== $image['attribute']) {
                         continue;
                     }
                     /** @var array $data */

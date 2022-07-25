@@ -24,6 +24,7 @@ class Gallery extends AbstractFieldArray
     protected function _construct()
     {
         $this->addColumn('attribute', ['label' => __('Akeneo Attribute')]);
+        $this->addColumn('image_alt', ['label' => __('Akeneo Attribute Image Alt')]);
         $this->_addAfter       = false;
         $this->_addButtonLabel = __('Add');
 

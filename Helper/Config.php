@@ -1375,7 +1375,10 @@ class Config
             if (!isset($image['attribute']) || $image['attribute'] === '') {
                 continue;
             }
-            $images[] = $image['attribute'];
+            $images[] = [
+                'attribute' => $image['attribute'],
+                'image_alt' => $image['image_alt'],
+            ];
         }
 
         return $images;
