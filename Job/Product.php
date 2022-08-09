@@ -2405,6 +2405,9 @@ class Product extends JobImport
                 continue;
             }
 
+            /** @var string $rowEntityId */
+            $rowEntityId = $row['_entity_id'];
+
             if ($edition === Edition::SERENITY || $edition === Edition::GROWTH) {
                 if (!empty($productModelItems) && array_key_exists($row['parent'], $productModelItems)) {
                     $row['parent'] = $productModelItems[$row['parent']];
@@ -2414,7 +2417,7 @@ class Product extends JobImport
                             'parent' => $row['parent'],
                         ],
                         [
-                            '_entity_id = ?' => $row['_entity_id'],
+                            '_entity_id = ?' => $rowEntityId,
                         ]
                     );
                 }
@@ -2429,7 +2432,7 @@ class Product extends JobImport
                         $connection->fetchAll(
                             $connection->select()
                                 ->from($productRelationTable, 'parent_id')
-                                ->where('child_id = ?', $row['_entity_id'])
+                                ->where('child_id = ?', $rowEntityId)
                         )
                     )
             );
@@ -2437,7 +2440,7 @@ class Product extends JobImport
             if (!isset($row['parent']) && $row['_type_id'] === 'simple') {
                 if (!$productEntityIds) {
                     // Check if relations exists for this product and delete the relations
-                    $connection->delete($productRelationTable, ['child_id = ?' => $row['_entity_id']]);
+                    $connection->delete($productRelationTable, ['child_id = ?' => $rowEntityId]);
                 } else {
                     foreach ($productEntityIds as $productEntityId) {
                         if ($productEntityId['type_id'] !== BundleType::TYPE_CODE && $productEntityId['type_id'] !== GroupedType::TYPE_CODE) {
@@ -2447,7 +2450,7 @@ class Product extends JobImport
                     }
                 }
 
-                $connection->delete($productSuperLinkTable, ['product_id = ?' => $row['_entity_id']]);
+                $connection->delete($productSuperLinkTable, ['product_id = ?' => $rowEntityId]);
             }
 
             /** @var string $productModelEntityId */
@@ -2464,8 +2467,8 @@ class Product extends JobImport
                 if ($productEntityIds) {
                     foreach ($productEntityIds as $productEntityId) {
                         if ($productEntityId['type_id'] !== BundleType::TYPE_CODE && $productEntityId['type_id'] !== GroupedType::TYPE_CODE) {
-                            // Delete relation for this child before insertion if not bundle/grouped relation
-                            $connection->delete($productRelationTable, ['parent_id = ?' => $productEntityId[$pKeyColumn]]);
+                            // Delete configurable/simple product relation ONLY for the CURRENTLY IMPORTED child before insertion. Do not handle bundle/grouped relations
+                            $connection->delete($productRelationTable, ['parent_id = ?' => $productEntityId[$pKeyColumn], 'child_id = ?' => $rowEntityId]);
                         }
                     }
                 }
@@ -2473,16 +2476,16 @@ class Product extends JobImport
                 // Insert the relation for the child
                 $valuesRelations[] = [
                     'parent_id' => $productModelEntityId,
-                    'child_id' => $row['_entity_id'],
+                    'child_id' => $rowEntityId,
                 ];
 
                 $connection->insertOnDuplicate($productRelationTable, $valuesRelations, []);
 
                 // Do the same for super links
-                $connection->delete($productSuperLinkTable, ['product_id = ?' => $row['_entity_id']]);
+                $connection->delete($productSuperLinkTable, ['product_id = ?' => $rowEntityId]);
 
                 $valuesSuperLink[] = [
-                    'product_id' => $row['_entity_id'],
+                    'product_id' => $rowEntityId,
                     'parent_id' => $productModelEntityId,
                 ];
 
