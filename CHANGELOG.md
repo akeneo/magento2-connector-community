@@ -361,3 +361,8 @@
 * Fix product model variant change in `catalog_product_super_attribute` table
 * Fix `Too few arguments to function Laminas\Diactoros\ResponseFactory::__construct()` issue by adding `nyholm/psr7` dependency
 * Fix missing "$edition" variable in `Job/Product.php`
+
+### Version 103.0.5 :
+* Fix product relation deletion for simple products when using differential import
+* Fix default status mode when scheduled changes are used for products
+* Add new dispatch events at error and success in the job executor
