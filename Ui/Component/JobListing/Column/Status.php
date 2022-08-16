@@ -8,9 +8,6 @@ use Akeneo\Connector\Api\Data\JobInterface;
 use Magento\Ui\Component\Listing\Columns\Column;
 
 /**
- * Class Status
- *
- * @package   Akeneo\Connector\Ui\Component\AkeneoJobListing\Column
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
@@ -21,14 +18,14 @@ class Status extends Column
     /**
      * Description prepareDataSource function
      *
-     * @param mixed[][] $dataSource
+     * @param array[] $dataSource
      *
-     * @return mixed[][]
+     * @return array[]
      */
     public function prepareDataSource(array $dataSource): array {
 
         if (isset($dataSource['data']['items'])) {
-            foreach ($dataSource['data']['items'] as & $item) {
+            foreach ($dataSource['data']['items'] as &$item) {
                 $item['raw_status'] = $item['status'];
                 $item['status'] = $this->getLabel($item['status']);
             }
@@ -46,9 +43,7 @@ class Status extends Column
      */
     private function getLabel(string $status): string
     {
-        /** @var string $class */
         $class = '';
-        /** @var string $text */
         $text = '';
         switch ($status) {
             case JobInterface::JOB_SUCCESS:

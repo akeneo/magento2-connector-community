@@ -5,15 +5,12 @@ declare(strict_types=1);
 namespace Akeneo\Connector\ViewModel\Jobgrid;
 
 use Akeneo\Connector\Api\Data\JobInterface;
-use Akeneo\Connector\Model\Job;
 use Akeneo\Connector\Model\ResourceModel\Job\CollectionFactory as JobCollectionFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 
 /**
- * Class AutoReloadConfig
- *
- * @package   Akeneo\Connector\ViewModel\Jobgrid
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
@@ -26,41 +23,34 @@ class AutoReloadConfig implements ArgumentInterface
      *
      * @var string IS_AUTO_RELOAD_CONFIG_PATH
      */
-    private const IS_AUTO_RELOAD_CONFIG_PATH = 'akeneo_connector/advanced/enable_job_grid_auto_reload';
+    public const IS_AUTO_RELOAD_CONFIG_PATH = 'akeneo_connector/advanced/enable_job_grid_auto_reload';
     /**
      * Scheduling and processing job status ids
      *
      * @var int[] SCHEDULING_AND_PROCESSING_STATUS_IDS
      */
-    private const SCHEDULING_AND_PROCESSING_STATUS_IDS = [
+    public const SCHEDULING_AND_PROCESSING_STATUS_IDS = [
         JobInterface::JOB_SCHEDULED,
         JobInterface::JOB_PROCESSING,
     ];
-    /**
-     * $scopeConfig field
-     *
-     * @var ScopeConfigInterface $scopeConfig
-     */
-    private $scopeConfig;
-    /**
-     * $jobCollectionFactory field
-     *
-     * @var JobCollectionFactory $jobCollectionFactory
-     */
-    private $jobCollectionFactory;
+
+    protected Json $json;
+    protected ScopeConfigInterface $scopeConfig;
+    protected JobCollectionFactory $jobCollectionFactory;
 
     /**
-     * AutoReloadConfig constructor
-     *
      * @param JobCollectionFactory $jobCollectionFactory
      * @param ScopeConfigInterface $scopeConfig
+     * @param Json $json
      */
     public function __construct(
         JobCollectionFactory $jobCollectionFactory,
-        ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig,
+        Json $json
     ) {
         $this->jobCollectionFactory = $jobCollectionFactory;
-        $this->scopeConfig          = $scopeConfig;
+        $this->scopeConfig = $scopeConfig;
+        $this->json = $json;
     }
 
     /**
@@ -70,13 +60,13 @@ class AutoReloadConfig implements ArgumentInterface
      */
     public function isAutoReloadEnabled(): bool
     {
-        /** @var Job[] $watchableJobs */
-        $watchableJobs = $this->jobCollectionFactory->create()->addFieldToFilter(
-                'status',
-                ['in' => self::SCHEDULING_AND_PROCESSING_STATUS_IDS]
-            )->getItems();
+        /** @var int $watchableJobs */
+        $watchableJobs = $this->jobCollectionFactory
+            ->create()
+            ->addFieldToFilter('status', ['in' => self::SCHEDULING_AND_PROCESSING_STATUS_IDS])
+            ->getSize();
 
-        return count($watchableJobs) && $this->scopeConfig->getValue(self::IS_AUTO_RELOAD_CONFIG_PATH);
+        return $watchableJobs > 0 && $this->scopeConfig->getValue(self::IS_AUTO_RELOAD_CONFIG_PATH);
     }
 
     /**
@@ -86,6 +76,6 @@ class AutoReloadConfig implements ArgumentInterface
      */
     public function getWatchableStatusIds(): string
     {
-        return json_encode(self::SCHEDULING_AND_PROCESSING_STATUS_IDS);
+        return $this->json->serialize(self::SCHEDULING_AND_PROCESSING_STATUS_IDS);
     }
 }
