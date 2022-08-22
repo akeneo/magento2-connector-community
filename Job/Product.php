@@ -2367,7 +2367,7 @@ class Product extends JobImport
         $query = $connection->query($select);
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
-        
+
         if ($edition === Edition::SERENITY || $edition === Edition::GROWTH) {
             /** @var string[] $filters */
             $filters = [
@@ -3740,7 +3740,10 @@ class Product extends JobImport
             }
 
             /** @var Select $cleaner */
-            $cleaner = $connection->select()->from($galleryTable, ['value_id'])->where('value NOT IN (?)', $files);
+            $cleaner = $connection->select()
+                ->from($galleryTable, ['value_id'])
+                ->where('value NOT IN (?)', $files)
+                ->where('media_type != ?', 'external-video');;
 
             $connection->delete(
                 $galleryEntityTable,
