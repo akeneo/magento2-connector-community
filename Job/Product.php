@@ -3743,7 +3743,7 @@ class Product extends JobImport
             $cleaner = $connection->select()
                 ->from($galleryTable, ['value_id'])
                 ->where('value NOT IN (?)', $files)
-                ->where('media_type != ?', 'external-video');;
+                ->where('media_type != ?', 'external-video');
 
             $connection->delete(
                 $galleryEntityTable,
