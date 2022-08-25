@@ -366,3 +366,6 @@
 * Fix product relation deletion for simple products when using differential import
 * Fix default status mode when scheduled changes are used for products
 * Add new dispatch events at error and success in the job executor
+
+### Version 103.0.6 :
+* Fix manually added product videos being deleted by the image attribute import
