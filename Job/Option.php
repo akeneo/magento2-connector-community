@@ -295,6 +295,84 @@ class Option extends Import
     }
 
     /**
+     * Check if attributes are select or multi select
+     *
+     * @return void
+     */
+    public function checkSelect()
+    {
+        // Get attributes from magento config
+        $attributeMapping = $this->configHelper->getAttributeMapping();
+
+        // Get only Magento attributes
+        $magentoAttributes = array_column($attributeMapping, 'magento_attribute');
+
+        // Get only Akeneo attributes
+        $akeneoAttributes = array_column($attributeMapping, 'akeneo_attribute');
+
+        foreach ($akeneoAttributes as $akeneoAttribute) {
+            $autorisatedTypes = 
+            [
+                'pim_catalog_simpleselect', 
+                'pim_catalog_multiselect'
+            ];
+        // Check if attribute is in the autorisated types
+        if (in_array($this->akeneoClient->getAttributeApi()->get($akeneoAttribute)['type'], $autorisatedTypes))
+            {
+                $connection = $this->entitiesHelper->getConnection();
+                $select = $connection->select()->from(
+                    'eav_attribute',
+                    [
+                        'attribute_code' => 'attribute_code',
+                        'source_model' => 'source_model',
+                        'is_user_defined' => 'is_user_defined',
+                    ]
+                )->where('attribute_code IN (?)', $magentoAttributes);
+
+                $query = $connection->query($select);
+                $row = $query->fetchAll();
+
+                // Check if the attribute is system or source model
+                foreach ($row as $attribute) {
+                    if ($attribute['is_user_defined'] == 1 && $attribute['source_model'] == null) {
+                        $dataArray = [];
+
+                        $dataArray['code'] = $akeneoAttribute;
+                        $dataArray['attribute'] = $attribute['attribute_code'];
+
+                        // Get attribute labels
+                        $infoAttribute = $this->akeneoClient->getAttributeApi()->get($akeneoAttribute);
+                        foreach ($infoAttribute['labels'] as $key => $value) {
+                            $dataArray['labels-' . $key] = $value;
+                        }
+
+                        // Get attribute options
+                        $options = $this->akeneoClient->getAttributeOptionApi()->listPerPage($akeneoAttribute)->getItems();
+
+                        foreach ($options as $option) {
+                            // Get options labels
+                            foreach ($option['labels'] as $key => $value) {
+                                $dataArray['labels-' . $key] = $value;
+                            }
+                            // Get options code
+                            $dataArray['code'] = $option['code'];
+
+                            // Get options sort order
+                            $dataArray['sort_order'] = $option['sort_order'];
+
+                            // Update tmp table
+                            $connection->insert(
+                                'tmp_akeneo_connector_entities_option',
+                                $dataArray
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
      * Check already imported entities are still in Magento
      *
      * @return void

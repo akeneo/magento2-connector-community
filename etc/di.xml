@@ -193,30 +193,34 @@
                         <item name="comment" xsi:type="string">Fill temporary table</item>
                     </item>
                     <item name="3" xsi:type="array">
+                        <item name="method" xsi:type="string">checkSelect</item>
+                        <item name="comment" xsi:type="string">Check select and multiselect</item>
+                    </item>
+                    <item name="4" xsi:type="array">
                         <item name="method" xsi:type="string">checkEntities</item>
                         <item name="comment" xsi:type="string">Check already imported entities</item>
                     </item>
-                    <item name="4" xsi:type="array">
+                    <item name="5" xsi:type="array">
                         <item name="method" xsi:type="string">matchEntities</item>
                         <item name="comment" xsi:type="string">Match code with Magento ID</item>
                     </item>
-                    <item name="5" xsi:type="array">
+                    <item name="6" xsi:type="array">
                         <item name="method" xsi:type="string">insertOptions</item>
                         <item name="comment" xsi:type="string">Insert Options</item>
                     </item>
-                    <item name="6" xsi:type="array">
+                    <item name="7" xsi:type="array">
                         <item name="method" xsi:type="string">insertValues</item>
                         <item name="comment" xsi:type="string">Insert Values</item>
                     </item>
-                    <item name="7" xsi:type="array">
+                    <item name="8" xsi:type="array">
                         <item name="method" xsi:type="string">dropTable</item>
                         <item name="comment" xsi:type="string">Drop temporary table</item>
                     </item>
-                    <item name="8" xsi:type="array">
+                    <item name="9" xsi:type="array">
                         <item name="method" xsi:type="string">refreshIndex</item>
                         <item name="comment" xsi:type="string">Refresh index</item>
                     </item>
-                    <item name="9" xsi:type="array">
+                    <item name="10" xsi:type="array">
                         <item name="method" xsi:type="string">cleanCache</item>
                         <item name="comment" xsi:type="string">Clean cache</item>
                     </item>
