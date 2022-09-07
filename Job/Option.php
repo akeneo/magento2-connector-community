@@ -334,7 +334,7 @@ class Option extends Import
             // Check if attribute is in the autorisated types
             if (in_array($this->akeneoClient->getAttributeApi()->get($akeneoAttribute)['type'], $autorisatedTypes)) {
                 foreach ($row as $attribute) {
-                    if ($attribute['is_user_defined'] === 0 || $attribute['source_model'] !== null) {
+                    if ($attribute['is_user_defined'] == 0 || $attribute['source_model'] !== null) {
                         continue;
                     }
                     $dataArray = [];
