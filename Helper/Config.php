@@ -895,7 +895,7 @@ class Config
     {
         $filters = $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_ADVANCED_FILTER);
 
-        return $this->jsonSerializer->unserialize($filters);
+        return !empty($filters) ? $this->jsonSerializer->unserialize($filters) : [];
     }
 
     /**
@@ -907,7 +907,7 @@ class Config
     {
         $filters = $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER);
 
-        return $this->jsonSerializer->unserialize($filters);
+        return !empty($filters) ? $this->jsonSerializer->unserialize($filters) : [];
     }
 
     /**

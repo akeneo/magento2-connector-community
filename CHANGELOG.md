@@ -369,3 +369,8 @@
 
 ### Version 103.0.6 :
 * Fix manually added product videos being deleted by the image attribute import
+
+### Version 103.0.7 :
+* Fix Magento Framework dependency in composer.json
+* Fix advanced filter error when left empty
+* Improve URL generation requests for product job
