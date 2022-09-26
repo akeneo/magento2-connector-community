@@ -193,8 +193,8 @@
                         <item name="comment" xsi:type="string">Fill temporary table</item>
                     </item>
                     <item name="3" xsi:type="array">
-                        <item name="method" xsi:type="string">checkSelect</item>
-                        <item name="comment" xsi:type="string">Check select and multiselect</item>
+                        <item name="method" xsi:type="string">mapOptions</item>
+                        <item name="comment" xsi:type="string">Map select and multiselect options from configuration</item>
                     </item>
                     <item name="4" xsi:type="array">
                         <item name="method" xsi:type="string">checkEntities</item>

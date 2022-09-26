@@ -15,6 +15,8 @@ use Akeneo\Connector\Logger\OptionLogger;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Magento\Catalog\Api\Data\ProductAttributeInterface;
+use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Eav\Model\Config;
 use Magento\Eav\Setup\EavSetup;
 use Magento\Framework\App\Cache\TypeListInterface;
@@ -295,84 +297,55 @@ class Option extends Import
     }
 
     /**
-     * Check if attributes are select or multi select
+     * Map select and multiselect options from configuration
      *
      * @return void
      */
-    public function checkSelect(): void
+    public function mapOptions()
     {
-        // Get attributes from magento config
+        // Get attributes mapped from connector configiration
         $attributeMapping = $this->configHelper->getAttributeMapping();
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
+        $eavAttributeTable = $this->entitiesHelper->getTable('eav_attribute');
 
-        // Get only Magento attributes
-        $magentoAttributes = array_column($attributeMapping, 'magento_attribute');
-
-        // Get only Akeneo attributes
-        $akeneoAttributes = array_column($attributeMapping, 'akeneo_attribute');
-
-        // Get autorized attributes
-        $autorisatedTypes =
-            [
+        foreach ($attributeMapping as $mapping) {
+            $magentoAttribute = $mapping['magento_attribute'];
+            $akeneoAttribute = $mapping['akeneo_attribute'];
+            $selectTypes = [
                 'pim_catalog_simpleselect',
-                'pim_catalog_multiselect',
+                'pim_catalog_multiselect'
             ];
 
-        $connection = $this->entitiesHelper->getConnection();
-        $select = $connection->select()->from(
-            'eav_attribute',
-            [
-                'attribute_code' => 'attribute_code',
-                'source_model' => 'source_model',
-                'is_user_defined' => 'is_user_defined',
-            ]
-        )->where('attribute_code IN (?)', $magentoAttributes);
+            $akeneoAttributeData = $this->akeneoClient->getAttributeApi()->get($akeneoAttribute);
+            // Does the Akeneo attribute an attribute that contains options
+            if (in_array($akeneoAttributeData['type'], $selectTypes)) {
+                $productEntityTypeId = $this->eavConfig->getEntityType(ProductAttributeInterface::ENTITY_TYPE_CODE)->getEntityTypeId();
+                $connection = $this->entitiesHelper->getConnection();
+                $magentoEavAttribute = $connection->fetchRow(
+                    $connection->select()
+                        ->from($eavAttributeTable, ['attribute_code', 'source_model', 'is_user_defined'])
+                        ->where('attribute_code = ?', $magentoAttribute)
+                        ->where(AttributeInterface::ENTITY_TYPE_ID . ' = ?', $productEntityTypeId)
+                );
 
-        $query = $connection->query($select);
-        $row = $query->fetchAll();
+                // Does the Magento attribute an existing attribute without a specific source model
+                if (isset($magentoEavAttribute['attribute_code']) && $magentoEavAttribute['is_user_defined'] == 1 && ($magentoEavAttribute['source_model'] === null || $magentoEavAttribute['source_model'] === 'Magento\Eav\Model\Entity\Attribute\Source\Table')) {
+                    // If needed, delete all options currently imported from the Magento mapped attribute to prevent duplicates
+                    $connection->delete($tmpTable, ['attribute = ?' => $magentoAttribute]);
 
-        foreach ($akeneoAttributes as $akeneoAttribute) {
-            // Check if attribute is in the autorisated types
-            if (in_array($this->akeneoClient->getAttributeApi()->get($akeneoAttribute)['type'], $autorisatedTypes)) {
-                foreach ($row as $attribute) {
-                    if ($attribute['is_user_defined'] == 0 || $attribute['source_model'] !== null) {
-                        continue;
-                    }
-                    $dataArray = [];
+                    $options = $connection->select()->from($tmpTable)->where('attribute = ?', $akeneoAttribute);
+                    $query = $connection->query($options);
+                    $allOptions = $query->fetchAll();
 
-                    $dataArray['code'] = $akeneoAttribute;
-                    $dataArray['attribute'] = $attribute['attribute_code'];
-
-                    // Get attribute labels
-                    $infoAttribute = $this->akeneoClient->getAttributeApi()->get($akeneoAttribute);
-                    foreach ($infoAttribute['labels'] as $key => $value) {
-                        $dataArray['labels-' . $key] = $value;
-                    }
-
-                    // Get attribute options
-                    $options = $this->akeneoClient->getAttributeOptionApi()->listPerPage($akeneoAttribute)->getItems();
-
-                    foreach ($options as $option) {
-                        // Get options labels
-                        foreach ($option['labels'] as $key => $value) {
-                            $dataArray['labels-' . $key] = $value;
-                        }
-                        // Get options code
-                        $dataArray['code'] = $option['code'];
-
-                        // Get options sort order
-                        $dataArray['sort_order'] = $option['sort_order'];
-
-                        // Update tmp table
-                        $connection->insert(
-                            'tmp_akeneo_connector_entities_option',
-                            $dataArray
-                        );
+                    foreach ($allOptions as $mappedOption) {
+                        $mappedOption['attribute'] = $magentoAttribute;
+                        $connection->insertOnDuplicate($tmpTable, $mappedOption);
                     }
                 }
             }
         }
     }
-    
+
     /**
      * Check already imported entities are still in Magento
      *
