@@ -3540,6 +3540,7 @@ class Product extends JobImport
      * @throws LocalizedException
      * @throws FileSystemException
      * @throws Zend_Db_Statement_Exception
+     * @throws Exception
      */
     public function importMedia()
     {
@@ -3570,21 +3571,47 @@ class Product extends JobImport
         $table = $this->entitiesHelper->getTable('catalog_product_entity');
         /** @var string $columnIdentifier */
         $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($table);
-
         /** @var array $data */
         $data = [
             $columnIdentifier => '_entity_id',
-            'sku' => 'identifier',
+            'sku'             => 'identifier',
         ];
+
+        /** @var mixed[] $stores */
+        $stores = $this->storeHelper->getAllStores();
+        /** @var string[] $dataToImport */
+        $dataToImport = [];
+        /** @var bool $valueFound */
+        $valueFound = false;
         foreach ($gallery as $image) {
             if (!$connection->tableColumnExists($tmpTable, strtolower($image))) {
-                $this->jobExecutor->setMessage(
-                    __('Info: No value found in the current batch for the attribute %1', $image),
-                    $this->logger
-                );
+                // If not exist, check for each store if the field exist
+                /**
+                 * @var string  $suffix
+                 * @var mixed[] $storeData
+                 */
+                foreach ($stores as $suffix => $storeData) {
+                    if (!$connection->tableColumnExists(
+                        $tmpTable,
+                        strtolower($image) . self::SUFFIX_SEPARATOR . $suffix
+                    )) {
+                        continue;
+                    }
+                    $valueFound = true;
+                    $data[$image . self::SUFFIX_SEPARATOR . $suffix] = strtolower($image) . self::SUFFIX_SEPARATOR . $suffix;
+                    $dataToImport[strtolower($image) . self::SUFFIX_SEPARATOR . $suffix] = $suffix;
+                }
+                if (!$valueFound) {
+                    $this->jobExecutor->setMessage(
+                        __('Info: No value found in the current batch for the attribute %1', $image),
+                        $this->logger
+                    );
+                }
                 continue;
             }
+            // Global image
             $data[$image] = strtolower($image);
+            $dataToImport[$image] = null;
         }
 
         /** @var bool $rowIdExists */
@@ -3604,13 +3631,20 @@ class Product extends JobImport
         $query = $connection->query($select);
 
         /** @var \Magento\Catalog\Model\ResourceModel\Eav\Attribute $galleryAttribute */
-        $galleryAttribute = $this->configHelper->getAttribute(BaseProductModel::ENTITY, 'media_gallery');
+        $galleryAttribute = $this->configHelper->getAttribute(
+            BaseProductModel::ENTITY,
+            'media_gallery'
+        );
         /** @var string $galleryTable */
         $galleryTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery');
-        /** @var string $galleryEntityTable */
-        $galleryEntityTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery_value_to_entity');
         /** @var string $galleryValueTable */
-        $galleryValueTable = $this->entitiesHelper->getTable('catalog_product_entity_media_gallery_value');
+        $galleryValueTable = $this->entitiesHelper->getTable(
+            'catalog_product_entity_media_gallery_value'
+        );
+        /** @var string $galleryEntityTable */
+        $galleryEntityTable = $this->entitiesHelper->getTable(
+            'catalog_product_entity_media_gallery_value_to_entity'
+        );
         /** @var string $productImageTable */
         $productImageTable = $this->entitiesHelper->getTable('catalog_product_entity_varchar');
         /** @var string[] $medias */
@@ -3620,7 +3654,11 @@ class Product extends JobImport
         while (($row = $query->fetch())) {
             /** @var array $files */
             $files = [];
-            foreach ($gallery as $image) {
+            /**
+             * @var string $image
+             * @var string $suffix
+             */
+            foreach ($dataToImport as $image => $suffix) {
                 if (!isset($row[$image])) {
                     continue;
                 }
@@ -3630,7 +3668,9 @@ class Product extends JobImport
                 }
 
                 if (!isset($medias[$row[$image]])) {
-                    $medias[$row[$image]] = $this->akeneoClient->getProductMediaFileApi()->get($row[$image]);
+                    $medias[$row[$image]] = $this->akeneoClient->getProductMediaFileApi()->get(
+                        $row[$image]
+                    );
                 }
                 /** @var string $name */
                 $name = $this->entitiesHelper->formatMediaName(basename($medias[$row[$image]]['code']));
@@ -3665,84 +3705,153 @@ class Product extends JobImport
 
                 /** @var array $data */
                 $data = [
-                    'value_id' => $valueId,
+                    'value_id'     => $valueId,
                     'attribute_id' => $galleryAttribute->getId(),
-                    'value' => $file,
-                    'media_type' => ImageEntryConverter::MEDIA_TYPE_CODE,
-                    'disabled' => 0,
+                    'value'        => $file,
+                    'media_type'   => ImageEntryConverter::MEDIA_TYPE_CODE,
+                    'disabled'     => 0,
                 ];
                 $connection->insertOnDuplicate($galleryTable, $data, array_keys($data));
 
                 /** @var array $data */
                 $data = [
-                    'value_id' => $valueId,
+                    'value_id'        => $valueId,
                     $columnIdentifier => $row[$columnIdentifier],
                 ];
                 $connection->insertOnDuplicate($galleryEntityTable, $data, array_keys($data));
 
-                // Get potential record_id from gallery value table
-                /** @var int $databaseRecords */
-                $databaseRecords = $connection->fetchOne(
-                    $connection->select()->from($galleryValueTable, [new Expr('MAX(`record_id`)')])->where(
-                        'value_id = ?',
-                        $valueId
-                    )->where(
-                        'store_id = ?',
-                        0
-                    )->where($columnIdentifier . ' = ?', $row[$columnIdentifier])
-                );
+                /**
+                 * @var string  $storeSuffix
+                 * @var mixed[] $storeArray
+                 */
+                foreach ($stores as $storeSuffix => $storeArray) {
+                    /** @var mixed[] $store */
+                    foreach ($storeArray as $store) {
+                        $disabled = 0;
+                        if ($suffix) {
+                            /** @var bool $storeIsInEnabledStores */
+                            $storeIsInEnabledStores = false;
+                            if ($suffix !== $storeSuffix) {
+                                /** @var int $disabled */
+                                $disabled = 1;
+                                // Disable image for this store, only if this store is not in enabled stores list
+                                /** @var mixed[] $enabledStores */
+                                foreach ($stores[$suffix] as $enabledStores) {
+                                    if ($enabledStores['store_code'] === $store['store_code']) {
+                                        $storeIsInEnabledStores = true;
+                                    }
+                                }
 
-                /** @var int $recordId */
-                $recordId = 0;
-                if (!empty($databaseRecords)) {
-                    $recordId = $databaseRecords;
-                }
+                                if ($storeIsInEnabledStores) {
+                                    continue;
+                                }
+                            }
+                        }
+                        // Get potential record_id from gallery value table
+                        /** @var int $databaseRecords */
+                        $databaseRecords = $connection->fetchOne(
+                            $connection->select()->from($galleryValueTable, [new Expr('MAX(`record_id`)')])->where(
+                                'value_id = ?',
+                                $valueId
+                            )->where(
+                                'store_id = ?',
+                                $store['store_id']
+                            )->where(
+                                $columnIdentifier . ' = ?',
+                                $row[$columnIdentifier]
+                            )
+                        );
+                        /** @var int $recordId */
+                        $recordId = 0;
+                        if (!empty($databaseRecords)) {
+                            $recordId = $databaseRecords;
+                        }
 
-                /** @var array $data */
-                $data = [
-                    'value_id' => $valueId,
-                    'store_id' => 0,
-                    $columnIdentifier => $row[$columnIdentifier],
-                    'label' => '',
-                    'position' => 0,
-                    'disabled' => 0,
-                ];
+                        /** @var string[] $data */
+                        $data = [
+                            'value_id' => $valueId,
+                            'store_id' => $store['store_id'],
+                            $columnIdentifier => $row[$columnIdentifier],
+                            'label' => '',
+                            'position' => 0,
+                            'disabled' => $disabled,
+                        ];
 
-                if ($recordId != 0) {
-                    $data['record_id'] = $recordId;
-                }
-                $connection->insertOnDuplicate($galleryValueTable, $data, array_keys($data));
+                        if ($recordId != 0) {
+                            $data['record_id'] = $recordId;
+                        }
+                        $connection->insertOnDuplicate($galleryValueTable, $data, array_keys($data));
 
-                /** @var array $columns */
-                $columns = $this->configHelper->getMediaImportImagesColumns();
+                        /** @var array $columns */
+                        $columns = $this->configHelper->getMediaImportImagesColumns();
 
-                foreach ($columns as $column) {
-                    if ($column['column'] !== $image) {
-                        continue;
+                        foreach ($columns as $column) {
+                            /** @var string $columnName */
+                            $columnName = $column['column'] . self::SUFFIX_SEPARATOR . $suffix;
+                            /** @var mixed[] $mappings */
+                            $mappings = $this->configHelper->getWebsiteMapping();
+                            /** @var string|null $locale */
+                            $locale = null;
+                            /** @var string|null $scope */
+                            $scope = null;
+                            if (str_contains($suffix, '-')) {
+                                /** @var string[] $suffixs */
+                                $suffixs = explode('-', $suffix);
+                                if (isset($suffixs[0])) {
+                                    $locale = $suffixs[0];
+                                }
+                                if (isset($suffixs[1])) {
+                                    $scope = $suffixs[1];
+                                }
+                            } elseif (str_contains($suffix, '_')) {
+                                if (isset($suffix)) {
+                                    $locale = $suffix;
+                                }
+                            } else {
+                                if (isset($suffix)) {
+                                    $scope = $suffix;
+                                }
+                            }
+
+                            foreach ($mappings as $mapping) {
+                                if (((isset($scope, $locale)) && ($columnName !== $image || $store['website_code'] !== $mapping['website'] || $store['channel_code'] !== $scope || $store['lang'] !== $locale))
+                                    || ((isset($scope)) && ($columnName !== $image || $store['website_code'] !== $mapping['website'] || $store['channel_code'] !== $scope))
+                                    || ((isset($locale)) && ($columnName !== $image || $store['website_code'] !== $mapping['website'] || $store['lang'] !== $locale))
+                                ) {
+                                    continue;
+                                }
+
+                                /** @var string[] $data */
+                                $data = [
+                                    'attribute_id'    => $column['attribute'],
+                                    'store_id'        => $store['store_id'],
+                                    $columnIdentifier => $row[$columnIdentifier],
+                                    'value'           => $file,
+                                ];
+                                $connection->insertOnDuplicate($productImageTable, $data, array_keys($data));
+                            }
+                        }
                     }
-                    /** @var array $data */
-                    $data = [
-                        'attribute_id' => $column['attribute'],
-                        'store_id' => 0,
-                        $columnIdentifier => $row[$columnIdentifier],
-                        'value' => $file,
-                    ];
-                    $connection->insertOnDuplicate($productImageTable, $data, array_keys($data));
                 }
 
                 $files[] = $file;
             }
 
             /** @var Select $cleaner */
-            $cleaner = $connection->select()
-                ->from($galleryTable, ['value_id'])
-                ->where('value NOT IN (?)', $files)
-                ->where('media_type != ?', 'external-video');
+            $cleaner = $connection->select()->from($galleryTable, ['value_id'])->where('value NOT IN (?)', $files);
 
             $connection->delete(
                 $galleryEntityTable,
                 [
                     'value_id IN (?)' => $cleaner,
+                    $columnIdentifier . ' = ?' => $row[$columnIdentifier],
+                ]
+            );
+            // Delete old value association with the imported product
+            $connection->delete(
+                $galleryValueTable,
+                [
+                    'value_id IN (?)'          => $cleaner,
                     $columnIdentifier . ' = ?' => $row[$columnIdentifier],
                 ]
             );
