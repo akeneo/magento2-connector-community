@@ -3542,7 +3542,7 @@ class Product extends JobImport
      * @throws Zend_Db_Statement_Exception
      * @throws Exception
      */
-    public function importMedia()
+    public function importMedia(): void
     {
         if (!$this->configHelper->isMediaImportEnabled()) {
             $this->setStatus(true);
@@ -3652,6 +3652,8 @@ class Product extends JobImport
 
         /** @var array $row */
         while (($row = $query->fetch())) {
+            /** @var int $positionCounter */
+            $positionCounter = 0;
             /** @var array $files */
             $files = [];
             /**
@@ -3773,9 +3775,11 @@ class Product extends JobImport
                             'store_id' => $store['store_id'],
                             $columnIdentifier => $row[$columnIdentifier],
                             'label' => '',
-                            'position' => 0,
+                            'position' => $positionCounter,
                             'disabled' => $disabled,
                         ];
+
+                        $positionCounter++;
 
                         if ($recordId != 0) {
                             $data['record_id'] = $recordId;
