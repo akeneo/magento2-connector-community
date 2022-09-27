@@ -301,7 +301,7 @@ class Option extends Import
      *
      * @return void
      */
-    public function mapOptions()
+    public function mapOptions(): void
     {
         // Get attributes mapped from connector configiration
         $attributeMapping = $this->configHelper->getAttributeMapping();
