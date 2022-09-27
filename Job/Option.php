@@ -316,7 +316,13 @@ class Option extends Import
                 'pim_catalog_multiselect'
             ];
 
-            $akeneoAttributeData = $this->akeneoClient->getAttributeApi()->get($akeneoAttribute);
+            try {
+                $akeneoAttributeData = $this->akeneoClient->getAttributeApi()->get($akeneoAttribute);
+            } catch (Exception $e) {
+                $this->jobExecutor->displayInfo($e->getMessage());
+                continue;
+            }
+
             // Does the Akeneo attribute an attribute that contains options
             if (in_array($akeneoAttributeData['type'], $selectTypes)) {
                 $productEntityTypeId = $this->eavConfig->getEntityType(ProductAttributeInterface::ENTITY_TYPE_CODE)->getEntityTypeId();
@@ -336,11 +342,12 @@ class Option extends Import
                     $options = $connection->select()->from($tmpTable)->where('attribute = ?', $akeneoAttribute);
                     $query = $connection->query($options);
                     $allOptions = $query->fetchAll();
-
+                    $newOptions = [];
                     foreach ($allOptions as $mappedOption) {
                         $mappedOption['attribute'] = $magentoAttribute;
-                        $connection->insertOnDuplicate($tmpTable, $mappedOption);
+                        $newOptions[] = $mappedOption;
                     }
+                    $connection->insertMultiple($tmpTable, $newOptions);
                 }
             }
         }
