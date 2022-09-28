@@ -305,16 +305,18 @@ class Option extends Import
     {
         // Get attributes mapped from connector configiration
         $attributeMapping = $this->configHelper->getAttributeMapping();
+        $connection = $this->entitiesHelper->getConnection();
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         $eavAttributeTable = $this->entitiesHelper->getTable('eav_attribute');
+        $productEntityTypeId = $this->eavConfig->getEntityType(ProductAttributeInterface::ENTITY_TYPE_CODE)->getEntityTypeId();
+        $selectTypes = [
+            'pim_catalog_simpleselect',
+            'pim_catalog_multiselect'
+        ];
 
         foreach ($attributeMapping as $mapping) {
             $magentoAttribute = $mapping['magento_attribute'];
             $akeneoAttribute = $mapping['akeneo_attribute'];
-            $selectTypes = [
-                'pim_catalog_simpleselect',
-                'pim_catalog_multiselect'
-            ];
 
             try {
                 $akeneoAttributeData = $this->akeneoClient->getAttributeApi()->get($akeneoAttribute);
@@ -325,8 +327,6 @@ class Option extends Import
 
             // Does the Akeneo attribute an attribute that contains options
             if (in_array($akeneoAttributeData['type'], $selectTypes)) {
-                $productEntityTypeId = $this->eavConfig->getEntityType(ProductAttributeInterface::ENTITY_TYPE_CODE)->getEntityTypeId();
-                $connection = $this->entitiesHelper->getConnection();
                 $magentoEavAttribute = $connection->fetchRow(
                     $connection->select()
                         ->from($eavAttributeTable, ['attribute_code', 'source_model', 'is_user_defined'])
@@ -341,13 +341,19 @@ class Option extends Import
 
                     $options = $connection->select()->from($tmpTable)->where('attribute = ?', $akeneoAttribute);
                     $query = $connection->query($options);
-                    $allOptions = $query->fetchAll();
-                    $newOptions = [];
-                    foreach ($allOptions as $mappedOption) {
-                        $mappedOption['attribute'] = $magentoAttribute;
-                        $newOptions[] = $mappedOption;
+
+                    try {
+                        $allOptions = $query->fetchAll();
+                    } catch (Zend_Db_Statement_Exception $e) {
+                        $this->jobExecutor->displayInfo($e->getMessage());
+                        continue;
                     }
-                    $connection->insertMultiple($tmpTable, $newOptions);
+
+                    array_walk($allOptions, static function(&$value, $key, $magentoAttr) {
+                        $value['attribute'] = $magentoAttr;
+                    }, $magentoAttribute);
+
+                    $connection->insertMultiple($tmpTable, $allOptions);
                 }
             }
         }
