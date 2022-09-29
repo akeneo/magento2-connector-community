@@ -18,6 +18,7 @@ use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Eav\Model\Config;
+use Magento\Eav\Model\Entity\Attribute\Source\Table;
 use Magento\Eav\Setup\EavSetup;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
@@ -335,7 +336,7 @@ class Option extends Import
                 );
 
                 // Does the Magento attribute an existing attribute without a specific source model
-                if (isset($magentoEavAttribute['attribute_code']) && $magentoEavAttribute['is_user_defined'] == 1 && ($magentoEavAttribute['source_model'] === null || $magentoEavAttribute['source_model'] === 'Magento\Eav\Model\Entity\Attribute\Source\Table')) {
+                if (isset($magentoEavAttribute['attribute_code']) && $magentoEavAttribute['is_user_defined'] == 1 && ($magentoEavAttribute['source_model'] === null || $magentoEavAttribute['source_model'] === Table::class)) {
                     // If needed, delete all options currently imported from the Magento mapped attribute to prevent duplicates
                     $connection->delete($tmpTable, ['attribute = ?' => $magentoAttribute]);
 
