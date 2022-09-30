@@ -368,6 +368,18 @@ class Config
      */
     const PRODUCT_STATUS_MODE = 'akeneo_connector/product/product_status_mode';
     /**
+     * Attribute code for simple product statuses config path
+     *
+     * @var string ATTRIBUTE_CODE_FOR_SIMPLE_PRODUCT_STATUSES
+     */
+    const ATTRIBUTE_CODE_FOR_SIMPLE_PRODUCT_STATUSES = 'akeneo_connector/product/attribute_code_for_simple_product_statuses';
+    /**
+     * Attribute code for configurable product statuses config path
+     *
+     * @var string ATTRIBUTE_CODE_FOR_CONFIGURABLE_PRODUCT_STATUSES
+     */
+    const ATTRIBUTE_CODE_FOR_CONFIGURABLE_PRODUCT_STATUSES = 'akeneo_connector/product/attribute_code_for_configurable_product_statuses';
+    /**
      * Enable simple products per website config path
      *
      * @var string ENABLE_SIMPLE_PRODUCTS_PER_WEBSITE
@@ -883,7 +895,7 @@ class Config
     {
         $filters = $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_ADVANCED_FILTER);
 
-        return $this->jsonSerializer->unserialize($filters);
+        return !empty($filters) ? $this->jsonSerializer->unserialize($filters) : [];
     }
 
     /**
@@ -895,7 +907,7 @@ class Config
     {
         $filters = $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER);
 
-        return $this->jsonSerializer->unserialize($filters);
+        return !empty($filters) ? $this->jsonSerializer->unserialize($filters) : [];
     }
 
     /**
@@ -1132,6 +1144,26 @@ class Config
     public function getProductStatusMode()
     {
         return $this->scopeConfig->getValue(self::PRODUCT_STATUS_MODE);
+    }
+
+    /**
+     * Description getAttributeCodeForSimpleProductStatuses function
+     *
+     * @return string
+     */
+    public function getAttributeCodeForSimpleProductStatuses()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_CODE_FOR_SIMPLE_PRODUCT_STATUSES);
+    }
+
+    /**
+     * Description getAttributeCodeForConfigurableProductStatuses function
+     *
+     * @return string
+     */
+    public function getAttributeCodeForConfigurableProductStatuses()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_CODE_FOR_CONFIGURABLE_PRODUCT_STATUSES);
     }
 
     /**
@@ -1799,7 +1831,6 @@ class Config
     {
         return $this->scopeConfig->getValue(self::INDEX_PRODUCT);
     }
-
 
     /**
      * Description getJobReportEnabled function

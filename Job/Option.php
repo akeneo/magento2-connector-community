@@ -188,7 +188,7 @@ class Option extends Import
                 __('Path to log file : %1', $this->handler->getFilename()),
                 $this->logger
             );
-            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
+            $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
         }
         /** @var PageInterface $attributes */
         $attributes = $this->getAllAttributes(true);
@@ -436,7 +436,9 @@ class Option extends Import
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
+        if (!$this->configHelper->isAdvancedLogActivated()) {
+            $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
+        }
     }
 
     /**
@@ -456,7 +458,7 @@ class Option extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $types */
         $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
@@ -489,7 +491,7 @@ class Option extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $typesFlushed */
         $typesFlushed = [];
 
@@ -551,7 +553,7 @@ class Option extends Import
             /** @var string[] $filters */
             $filters = $this->attributeFilters->getFilters();
             if ($this->configHelper->isAdvancedLogActivated() && $logging) {
-                $this->logger->addDebug(__('Attribute API call Filters : ') . print_r($filters, true));
+                $this->logger->debug(__('Attribute API call Filters : ') . print_r($filters, true));
             }
             $this->attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize, $filters);
         }

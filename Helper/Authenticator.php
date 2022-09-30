@@ -5,9 +5,9 @@ namespace Akeneo\Connector\Helper;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\AkeneoPimClientBuilder;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Http\Adapter\Guzzle6\Client;
 use Http\Factory\Guzzle\StreamFactory;
 use Http\Factory\Guzzle\RequestFactory;
+use Symfony\Component\HttpClient\Psr18Client;
 
 /**
  * Class Authenticator
@@ -64,7 +64,7 @@ class Authenticator
         /** @var AkeneoPimClientBuilder $akeneoClientBuilder */
         $akeneoClientBuilder = new AkeneoPimClientBuilder($baseUri);
 
-        $akeneoClientBuilder->setHttpClient(new Client());
+        $akeneoClientBuilder->setHttpClient(new Psr18Client());
         $akeneoClientBuilder->setStreamFactory(new StreamFactory());
         $akeneoClientBuilder->setRequestFactory(new RequestFactory());
 

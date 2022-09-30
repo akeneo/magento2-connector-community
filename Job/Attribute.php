@@ -196,8 +196,8 @@ class Attribute extends Import
                 __('Path to log file : %1', $this->handler->getFilename()),
                 $this->logger
             );
-            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
-            $this->logger->addDebug(__('Attribute API call Filters : ') . print_r($filters, true));
+            $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
+            $this->logger->debug(__('Attribute API call Filters : ') . print_r($filters, true));
         }
         /** @var PageInterface $attributes */
         $attributes = $this->akeneoClient->getAttributeApi()->listPerPage(1, false, $filters);
@@ -569,10 +569,10 @@ class Attribute extends Import
             /* Retrieve attribute scope */
             /** @var int $global */
             $global = ScopedAttributeInterface::SCOPE_GLOBAL; // Global
-            if ($row['scopable'] === 1) {
+            if ((int)$row['scopable'] === 1) {
                 $global = ScopedAttributeInterface::SCOPE_WEBSITE; // Website
             }
-            if ($row['localizable'] === 1 || $row['type'] === self::PIM_CATALOG_TABLE) {
+            if ((int)$row['localizable'] === 1 || $row['type'] === self::PIM_CATALOG_TABLE) {
                 $global = ScopedAttributeInterface::SCOPE_STORE; // Store View
             }
             /** @var array $data */
@@ -640,7 +640,7 @@ class Attribute extends Import
 
             /* Add Attribute to group and family */
             if ($row['_attribute_set_id'] && $row['group']) {
-                $attributeSetIds = explode(',', $row['_attribute_set_id']);
+                $attributeSetIds = explode(',', $row['_attribute_set_id'] ?? '');
 
                 if (is_numeric($row['group'])) {
                     $row['group'] = 'PIM' . $row['group'];
@@ -788,7 +788,9 @@ class Attribute extends Import
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
+        if (!$this->configHelper->isAdvancedLogActivated()) {
+            $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
+        }
     }
 
     /**
@@ -808,7 +810,7 @@ class Attribute extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $types */
         $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
@@ -841,7 +843,7 @@ class Attribute extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $typesFlushed */
         $typesFlushed = [];
 

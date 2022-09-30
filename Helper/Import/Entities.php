@@ -72,14 +72,6 @@ class Entities
      */
     protected $tablePrefix;
     /**
-     * Product attributes to pass if empty value
-     *
-     * @var string[] $passIfEmpty
-     */
-    protected $passIfEmpty = [
-        'price',
-    ];
-    /**
      * Mapped catalog attributes with relative scope
      *
      * @var string[] $attributeScopeMapping
@@ -234,7 +226,7 @@ class Entities
                 $table->addColumn(
                     $column,
                     Table::TYPE_TEXT,
-                    null,
+                    '2M',
                     [],
                     $column
                 );
@@ -380,7 +372,16 @@ class Entities
          */
         foreach ($result as $key => $value) {
             if (!$this->connection->tableColumnExists($tableName, $key)) {
-                $this->connection->addColumn($tableName, $key, 'text');
+                $this->connection->addColumn(
+                    $tableName,
+                    $key,
+                    [
+                        'type'    => 'text',
+                        'length'  => '2M',
+                        'default' => null,
+                        'COMMENT' => ' '
+                    ]
+                );
             }
         }
 
@@ -586,12 +587,6 @@ class Entities
                 );
             }
 
-            /** @var bool $columnExists */
-            $columnExists = $connection->tableColumnExists($tableName, $value);
-            if ($columnExists && ($import !== self::IMPORT_CODE_PRODUCT || in_array($code, $this->passIfEmpty))) {
-                $select->where(sprintf('TRIM(`%s`) > ?', $value), new Expr('""'));
-            }
-
             /** @var string $insert */
             $insert = $connection->insertFromSelect(
                 $select,
@@ -735,7 +730,16 @@ class Entities
         $connection = $this->getConnection();
 
         if ($connection->tableColumnExists($tableName, $source)) {
-            $connection->addColumn($tableName, $target, 'text');
+            $connection->addColumn(
+                $tableName,
+                $target,
+                [
+                    'type'     => 'text',
+                    'length'   => '2M',
+                    'default' => '',
+                    'COMMENT' => ' '
+                ]
+            );
             $connection->update(
                 $tableName,
                 [$target => new Expr('`' . $source . '`')]
@@ -784,7 +788,7 @@ class Entities
         $newValues = [];
         foreach ($values as $key => $data) {
             /** @var string[] $keyParts */
-            $keyParts    = explode('-', $key, 2);
+            $keyParts    = explode('-', $key ?? '', 2);
             $keyParts[0] = strtolower($keyParts[0]);
             if (count($keyParts) > 1) {
                 $newValues[$keyParts[0] . '-' . $keyParts[1]] = $data;
@@ -851,13 +855,13 @@ class Entities
     public function formatMediaName($filename)
     {
         /** @var string[] $filenameParts */
-        $filenameParts = explode('.', $filename);
+        $filenameParts = explode('.', $filename ?? '');
         // Get the extention
         /** @var string $extension */
         $extension = array_pop($filenameParts);
         // Get the hash
         $filename = implode('.', $filenameParts);
-        $filename = explode('_', $filename);
+        $filename = explode('_', $filename ?? '');
         /** @var string $shortHash */
         $shortHash = array_shift($filename);
         $shortHash = substr($shortHash, 0, 4);
@@ -881,15 +885,18 @@ class Entities
      */
     public function addJoinForContentStaging($select, $cols)
     {
+        $productTable = $this->getTable('catalog_product_entity');
+        $stagingTable = $this->getTable('staging_update');
+
         $select->joinLeft(
         // retrieve each product entity for each row_id.
         // We use "left join" to be able to create new product from Akeneo (they are not yet in catalog_product_entity)
-            ['p' => 'catalog_product_entity'],
+            ['p' => $productTable],
             '_entity_id = p.entity_id',
             $cols
         )
             ->joinLeft( // retrieve all the staging update for the givens entities. We use "join left" to get the original entity
-                ['s' => 'staging_update'],
+                ['s' => $stagingTable],
                 'p.created_in = s.id',
                 []
             );
@@ -899,9 +906,7 @@ class Entities
             // filter to get only "default product entities"
             // ie. product with 2 stagings scheduled will appear 5 times in catalog_product_entity table.
             // We only want row not updated by the content staging (the first, the one between the 2 scheduled and the last).
-                's.is_rollback = 1'
-            )->orWhere(
-                's.id IS NULL'
+                's.is_rollback = 1 OR s.id IS NULL'
             );
         }
 
@@ -941,9 +946,7 @@ class Entities
             // filter to get only "default category entities"
             // ie. category with 2 stagings scheduled will appear 5 times in catalog_category_entity table.
             // We only want row not updated by the content staging (the first, the one between the 2 scheduled and the last).
-                's.is_rollback = 1'
-            )->orWhere(
-                's.id IS NULL'
+                's.is_rollback = 1 OR s.id IS NULL'
             );
         }
 

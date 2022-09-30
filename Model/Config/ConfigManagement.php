@@ -349,7 +349,7 @@ class ConfigManagement
                 /** @var string $text */
                 $text = $config['value'];
                 /** @var string $cleanValue */
-                $cleanValue = preg_replace("/<br>|\n|\r|\r?|\s\s+/", "", $text);
+                $cleanValue = preg_replace("/<br>|\n|\r|\r?|\s\s+/", "", $text ?? '');
                 /** @var string[] $lines */
                 $lines = str_split($cleanValue, 89);
 
@@ -461,7 +461,7 @@ class ConfigManagement
     protected function insertMultiselect($values, string $field)
     {
         /** @var string[] $valuesArray */
-        $valuesArray = explode(',', $values);
+        $valuesArray = explode(',', $values ?? '');
         /** @var string $value */
         foreach ($valuesArray as $value) {
             $this->addLineBreak(self::LINE_BREAK);
@@ -630,7 +630,7 @@ class ConfigManagement
     protected function getSystemConfigAttribute(string $path, string $attributeName)
     {
         /** @var string[] $path */
-        $path = explode('/', $path);
+        $path = explode('/', $path ?? '');
         /** @var string $etcDir */
         $etcDir = $this->moduleReader->getModuleDir(
             Dir::MODULE_ETC_DIR,
@@ -769,7 +769,7 @@ class ConfigManagement
      */
     protected function addLineBreak($nextElementHeight = null, $value = null)
     {
-        if (is_null($nextElementHeight)) {
+        if ($nextElementHeight === null) {
             $nextElementHeight = 0;
         }
 
@@ -777,7 +777,7 @@ class ConfigManagement
             $this->addNewPage();
         }
 
-        if (is_null($value)) {
+        if ($value === null) {
             $this->lastPosition -= self::LINE_BREAK;
         } else {
             $this->lastPosition -= $value;

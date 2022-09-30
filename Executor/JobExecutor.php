@@ -158,13 +158,13 @@ class JobExecutor implements JobExecutorInterface
     /**
      * JobExecutor constructor
      *
-     * @param JobRepository           $jobRepository
-     * @param ProcessClassFactory     $processClassFactory
-     * @param ConfigHelper            $configHelper
-     * @param OutputHelper            $outputHelper
-     * @param ManagerInterface        $eventManager
-     * @param Authenticator           $authenticator
-     * @param CollectionFactory       $jobCollectionFactory
+     * @param JobRepository $jobRepository
+     * @param ProcessClassFactory $processClassFactory
+     * @param ConfigHelper $configHelper
+     * @param OutputHelper $outputHelper
+     * @param ManagerInterface $eventManager
+     * @param Authenticator $authenticator
+     * @param CollectionFactory $jobCollectionFactory
      * @param MessageManagerInterface $messageManager
      */
     public function __construct(
@@ -177,14 +177,14 @@ class JobExecutor implements JobExecutorInterface
         CollectionFactory $jobCollectionFactory,
         MessageManagerInterface $messageManager
     ) {
-        $this->jobRepository        = $jobRepository;
-        $this->processClassFactory  = $processClassFactory;
-        $this->configHelper         = $configHelper;
-        $this->outputHelper         = $outputHelper;
-        $this->eventManager         = $eventManager;
-        $this->authenticator        = $authenticator;
+        $this->jobRepository = $jobRepository;
+        $this->processClassFactory = $processClassFactory;
+        $this->configHelper = $configHelper;
+        $this->outputHelper = $outputHelper;
+        $this->eventManager = $eventManager;
+        $this->authenticator = $authenticator;
         $this->jobCollectionFactory = $jobCollectionFactory;
-        $this->messageManager       = $messageManager;
+        $this->messageManager = $messageManager;
     }
 
     /**
@@ -203,14 +203,14 @@ class JobExecutor implements JobExecutorInterface
         $this->steps = array_merge(
             [
                 [
-                    'method'  => 'beforeImport',
+                    'method' => 'beforeImport',
                     'comment' => 'Start import',
                 ],
             ],
             $steps,
             [
                 [
-                    'method'  => 'afterImport',
+                    'method' => 'afterImport',
                     'comment' => 'Import complete',
                 ],
             ]
@@ -244,7 +244,7 @@ class JobExecutor implements JobExecutorInterface
     /**
      * Description execute function
      *
-     * @param string               $code
+     * @param string $code
      * @param OutputInterface|null $output
      *
      * @return bool
@@ -262,7 +262,7 @@ class JobExecutor implements JobExecutorInterface
         }
 
         /** @var string[] $entities */
-        $entities = explode(',', $code);
+        $entities = explode(',', $code ?? '');
         if (count($entities) > 1) {
             $entities = $this->sortJobs($entities);
 
@@ -286,7 +286,7 @@ class JobExecutor implements JobExecutorInterface
 
             return false;
         }
-        $this->currentJob      = $job;
+        $this->currentJob = $job;
         $this->currentJobClass = $this->processClassFactory->create($job->getJobClass());
         $this->currentJobClass->setJobExecutor($this);
 
@@ -296,8 +296,15 @@ class JobExecutor implements JobExecutorInterface
 
         // If product import, run the import once per family
         if ($code === self::IMPORT_CODE_PRODUCT) {
-            /** @var array $productFamiliesToImport */
-            $productFamiliesToImport = $this->currentJobClass->getFamiliesToImport();
+            try {
+                /** @var array $productFamiliesToImport */
+                $productFamiliesToImport = $this->currentJobClass->getFamiliesToImport();
+            } catch (\Exception $e) {
+                $this->setJobStatus(JobInterface::JOB_ERROR, $this->currentJob);
+                $this->displayError($e->getMessage());
+
+                return false;
+            }
 
             if (!count($productFamiliesToImport)) {
                 $message = __('No family to import');
@@ -307,6 +314,9 @@ class JobExecutor implements JobExecutorInterface
             }
 
             $this->beforeRun();
+
+            /** @var bool $isError */
+            $isError = null;
             /** @var string $family */
             foreach ($productFamiliesToImport as $family) {
                 $this->eventManager->dispatch(
@@ -316,9 +326,20 @@ class JobExecutor implements JobExecutorInterface
 
                 $this->run($family);
                 $this->setIdentifier(null);
+
+                if ($this->currentJob->getStatus() === JobInterface::JOB_ERROR) {
+                    $isError = true;
+                }
+
+                // If last family, force proceed with after run steps
+                if (array_slice($productFamiliesToImport, -1)[0] === $family
+                    && $this->currentJob->getStatus() !== JobInterface::JOB_ERROR
+                ) {
+                    $this->continue = true;
+                }
             }
             if ($this->continue) {
-                $this->afterRun();
+                $this->afterRun($isError);
             }
 
             return true;
@@ -551,8 +572,8 @@ class JobExecutor implements JobExecutorInterface
      */
     public function getComment()
     {
-        return isset($this->steps[$this->getStep()]['comment']) ? $this->outputHelper->getPrefix(
-            ) . $this->steps[$this->getStep()]['comment'] : $this->outputHelper->getPrefix() . get_class(
+        return isset($this->steps[$this->getStep()]['comment']) ? $this->outputHelper->getPrefix() . $this->steps[$this->getStep(
+            )]['comment'] : $this->outputHelper->getPrefix() . get_class(
                 $this
             ) . '::' . $this->getMethod();
     }
@@ -604,7 +625,7 @@ class JobExecutor implements JobExecutorInterface
      * Set import message
      *
      * @param string|Phrase $message
-     * @param null          $logger
+     * @param null $logger
      *
      * @return $this
      */
@@ -612,7 +633,7 @@ class JobExecutor implements JobExecutorInterface
     {
         $this->message = $message;
         if ($logger && $this->configHelper->isAdvancedLogActivated()) {
-            $this->currentJobClass->getLogger()->addDebug($message);
+            $this->currentJobClass->getLogger()->debug($message);
         }
 
         return $this;
@@ -621,7 +642,7 @@ class JobExecutor implements JobExecutorInterface
     /**
      * Description setJobStatus function
      *
-     * @param int      $status
+     * @param int $status
      * @param Job|null $job
      *
      * @return void
@@ -685,6 +706,10 @@ class JobExecutor implements JobExecutorInterface
                 'akeneo_connector_import_on_error',
                 ['executor' => $this, 'error' => $this->getMessage()]
             );
+            $this->eventManager->dispatch(
+                'akeneo_connector_import_on_error_' . strtolower($this->currentJob->getCode()),
+                ['executor' => $this, 'error' => $this->getMessage()]
+            );
         }
 
         if ($error === null && $this->currentJob->getStatus() !== JobInterface::JOB_ERROR) {
@@ -693,6 +718,10 @@ class JobExecutor implements JobExecutorInterface
             $this->setJobStatus(JobInterface::JOB_SUCCESS);
             $this->eventManager->dispatch(
                 'akeneo_connector_import_on_success',
+                ['executor' => $this]
+            );
+            $this->eventManager->dispatch(
+                'akeneo_connector_import_on_success_' . strtolower($this->currentJob->getCode()),
                 ['executor' => $this]
             );
         }
@@ -772,7 +801,7 @@ class JobExecutor implements JobExecutorInterface
      * Set additional message during import
      *
      * @param string|Phrase $message
-     * @param null          $logger
+     * @param null $logger
      *
      * @return $this
      */
@@ -780,7 +809,7 @@ class JobExecutor implements JobExecutorInterface
     {
         $this->message = $this->getMessageWithoutPrefix() . PHP_EOL . $message;
         if ($logger && $this->configHelper->isAdvancedLogActivated()) {
-            $this->currentJobClass->getLogger()->addDebug($message);
+            $this->currentJobClass->getLogger()->debug($message);
         }
 
         return $this;
@@ -884,8 +913,8 @@ class JobExecutor implements JobExecutorInterface
     public function init(string $code)
     {
         /** @var Job $job */
-        $job                   = $this->jobRepository->getByCode($code);
-        $this->currentJob      = $job;
+        $job = $this->jobRepository->getByCode($code);
+        $this->currentJob = $job;
         $this->currentJobClass = $this->processClassFactory->create($job->getJobClass());
         $this->currentJobClass->setJobExecutor($this);
         $this->currentJobClass->setStatus(1);
@@ -895,7 +924,7 @@ class JobExecutor implements JobExecutorInterface
      * Check conditions to launch or schedule a job
      *
      * @param JobInterface $job
-     * @param bool         $isMassAction
+     * @param bool $isMassAction
      *
      * @return bool
      */

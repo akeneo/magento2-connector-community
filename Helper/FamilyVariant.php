@@ -211,7 +211,7 @@ class FamilyVariant
         );
         while (($row = $variantFamily->fetch())) {
             /** @var array $axisAttributes */
-            $axisAttributes = explode(',', $row['_axis']);
+            $axisAttributes = explode(',', $row['_axis'] ?? '');
             /** @var array $axis */
             $axis = [];
             /** @var string $code */
