@@ -93,6 +93,7 @@ class Product extends JobImport
      * @var string CATALOG_PRODUCT_ENTITY_TABLE_NAME
      */
     const CATALOG_PRODUCT_ENTITY_TABLE_NAME = 'catalog_product_entity';
+    public const SUFFIX_SEPARATOR = '-';
     /**
      * This variable contains a string value
      *
