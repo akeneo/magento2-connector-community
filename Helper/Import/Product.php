@@ -569,7 +569,7 @@ class Product extends Entities
                     $product->setUrlKey($product->getUrlKey() . '-' . $suffix);
                 }
                 if ($suffix >= 2) {
-                    $product->setUrlKey(substr($product->getUrlKey(), 0, -(strlen($suffix - 1) + 1)) . '-' . $suffix);
+                    $product->setUrlKey(substr($product->getUrlKey(), 0, -(strlen((string)($suffix - 1)) + 1)) . '-' . $suffix);
                 }
                 /** @var string $requestPath */
                 $requestPath = $this->productUrlPathGenerator->getUrlPathWithSuffix(
