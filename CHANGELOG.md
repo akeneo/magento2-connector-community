@@ -374,3 +374,6 @@
 * Fix Magento Framework dependency in composer.json
 * Fix advanced filter error when left empty
 * Improve URL generation requests for product job
+
+### Version 103.0.8 :
+* Fix URL rewrite generation when multiple url keys are duplicated
