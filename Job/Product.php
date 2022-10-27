@@ -2619,11 +2619,9 @@ class Product extends JobImport
      *
      * @return void
      */
-    public function setCategories()
+    public function setCategories(): void
     {
-        /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         if (!$connection->tableColumnExists($tmpTable, 'categories')) {
@@ -2633,60 +2631,49 @@ class Product extends JobImport
             return;
         }
 
-        /** @var Select $select */
-        $select = $connection->select()
-            ->from(['c' => $this->entitiesHelper->getTable('akeneo_connector_entities')], [])
-            ->joinInner(
-                ['p' => $tmpTable],
-                'FIND_IN_SET(`c`.`code`, `p`.`categories`) AND `c`.`import` = "category"',
-                [
-                    'category_id' => 'c.entity_id',
-                    'product_id' => 'p._entity_id',
-                ]
+        $akeneoEntitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
+        $categoryProductTable = $this->entitiesHelper->getTable('catalog_category_product');
+
+        $productCategoryInsertData = [];
+        $categoriesByProduct = $connection->fetchAll(
+            $connection->select()->from(
+                [$tmpTable],
+                ['_entity_id', 'categories']
             )
-            ->joinInner(
-                ['e' => $this->entitiesHelper->getTable('catalog_category_entity')],
-                'c.entity_id = e.entity_id',
-                []
+        );
+
+        // we get all link between category code and id
+        $categoryAkeneo = $connection->fetchAssoc(
+            $connection->select()->from(
+                [$akeneoEntitiesTable],
+                ['code', 'entity_id']
+            )->where('import = "category"')
+        );
+
+        // create data to insert in catalog_product_entity
+        $notInWhere = [];
+        foreach ($categoriesByProduct as $row) {
+            $categoryList = explode(',', $row['categories']);
+            foreach ($categoryList as $category) {
+                $data = [
+                    $row['_entity_id'],
+                    $categoryAkeneo[$category]['entity_id'],
+                ];
+                $productCategoryInsertData[] = $data;
+                $notInWhere[] = '(' . $row['_entity_id'] . ',' . $categoryAkeneo[$category]['entity_id'] . ')';
+            }
+        }
+
+        $connection->insertArray($categoryProductTable, ['product_id', 'category_id'], $productCategoryInsertData, AdapterInterface::INSERT_IGNORE);
+
+        $productIds = implode(',', array_unique(array_column($productCategoryInsertData, 0)));
+        $productCategoryExclusion = implode(',', $notInWhere);
+        if (!empty($productIds) && !empty($productCategoryExclusion)) {
+            $connection->delete(
+                $categoryProductTable,
+                new \Zend_Db_Expr("product_id IN ($productIds) AND (product_id, category_id) NOT IN ($productCategoryExclusion)")
             );
-
-        $connection->query(
-            $connection->insertFromSelect(
-                $select,
-                $this->entitiesHelper->getTable('catalog_category_product'),
-                ['category_id', 'product_id'],
-                1
-            )
-        );
-
-        /** @var Select $selectToDelete */
-        $selectToDelete = $connection->select()
-            ->from($this->entitiesHelper->getTable('catalog_category_product'), [])
-            ->joinInner(
-                ['c' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
-                $this->entitiesHelper->getTable('catalog_category_product') . '.category_id = c.entity_id',
-                []
-            )
-            ->joinInner(
-                ['p' => $tmpTable],
-                $this->entitiesHelper->getTable('catalog_category_product') . '.product_id = `p`.`_entity_id`',
-                [
-                    'category_id' => 'c.entity_id',
-                    'product_id' => 'p._entity_id',
-                ]
-            )
-            ->joinInner(
-                ['e' => $this->entitiesHelper->getTable('catalog_category_entity')],
-                'c.entity_id = e.entity_id',
-                []
-            )
-            ->where('!FIND_IN_SET(`c`.`code`, `p`.`categories`) AND `c`.`import` = "category"');
-
-        $delete = $connection->deleteFromSelect(
-            $selectToDelete,
-            $this->entitiesHelper->getTable('catalog_category_product')
-        );
-        $connection->query($delete);
+        }
     }
 
     /**
