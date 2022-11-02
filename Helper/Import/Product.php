@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Helper\Import;
 
+use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
@@ -73,6 +74,7 @@ class Product extends Entities
      * @var ScopeConfigInterface $scopeConfig
      */
     protected $scopeConfig;
+    protected Authenticator $authenticator;
 
     /**
      * Product constructor
@@ -82,6 +84,7 @@ class Product extends Entities
      * @param BaseProductModel        $product
      * @param ProductUrlPathGenerator $productUrlPathGenerator
      * @param ConfigHelper            $configHelper
+     * @param Authenticator           $authenticator
      * @param Json                    $jsonSerializer
      * @param ScopeConfigInterface    $scopeConfig
      */
@@ -91,10 +94,11 @@ class Product extends Entities
         BaseProductModel $product,
         ProductUrlPathGenerator $productUrlPathGenerator,
         ConfigHelper $configHelper,
+        Authenticator $authenticator,
         Json $jsonSerializer,
         ScopeConfigInterface $scopeConfig
     ) {
-        parent::__construct($connection, $deploymentConfig, $product, $configHelper);
+        parent::__construct($connection, $deploymentConfig, $product, $configHelper, $authenticator);
 
         $this->jsonSerializer          = $jsonSerializer;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
