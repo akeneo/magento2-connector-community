@@ -744,7 +744,7 @@ class Product extends JobImport
             $this->logger->debug(__('Product Model API call Filters : ') . print_r($filters, true));
         }
         /** @var mixed[] $step */
-        $step = $this->productModelHelper->createTable($this->akeneoClient, $filters, $family);
+        $step = $this->productModelHelper->createTable($this->akeneoClient, $filters);
         $messages[] = $step;
         if (array_keys(array_column($step, 'status'), false)) {
             $this->jobExecutor->displayMessages($messages, $this->logger);
