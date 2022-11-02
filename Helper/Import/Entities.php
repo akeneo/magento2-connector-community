@@ -2,7 +2,10 @@
 
 namespace Akeneo\Connector\Helper\Import;
 
+use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
+use Akeneo\Pim\ApiClient\Pagination\ResourceCursor;
 use Exception;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Catalog\Model\Product as BaseProductModel;
@@ -46,6 +49,29 @@ class Entities
      */
     const IMPORT_CODE_PRODUCT = 'product';
     /**
+     * @var mixed[] ATTRIBUTE_TYPES_LENGTH
+     */
+    public const ATTRIBUTE_TYPES_LENGTH = [
+        'pim_catalog_identifier' => '255',
+        'pim_catalog_text' => '255',
+        'pim_catalog_textarea' => '65535',
+        'pim_catalog_simpleselect' => null,
+        'pim_catalog_multiselect' => null,
+        'pim_catalog_boolean' => '3',
+        'pim_catalog_date' => '20',
+        'pim_catalog_number' => '100',
+        'pim_catalog_metric' => '255',
+        'pim_catalog_price_collection' => null,
+        'pim_catalog_image' => null,
+        'pim_catalog_file' => null,
+        'pim_catalog_asset_collection' => '2M',
+        'akeneo_reference_entity' => null,
+        'akeneo_reference_entity_collection' => null,
+        'pim_reference_data_simpleselect' => null,
+        'pim_reference_data_multiselect' => null,
+        'pim_catalog_table' => null,
+    ];
+    /**
      * This variable contains a ResourceConnection
      *
      * @var ResourceConnection $connection
@@ -57,6 +83,7 @@ class Entities
      * @var BaseProductModel $product
      */
     protected $product;
+    protected Authenticator $authenticator;
     /**
      * This variable contains a ConfigHelper
      *
@@ -83,26 +110,30 @@ class Entities
      * @var bool[] $rowIdExists
      */
     protected $rowIdExists = [];
+    protected array $attributeLength = [];
 
     /**
      * Entities constructor
      *
-     * @param Context            $context
+     * @param Context $context
      * @param ResourceConnection $connection
-     * @param DeploymentConfig   $deploymentConfig
-     * @param ConfigHelper       $configHelper
-     * @param BaseProductModel   $product
+     * @param DeploymentConfig $deploymentConfig
+     * @param ConfigHelper $configHelper
+     * @param BaseProductModel $product
+     * @param Authenticator $authenticator
      */
     public function __construct(
         ResourceConnection $connection,
         DeploymentConfig $deploymentConfig,
         BaseProductModel $product,
-        ConfigHelper $configHelper
+        ConfigHelper $configHelper,
+        Authenticator $authenticator
     ) {
         $this->connection       = $connection->getConnection();
         $this->deploymentConfig = $deploymentConfig;
         $this->configHelper     = $configHelper;
         $this->product          = $product;
+        $this->authenticator    = $authenticator;
     }
 
     /**
@@ -347,10 +378,11 @@ class Entities
      *
      * @param array       $result
      * @param null|string $tableSuffix
+     * @param null|string $family
      *
      * @return bool
      */
-    public function insertDataFromApi(array $result, $tableSuffix = null)
+    public function insertDataFromApi(array $result, ?string $tableSuffix = null, ?string $family = null)
     {
         if (empty($result)) {
             return false;
@@ -377,7 +409,7 @@ class Entities
                     $key,
                     [
                         'type'    => 'text',
-                        'length'  => '2M',
+                        'length'  => $this->getAttributeColumnLength($family, $key), // Get correct column length
                         'default' => null,
                         'COMMENT' => ' '
                     ]
@@ -721,10 +753,11 @@ class Entities
      * @param string $tableName
      * @param string $source
      * @param string $target
+     * @param string|null $family
      *
      * @return \Akeneo\Connector\Helper\Import\Entities
      */
-    public function copyColumn($tableName, $source, $target)
+    public function copyColumn(string $tableName, string $source, string $target, ?string $family = null)
     {
         /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
@@ -734,8 +767,8 @@ class Entities
                 $tableName,
                 $target,
                 [
-                    'type'     => 'text',
-                    'length'   => '2M',
+                    'type'    => 'text',
+                    'length'  => $this->getAttributeColumnLength($family, $target), // Get correct column length
                     'default' => '',
                     'COMMENT' => ' '
                 ]
@@ -978,5 +1011,96 @@ class Entities
         }
 
         return $mysqlVersion['version'];
+    }
+    
+    /**
+     * Get family attributes database recommended length
+     *
+     * @param string $familyCode
+     *
+     * @return mixed[]
+     */
+    protected function getAttributesLength(string $familyCode): array
+    {
+        /** @var AkeneoPimClientInterface|false $akeneoClient */
+        $akeneoClient = $this->authenticator->getAkeneoApiClient();
+
+        if (!empty($this->attributeLength) || !$akeneoClient) {
+            return $this->attributeLength;
+        }
+
+        $attributeTypesLength = self::ATTRIBUTE_TYPES_LENGTH;
+        /** @var mixed[] $family */
+        $family = $akeneoClient->getFamilyApi()->get($familyCode);
+        /** @var string[] $familyAttributesCode */
+        $familyAttributesCode = $family['attributes'] ?? [];
+        /** @var string|int $paginationSize */
+        $paginationSize = $this->configHelper->getPaginationSize();
+        $searchAttributesResult = [];
+        $searchAttributesCode = [];
+        // Batch API calls to avoid too large request URI
+        foreach ($familyAttributesCode as $attributeCode) {
+            $searchAttributesCode[] = $attributeCode;
+            if (count($searchAttributesCode) === $paginationSize) {
+                $searchAttributesResult[] = $akeneoClient->getAttributeApi()->all($paginationSize, [
+                    'search' => [
+                        'code' => [
+                            [
+                                'operator' => 'IN',
+                                'value' => $searchAttributesCode,
+                            ],
+                        ],
+                    ],
+                ]);
+                $searchAttributesCode = [];
+            }
+        }
+        // Don't forget last page of attributes
+        if (count($searchAttributesCode) > 1) {
+            $searchAttributesResult[] = $akeneoClient->getAttributeApi()->all($paginationSize, [
+                'search' => [
+                    'code' => [
+                        [
+                            'operator' => 'IN',
+                            'value' => $searchAttributesCode,
+                        ],
+                    ],
+                ],
+            ]);
+        }
+
+        /** @var ResourceCursor $familyAttributes */
+        foreach ($searchAttributesResult as $familyAttributes) {
+            foreach ($familyAttributes as $attribute) {
+                if (!isset($attribute['code'], $attribute['type'])) {
+                    continue;
+                }
+                $attributeCode = $attribute['code'];
+                $attributeType = $attribute['type'];
+
+                $this->attributeLength[$attributeCode] = $attributeTypesLength[$attributeType];
+            }
+        }
+
+        return $this->attributeLength;
+    }
+
+    /**
+     * Get attribute column length with family ATTRIBUTE_TYPES_LENGTH
+     *
+     * @param string|null $familyCode
+     * @param string $attributeCode
+     *
+     * @return string|null
+     */
+    public function getAttributeColumnLength(?string $familyCode, string $attributeCode): ?string
+    {
+        if (!$familyCode) {
+            return null;
+        }
+
+        $attributesLength = $this->getAttributesLength($familyCode);
+
+        return $attributesLength[$attributeCode] ?? '2M'; // Add 2M by default to ensure "fake" reference entity attributes correct length
     }
 }
