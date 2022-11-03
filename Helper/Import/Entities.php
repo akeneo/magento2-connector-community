@@ -48,28 +48,42 @@ class Entities
      * @var string IMPORT_CODE_PRODUCT
      */
     const IMPORT_CODE_PRODUCT = 'product';
+    /** @var null DEFAULT_ATTRIBUTE_LENGTH */
+    public const DEFAULT_ATTRIBUTE_LENGTH = null;
+    /** @var string NORMAL_TEXT_ATTRIBUTE_LENGTH */
+    public const NORMAL_TEXT_ATTRIBUTE_LENGTH = '255';
+    /** @var string TEXTAREA_ATTRIBUTE_LENGTH */
+    public const TEXTAREA_ATTRIBUTE_LENGTH = '65535';
+    /** @var string BOOLEAN_ATTRIBUTE_LENGTH */
+    public const BOOLEAN_ATTRIBUTE_LENGTH = '3';
+    /** @var string DATE_ATTRIBUTE_LENGTH */
+    public const DATE_ATTRIBUTE_LENGTH = '20';
+    /** @var string NUMBER_ATTRIBUTE_LENGTH */
+    public const NUMBER_ATTRIBUTE_LENGTH = '100';
+    /** @var string LARGE_ATTRIBUTE_LENGTH */
+    public const LARGE_ATTRIBUTE_LENGTH = '2M';
     /**
      * @var mixed[] ATTRIBUTE_TYPES_LENGTH
      */
     public const ATTRIBUTE_TYPES_LENGTH = [
-        'pim_catalog_identifier' => '255',
-        'pim_catalog_text' => '255',
-        'pim_catalog_textarea' => '65535',
-        'pim_catalog_simpleselect' => null,
-        'pim_catalog_multiselect' => null,
-        'pim_catalog_boolean' => '3',
-        'pim_catalog_date' => '20',
-        'pim_catalog_number' => '100',
-        'pim_catalog_metric' => '255',
-        'pim_catalog_price_collection' => null,
-        'pim_catalog_image' => null,
-        'pim_catalog_file' => null,
-        'pim_catalog_asset_collection' => '2M',
-        'akeneo_reference_entity' => null,
-        'akeneo_reference_entity_collection' => null,
-        'pim_reference_data_simpleselect' => null,
-        'pim_reference_data_multiselect' => null,
-        'pim_catalog_table' => null,
+        'pim_catalog_identifier' => self::NORMAL_TEXT_ATTRIBUTE_LENGTH,
+        'pim_catalog_text' => self::NORMAL_TEXT_ATTRIBUTE_LENGTH,
+        'pim_catalog_textarea' => self::TEXTAREA_ATTRIBUTE_LENGTH,
+        'pim_catalog_simpleselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_multiselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_boolean' => self::BOOLEAN_ATTRIBUTE_LENGTH,
+        'pim_catalog_date' => self::DATE_ATTRIBUTE_LENGTH,
+        'pim_catalog_number' => self::NUMBER_ATTRIBUTE_LENGTH,
+        'pim_catalog_metric' => self::NORMAL_TEXT_ATTRIBUTE_LENGTH,
+        'pim_catalog_price_collection' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_image' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_file' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_asset_collection' => self::LARGE_ATTRIBUTE_LENGTH,
+        'akeneo_reference_entity' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'akeneo_reference_entity_collection' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_reference_data_simpleselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_reference_data_multiselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_table' => self::DEFAULT_ATTRIBUTE_LENGTH,
     ];
     /**
      * This variable contains a ResourceConnection
@@ -1012,7 +1026,7 @@ class Entities
 
         return $mysqlVersion['version'];
     }
-    
+
     /**
      * Get family attributes database recommended length
      *
@@ -1101,6 +1115,6 @@ class Entities
 
         $attributesLength = $this->getAttributesLength($familyCode);
 
-        return $attributesLength[$attributeCode] ?? '2M'; // Add 2M by default to ensure "fake" reference entity attributes correct length
+        return $attributesLength[$attributeCode] ?? self::LARGE_ATTRIBUTE_LENGTH; // Add 2M by default to ensure "fake" reference entity attributes correct length
     }
 }
