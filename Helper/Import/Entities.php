@@ -54,8 +54,6 @@ class Entities
     public const NORMAL_TEXT_ATTRIBUTE_LENGTH = '255';
     /** @var string TEXTAREA_ATTRIBUTE_LENGTH */
     public const TEXTAREA_ATTRIBUTE_LENGTH = '65535';
-    /** @var string BOOLEAN_ATTRIBUTE_LENGTH */
-    public const BOOLEAN_ATTRIBUTE_LENGTH = '3';
     /** @var string DATE_ATTRIBUTE_LENGTH */
     public const DATE_ATTRIBUTE_LENGTH = '20';
     /** @var string NUMBER_ATTRIBUTE_LENGTH */
@@ -71,7 +69,7 @@ class Entities
         'pim_catalog_textarea' => self::TEXTAREA_ATTRIBUTE_LENGTH,
         'pim_catalog_simpleselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_multiselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
-        'pim_catalog_boolean' => self::BOOLEAN_ATTRIBUTE_LENGTH,
+        'pim_catalog_boolean' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_date' => self::DATE_ATTRIBUTE_LENGTH,
         'pim_catalog_number' => self::NUMBER_ATTRIBUTE_LENGTH,
         'pim_catalog_metric' => self::NORMAL_TEXT_ATTRIBUTE_LENGTH,
