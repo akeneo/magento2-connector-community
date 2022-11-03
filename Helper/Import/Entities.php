@@ -59,7 +59,7 @@ class Entities
     /** @var string DATE_ATTRIBUTE_LENGTH */
     public const DATE_ATTRIBUTE_LENGTH = '20';
     /** @var string NUMBER_ATTRIBUTE_LENGTH */
-    public const NUMBER_ATTRIBUTE_LENGTH = '100';
+    public const NUMBER_ATTRIBUTE_LENGTH = '20';
     /** @var string LARGE_ATTRIBUTE_LENGTH */
     public const LARGE_ATTRIBUTE_LENGTH = '2M';
     /**
