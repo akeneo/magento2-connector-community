@@ -1113,6 +1113,6 @@ class Entities
 
         $attributesLength = $this->getAttributesLength($familyCode);
 
-        return $attributesLength[$attributeCode] ?? self::LARGE_ATTRIBUTE_LENGTH; // Add 2M by default to ensure "fake" reference entity attributes correct length
+        return $attributesLength[strtok($attributeCode, '-')] ?? self::LARGE_ATTRIBUTE_LENGTH; // Add 2M by default to ensure "fake" reference entity attributes correct length
     }
 }
