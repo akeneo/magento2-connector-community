@@ -66,7 +66,7 @@ class Entities
     public const ATTRIBUTE_TYPES_LENGTH = [
         'pim_catalog_identifier' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_text' => self::DEFAULT_ATTRIBUTE_LENGTH,
-        'pim_catalog_textarea' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_textarea' => self::TEXTAREA_ATTRIBUTE_LENGTH,
         'pim_catalog_simpleselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_multiselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_boolean' => self::DEFAULT_ATTRIBUTE_LENGTH,
