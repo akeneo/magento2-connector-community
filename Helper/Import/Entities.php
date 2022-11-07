@@ -64,15 +64,15 @@ class Entities
      * @var mixed[] ATTRIBUTE_TYPES_LENGTH
      */
     public const ATTRIBUTE_TYPES_LENGTH = [
-        'pim_catalog_identifier' => self::NORMAL_TEXT_ATTRIBUTE_LENGTH,
-        'pim_catalog_text' => self::NORMAL_TEXT_ATTRIBUTE_LENGTH,
-        'pim_catalog_textarea' => self::TEXTAREA_ATTRIBUTE_LENGTH,
+        'pim_catalog_identifier' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_text' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_textarea' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_simpleselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_multiselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_boolean' => self::DEFAULT_ATTRIBUTE_LENGTH,
-        'pim_catalog_date' => self::DATE_ATTRIBUTE_LENGTH,
-        'pim_catalog_number' => self::NUMBER_ATTRIBUTE_LENGTH,
-        'pim_catalog_metric' => self::NORMAL_TEXT_ATTRIBUTE_LENGTH,
+        'pim_catalog_date' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_number' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_metric' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_price_collection' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_image' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_file' => self::DEFAULT_ATTRIBUTE_LENGTH,
@@ -81,7 +81,7 @@ class Entities
         'akeneo_reference_entity_collection' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_reference_data_simpleselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_reference_data_multiselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
-        'pim_catalog_table' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_table' => self::LARGE_ATTRIBUTE_LENGTH,
     ];
     /**
      * This variable contains a ResourceConnection
