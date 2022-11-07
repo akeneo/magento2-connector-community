@@ -213,14 +213,15 @@ class Entities
      *
      * @param array  $result
      * @param string $tableSuffix
+     * @param string|null $family
      *
      * @return $this
      */
-    public function createTmpTableFromApi($result, $tableSuffix)
+    public function createTmpTableFromApi(array $result, string $tableSuffix, ?string $family = null)
     {
         /** @var array $columns */
         $columns = $this->getColumnsFromResult($result);
-        $this->createTmpTable(array_keys($columns), $tableSuffix);
+        $this->createTmpTable(array_keys($columns), $tableSuffix, $family);
 
         return $this;
     }
@@ -230,11 +231,12 @@ class Entities
      *
      * @param array  $fields
      * @param string $tableSuffix
+     * @param string|null $family
      *
      * @return $this
      * @throws \Zend_Db_Exception
      */
-    public function createTmpTable($fields, $tableSuffix)
+    public function createTmpTable(array $fields, string $tableSuffix, ?string $family = null)
     {
         /* Delete table if exists */
         $this->dropTable($tableSuffix);
@@ -269,7 +271,7 @@ class Entities
                 $table->addColumn(
                     $column,
                     Table::TYPE_TEXT,
-                    '2M',
+                    $this->getAttributeColumnLength($family, $column),
                     [],
                     $column
                 );

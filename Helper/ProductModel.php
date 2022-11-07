@@ -122,11 +122,12 @@ class ProductModel
      * Description createTable function
      *
      * @param AkeneoPimClientInterface $akeneoClient
-     * @param string[]                 $filters
+     * @param string[] $filters
+     * @param string|null $family
      *
      * @return string[]
      */
-    public function createTable($akeneoClient, $filters)
+    public function createTable(AkeneoPimClientInterface $akeneoClient, array $filters, ?string $family = null)
     {
         /** @var string[] $messages */
         $messages = [];
@@ -155,7 +156,7 @@ class ProductModel
         }
 
         $productModel = reset($productModels);
-        $this->entitiesHelper->createTmpTableFromApi($productModel, 'product_model');
+        $this->entitiesHelper->createTmpTableFromApi($productModel, 'product_model', $family);
 
         return $messages;
     }
