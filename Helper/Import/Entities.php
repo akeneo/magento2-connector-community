@@ -50,14 +50,8 @@ class Entities
     const IMPORT_CODE_PRODUCT = 'product';
     /** @var string DEFAULT_ATTRIBUTE_LENGTH */
     public const DEFAULT_ATTRIBUTE_LENGTH = 'default';
-    /** @var string NORMAL_TEXT_ATTRIBUTE_LENGTH */
-    public const NORMAL_TEXT_ATTRIBUTE_LENGTH = '255';
     /** @var string TEXTAREA_ATTRIBUTE_LENGTH */
     public const TEXTAREA_ATTRIBUTE_LENGTH = '65535';
-    /** @var string DATE_ATTRIBUTE_LENGTH */
-    public const DATE_ATTRIBUTE_LENGTH = '20';
-    /** @var string NUMBER_ATTRIBUTE_LENGTH */
-    public const NUMBER_ATTRIBUTE_LENGTH = '20';
     /** @var string LARGE_ATTRIBUTE_LENGTH */
     public const LARGE_ATTRIBUTE_LENGTH = '2M';
     /**
