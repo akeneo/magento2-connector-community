@@ -48,8 +48,8 @@ class Entities
      * @var string IMPORT_CODE_PRODUCT
      */
     const IMPORT_CODE_PRODUCT = 'product';
-    /** @var null DEFAULT_ATTRIBUTE_LENGTH */
-    public const DEFAULT_ATTRIBUTE_LENGTH = null;
+    /** @var string DEFAULT_ATTRIBUTE_LENGTH */
+    public const DEFAULT_ATTRIBUTE_LENGTH = 'default';
     /** @var string NORMAL_TEXT_ATTRIBUTE_LENGTH */
     public const NORMAL_TEXT_ATTRIBUTE_LENGTH = '255';
     /** @var string TEXTAREA_ATTRIBUTE_LENGTH */
@@ -1113,7 +1113,7 @@ class Entities
         }
 
         $attributesLength = $this->getAttributesLength($familyCode);
-
-        return $attributesLength[strtok($attributeCode, '-')] ?? self::LARGE_ATTRIBUTE_LENGTH; // Add 2M by default to ensure "fake" reference entity attributes correct length
+        $attributeColumnLength = $attributesLength[strtok($attributeCode, '-')] ?? self::LARGE_ATTRIBUTE_LENGTH; // Add 2M by default to ensure "fake" reference entity attributes correct length
+        return $attributeColumnLength === self::DEFAULT_ATTRIBUTE_LENGTH ? null : $attributeColumnLength; // Return null value for default attributes length
     }
 }
