@@ -48,8 +48,8 @@ class Entities
      * @var string IMPORT_CODE_PRODUCT
      */
     const IMPORT_CODE_PRODUCT = 'product';
-    /** @var null DEFAULT_ATTRIBUTE_LENGTH */
-    public const DEFAULT_ATTRIBUTE_LENGTH = null;
+    /** @var string DEFAULT_ATTRIBUTE_LENGTH */
+    public const DEFAULT_ATTRIBUTE_LENGTH = 'default';
     /** @var string NORMAL_TEXT_ATTRIBUTE_LENGTH */
     public const NORMAL_TEXT_ATTRIBUTE_LENGTH = '255';
     /** @var string TEXTAREA_ATTRIBUTE_LENGTH */
@@ -64,15 +64,15 @@ class Entities
      * @var mixed[] ATTRIBUTE_TYPES_LENGTH
      */
     public const ATTRIBUTE_TYPES_LENGTH = [
-        'pim_catalog_identifier' => self::NORMAL_TEXT_ATTRIBUTE_LENGTH,
-        'pim_catalog_text' => self::NORMAL_TEXT_ATTRIBUTE_LENGTH,
-        'pim_catalog_textarea' => self::TEXTAREA_ATTRIBUTE_LENGTH,
+        'pim_catalog_identifier' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_text' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_textarea' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_simpleselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_multiselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_boolean' => self::DEFAULT_ATTRIBUTE_LENGTH,
-        'pim_catalog_date' => self::DATE_ATTRIBUTE_LENGTH,
-        'pim_catalog_number' => self::NUMBER_ATTRIBUTE_LENGTH,
-        'pim_catalog_metric' => self::NORMAL_TEXT_ATTRIBUTE_LENGTH,
+        'pim_catalog_date' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_number' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_metric' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_price_collection' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_image' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_catalog_file' => self::DEFAULT_ATTRIBUTE_LENGTH,
@@ -81,7 +81,7 @@ class Entities
         'akeneo_reference_entity_collection' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_reference_data_simpleselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
         'pim_reference_data_multiselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
-        'pim_catalog_table' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_table' => self::LARGE_ATTRIBUTE_LENGTH,
     ];
     /**
      * This variable contains a ResourceConnection
@@ -213,14 +213,15 @@ class Entities
      *
      * @param array  $result
      * @param string $tableSuffix
+     * @param string|null $family
      *
      * @return $this
      */
-    public function createTmpTableFromApi($result, $tableSuffix)
+    public function createTmpTableFromApi(array $result, string $tableSuffix, ?string $family = null)
     {
         /** @var array $columns */
         $columns = $this->getColumnsFromResult($result);
-        $this->createTmpTable(array_keys($columns), $tableSuffix);
+        $this->createTmpTable(array_keys($columns), $tableSuffix, $family);
 
         return $this;
     }
@@ -230,11 +231,12 @@ class Entities
      *
      * @param array  $fields
      * @param string $tableSuffix
+     * @param string|null $family
      *
      * @return $this
      * @throws \Zend_Db_Exception
      */
-    public function createTmpTable($fields, $tableSuffix)
+    public function createTmpTable(array $fields, string $tableSuffix, ?string $family = null)
     {
         /* Delete table if exists */
         $this->dropTable($tableSuffix);
@@ -269,7 +271,7 @@ class Entities
                 $table->addColumn(
                     $column,
                     Table::TYPE_TEXT,
-                    '2M',
+                    $this->getAttributeColumnLength($family, $column),
                     [],
                     $column
                 );
@@ -1037,8 +1039,8 @@ class Entities
         /** @var AkeneoPimClientInterface|false $akeneoClient */
         $akeneoClient = $this->authenticator->getAkeneoApiClient();
 
-        if (!empty($this->attributeLength) || !$akeneoClient) {
-            return $this->attributeLength;
+        if (!empty($this->attributeLength[$familyCode]) || !$akeneoClient) {
+            return $this->attributeLength[$familyCode];
         }
 
         $attributeTypesLength = self::ATTRIBUTE_TYPES_LENGTH;
@@ -1090,11 +1092,10 @@ class Entities
                 $attributeCode = $attribute['code'];
                 $attributeType = $attribute['type'];
 
-                $this->attributeLength[$attributeCode] = $attributeTypesLength[$attributeType];
-            }
+                $this->attributeLength[$familyCode][$attributeCode] = $attributeTypesLength[$attributeType];            }
         }
 
-        return $this->attributeLength;
+        return $this->attributeLength[$familyCode];
     }
 
     /**
@@ -1112,7 +1113,7 @@ class Entities
         }
 
         $attributesLength = $this->getAttributesLength($familyCode);
-
-        return $attributesLength[$attributeCode] ?? self::LARGE_ATTRIBUTE_LENGTH; // Add 2M by default to ensure "fake" reference entity attributes correct length
+        $attributeColumnLength = $attributesLength[strtok($attributeCode, '-')] ?? self::LARGE_ATTRIBUTE_LENGTH; // Add 2M by default to ensure "fake" reference entity attributes correct length
+        return $attributeColumnLength === self::DEFAULT_ATTRIBUTE_LENGTH ? null : $attributeColumnLength; // Return null value for default attributes length
     }
 }
