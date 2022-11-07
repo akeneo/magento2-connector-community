@@ -1039,8 +1039,8 @@ class Entities
         /** @var AkeneoPimClientInterface|false $akeneoClient */
         $akeneoClient = $this->authenticator->getAkeneoApiClient();
 
-        if (!empty($this->attributeLength) || !$akeneoClient) {
-            return $this->attributeLength;
+        if (!empty($this->attributeLength[$familyCode]) || !$akeneoClient) {
+            return $this->attributeLength[$familyCode];
         }
 
         $attributeTypesLength = self::ATTRIBUTE_TYPES_LENGTH;
@@ -1092,11 +1092,10 @@ class Entities
                 $attributeCode = $attribute['code'];
                 $attributeType = $attribute['type'];
 
-                $this->attributeLength[$attributeCode] = $attributeTypesLength[$attributeType];
-            }
+                $this->attributeLength[$familyCode][$attributeCode] = $attributeTypesLength[$attributeType];            }
         }
 
-        return $this->attributeLength;
+        return $this->attributeLength[$familyCode];
     }
 
     /**
