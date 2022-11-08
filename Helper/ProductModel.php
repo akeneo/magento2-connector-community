@@ -122,11 +122,12 @@ class ProductModel
      * Description createTable function
      *
      * @param AkeneoPimClientInterface $akeneoClient
-     * @param string[]                 $filters
+     * @param string[] $filters
+     * @param string|null $family
      *
      * @return string[]
      */
-    public function createTable($akeneoClient, $filters)
+    public function createTable(AkeneoPimClientInterface $akeneoClient, array $filters, ?string $family = null)
     {
         /** @var string[] $messages */
         $messages = [];
@@ -155,7 +156,7 @@ class ProductModel
         }
 
         $productModel = reset($productModels);
-        $this->entitiesHelper->createTmpTableFromApi($productModel, 'product_model');
+        $this->entitiesHelper->createTmpTableFromApi($productModel, 'product_model', $family);
 
         return $messages;
     }
@@ -164,11 +165,12 @@ class ProductModel
      * Insert data into temporary table
      *
      * @param AkeneoPimClientInterface $akeneoClient
-     * @param string[]                 $filters
+     * @param string[] $filters
+     * * @param string|null $family
      *
      * @return void
      */
-    public function insertData($akeneoClient, $filters)
+    public function insertData(AkeneoPimClientInterface $akeneoClient, array $filters, ?string $family = null)
     {
         /** @var mixed[] $messages */
         $messages = [];
@@ -345,7 +347,7 @@ class ProductModel
                 if (isset($productModel['code'])) {
                     $productModel['identifier'] = $productModel['code'];
                 }
-                $this->entitiesHelper->insertDataFromApi($productModel, 'product_model');
+                $this->entitiesHelper->insertDataFromApi($productModel, 'product_model', $family);
                 $index++;
             }
         }
@@ -438,9 +440,11 @@ class ProductModel
     /**
      * Add columns to product table
      *
+     * @param string|null $family
+     *
      * @return void
      */
-    public function addColumns($code)
+    public function addColumns($code, ?string $family = null)
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
@@ -462,12 +466,13 @@ class ProductModel
             if (in_array($column, $except)) {
                 continue;
             }
+            $columnName = $this->_columnName($column);
             $connection->addColumn(
                 $tmpTable,
-                $this->_columnName($column),
+                $columnName,
                 [
                     'type'    => 'text',
-                    'length'  => '2M',
+                    $this->entitiesHelper->getAttributeColumnLength($family, $columnName), // Get correct column length
                     'default' => '',
                     'COMMENT' => ' '
                 ]

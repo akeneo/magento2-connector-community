@@ -2,7 +2,10 @@
 
 namespace Akeneo\Connector\Helper\Import;
 
+use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
+use Akeneo\Pim\ApiClient\Pagination\ResourceCursor;
 use Exception;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Catalog\Model\Product as BaseProductModel;
@@ -45,6 +48,35 @@ class Entities
      * @var string IMPORT_CODE_PRODUCT
      */
     const IMPORT_CODE_PRODUCT = 'product';
+    /** @var string DEFAULT_ATTRIBUTE_LENGTH */
+    public const DEFAULT_ATTRIBUTE_LENGTH = 'default';
+    /** @var string TEXTAREA_ATTRIBUTE_LENGTH */
+    public const TEXTAREA_ATTRIBUTE_LENGTH = '65535';
+    /** @var string LARGE_ATTRIBUTE_LENGTH */
+    public const LARGE_ATTRIBUTE_LENGTH = '2M';
+    /**
+     * @var mixed[] ATTRIBUTE_TYPES_LENGTH
+     */
+    public const ATTRIBUTE_TYPES_LENGTH = [
+        'pim_catalog_identifier' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_text' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_textarea' => self::TEXTAREA_ATTRIBUTE_LENGTH,
+        'pim_catalog_simpleselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_multiselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_boolean' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_date' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_number' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_metric' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_price_collection' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_image' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_file' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_asset_collection' => self::LARGE_ATTRIBUTE_LENGTH,
+        'akeneo_reference_entity' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'akeneo_reference_entity_collection' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_reference_data_simpleselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_reference_data_multiselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_table' => self::LARGE_ATTRIBUTE_LENGTH,
+    ];
     /**
      * This variable contains a ResourceConnection
      *
@@ -57,6 +89,7 @@ class Entities
      * @var BaseProductModel $product
      */
     protected $product;
+    protected Authenticator $authenticator;
     /**
      * This variable contains a ConfigHelper
      *
@@ -83,26 +116,30 @@ class Entities
      * @var bool[] $rowIdExists
      */
     protected $rowIdExists = [];
+    protected array $attributeLength = [];
 
     /**
      * Entities constructor
      *
-     * @param Context            $context
+     * @param Context $context
      * @param ResourceConnection $connection
-     * @param DeploymentConfig   $deploymentConfig
-     * @param ConfigHelper       $configHelper
-     * @param BaseProductModel   $product
+     * @param DeploymentConfig $deploymentConfig
+     * @param ConfigHelper $configHelper
+     * @param BaseProductModel $product
+     * @param Authenticator $authenticator
      */
     public function __construct(
         ResourceConnection $connection,
         DeploymentConfig $deploymentConfig,
         BaseProductModel $product,
-        ConfigHelper $configHelper
+        ConfigHelper $configHelper,
+        Authenticator $authenticator
     ) {
         $this->connection       = $connection->getConnection();
         $this->deploymentConfig = $deploymentConfig;
         $this->configHelper     = $configHelper;
         $this->product          = $product;
+        $this->authenticator    = $authenticator;
     }
 
     /**
@@ -170,14 +207,15 @@ class Entities
      *
      * @param array  $result
      * @param string $tableSuffix
+     * @param string|null $family
      *
      * @return $this
      */
-    public function createTmpTableFromApi($result, $tableSuffix)
+    public function createTmpTableFromApi(array $result, string $tableSuffix, ?string $family = null)
     {
         /** @var array $columns */
         $columns = $this->getColumnsFromResult($result);
-        $this->createTmpTable(array_keys($columns), $tableSuffix);
+        $this->createTmpTable(array_keys($columns), $tableSuffix, $family);
 
         return $this;
     }
@@ -187,11 +225,12 @@ class Entities
      *
      * @param array  $fields
      * @param string $tableSuffix
+     * @param string|null $family
      *
      * @return $this
      * @throws \Zend_Db_Exception
      */
-    public function createTmpTable($fields, $tableSuffix)
+    public function createTmpTable(array $fields, string $tableSuffix, ?string $family = null)
     {
         /* Delete table if exists */
         $this->dropTable($tableSuffix);
@@ -226,7 +265,7 @@ class Entities
                 $table->addColumn(
                     $column,
                     Table::TYPE_TEXT,
-                    '2M',
+                    $this->getAttributeColumnLength($family, $column),
                     [],
                     $column
                 );
@@ -347,10 +386,11 @@ class Entities
      *
      * @param array       $result
      * @param null|string $tableSuffix
+     * @param null|string $family
      *
      * @return bool
      */
-    public function insertDataFromApi(array $result, $tableSuffix = null)
+    public function insertDataFromApi(array $result, ?string $tableSuffix = null, ?string $family = null)
     {
         if (empty($result)) {
             return false;
@@ -377,7 +417,7 @@ class Entities
                     $key,
                     [
                         'type'    => 'text',
-                        'length'  => '2M',
+                        'length'  => $this->getAttributeColumnLength($family, $key), // Get correct column length
                         'default' => null,
                         'COMMENT' => ' '
                     ]
@@ -721,10 +761,11 @@ class Entities
      * @param string $tableName
      * @param string $source
      * @param string $target
+     * @param string|null $family
      *
      * @return \Akeneo\Connector\Helper\Import\Entities
      */
-    public function copyColumn($tableName, $source, $target)
+    public function copyColumn(string $tableName, string $source, string $target, ?string $family = null)
     {
         /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
@@ -734,8 +775,8 @@ class Entities
                 $tableName,
                 $target,
                 [
-                    'type'     => 'text',
-                    'length'   => '2M',
+                    'type'    => 'text',
+                    'length'  => $this->getAttributeColumnLength($family, $target), // Get correct column length
                     'default' => '',
                     'COMMENT' => ' '
                 ]
@@ -978,5 +1019,95 @@ class Entities
         }
 
         return $mysqlVersion['version'];
+    }
+
+    /**
+     * Get family attributes database recommended length
+     *
+     * @param string $familyCode
+     *
+     * @return mixed[]
+     */
+    protected function getAttributesLength(string $familyCode): array
+    {
+        /** @var AkeneoPimClientInterface|false $akeneoClient */
+        $akeneoClient = $this->authenticator->getAkeneoApiClient();
+
+        if (!empty($this->attributeLength[$familyCode]) || !$akeneoClient) {
+            return $this->attributeLength[$familyCode];
+        }
+
+        $attributeTypesLength = self::ATTRIBUTE_TYPES_LENGTH;
+        /** @var mixed[] $family */
+        $family = $akeneoClient->getFamilyApi()->get($familyCode);
+        /** @var string[] $familyAttributesCode */
+        $familyAttributesCode = $family['attributes'] ?? [];
+        /** @var string|int $paginationSize */
+        $paginationSize = $this->configHelper->getPaginationSize();
+        $searchAttributesResult = [];
+        $searchAttributesCode = [];
+        // Batch API calls to avoid too large request URI
+        foreach ($familyAttributesCode as $attributeCode) {
+            $searchAttributesCode[] = $attributeCode;
+            if (count($searchAttributesCode) === $paginationSize) {
+                $searchAttributesResult[] = $akeneoClient->getAttributeApi()->all($paginationSize, [
+                    'search' => [
+                        'code' => [
+                            [
+                                'operator' => 'IN',
+                                'value' => $searchAttributesCode,
+                            ],
+                        ],
+                    ],
+                ]);
+                $searchAttributesCode = [];
+            }
+        }
+        // Don't forget last page of attributes
+        if (count($searchAttributesCode) > 1) {
+            $searchAttributesResult[] = $akeneoClient->getAttributeApi()->all($paginationSize, [
+                'search' => [
+                    'code' => [
+                        [
+                            'operator' => 'IN',
+                            'value' => $searchAttributesCode,
+                        ],
+                    ],
+                ],
+            ]);
+        }
+
+        /** @var ResourceCursor $familyAttributes */
+        foreach ($searchAttributesResult as $familyAttributes) {
+            foreach ($familyAttributes as $attribute) {
+                if (!isset($attribute['code'], $attribute['type'])) {
+                    continue;
+                }
+                $attributeCode = $attribute['code'];
+                $attributeType = $attribute['type'];
+
+                $this->attributeLength[$familyCode][$attributeCode] = $attributeTypesLength[$attributeType];            }
+        }
+
+        return $this->attributeLength[$familyCode];
+    }
+
+    /**
+     * Get attribute column length with family ATTRIBUTE_TYPES_LENGTH
+     *
+     * @param string|null $familyCode
+     * @param string $attributeCode
+     *
+     * @return string|null
+     */
+    public function getAttributeColumnLength(?string $familyCode, string $attributeCode): ?string
+    {
+        if (!$familyCode) {
+            return null;
+        }
+
+        $attributesLength = $this->getAttributesLength($familyCode);
+        $attributeColumnLength = $attributesLength[strtok($attributeCode, '-')] ?? self::LARGE_ATTRIBUTE_LENGTH; // Add 2M by default to ensure "fake" reference entity attributes correct length
+        return $attributeColumnLength === self::DEFAULT_ATTRIBUTE_LENGTH ? null : $attributeColumnLength; // Return null value for default attributes length
     }
 }
