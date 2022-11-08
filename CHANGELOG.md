@@ -377,3 +377,6 @@
 
 ### Version 103.0.8 :
 * Fix URL rewrite generation when multiple url keys are duplicated
+
+### Version 103.2.0 :
+* Improve column sizes per attribute type inside product temporary table in order to reduce the MYSQL table volume
