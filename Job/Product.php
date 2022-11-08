@@ -389,7 +389,8 @@ class Product extends JobImport
         }
 
         // Stop the import if the family is not imported
-        if ($this->getFamily()) {
+        $family = $this->getFamily();
+        if ($family) {
             /** @var AdapterInterface $connection */
             $connection = $this->entitiesHelper->getConnection();
             /** @var string $connectorEntitiesTable */
@@ -398,13 +399,13 @@ class Product extends JobImport
             $isFamilyImported = (bool)$connection->fetchOne(
                 $connection->select()
                     ->from($connectorEntitiesTable, ['code'])
-                    ->where('code = ?', $this->getFamily())
+                    ->where('code = ?', $family)
                     ->limit(1)
             );
 
             if (!$isFamilyImported) {
                 $this->jobExecutor->setAdditionalMessage(
-                    __('The family %1 is not imported yet, please run Family import.', $this->getFamily()),
+                    __('The family %1 is not imported yet, please run Family import.', $family),
                     $this->logger
                 );
                 $this->jobExecutor->afterRun(true);
@@ -414,7 +415,7 @@ class Product extends JobImport
         }
 
         /** @var mixed[] $filters */
-        $filters = $this->getFilters($this->getFamily());
+        $filters = $this->getFilters($family);
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logger->debug(__('Product API call Filters : ') . print_r($filters, true));
         }
@@ -432,9 +433,9 @@ class Product extends JobImport
 
         if (empty($products)) {
             // No product were found and we're in a grouped family, we don't import product models for it, so we stop the import
-            if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+            if ($this->entitiesHelper->isFamilyGrouped($family)) {
                 $this->jobExecutor->setAdditionalMessage(
-                    __('No results from Akeneo for the family: %1', $this->getFamily()),
+                    __('No results from Akeneo for the family: %1', $family),
                     $this->logger
                 )->afterRun(null, true);
 
@@ -442,7 +443,7 @@ class Product extends JobImport
             }
 
             /** @var mixed[] $modelFilters */
-            $modelFilters = $this->getProductModelFilters($this->getFamily());
+            $modelFilters = $this->getProductModelFilters($family);
             foreach ($modelFilters as $filter) {
                 /** @var PageInterface $productModels */
                 $productModels = $this->akeneoClient->getProductModelApi()->listPerPage(1, false, $filter);
@@ -456,17 +457,17 @@ class Product extends JobImport
 
             if (empty($productModels)) {
                 $this->jobExecutor->setAdditionalMessage(
-                    __('No results from Akeneo for the family: %1', $this->getFamily()),
+                    __('No results from Akeneo for the family: %1', $family),
                     $this->logger
                 )->afterRun(null, true);
 
                 return;
             }
             $productModel = reset($productModels);
-            $this->entitiesHelper->createTmpTableFromApi($productModel, $this->jobExecutor->getCurrentJob()->getCode());
-            $this->entitiesHelper->createTmpTableFromApi($productModel, 'product_model');
+            $this->entitiesHelper->createTmpTableFromApi($productModel, $this->jobExecutor->getCurrentJob()->getCode(), $family);
+            $this->entitiesHelper->createTmpTableFromApi($productModel, 'product_model', $family);
             $this->jobExecutor->setAdditionalMessage(
-                __('No product found for family: %1 but product model found, process with import', $this->getFamily()),
+                __('No product found for family: %1 but product model found, process with import', $family),
                 $this->logger
             );
 
@@ -475,10 +476,10 @@ class Product extends JobImport
             $product = reset($products);
             // Make sure to delete product model table
             $this->entitiesHelper->dropTable('product_model');
-            $this->entitiesHelper->createTmpTableFromApi($product, $this->jobExecutor->getCurrentJob()->getCode());
+            $this->entitiesHelper->createTmpTableFromApi($product, $this->jobExecutor->getCurrentJob()->getCode(), $family);
 
             /** @var string $message */
-            $message = __('Family imported in this batch: %1', $this->getFamily());
+            $message = __('Family imported in this batch: %1', $family);
             $this->jobExecutor->setAdditionalMessage($message, $this->logger);
         }
     }
@@ -494,8 +495,9 @@ class Product extends JobImport
         $paginationSize = $this->configHelper->getPaginationSize();
         /** @var int $index */
         $index = 0;
+        $family = $this->getFamily();
         /** @var mixed[] $filters */
-        $filters = $this->getFilters($this->getFamily());
+        $filters = $this->getFilters($family);
         /** @var mixed[] $metricsConcatSettings */
         $metricsConcatSettings = $this->configHelper->getMetricsColumns(null, true);
         /** @var string[] $metricSymbols */
@@ -661,7 +663,8 @@ class Product extends JobImport
                 /** @var bool $result */
                 $result = $this->entitiesHelper->insertDataFromApi(
                     $product,
-                    $this->jobExecutor->getCurrentJob()->getCode()
+                    $this->jobExecutor->getCurrentJob()->getCode(),
+                    $family
                 );
 
                 if (!$result) {
@@ -729,19 +732,20 @@ class Product extends JobImport
      */
     public function productModelImport()
     {
-        if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+        $family = $this->getFamily();
+        if ($this->entitiesHelper->isFamilyGrouped($family)) {
             return;
         }
 
         /** @var string[] $messages */
         $messages = [];
         /** @var mixed[] $filters */
-        $filters = $this->getProductModelFilters($this->getFamily());
+        $filters = $this->getProductModelFilters($family);
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logger->debug(__('Product Model API call Filters : ') . print_r($filters, true));
         }
         /** @var mixed[] $step */
-        $step = $this->productModelHelper->createTable($this->akeneoClient, $filters);
+        $step = $this->productModelHelper->createTable($this->akeneoClient, $filters, $family);
         $messages[] = $step;
         if (array_keys(array_column($step, 'status'), false)) {
             $this->jobExecutor->displayMessages($messages, $this->logger);
@@ -750,7 +754,7 @@ class Product extends JobImport
         }
 
         /** @var mixed[] $stepInsertData */
-        $step = $this->productModelHelper->insertData($this->akeneoClient, $filters);
+        $step = $this->productModelHelper->insertData($this->akeneoClient, $filters, $family);
         $messages[] = $step;
         if (array_keys(array_column($step, 'status'), false)) {
             $this->jobExecutor->displayMessages($messages, $this->logger);
@@ -758,7 +762,7 @@ class Product extends JobImport
             return;
         }
         // Add missing columns from product models in product tmp table
-        $this->productModelHelper->addColumns($this->jobExecutor->getCurrentJob()->getCode());
+        $this->productModelHelper->addColumns($this->jobExecutor->getCurrentJob()->getCode(), $family);
 
         $this->jobExecutor->displayMessages($messages, $this->logger);
     }
@@ -770,7 +774,8 @@ class Product extends JobImport
      */
     public function familyVariantImport()
     {
-        if ($this->entitiesHelper->isFamilyGrouped($this->getFamily())) {
+        $family = $this->getFamily();
+        if ($this->entitiesHelper->isFamilyGrouped($family)) {
             return;
         }
 
@@ -781,7 +786,7 @@ class Product extends JobImport
             $messages = [];
 
             /** @var mixed[] $step */
-            $step = $this->familyVariantHelper->createTable($this->akeneoClient, $this->getFamily());
+            $step = $this->familyVariantHelper->createTable($this->akeneoClient, $family);
             $messages[] = $step;
             if (array_keys(array_column($step, 'status'), false)) {
                 $this->jobExecutor->displayMessages($messages, $this->logger);
@@ -789,7 +794,7 @@ class Product extends JobImport
                 return;
             }
             /** @var mixed[] $step */
-            $step = $this->familyVariantHelper->insertData($this->akeneoClient, $this->getFamily());
+            $step = $this->familyVariantHelper->insertData($this->akeneoClient, $family);
             $messages[] = $step;
             if (array_keys(array_column($step, 'status'), false)) {
                 $this->jobExecutor->displayMessages($messages, $this->logger);
@@ -837,6 +842,7 @@ class Product extends JobImport
      */
     public function addRequiredData()
     {
+        $family = $this->getFamily();
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
@@ -846,7 +852,7 @@ class Product extends JobImport
         $edition = $this->configHelper->getEdition();
         // If family is grouped, create grouped products
         if (($edition === Edition::SERENITY || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::GROWTH) && $this->entitiesHelper->isFamilyGrouped(
-                $this->getFamily()
+                $family
             )
         ) {
             $connection->addColumn(
@@ -1020,7 +1026,7 @@ class Product extends JobImport
             /** @var string $magentoAttribute */
             $magentoAttribute = $match['magento_attribute'];
 
-            $this->entitiesHelper->copyColumn($tmpTable, $pimAttribute, $magentoAttribute);
+            $this->entitiesHelper->copyColumn($tmpTable, $pimAttribute, $magentoAttribute, $family);
 
             /**
              * @var string $local
@@ -1030,7 +1036,8 @@ class Product extends JobImport
                 $this->entitiesHelper->copyColumn(
                     $tmpTable,
                     $pimAttribute . '-' . $local,
-                    $magentoAttribute . '-' . $local
+                    $magentoAttribute . '-' . $local,
+                    $family
                 );
             }
         }
@@ -1088,7 +1095,7 @@ class Product extends JobImport
                     'labels' => $labels,
                 ];
 
-                $this->entitiesHelper->insertDataFromApi($insertedData, $this->jobOption->getCode());
+                $this->entitiesHelper->insertDataFromApi($insertedData, $this->jobOption->getCode(), $this->getFamily());
             }
         }
 
