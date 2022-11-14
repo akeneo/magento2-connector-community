@@ -604,4 +604,31 @@ class Product extends Entities
 
         return false;
     }
+
+    /**
+     * Retrieve attributes that are filterable into imported family
+     * Compare family attributes to product and product model filters
+     * If filter is disabled or empty, return all uniques family attributes
+     *
+     * @param mixed[] $familyAttributesCode
+     * @param mixed[] $productFilters
+     * @param mixed[] $productModelFilters
+     *
+     * @return string[]
+     */
+    public function getFilterableFamilyAttributes(array $familyAttributesCode, array $productFilters, array $productModelFilters): array
+    {
+        $filterableAttributes = [];
+        $filters = array_merge($productFilters, $productModelFilters);
+        /** @var mixed[] $filter */
+        foreach ($filters as $filter) {
+            $attributesCodes = explode(',', $filter['attributes'] ?? '');
+            $filterableAttributes = array_merge($filterableAttributes, $attributesCodes);
+        }
+
+        $filterableFamilyAttributes =
+            array_intersect($familyAttributesCode, $filterableAttributes); // Get only filterable family attribute
+
+        return !empty($filterableFamilyAttributes) ? array_unique($filterableFamilyAttributes) : $familyAttributesCode;
+    }
 }
