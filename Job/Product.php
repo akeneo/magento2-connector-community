@@ -27,6 +27,7 @@ use Akeneo\Connector\Model\Source\Filters\Mode;
 use Akeneo\Connector\Model\Source\Filters\ModelCompleteness;
 use Akeneo\Connector\Model\Source\StatusMode;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
+use Akeneo\Pim\ApiClient\Pagination\ResourceCursor;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Exception;
 use Magento\Bundle\Model\Product\Type as BundleType;
@@ -1338,6 +1339,123 @@ class Product extends JobImport
                 $values,
                 []
             );
+        }
+    }
+
+    /**
+     * Create empty localizable and scopable attributes columns
+     * If attribute is unset on Akeneo, create a null column into tmp table to empty attribute value on Magento
+     * Multiple columns can be created for each attribut. It depends on the scopes and locales enabled
+     * There is 4 cases for each attribute :
+     * 1. Localizable and scopable (Ex: name-en_EN-ecommerce)
+     * 2. Only scopable (Ex: name-ecommerce)
+     * 3. Only localizable (Ex: name-en_EN)
+     * 4. None of them (Ex: name)
+     *
+     * @return void
+     * @throws LocalizedException
+     */
+    public function createEmptyAttributesColumns(): void
+    {
+        $akeneoClient = $this->akeneoClient;
+        /** @var string[] $scopesCodes */
+        $scopesCodes = array_keys($this->storeHelper->getStores(['channel_code'])); // channel
+        /** @var string[] $localesCodes */
+        $localesCodes = array_keys($this->storeHelper->getStores(['lang'])); // en_US
+        /** @var string[] $localizableScopeCodes */
+        $localizableScopeCodes = array_keys($this->storeHelper->getStores(['lang', 'channel_code'])); // en_US-channel
+        /** @var mixed[] $family */
+        $family = $akeneoClient->getFamilyApi()->get($this->getFamily());
+        /** @var string[] $familyAttributesCode */
+        $familyAttributesCode = $family['attributes'] ?? [];
+        /** @var mixed[] $productFilters */
+        $productFilters = $this->getFilters($family);
+        /** @var mixed[] $productModelFilters */
+        $productModelFilters = $this->getProductModelFilters($family);
+        /** @var string|int $paginationSize */
+        $paginationSize = $this->configHelper->getPaginationSize();
+        $filterableFamilyAttributes = array_diff(
+            $this->entitiesHelper->getFilterableFamilyAttributes($familyAttributesCode, $productFilters, $productModelFilters),
+            $this->excludedColumns
+        ); // Remove excluded attributes from filterable attributes
+        $searchAttributesResult = [];
+        $searchAttributesCode = [];
+        // Batch API calls to avoid too large request URI
+        foreach ($filterableFamilyAttributes as $attributeCode) {
+            $searchAttributesCode[] = $attributeCode;
+            if (count($searchAttributesCode) === $paginationSize) {
+                $searchAttributesResult[] = $akeneoClient->getAttributeApi()->all($paginationSize, [
+                    'search' => [
+                        'code' => [
+                            [
+                                'operator' => 'IN',
+                                'value' => $searchAttributesCode,
+                            ],
+                        ],
+                    ],
+                ]);
+                $searchAttributesCode = [];
+            }
+        }
+        // Don't forget last page of attributes
+        if (count($searchAttributesCode) > 1) {
+            $searchAttributesResult[] = $akeneoClient->getAttributeApi()->all($paginationSize, [
+                'search' => [
+                    'code' => [
+                        [
+                            'operator' => 'IN',
+                            'value' => $searchAttributesCode,
+                        ],
+                    ],
+                ],
+            ]);
+        }
+
+        $columns = [];
+        /** @var ResourceCursor $familyAttributes */
+        foreach ($searchAttributesResult as $familyAttributes) {
+            foreach ($familyAttributes as $attribute) {
+                $attributeCode = $attribute['code'] ?? '';
+                /** @var bool $isScopable */
+                $isScopable = $attribute['scopable'] ?? false;
+                /** @var bool $isLocalizable */
+                $isLocalizable = $attribute['localizable'] ?? false;
+                $variationsCodes = [];
+                if ($isScopable && $isLocalizable) {
+                    $variationsCodes = $localizableScopeCodes;
+                } elseif ($isScopable) {
+                    $variationsCodes = $scopesCodes;
+                } elseif ($isLocalizable) {
+                    $variationsCodes = $localesCodes;
+                } else {
+                    $columns[] = strtolower($attributeCode); // Column name is attribute code (case 4)
+                    continue;
+                }
+
+                foreach ($variationsCodes as $code) {
+                    $columns[] = strtolower($attributeCode) . '-' . $code; // Column name is attribute code with scope or local or both (case 1, 2, 3)
+                }
+            }
+        }
+
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $columnName */
+        foreach ($columns as $columnName) {
+            if (!$connection->tableColumnExists($tmpTable, $columnName)) {
+                $connection->addColumn(
+                    $tmpTable,
+                    $columnName,
+                    [
+                        'type' => 'text',
+                        'length' => '2M',
+                        'default' => null,
+                        'COMMENT' => ' ',
+                    ]
+                );
+            }
         }
     }
 
