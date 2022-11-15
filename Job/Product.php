@@ -95,6 +95,10 @@ class Product extends JobImport
      */
     const CATALOG_PRODUCT_ENTITY_TABLE_NAME = 'catalog_product_entity';
     /**
+     * @var string AKENEO_PRICE_ATTRIBUTE_TYPE
+     */
+    public const AKENEO_PRICE_ATTRIBUTE_TYPE = 'pim_catalog_price_collection';
+    /**
      * This variable contains a string value
      *
      * @var string $code
@@ -1346,11 +1350,13 @@ class Product extends JobImport
      * Create empty localizable and scopable attributes columns
      * If attribute is unset on Akeneo, create a null column into tmp table to empty attribute value on Magento
      * Multiple columns can be created for each attribut. It depends on the scopes and locales enabled
-     * There is 4 cases for each attribute :
+     * There is 4 cases for each attribute (see exception below) :
      * 1. Localizable and scopable (Ex: name-en_EN-ecommerce)
      * 2. Only scopable (Ex: name-ecommerce)
      * 3. Only localizable (Ex: name-en_EN)
      * 4. None of them (Ex: name)
+     * Exception, price attributes can have each case multiplied by the number of enabled currencies
+     * Example : price-en_EN-ecommerce-EUR, price-en_EN-ecommerce-USD, price-ecommerce-EUR, price-ecommerce-USD...
      *
      * @return void
      * @throws LocalizedException
@@ -1398,7 +1404,7 @@ class Product extends JobImport
             }
         }
         // Don't forget last page of attributes
-        if (count($searchAttributesCode) > 1) {
+        if (count($searchAttributesCode) >= 1) {
             $searchAttributesResult[] = $akeneoClient->getAttributeApi()->all($paginationSize, [
                 'search' => [
                     'code' => [
@@ -1411,29 +1417,44 @@ class Product extends JobImport
             ]);
         }
 
+        $currencies = $this->entitiesHelper->getEnabledCurrencies($akeneoClient);
         $columns = [];
         /** @var ResourceCursor $familyAttributes */
         foreach ($searchAttributesResult as $familyAttributes) {
             foreach ($familyAttributes as $attribute) {
-                $attributeCode = $attribute['code'] ?? '';
+                $attributeCode = strtolower($attribute['code'] ?? '');
+                $attributeType = $attribute['type'] ?? '';
                 /** @var bool $isScopable */
                 $isScopable = $attribute['scopable'] ?? false;
                 /** @var bool $isLocalizable */
                 $isLocalizable = $attribute['localizable'] ?? false;
-                $variationsCodes = [];
+                /** @var bool $isPrice */
+                $isPrice = $attributeType === self::AKENEO_PRICE_ATTRIBUTE_TYPE;
                 if ($isScopable && $isLocalizable) {
                     $variationsCodes = $localizableScopeCodes;
                 } elseif ($isScopable) {
                     $variationsCodes = $scopesCodes;
                 } elseif ($isLocalizable) {
                     $variationsCodes = $localesCodes;
+                } elseif ($isPrice) {
+                    foreach ($currencies as $currencyCode) {
+                        $columns[] = $attributeCode . '-' . $currencyCode; // Add currency code to price attribute column name without variation
+                    }
+                    continue;
                 } else {
-                    $columns[] = strtolower($attributeCode); // Column name is attribute code (case 4)
+                    $columns[] = $attributeCode; // Column name is attribute code (case 4)
                     continue;
                 }
 
                 foreach ($variationsCodes as $code) {
-                    $columns[] = strtolower($attributeCode) . '-' . $code; // Column name is attribute code with scope or local or both (case 1, 2, 3)
+                    if ($attributeType !== self::AKENEO_PRICE_ATTRIBUTE_TYPE) {
+                        $columns[] = $attributeCode . '-' . $code; // Column name is attribute code with scope or local or both (case 1, 2, 3)
+                        continue;
+                    }
+
+                    foreach ($currencies as $currencyCode) {
+                        $columns[] = $attributeCode . '-' . $code . '-' . $currencyCode; // Add currency code to price attribute column name with variations
+                    }
                 }
             }
         }

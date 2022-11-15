@@ -650,4 +650,23 @@ class Product extends Entities
 
         return !empty($filterableFamilyAttributes) ? array_unique($filterableFamilyAttributes) : $familyAttributesCode;
     }
+
+    /**
+     * @param AkeneoPimClientInterface $akeneoClient
+     *
+     * @return string[]
+     */
+    public function getEnabledCurrencies(AkeneoPimClientInterface $akeneoClient): array
+    {
+        $currencies = $akeneoClient->getCurrencyApi()->all();
+        $enabledCurrencies = [];
+        /** @var mixed[] $currency */
+        foreach ($currencies as $currency) {
+            if (isset($currency['enabled'], $currency['code']) && $currency['enabled']) {
+                $enabledCurrencies[] = $currency['code'];
+            }
+        }
+
+        return $enabledCurrencies;
+    }
 }
