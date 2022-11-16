@@ -1471,7 +1471,7 @@ class Product extends JobImport
                     $columnName,
                     [
                         'type' => 'text',
-                        'length' => '2M',
+                        'length' => null,
                         'default' => null,
                         'COMMENT' => ' ',
                     ]
