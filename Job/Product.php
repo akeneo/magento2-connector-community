@@ -3799,21 +3799,19 @@ class Product extends JobImport
                             $locale = null;
                             /** @var string|null $scope */
                             $scope = null;
-                            if (str_contains($suffix, '-')) {
-                                /** @var string[] $suffixs */
-                                $suffixs = explode('-', $suffix);
-                                if (isset($suffixs[0])) {
-                                    $locale = $suffixs[0];
-                                }
-                                if (isset($suffixs[1])) {
-                                    $scope = $suffixs[1];
-                                }
-                            } elseif (str_contains($suffix, '_')) {
-                                if (isset($suffix)) {
+                            if ($suffix) {
+                                if (str_contains($suffix, '-')) {
+                                    /** @var string[] $suffixs */
+                                    $suffixs = explode('-', $suffix);
+                                    if (isset($suffixs[0])) {
+                                        $locale = $suffixs[0];
+                                    }
+                                    if (isset($suffixs[1])) {
+                                        $scope = $suffixs[1];
+                                    }
+                                } elseif (str_contains($suffix, '_')) {
                                     $locale = $suffix;
-                                }
-                            } else {
-                                if (isset($suffix)) {
+                                } else {
                                     $scope = $suffix;
                                 }
                             }
