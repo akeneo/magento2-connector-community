@@ -380,3 +380,6 @@
 
 ### Version 103.2.0 :
 * Improve column sizes per attribute type inside product temporary table in order to reduce the MYSQL table volume
+
+### Version 103.2.1 :
+* Fix product model completeness filter channel value when multiple channels are mapped to different websites
