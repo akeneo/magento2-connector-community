@@ -27,6 +27,16 @@ use Magento\Framework\Exception\AlreadyExistsException;
 class MassSchedule extends Action
 {
     /**
+     * In
+     */
+    private const CONDITION_TYPE_IN = 'in';
+
+    /**
+     * Not In
+     */
+    private const CONDITION_TYPE_NIN = 'nin';
+
+    /**
      * Description $collectionFactory field
      *
      * @var CollectionFactory $collectionFactory
@@ -75,22 +85,29 @@ class MassSchedule extends Action
     public function execute()
     {
         /** @var int[] $ids */
-        $ids = $this->getRequest()->getParam('selected') ?? [];
-        $ids[] = $this->getRequest()->getParam('entity_id');
+        $ids = $this->getRequest()->getParam('selected') ?? []; // Mass action from checkbox
+        $ids[] = $this->getRequest()->getParam('entity_id'); // Mass action from Action column
+        $condition = self::CONDITION_TYPE_IN;
+
+        if (!!$this->getRequest()->getParam('excluded')) {
+            $ids = $this->getRequest()->getParam('excluded');
+            $condition = self::CONDITION_TYPE_NIN;
+        }
+
         /** @var Collection $collection */
         $collection = $this->collectionFactory->create();
-        if (!$this->getRequest()->getParam('excluded')) {
-            $collection->addFieldToFilter(JobInterface::ENTITY_ID, ['in' => $ids]);
-        }
+        $collection->addFieldToFilter(JobInterface::ENTITY_ID, [$condition => $ids]);
+
         /** @var JobInterface $job */
         foreach ($collection->getItems() as $job) {
             if ($this->jobExecutor->checkStatusConditions($job, true)) {
+                $message = ($this->configHelper->getEnableJobGridAutoReload())
+                    ? 'Job %1 correctly scheduled.'
+                    : 'Job %1 correctly scheduled. Please refresh the page in a few minutes to check the progress.'
+                    ;
                 $this->jobExecutor->setJobStatus(JobInterface::JOB_SCHEDULED, $job);
                 $this->messageManager->addSuccessMessage(
-                    __(
-                        'Job %1 correctly scheduled. Please refresh the page in a few minutes to check the progress.',
-                        $job->getName()
-                    )
+                    __($message, $job->getName())
                 );
             }
         }

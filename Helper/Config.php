@@ -338,24 +338,6 @@ class Config
      */
     public const ATTRIBUTE_FILTERS_BY_CODE = 'akeneo_connector/filter_attribute/filter_attribute_code';
     /**
-     * Akeneo master of staging content flag config path
-     *
-     * @var string PRODUCT_ASSOCIATION_RELATED
-     */
-    public const PRODUCT_ASSOCIATION_RELATED = 'akeneo_connector/product/association_related';
-    /**
-     * Akeneo master of staging content flag config path
-     *
-     * @var string PRODUCT_ASSOCIATION_UPSELL
-     */
-    public const PRODUCT_ASSOCIATION_UPSELL = 'akeneo_connector/product/association_upsell';
-    /**
-     * Akeneo master of staging content flag config path
-     *
-     * @var string PRODUCT_AKENEO_MASTER
-     */
-    public const PRODUCT_ASSOCIATION_CROSSELL = 'akeneo_connector/product/association_crossell';
-    /**
      * Product activation flag config path
      *
      * @var string PRODUCT_ACTIVATION
@@ -504,6 +486,12 @@ class Config
      */
     const EMAIL_JOB_REPORT_RECIPIENT = 'akeneo_connector/advanced/email_job_report_recipient';
     /**
+     * Enable job grid auto reload path
+     *
+     * @var string EMAIL_JOB_REPORT_RECIPIENT
+     */
+    const ENABLE_JOB_GRID_AUTO_RELOAD = 'akeneo_connector/advanced/enable_job_grid_auto_reload';
+    /**
      * Email name job report from
      *
      * @var string EMAIL_JOB_REPORT_FROM_NAME
@@ -573,14 +561,14 @@ class Config
     /**
      * Config constructor
      *
-     * @param Encryptor                     $encryptor
-     * @param Json                          $jsonSerializer
-     * @param EavConfig                     $eavConfig
-     * @param StoreManagerInterface         $storeManager
+     * @param Encryptor $encryptor
+     * @param Json $jsonSerializer
+     * @param EavConfig $eavConfig
+     * @param StoreManagerInterface $storeManager
      * @param CatalogInventoryConfiguration $catalogInventoryConfiguration
-     * @param Filesystem                    $filesystem
-     * @param MediaConfig                   $mediaConfig
-     * @param ScopeConfigInterface          $scopeConfig
+     * @param Filesystem $filesystem
+     * @param MediaConfig $mediaConfig
+     * @param ScopeConfigInterface $scopeConfig
      *
      * @throws FileSystemException
      */
@@ -594,14 +582,14 @@ class Config
         MediaConfig $mediaConfig,
         ScopeConfigInterface $scopeConfig
     ) {
-        $this->encryptor                     = $encryptor;
-        $this->jsonSerializer                = $jsonSerializer;
-        $this->eavConfig                     = $eavConfig;
-        $this->storeManager                  = $storeManager;
-        $this->mediaConfig                   = $mediaConfig;
+        $this->encryptor = $encryptor;
+        $this->jsonSerializer = $jsonSerializer;
+        $this->eavConfig = $eavConfig;
+        $this->storeManager = $storeManager;
+        $this->mediaConfig = $mediaConfig;
         $this->catalogInventoryConfiguration = $catalogInventoryConfiguration;
-        $this->mediaDirectory                = $filesystem->getDirectoryWrite(DirectoryList::MEDIA);
-        $this->scopeConfig                   = $scopeConfig;
+        $this->mediaDirectory = $filesystem->getDirectoryWrite(DirectoryList::MEDIA);
+        $this->scopeConfig = $scopeConfig;
     }
 
     /**
@@ -670,8 +658,12 @@ class Config
      */
     public function checkAkeneoApiCredentials()
     {
-        if (!$this->getAkeneoApiBaseUrl() || !$this->getAkeneoApiClientId() || !$this->getAkeneoApiClientSecret(
-            ) || !$this->getAkeneoApiPassword() || !$this->getAkeneoApiUsername()) {
+        if (!$this->getAkeneoApiBaseUrl() 
+            || !$this->getAkeneoApiClientId() 
+            || !$this->getAkeneoApiClientSecret() 
+            || !$this->getAkeneoApiPassword() 
+            || !$this->getAkeneoApiUsername()
+        ) {
             return false;
         }
 
@@ -1204,7 +1196,8 @@ class Config
         if (!$classes) {
             return $result;
         }
-        /** @var mixed[] $classes */
+
+        /** @var string[] $classes */
         $classes = $this->jsonSerializer->unserialize($classes);
         if (!is_array($classes)) {
             return $result;
@@ -1292,15 +1285,12 @@ class Config
      */
     public function getMediaImportImagesColumns()
     {
-        /** @var mixed[] $images */
         $images = [];
-        /** @var string $config */
         $config = $this->scopeConfig->getValue(self::PRODUCT_MEDIA_IMAGES);
         if (!$config) {
             return $images;
         }
 
-        /** @var mixed[] $media */
         $media = $this->jsonSerializer->unserialize($config);
         if (!$media) {
             return $images;
@@ -1445,7 +1435,7 @@ class Config
     /**
      * Get media full path
      *
-     * @param string      $fileName
+     * @param string $fileName
      * @param null|string $subDirectory
      *
      * @return string
@@ -1864,6 +1854,16 @@ class Config
         }
 
         return $matches;
+    }
+
+    /**
+     * Description getEnableJobGridAutoReload function
+     *
+     * @return bool
+     */
+    public function getEnableJobGridAutoReload(): bool
+    {
+        return $this->scopeConfig->isSetFlag(self::ENABLE_JOB_GRID_AUTO_RELOAD, ScopeInterface::SCOPE_STORE);
     }
 
     /**
