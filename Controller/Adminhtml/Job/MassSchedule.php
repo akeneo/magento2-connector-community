@@ -98,13 +98,14 @@ class MassSchedule extends Action
         $collection = $this->collectionFactory->create();
         $collection->addFieldToFilter(JobInterface::ENTITY_ID, [$condition => $ids]);
 
+        $message = ($this->configHelper->getEnableJobGridAutoReload())
+            ? 'Job %1 correctly scheduled.'
+            : 'Job %1 correctly scheduled. Please refresh the page in a few minutes to check the progress.'
+        ;
+
         /** @var JobInterface $job */
         foreach ($collection->getItems() as $job) {
             if ($this->jobExecutor->checkStatusConditions($job, true)) {
-                $message = ($this->configHelper->getEnableJobGridAutoReload())
-                    ? 'Job %1 correctly scheduled.'
-                    : 'Job %1 correctly scheduled. Please refresh the page in a few minutes to check the progress.'
-                    ;
                 $this->jobExecutor->setJobStatus(JobInterface::JOB_SCHEDULED, $job);
                 $this->messageManager->addSuccessMessage(
                     __($message, $job->getName())

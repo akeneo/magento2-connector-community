@@ -490,7 +490,7 @@ class Config
      *
      * @var string EMAIL_JOB_REPORT_RECIPIENT
      */
-    const ENABLE_JOB_GRID_AUTO_RELOAD = 'akeneo_connector/advanced/enable_job_grid_auto_reload';
+    private const ENABLE_JOB_GRID_AUTO_RELOAD = 'akeneo_connector/advanced/enable_job_grid_auto_reload';
     /**
      * Email name job report from
      *
@@ -1856,11 +1856,6 @@ class Config
         return $matches;
     }
 
-    /**
-     * Description getEnableJobGridAutoReload function
-     *
-     * @return bool
-     */
     public function getEnableJobGridAutoReload(): bool
     {
         return $this->scopeConfig->isSetFlag(self::ENABLE_JOB_GRID_AUTO_RELOAD, ScopeInterface::SCOPE_STORE);
