@@ -18,15 +18,8 @@ use Magento\Ui\Component\Listing\Columns\Column;
  */
 class ActionsColumn extends Column
 {
-    private UrlInterface $urlBuilder;
+    protected UrlInterface $urlBuilder;
 
-    /**
-     * @param ContextInterface $context
-     * @param UiComponentFactory $uiComponentFactory
-     * @param UrlInterface $urlBuilder
-     * @param array $components
-     * @param array $data
-     */
     public function __construct(
         ContextInterface $context,
         UiComponentFactory $uiComponentFactory,
@@ -39,31 +32,28 @@ class ActionsColumn extends Column
         $this->urlBuilder = $urlBuilder;
     }
 
-    /**
-     * Description prepareDataSource function
-     *
-     * @param array[] $dataSource
-     *
-     * @return array[]
-     */
     public function prepareDataSource(array $dataSource): array
     {
-        if (isset($dataSource['data']['items'])) {
-            foreach ($dataSource['data']['items'] as & $item) {
-                if (isset($item['entity_id'])) {
-                    /** @var string $scheduleJobPath */
-                    $scheduleJobPath = $this->getData('config/scheduleJobPath') ?: '#';
-                    $scheduleJobUrl =  $this->urlBuilder->getUrl($scheduleJobPath,['entity_id' => $item['entity_id']]);
-                    /** @var string $viewJobLogPath */
-                    $viewJobLogPath = $this->getData('config/viewJobLogPath') ?: '#';
-                    $viewJobLogPathFilter = base64_encode(JobInterface::CODE . '=' . $item['code']);
-                    $viewJobLogUrl =  $this->urlBuilder->getUrl($viewJobLogPath, ['filter' => $viewJobLogPathFilter]);
+        if (!isset($dataSource['data']['items'])) {
+            return $dataSource;
+        }
 
-                    $html = '<a href="' . $scheduleJobUrl . '">' . __('Schedule Job') . '</a> / ';
-                    $html .= '<a href="' . $viewJobLogUrl . '">' . __('View Logs') . '</a>';
-                    $item['actions'] = $html;
-                }
+        /** @var string $scheduleJobPath */
+        $scheduleJobPath = $this->getData('config/scheduleJobPath') ?: '#';
+        /** @var string $viewJobLogPath */
+        $viewJobLogPath = $this->getData('config/viewJobLogPath') ?: '#';
+
+        foreach ($dataSource['data']['items'] as &$item) {
+            if (!isset($item['entity_id'])) {
+                continue;
             }
+            $scheduleJobUrl =  $this->urlBuilder->getUrl($scheduleJobPath,['entity_id' => $item['entity_id']]);
+            $viewJobLogPathFilter = base64_encode(JobInterface::CODE . '=' . $item['code']);
+            $viewJobLogUrl =  $this->urlBuilder->getUrl($viewJobLogPath, ['filter' => $viewJobLogPathFilter]);
+
+            $html = '<a href="' . $scheduleJobUrl . '">' . __('Schedule Job') . '</a> / ';
+            $html .= '<a href="' . $viewJobLogUrl . '">' . __('View Logs') . '</a>';
+            $item['actions'] = $html;
         }
 
         return $dataSource;

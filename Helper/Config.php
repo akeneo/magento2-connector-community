@@ -490,7 +490,7 @@ class Config
      *
      * @var string EMAIL_JOB_REPORT_RECIPIENT
      */
-    private const ENABLE_JOB_GRID_AUTO_RELOAD = 'akeneo_connector/advanced/enable_job_grid_auto_reload';
+    public const ENABLE_JOB_GRID_AUTO_RELOAD = 'akeneo_connector/advanced/enable_job_grid_auto_reload';
     /**
      * Email name job report from
      *
@@ -658,10 +658,10 @@ class Config
      */
     public function checkAkeneoApiCredentials()
     {
-        if (!$this->getAkeneoApiBaseUrl() 
-            || !$this->getAkeneoApiClientId() 
-            || !$this->getAkeneoApiClientSecret() 
-            || !$this->getAkeneoApiPassword() 
+        if (!$this->getAkeneoApiBaseUrl()
+            || !$this->getAkeneoApiClientId()
+            || !$this->getAkeneoApiClientSecret()
+            || !$this->getAkeneoApiPassword()
             || !$this->getAkeneoApiUsername()
         ) {
             return false;

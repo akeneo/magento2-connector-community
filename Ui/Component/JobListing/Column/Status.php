@@ -15,32 +15,20 @@ use Magento\Ui\Component\Listing\Columns\Column;
  */
 class Status extends Column
 {
-    /**
-     * Description prepareDataSource function
-     *
-     * @param array[] $dataSource
-     *
-     * @return array[]
-     */
-    public function prepareDataSource(array $dataSource): array {
+    public function prepareDataSource(array $dataSource): array
+    {
+        if (!isset($dataSource['data']['items'])) {
+            return $dataSource;
+        }
 
-        if (isset($dataSource['data']['items'])) {
-            foreach ($dataSource['data']['items'] as &$item) {
-                $item['raw_status'] = $item['status'];
-                $item['status'] = $this->getLabel($item['status']);
-            }
+        foreach ($dataSource['data']['items'] as &$item) {
+            $item['raw_status'] = $item['status'];
+            $item['status'] = $this->getLabel($item['status']);
         }
 
         return $dataSource;
     }
 
-    /**
-     * Description getLabel function
-     *
-     * @param string $status
-     *
-     * @return string
-     */
     private function getLabel(string $status): string
     {
         $class = '';
