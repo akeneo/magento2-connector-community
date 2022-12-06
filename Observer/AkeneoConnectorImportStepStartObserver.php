@@ -61,12 +61,17 @@ class AkeneoConnectorImportStepStartObserver implements ObserverInterface
     {
         /** @var JobExecutor $executor */
         $executor = $observer->getEvent()->getImport();
+        /** @var Import $currentJobClass */
+        $currentJobClass = $executor->getCurrentJobClass();
+        /** @var string $nameExtension */
+        $nameExtension = $currentJobClass->getFamily() ? ' - ' . $currentJobClass->getFamily() : '';
+
         if ($executor->getStep() == 0) {
             /** @var LogModel $log */
             $log = $this->logFactory->create();
             $log->setIdentifier($executor->getIdentifier());
             $log->setCode($executor->getCurrentJob()->getCode());
-            $log->setName($executor->getCurrentJobClass()->getName());
+            $log->setName($executor->getCurrentJobClass()->getName() . $nameExtension);
             $log->setStatus(JobInterface::JOB_PROCESSING); // processing
             $this->logRepository->save($log);
         } else {
