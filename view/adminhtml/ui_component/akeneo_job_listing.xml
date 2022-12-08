@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+/**
+ * @package   Akeneo\Connector\view\adminhtml\ui_component
+ * @author    Agence Dn'D <contact@dnd.fr>
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @link      https://www.dnd.fr/
+ */
+-->
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">akeneo_job_listing.akeneo_job_listing_data_source</item>
+        </item>
+    </argument>
+    <settings>
+        <spinner>akeneo_job_columns</spinner>
+        <deps>
+            <dep>akeneo_job_listing.akeneo_job_listing_data_source</dep>
+        </deps>
+    </settings>
+    <dataSource name="akeneo_job_listing_data_source" component="Magento_Ui/js/grid/provider">
+        <settings>
+            <updateUrl path="mui/index/render"/>
+        </settings>
+        <dataProvider class="Magento\Framework\View\Element\UiComponent\DataProvider\DataProvider" name="akeneo_job_listing_data_source">
+            <settings>
+                <requestFieldName>entity_id</requestFieldName>
+                <primaryFieldName>main_table.entity_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+    <listingToolbar name="listing_top">
+        <bookmark name="bookmarks"/>
+        <columnsControls name="columns_controls"/>
+        <exportButton name="export_button"/>
+        <filterSearch name="fulltext"/>
+        <massaction name="listing_massaction">
+            <action name="schedule">
+                <settings>
+                    <url path="*/job/massSchedule"/>
+                    <type>schedule</type>
+                    <label translate="true">Schedule Job</label>
+                </settings>
+            </action>
+            <action name="reset">
+                <settings>
+                    <url path="*/job/massReset"/>
+                    <type>reset</type>
+                    <label translate="true">Reset Job</label>
+                </settings>
+            </action>
+        </massaction>
+        <paging name="listing_paging"/>
+    </listingToolbar>
+    <columns name="akeneo_job_columns">
+        <selectionsColumn name="ids">
+            <settings>
+                <indexField>entity_id</indexField>
+            </settings>
+        </selectionsColumn>
+        <column name="name">
+            <settings>
+                <label translate="true">Name</label>
+            </settings>
+        </column>
+        <column name="code">
+            <settings>
+                <label translate="true">Code</label>
+            </settings>
+        </column>
+        <column name="status" class="Akeneo\Connector\Ui\Component\JobListing\Column\Status">
+            <settings>
+                <label translate="true">Status</label>
+                <bodyTmpl>ui/grid/cells/html</bodyTmpl>
+            </settings>
+        </column>
+        <column name="scheduled_at">
+            <settings>
+                <label translate="true">Scheduled At</label>
+            </settings>
+        </column>
+        <column name="last_executed_date">
+            <settings>
+                <label translate="true">Last executed date</label>
+            </settings>
+        </column>
+        <column name="last_success_date">
+            <settings>
+                <label translate="true">Last success date</label>
+            </settings>
+        </column>
+        <column name="actions" class="Akeneo\Connector\Ui\Component\JobListing\Column\ActionsColumn">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="scheduleJobPath" xsi:type="string">akeneo_connector/job/massSchedule</item>
+                    <item name="viewJobLogPath" xsi:type="string">akeneo_connector/log/index</item>
+                </item>
+            </argument>
+            <settings>
+                <label translate="true">Actions</label>
+                <bodyTmpl>ui/grid/cells/html</bodyTmpl>
+            </settings>
+        </column>
+    </columns>
+</listing>

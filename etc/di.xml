@@ -12,6 +12,21 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <preference for="Akeneo\Connector\Api\LogRepositoryInterface" type="Akeneo\Connector\Model\LogRepository"/>
 
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="akeneo_job_listing_data_source" xsi:type="string">Akeneo\Connector\Model\ResourceModel\Job\Grid\Collection</item>
+            </argument>
+        </arguments>
+    </type>
+    <virtualType name="Akeneo\Connector\Model\ResourceModel\Job\Grid\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">akeneo_connector_job</argument>
+            <argument name="resourceModel" xsi:type="string">Akeneo\Connector\Model\ResourceModel\Job</argument>
+        </arguments>
+    </virtualType>
+
+
     <type name="Akeneo\Connector\Job\Category">
         <arguments>
             <argument name="data" xsi:type="array">
