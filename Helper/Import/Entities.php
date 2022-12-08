@@ -1105,10 +1105,11 @@ class Entities
                 if (!isset($attribute['code'], $attribute['type'])) {
                     continue;
                 }
-                $attributeCode = $attribute['code'];
+                $attributeCode = strtolower($attribute['code']);
                 $attributeType = $attribute['type'];
 
-                $this->attributeLength[$familyCode][$attributeCode] = $attributeTypesLength[$attributeType];            }
+                $this->attributeLength[$familyCode][$attributeCode] = $attributeTypesLength[$attributeType];
+            }
         }
 
         return $this->attributeLength[$familyCode];
