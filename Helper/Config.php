@@ -300,6 +300,24 @@ class Config
      */
     public const PRODUCT_AKENEO_MASTER = 'akeneo_connector/product/akeneo_master';
     /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_ASSOCIATION_RELATED
+     */
+    public const PRODUCT_ASSOCIATION_RELATED = 'akeneo_connector/product/association_related';
+    /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_ASSOCIATION_UPSELL
+     */
+    public const PRODUCT_ASSOCIATION_UPSELL = 'akeneo_connector/product/association_upsell';
+    /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_AKENEO_MASTER
+     */
+    public const PRODUCT_ASSOCIATION_CROSSELL = 'akeneo_connector/product/association_crossell';
+    /**
      * Attribute types mapping config path
      *
      * @var string ATTRIBUTE_TYPES
