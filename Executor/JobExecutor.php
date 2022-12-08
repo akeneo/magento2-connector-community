@@ -10,6 +10,7 @@ use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Job\Import as JobImport;
+use Akeneo\Connector\Logger\AttributeLogger;
 use Akeneo\Connector\Model\Job;
 use Akeneo\Connector\Model\JobRepository;
 use Akeneo\Connector\Model\Processor\ProcessClassFactory;
@@ -24,12 +25,9 @@ use Magento\Framework\Phrase;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Class JobExecutor
- *
- * @package   Akeneo\Connector\Executor
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class JobExecutor implements JobExecutorInterface
@@ -39,7 +37,7 @@ class JobExecutor implements JobExecutorInterface
      *
      * @var string IMPORT_CODE_PRODUCT
      */
-    const IMPORT_CODE_PRODUCT = 'product';
+    public const IMPORT_CODE_PRODUCT = 'product';
     /**
      * Description $jobRepository field
      *
@@ -375,7 +373,7 @@ class JobExecutor implements JobExecutorInterface
     /**
      * Description sortJobs function
      *
-     * @param $jobCodes
+     * @param string[] $jobCodes
      *
      * @return array
      */
@@ -401,7 +399,7 @@ class JobExecutor implements JobExecutorInterface
     /**
      * Run the import
      *
-     * @param null $family
+     * @param string|null $family
      *
      * @return bool
      * @throws AlreadyExistsException
@@ -491,6 +489,7 @@ class JobExecutor implements JobExecutorInterface
 
     /**
      * Function called to run import
+     *
      * This function will get the right method to call
      *
      * @return void
@@ -572,10 +571,9 @@ class JobExecutor implements JobExecutorInterface
      */
     public function getComment()
     {
-        return isset($this->steps[$this->getStep()]['comment']) ? $this->outputHelper->getPrefix() . $this->steps[$this->getStep(
-            )]['comment'] : $this->outputHelper->getPrefix() . get_class(
-                $this
-            ) . '::' . $this->getMethod();
+        return isset($this->steps[$this->getStep()]['comment'])
+            ? $this->outputHelper->getPrefix() . $this->steps[$this->getStep()]['comment']
+            : $this->outputHelper->getPrefix() . get_class($this) . '::' . $this->getMethod();
     }
 
     /**
@@ -625,7 +623,7 @@ class JobExecutor implements JobExecutorInterface
      * Set import message
      *
      * @param string|Phrase $message
-     * @param null $logger
+     * @param AttributeLogger|null $logger
      *
      * @return $this
      */
@@ -773,7 +771,8 @@ class JobExecutor implements JobExecutorInterface
     /**
      * Display messages from import
      *
-     * @param $messages
+     * @param string[] $messages
+     * @param AttributeLogger|null $logger
      *
      * @return void
      */
@@ -801,7 +800,7 @@ class JobExecutor implements JobExecutorInterface
      * Set additional message during import
      *
      * @param string|Phrase $message
-     * @param null $logger
+     * @param AttributeLogger|null $logger
      *
      * @return $this
      */

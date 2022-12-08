@@ -8,12 +8,9 @@ use Akeneo\Connector\Api\ProcessClassFactoryInterface;
 use Magento\Framework\ObjectManagerInterface;
 
 /**
- * Class ProcessClassFactory
- *
- * @package   Akeneo\Connector\Model\Processor
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class ProcessClassFactory implements ProcessClassFactoryInterface
@@ -37,6 +34,8 @@ class ProcessClassFactory implements ProcessClassFactoryInterface
     }
 
     /**
+     * Description create function
+     *
      * @param string  $type
      * @param mixed[] $arguments
      *

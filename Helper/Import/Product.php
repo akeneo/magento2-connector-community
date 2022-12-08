@@ -4,6 +4,7 @@ namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
@@ -17,13 +18,9 @@ use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Exception;
 
 /**
- * Class Product
- *
- * @category  Class
- * @package   Akeneo\Connector\Helper\Import
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Product extends Entities
@@ -31,19 +28,19 @@ class Product extends Entities
     /**
      * @var array EXCLUDED_COLUMNS
      */
-    const EXCLUDED_COLUMNS = ['_links'];
+    public const EXCLUDED_COLUMNS = ['_links'];
     /**
      * @var string ASSOCIATIONS_KEY
      */
-    const ASSOCIATIONS_KEY = 'associations';
+    public const ASSOCIATIONS_KEY = 'associations';
     /**
      * @var string VALUES_KEY
      */
-    const VALUES_KEY = 'values';
+    public const VALUES_KEY = 'values';
     /**
      * @var string COMPLETENESS_KEY
      */
-    const COMPLETENESS_KEY = 'completenesses';
+    public const COMPLETENESS_KEY = 'completenesses';
     /**
      * QUANTIFIED_ASSOCIATIONS_KEY const
      *
@@ -581,7 +578,7 @@ class Product extends Entities
                     $product->getStoreId()
                 );
             }
-            $suffix += 1;
+            ++$suffix;
         } while ($exists);
 
         return $requestPath;
@@ -590,7 +587,7 @@ class Product extends Entities
     /**
      * Check if given family is a grouped family
      *
-     * @param $family
+     * @param string[] $family
      *
      * @return bool
      */
@@ -603,5 +600,69 @@ class Product extends Entities
         }
 
         return false;
+    }
+
+    /**
+     * Retrieve attributes that are filterable into imported family
+     * Compare family attributes to product and product model filters
+     * If filter is disabled or empty, return all uniques family attributes
+     *
+     * @param mixed[] $familyAttributesCode
+     * @param mixed[] $productFilters
+     * @param mixed[] $productModelFilters
+     *
+     * @return string[]
+     */
+    public function getFilterableFamilyAttributes(array $familyAttributesCode, array $productFilters, array $productModelFilters): array
+    {
+        // Manage product attribute mapping configuration for native price attributes
+        /** @var mixed[] $attributesMapping */
+        $attributesMapping = $this->configHelper->getAttributeMapping();
+        $nativePriceAttributes = ['cost', 'price', 'special_price'];
+        $familyAttributesCode = array_diff($familyAttributesCode, $nativePriceAttributes); // Remove native prices attributes from family attributes
+        if (!empty($attributesMapping)) {
+            foreach ($attributesMapping as $attributeMapping) {
+                if (isset($attributeMapping['akeneo_attribute'], $attributeMapping['magento_attribute']) && in_array(
+                        $attributeMapping['magento_attribute'],
+                        $nativePriceAttributes,
+                        true
+                    )
+                ) {
+                    $familyAttributesCode[] = $attributeMapping['akeneo_attribute']; // Add mapped price attribute
+                }
+            }
+        }
+
+        // Manage product and product model filters
+        $filterableAttributes = [];
+        $filters = array_merge($productFilters, $productModelFilters);
+        /** @var mixed[] $filter */
+        foreach ($filters as $filter) {
+            $attributesCodes = explode(',', $filter['attributes'] ?? '');
+            $filterableAttributes = array_merge($filterableAttributes, $attributesCodes);
+        }
+
+        $filterableFamilyAttributes = array_intersect($familyAttributesCode, $filterableAttributes); // Get only filterable family attribute
+
+        return !empty($filterableFamilyAttributes) ? array_unique($filterableFamilyAttributes) : $familyAttributesCode;
+    }
+
+    /**
+     * @param AkeneoPimClientInterface $akeneoClient
+     *
+     * @return string[]
+     */
+    public function getEnabledCurrencies(AkeneoPimClientInterface $akeneoClient): array
+    {
+        $currencies = $akeneoClient->getCurrencyApi()->all();
+        $enabledCurrencies = [];
+        /** @var mixed[] $currency */
+        foreach ($currencies as $currency) {
+            if (isset($currency['enabled'], $currency['code']) && $currency['enabled']) {
+                $enabledCurrencies[] = $currency['code'];
+            }
+        }
+
+        return $enabledCurrencies;
     }
 }

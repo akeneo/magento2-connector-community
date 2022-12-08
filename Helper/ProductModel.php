@@ -18,12 +18,9 @@ use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\Serialize\Serializer\Json;
 
 /**
- * Class ProductModel
- *
- * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class ProductModel
@@ -86,15 +83,15 @@ class ProductModel
     /**
      * ProductModel constructor
      *
-     * @param Product          $entitiesHelper
-     * @param ConfigHelper     $configHelper
-     * @param Config           $eavConfig
-     * @param ProductFilters   $productFilters
-     * @param Store            $storeHelper
-     * @param Json             $jsonSerializer
-     * @param EntitiesHelper   $entities
+     * @param Product $entitiesHelper
+     * @param ConfigHelper $configHelper
+     * @param Config $eavConfig
+     * @param ProductFilters $productFilters
+     * @param Store $storeHelper
+     * @param Json $jsonSerializer
+     * @param EntitiesHelper $entities
      * @param AttributeMetrics $attributeMetrics
-     * @param AttributeTables                 $attributeTables
+     * @param AttributeTables $attributeTables
      */
     public function __construct(
         Product $entitiesHelper,
@@ -275,7 +272,9 @@ class ProductModel
                             foreach ($data as $label => $newData) {
                                 /** @var string[] $config */
                                 foreach ($tableConfiguration as $config) {
-                                    if (isset($locale, $config['labels'][$locale]) && $locale !== null && ($config['code'] === $label)) {
+                                    if (isset($locale, $config['labels'][$locale])
+                                        && $locale !== null && ($config['code'] === $label)
+                                    ) {
                                         /** @var string $newLabel */
                                         $newLabel = $config['labels'][$locale];
                                         if (isset($table['data'][$i][$label], $newLabel)) {
@@ -416,7 +415,7 @@ class ProductModel
     /**
      * Generate array of metrics with unit in key and symbol for value
      *
-     * @return string[]
+     * @return string[] $akeneoClient
      */
     public function getMetricsSymbols($akeneoClient)
     {
@@ -440,8 +439,9 @@ class ProductModel
     /**
      * Add columns to product table
      *
+     * @param string $code
      * @param string|null $family
-     *
+     * 
      * @return void
      */
     public function addColumns($code, ?string $family = null)

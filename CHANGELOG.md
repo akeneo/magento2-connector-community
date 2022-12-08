@@ -383,3 +383,11 @@
 
 ### Version 103.2.1 :
 * Fix product model completeness filter channel value when multiple channels are mapped to different websites
+
+### Version 103.3.0 :
+* Add localisable and scopable image attribute import (https://help.akeneo.com/magento2-connector/articles/06-import-images-configuration.html#how-can-i-retrieve-images-from-the-image-attributes)
+* Add job grid automatic refresh in order provide real time progress of jobs (https://help.akeneo.com/magento2-connector/articles/trigger.html#how-to-manually-schedule-and-trigger-each-job)
+* Add attribute option mapping when a select / multi-select attribute is mapped with another one (https://help.akeneo.com/magento2-connector/articles/existing-magento.html#attribute-options)
+* Manage empty attribute values returned by Akeneo API by creating missing columns inside product temporary table
+* Improve extension coding standards
+* Fix column size improvement to manage uppercase attribute codes

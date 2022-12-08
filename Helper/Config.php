@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Helper;
 
 use Exception;
@@ -26,13 +28,9 @@ use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
 /**
- * Class Config
- *
- * @category  Class
- * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Config
@@ -240,7 +238,7 @@ class Config
      *
      * @var string PRODUCT_MAPPING_ATTRIBUTE
      */
-    const PRODUCT_MAPPING_ATTRIBUTE = 'akeneo_connector/product/product_mapping_attribute';
+    public const PRODUCT_MAPPING_ATTRIBUTE = 'akeneo_connector/product/product_mapping_attribute';
     /**
      * Configurable attribute mapping config path
      *
@@ -302,6 +300,24 @@ class Config
      */
     public const PRODUCT_AKENEO_MASTER = 'akeneo_connector/product/akeneo_master';
     /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_ASSOCIATION_RELATED
+     */
+    public const PRODUCT_ASSOCIATION_RELATED = 'akeneo_connector/product/association_related';
+    /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_ASSOCIATION_UPSELL
+     */
+    public const PRODUCT_ASSOCIATION_UPSELL = 'akeneo_connector/product/association_upsell';
+    /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_AKENEO_MASTER
+     */
+    public const PRODUCT_ASSOCIATION_CROSSELL = 'akeneo_connector/product/association_crossell';
+    /**
      * Attribute types mapping config path
      *
      * @var string ATTRIBUTE_TYPES
@@ -338,24 +354,6 @@ class Config
      */
     public const ATTRIBUTE_FILTERS_BY_CODE = 'akeneo_connector/filter_attribute/filter_attribute_code';
     /**
-     * Akeneo master of staging content flag config path
-     *
-     * @var string PRODUCT_ASSOCIATION_RELATED
-     */
-    public const PRODUCT_ASSOCIATION_RELATED = 'akeneo_connector/product/association_related';
-    /**
-     * Akeneo master of staging content flag config path
-     *
-     * @var string PRODUCT_ASSOCIATION_UPSELL
-     */
-    public const PRODUCT_ASSOCIATION_UPSELL = 'akeneo_connector/product/association_upsell';
-    /**
-     * Akeneo master of staging content flag config path
-     *
-     * @var string PRODUCT_AKENEO_MASTER
-     */
-    public const PRODUCT_ASSOCIATION_CROSSELL = 'akeneo_connector/product/association_crossell';
-    /**
      * Product activation flag config path
      *
      * @var string PRODUCT_ACTIVATION
@@ -366,31 +364,31 @@ class Config
      *
      * @var string PRODUCT_STATUS_MODE
      */
-    const PRODUCT_STATUS_MODE = 'akeneo_connector/product/product_status_mode';
+    public const PRODUCT_STATUS_MODE = 'akeneo_connector/product/product_status_mode';
     /**
      * Attribute code for simple product statuses config path
      *
      * @var string ATTRIBUTE_CODE_FOR_SIMPLE_PRODUCT_STATUSES
      */
-    const ATTRIBUTE_CODE_FOR_SIMPLE_PRODUCT_STATUSES = 'akeneo_connector/product/attribute_code_for_simple_product_statuses';
+    public const ATTRIBUTE_CODE_FOR_SIMPLE_PRODUCT_STATUSES = 'akeneo_connector/product/attribute_code_for_simple_product_statuses';
     /**
      * Attribute code for configurable product statuses config path
      *
      * @var string ATTRIBUTE_CODE_FOR_CONFIGURABLE_PRODUCT_STATUSES
      */
-    const ATTRIBUTE_CODE_FOR_CONFIGURABLE_PRODUCT_STATUSES = 'akeneo_connector/product/attribute_code_for_configurable_product_statuses';
+    public const ATTRIBUTE_CODE_FOR_CONFIGURABLE_PRODUCT_STATUSES = 'akeneo_connector/product/attribute_code_for_configurable_product_statuses';
     /**
      * Enable simple products per website config path
      *
      * @var string ENABLE_SIMPLE_PRODUCTS_PER_WEBSITE
      */
-    const ENABLE_SIMPLE_PRODUCTS_PER_WEBSITE = 'akeneo_connector/product/enable_simple_products_per_website';
+    public const ENABLE_SIMPLE_PRODUCTS_PER_WEBSITE = 'akeneo_connector/product/enable_simple_products_per_website';
     /**
      * Default configurable product status config path
      *
      * @var string DEFAULT_CONFIGURABLE_PRODUCT_STATUS
      */
-    const DEFAULT_CONFIGURABLE_PRODUCT_STATUS = 'akeneo_connector/product/default_configurable_product_status';
+    public const DEFAULT_CONFIGURABLE_PRODUCT_STATUS = 'akeneo_connector/product/default_configurable_product_status';
     /**
      * Grouped product families mapping path
      *
@@ -496,25 +494,31 @@ class Config
      *
      * @var string EMAIL_JOB_REPORT_ENABLED
      */
-    const EMAIL_JOB_REPORT_ENABLED = 'akeneo_connector/advanced/email_job_report_enabled';
+    public const EMAIL_JOB_REPORT_ENABLED = 'akeneo_connector/advanced/email_job_report_enabled';
     /**
      * Email job report recicipient path
      *
      * @var string EMAIL_JOB_REPORT_RECIPIENT
      */
-    const EMAIL_JOB_REPORT_RECIPIENT = 'akeneo_connector/advanced/email_job_report_recipient';
+    public const EMAIL_JOB_REPORT_RECIPIENT = 'akeneo_connector/advanced/email_job_report_recipient';
+    /**
+     * Enable job grid auto reload path
+     *
+     * @var string EMAIL_JOB_REPORT_RECIPIENT
+     */
+    public const ENABLE_JOB_GRID_AUTO_RELOAD = 'akeneo_connector/advanced/enable_job_grid_auto_reload';
     /**
      * Email name job report from
      *
      * @var string EMAIL_JOB_REPORT_FROM_NAME
      */
-    const EMAIL_JOB_REPORT_FROM_NAME = 'trans_email/ident_general/name';
+    public const EMAIL_JOB_REPORT_FROM_NAME = 'trans_email/ident_general/name';
     /**
      * Email job report from
      *
      * @var string EMAIL_JOB_REPORT_FROM
      */
-    const EMAIL_JOB_REPORT_FROM = 'trans_email/ident_general/email';
+    public const EMAIL_JOB_REPORT_FROM = 'trans_email/ident_general/email';
     /**
      * This variable contains a Encryptor
      *
@@ -573,14 +577,14 @@ class Config
     /**
      * Config constructor
      *
-     * @param Encryptor                     $encryptor
-     * @param Json                          $jsonSerializer
-     * @param EavConfig                     $eavConfig
-     * @param StoreManagerInterface         $storeManager
+     * @param Encryptor $encryptor
+     * @param Json $jsonSerializer
+     * @param EavConfig $eavConfig
+     * @param StoreManagerInterface $storeManager
      * @param CatalogInventoryConfiguration $catalogInventoryConfiguration
-     * @param Filesystem                    $filesystem
-     * @param MediaConfig                   $mediaConfig
-     * @param ScopeConfigInterface          $scopeConfig
+     * @param Filesystem $filesystem
+     * @param MediaConfig $mediaConfig
+     * @param ScopeConfigInterface $scopeConfig
      *
      * @throws FileSystemException
      */
@@ -594,14 +598,14 @@ class Config
         MediaConfig $mediaConfig,
         ScopeConfigInterface $scopeConfig
     ) {
-        $this->encryptor                     = $encryptor;
-        $this->jsonSerializer                = $jsonSerializer;
-        $this->eavConfig                     = $eavConfig;
-        $this->storeManager                  = $storeManager;
-        $this->mediaConfig                   = $mediaConfig;
+        $this->encryptor = $encryptor;
+        $this->jsonSerializer = $jsonSerializer;
+        $this->eavConfig = $eavConfig;
+        $this->storeManager = $storeManager;
+        $this->mediaConfig = $mediaConfig;
         $this->catalogInventoryConfiguration = $catalogInventoryConfiguration;
-        $this->mediaDirectory                = $filesystem->getDirectoryWrite(DirectoryList::MEDIA);
-        $this->scopeConfig                   = $scopeConfig;
+        $this->mediaDirectory = $filesystem->getDirectoryWrite(DirectoryList::MEDIA);
+        $this->scopeConfig = $scopeConfig;
     }
 
     /**
@@ -670,8 +674,12 @@ class Config
      */
     public function checkAkeneoApiCredentials()
     {
-        if (!$this->getAkeneoApiBaseUrl() || !$this->getAkeneoApiClientId() || !$this->getAkeneoApiClientSecret(
-            ) || !$this->getAkeneoApiPassword() || !$this->getAkeneoApiUsername()) {
+        if (!$this->getAkeneoApiBaseUrl()
+            || !$this->getAkeneoApiClientId()
+            || !$this->getAkeneoApiClientSecret()
+            || !$this->getAkeneoApiPassword()
+            || !$this->getAkeneoApiUsername()
+        ) {
             return false;
         }
 
@@ -693,7 +701,6 @@ class Config
      *
      * @return string
      * @see \Akeneo\Connector\Model\Source\Filters\Mode
-     *
      */
     public function getFilterMode()
     {
@@ -705,7 +712,6 @@ class Config
      *
      * @return string
      * @see \Akeneo\Connector\Model\Source\Filters\Completeness
-     *
      */
     public function getCompletenessTypeFilter()
     {
@@ -747,7 +753,6 @@ class Config
      *
      * @return string
      * @see \Akeneo\Connector\Model\Source\Filters\ModelCompleteness
-     *
      */
     public function getModelCompletenessTypeFilter()
     {
@@ -759,7 +764,6 @@ class Config
      *
      * @return string
      * @see \Akeneo\Connector\Model\Source\Filters\Status
-     *
      */
     public function getStatusFilter()
     {
@@ -998,7 +1002,6 @@ class Config
      *
      * @return mixed[]
      * @throws Exception
-     *
      */
     public function getWebsiteMapping($withDefault = true)
     {
@@ -1204,7 +1207,8 @@ class Config
         if (!$classes) {
             return $result;
         }
-        /** @var mixed[] $classes */
+
+        /** @var string[] $classes */
         $classes = $this->jsonSerializer->unserialize($classes);
         if (!is_array($classes)) {
             return $result;
@@ -1292,15 +1296,12 @@ class Config
      */
     public function getMediaImportImagesColumns()
     {
-        /** @var mixed[] $images */
         $images = [];
-        /** @var string $config */
         $config = $this->scopeConfig->getValue(self::PRODUCT_MEDIA_IMAGES);
         if (!$config) {
             return $images;
         }
 
-        /** @var mixed[] $media */
         $media = $this->jsonSerializer->unserialize($config);
         if (!$media) {
             return $images;
@@ -1445,7 +1446,7 @@ class Config
     /**
      * Get media full path
      *
-     * @param string      $fileName
+     * @param string $fileName
      * @param null|string $subDirectory
      *
      * @return string
@@ -1864,6 +1865,11 @@ class Config
         }
 
         return $matches;
+    }
+
+    public function getEnableJobGridAutoReload(): bool
+    {
+        return $this->scopeConfig->isSetFlag(self::ENABLE_JOB_GRID_AUTO_RELOAD, ScopeInterface::SCOPE_STORE);
     }
 
     /**
