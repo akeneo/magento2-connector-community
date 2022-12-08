@@ -27,6 +27,7 @@ use Akeneo\Connector\Model\Source\Filters\Mode;
 use Akeneo\Connector\Model\Source\Filters\ModelCompleteness;
 use Akeneo\Connector\Model\Source\StatusMode;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
+use Akeneo\Pim\ApiClient\Pagination\ResourceCursor;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Exception;
 use Magento\Bundle\Model\Product\Type as BundleType;
@@ -90,6 +91,10 @@ class Product extends JobImport
      */
     public const CATALOG_PRODUCT_ENTITY_TABLE_NAME = 'catalog_product_entity';
     public const SUFFIX_SEPARATOR = '-';
+    /**
+     * @var string AKENEO_PRICE_ATTRIBUTE_TYPE
+     */
+    public const AKENEO_PRICE_ATTRIBUTE_TYPE = 'pim_catalog_price_collection';
     /**
      * This variable contains a string value
      *
@@ -1337,6 +1342,140 @@ class Product extends JobImport
                 $values,
                 []
             );
+        }
+    }
+
+    /**
+     * Create empty localizable and scopable attributes columns
+     * If attribute is unset on Akeneo, create a null column into tmp table to empty attribute value on Magento
+     * Multiple columns can be created for each attribut. It depends on the scopes and locales enabled
+     * There is 4 cases for each attribute (see exception below) :
+     * 1. Localizable and scopable (Ex: name-en_EN-ecommerce)
+     * 2. Only scopable (Ex: name-ecommerce)
+     * 3. Only localizable (Ex: name-en_EN)
+     * 4. None of them (Ex: name)
+     * Exception, price attributes can have each case multiplied by the number of enabled currencies
+     * Example : price-en_EN-ecommerce-EUR, price-en_EN-ecommerce-USD, price-ecommerce-EUR, price-ecommerce-USD...
+     *
+     * @return void
+     * @throws LocalizedException
+     */
+    public function createEmptyAttributesColumns(): void
+    {
+        $akeneoClient = $this->akeneoClient;
+        /** @var string[] $scopesCodes */
+        $scopesCodes = array_keys($this->storeHelper->getStores(['channel_code'])); // channel
+        /** @var string[] $localesCodes */
+        $localesCodes = array_keys($this->storeHelper->getStores(['lang'])); // en_US
+        /** @var string[] $localizableScopeCodes */
+        $localizableScopeCodes = array_keys($this->storeHelper->getStores(['lang', 'channel_code'])); // en_US-channel
+        /** @var mixed[] $family */
+        $family = $akeneoClient->getFamilyApi()->get($this->getFamily());
+        /** @var string[] $familyAttributesCode */
+        $familyAttributesCode = $family['attributes'] ?? [];
+        /** @var mixed[] $productFilters */
+        $productFilters = $this->getFilters($family);
+        /** @var mixed[] $productModelFilters */
+        $productModelFilters = $this->getProductModelFilters($family);
+        /** @var string|int $paginationSize */
+        $paginationSize = $this->configHelper->getPaginationSize();
+        $filterableFamilyAttributes = array_diff(
+            $this->entitiesHelper->getFilterableFamilyAttributes($familyAttributesCode, $productFilters, $productModelFilters),
+            $this->excludedColumns
+        ); // Remove excluded attributes from filterable attributes
+        $searchAttributesResult = [];
+        $searchAttributesCode = [];
+        // Batch API calls to avoid too large request URI
+        foreach ($filterableFamilyAttributes as $attributeCode) {
+            $searchAttributesCode[] = $attributeCode;
+            if (count($searchAttributesCode) === $paginationSize) {
+                $searchAttributesResult[] = $akeneoClient->getAttributeApi()->all($paginationSize, [
+                    'search' => [
+                        'code' => [
+                            [
+                                'operator' => 'IN',
+                                'value' => $searchAttributesCode,
+                            ],
+                        ],
+                    ],
+                ]);
+                $searchAttributesCode = [];
+            }
+        }
+        // Don't forget last page of attributes
+        if (count($searchAttributesCode) >= 1) {
+            $searchAttributesResult[] = $akeneoClient->getAttributeApi()->all($paginationSize, [
+                'search' => [
+                    'code' => [
+                        [
+                            'operator' => 'IN',
+                            'value' => $searchAttributesCode,
+                        ],
+                    ],
+                ],
+            ]);
+        }
+
+        $currencies = $this->entitiesHelper->getEnabledCurrencies($akeneoClient);
+        $columns = [];
+        /** @var ResourceCursor $familyAttributes */
+        foreach ($searchAttributesResult as $familyAttributes) {
+            foreach ($familyAttributes as $attribute) {
+                $attributeCode = strtolower($attribute['code'] ?? '');
+                $attributeType = $attribute['type'] ?? '';
+                /** @var bool $isScopable */
+                $isScopable = $attribute['scopable'] ?? false;
+                /** @var bool $isLocalizable */
+                $isLocalizable = $attribute['localizable'] ?? false;
+                /** @var bool $isPrice */
+                $isPrice = $attributeType === self::AKENEO_PRICE_ATTRIBUTE_TYPE;
+                if ($isScopable && $isLocalizable) {
+                    $variationsCodes = $localizableScopeCodes;
+                } elseif ($isScopable) {
+                    $variationsCodes = $scopesCodes;
+                } elseif ($isLocalizable) {
+                    $variationsCodes = $localesCodes;
+                } elseif ($isPrice) {
+                    foreach ($currencies as $currencyCode) {
+                        $columns[] = $attributeCode . '-' . $currencyCode; // Add currency code to price attribute column name without variation
+                    }
+                    continue;
+                } else {
+                    $columns[] = $attributeCode; // Column name is attribute code (case 4)
+                    continue;
+                }
+
+                foreach ($variationsCodes as $code) {
+                    if ($attributeType !== self::AKENEO_PRICE_ATTRIBUTE_TYPE) {
+                        $columns[] = $attributeCode . '-' . $code; // Column name is attribute code with scope or local or both (case 1, 2, 3)
+                        continue;
+                    }
+
+                    foreach ($currencies as $currencyCode) {
+                        $columns[] = $attributeCode . '-' . $code . '-' . $currencyCode; // Add currency code to price attribute column name with variations
+                    }
+                }
+            }
+        }
+
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $columnName */
+        foreach ($columns as $columnName) {
+            if (!$connection->tableColumnExists($tmpTable, $columnName)) {
+                $connection->addColumn(
+                    $tmpTable,
+                    $columnName,
+                    [
+                        'type' => 'text',
+                        'length' => null,
+                        'default' => null,
+                        'COMMENT' => ' ',
+                    ]
+                );
+            }
         }
     }
 
