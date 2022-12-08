@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Authenticator;
@@ -20,12 +22,9 @@ use Zend_Db_Expr as Expr;
 use Zend_Db_Select_Exception;
 
 /**
- * Class Entities
- *
- * @package   Akeneo\Connector\Helper\Import
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Entities
@@ -33,21 +32,21 @@ class Entities
     /**
      * @var string TABLE_PREFIX
      */
-    const TABLE_PREFIX = 'tmp';
+    public const TABLE_PREFIX = 'tmp';
     /**
      * @var string TABLE_NAME
      */
-    const TABLE_NAME = 'akeneo_connector_entities';
+    public const TABLE_NAME = 'akeneo_connector_entities';
     /**
      * @var array EXCLUDED_COLUMNS
      */
-    const EXCLUDED_COLUMNS = ['_links'];
+    public const EXCLUDED_COLUMNS = ['_links'];
     /**
      * Akeneo Connector product import code
      *
      * @var string IMPORT_CODE_PRODUCT
      */
-    const IMPORT_CODE_PRODUCT = 'product';
+    public const IMPORT_CODE_PRODUCT = 'product';
     /** @var string DEFAULT_ATTRIBUTE_LENGTH */
     public const DEFAULT_ATTRIBUTE_LENGTH = 'default';
     /** @var string TEXTAREA_ATTRIBUTE_LENGTH */
@@ -121,11 +120,10 @@ class Entities
     /**
      * Entities constructor
      *
-     * @param Context $context
      * @param ResourceConnection $connection
      * @param DeploymentConfig $deploymentConfig
-     * @param ConfigHelper $configHelper
      * @param BaseProductModel $product
+     * @param ConfigHelper $configHelper
      * @param Authenticator $authenticator
      */
     public function __construct(
@@ -155,7 +153,7 @@ class Entities
     /**
      * Get temporary table name
      *
-     * @param null $tableSuffix
+     * @param string|null $tableSuffix
      *
      * @return string
      */
@@ -816,8 +814,7 @@ class Entities
     }
 
     /**
-     * Set prefix to lower case
-     * to avoid problems with values import
+     * Set prefix to lower case to avoid problems with values import
      *
      * @param string[] $values
      *
@@ -936,13 +933,20 @@ class Entities
             '_entity_id = p.entity_id',
             $cols
         )
-            ->joinLeft( // retrieve all the staging update for the givens entities. We use "join left" to get the original entity
+            // retrieve all the staging update for the givens entities. We use "join left" to get the original entity
+            ->joinLeft(
                 ['s' => $stagingTable],
                 'p.created_in = s.id',
                 []
             );
 
         if (!$this->configHelper->isAkeneoMaster()) {
+            /**
+             * filter to get only "default product entities"
+             * ie. product with 2 stagings scheduled will appear 5 times in catalog_product_entity table.
+             * We only want row not updated by the content staging (the first, the one between
+             * the 2 scheduled and the last).
+             */
             $select->where(
             // filter to get only "default product entities"
             // ie. product with 2 stagings scheduled will appear 5 times in catalog_product_entity table.
@@ -952,7 +956,10 @@ class Entities
         }
 
         try {
-            // if possible, we remove behaviour of the ContentStaging override on FromRenderer @see \Magento\Staging\Model\Select\FromRenderer
+            /**
+             * if possible, we remove behaviour of the ContentStaging override on FromRenderer
+             * @see \Magento\Staging\Model\Select\FromRenderer
+             */
             $select->setPart('disable_staging_preview', true);
         } catch (Zend_Db_Select_Exception $e) {
             $this->_logger->error($e->getMessage());
@@ -969,20 +976,32 @@ class Entities
      */
     public function addJoinForContentStagingCategory($select, $cols)
     {
+        /**
+         * retrieve each category entity for each row_id.
+         * We use "left join" to be able to create new category from Akeneo
+         * (they are not yet in catalog_category_entity)
+         */
         $select->joinLeft(
-        // retrieve each category entity for each row_id.
-        // We use "left join" to be able to create new category from Akeneo (they are not yet in catalog_category_entity)
             ['p' => 'catalog_category_entity'],
             '_entity_id = p.entity_id',
             $cols
         )
-            ->joinLeft( // retrieve all the staging update for the givens entities. We use "join left" to get the original entity
+            /**
+             * retrieve all the staging update for the givens entities. We use "join left" to get the original entity
+             */
+            ->joinLeft(
                 ['s' => 'staging_update'],
                 'p.created_in = s.id',
                 []
             );
 
         if (!$this->configHelper->getCategoriesIsOverrideContentStaging()) {
+            /**
+             * filter to get only "default category entities"
+             * ie. category with 2 stagings scheduled will appear 5 times in catalog_category_entity table.
+             * We only want row not updated by the content staging
+             * (the first, the one between the 2 scheduled and the last).
+             */
             $select->where(
             // filter to get only "default category entities"
             // ie. category with 2 stagings scheduled will appear 5 times in catalog_category_entity table.
@@ -992,7 +1011,10 @@ class Entities
         }
 
         try {
-            // if possible, we remove behaviour of the ContentStaging override on FromRenderer @see \Magento\Staging\Model\Select\FromRenderer
+            /**
+             * if possible, we remove behaviour of the ContentStaging override on FromRenderer
+             * @see \Magento\Staging\Model\Select\FromRenderer
+             */
             $select->setPart('disable_staging_preview', true);
         } catch (Zend_Db_Select_Exception $e) {
             $this->_logger->error($e->getMessage());

@@ -12,9 +12,6 @@ use Magento\Framework\Setup\Patch\PatchVersionInterface;
 use Magento\Framework\App\Config\ConfigResource\ConfigInterface;
 
 /**
- * Class EncryptApiSecret
- *
- * @package   Akeneo\Connector\Setup\Patch\Data
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
  * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)

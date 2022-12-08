@@ -18,12 +18,9 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Class AkeneoConnectorImportCommand
- *
- * @package   Akeneo\Connector\Console\Command
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class AkeneoConnectorImportCommand extends Command
@@ -33,7 +30,7 @@ class AkeneoConnectorImportCommand extends Command
      *
      * @var string IMPORT_CODE
      */
-    const IMPORT_CODE = 'code';
+    public const IMPORT_CODE = 'code';
     /**
      * This variable contains a State
      *
@@ -60,7 +57,7 @@ class AkeneoConnectorImportCommand extends Command
      * @param ConfigHelper $configHelper
      * @param JobExecutor $jobExecutor
      * @param JobRepository $jobRepository
-     * @param null $name
+     * @param string|null $name
      */
     public function __construct(
         State $appState,
@@ -78,7 +75,7 @@ class AkeneoConnectorImportCommand extends Command
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected function configure()
     {
@@ -91,7 +88,8 @@ class AkeneoConnectorImportCommand extends Command
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
+     *
      * @throws AlreadyExistsException
      */
     protected function execute(InputInterface $input, OutputInterface $output)

@@ -7,22 +7,19 @@ namespace Akeneo\Connector\Model\Source\Filters;
 use Magento\Framework\Option\ArrayInterface;
 
 /**
- * Class FamilyUpdate
- *
- * @package   Akeneo\Connector\Model\Source\Filters
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class FamilyUpdate implements ArrayInterface
 {
     /**
-     * Description GREATER_THAN constant
+     * Description GREATER_THAN public constant
      *
      * @var string GREATER_THAN
      */
-    const GREATER_THAN = '>';
+    public const GREATER_THAN = '>';
 
     /**
      * Description toOptionArray function

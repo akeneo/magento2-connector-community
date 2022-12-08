@@ -1,17 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Model\Source\Filters;
 
 use Magento\Framework\Option\ArrayInterface;
 
 /**
- * Class Update
- *
- * @category  Class
- * @package   Akeneo\Connector\Model\Source\Filters
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Update implements ArrayInterface
@@ -21,37 +19,37 @@ class Update implements ArrayInterface
      *
      * @var string LOWER_THAN
      */
-    const LOWER_THAN = '<';
+    public const LOWER_THAN = '<';
     /**
      * Description GREATER_THAN constant
      *
      * @var string GREATER_THAN
      */
-    const GREATER_THAN = '>';
+    public const GREATER_THAN = '>';
     /**
      * Description BETWEEN constant
      *
      * @var string BETWEEN
      */
-    const BETWEEN = 'BETWEEN';
+    public const BETWEEN = 'BETWEEN';
     /**
      * Description SINCE_LAST_N_DAYS constant
      *
      * @var string SINCE_LAST_N_DAYS
      */
-    const SINCE_LAST_N_DAYS = 'SINCE LAST N DAYS';
+    public const SINCE_LAST_N_DAYS = 'SINCE LAST N DAYS';
     /**
      * Description SINCE_LAST_N_HOURS constant
      *
      * @var string SINCE_LAST_N_HOURS
      */
-    const SINCE_LAST_N_HOURS = 'SINCE LAST N HOURS';
+    public const SINCE_LAST_N_HOURS = 'SINCE LAST N HOURS';
     /**
      * Description SINCE_LAST_IMPORT constant
      *
      * @var string SINCE_LAST_IMPORT
      */
-    const SINCE_LAST_IMPORT = 'LAST_IMPORT';
+    public const SINCE_LAST_IMPORT = 'LAST_IMPORT';
 
     /**
      * Return array of options for the status filter
