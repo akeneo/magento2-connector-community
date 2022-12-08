@@ -1,17 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Helper;
 
 use Magento\Framework\Stdlib\DateTime\DateTime;
 
 /**
- * Class Output
- *
- * @category  Class
- * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Output
@@ -22,7 +20,7 @@ class Output
      *
      * @var string PREFIX_DATE_FORMAT
      */
-    const PREFIX_DATE_FORMAT = 'H:i:s';
+    public const PREFIX_DATE_FORMAT = 'H:i:s';
     /**
      * This variable contains a DateTime
      *

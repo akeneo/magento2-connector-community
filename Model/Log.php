@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Model;
 
 use Akeneo\Connector\Api\Data\LogInterface;
@@ -7,13 +9,9 @@ use Magento\Framework\DataObject\IdentityInterface;
 use Magento\Framework\Model\AbstractModel;
 
 /**
- * Class Log
- *
- * @category  Class
- * @package   Akeneo\Connector\Model
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Log extends AbstractModel implements LogInterface, IdentityInterface
@@ -23,7 +21,7 @@ class Log extends AbstractModel implements LogInterface, IdentityInterface
      *
      * @var string CACHE_TAG
      */
-    const CACHE_TAG = 'akeneo_connector_import_log';
+    public const CACHE_TAG = 'akeneo_connector_import_log';
 
     /**
      * Prefix of model events names
@@ -39,7 +37,7 @@ class Log extends AbstractModel implements LogInterface, IdentityInterface
      */
     protected function _construct()
     {
-        $this->_init('Akeneo\Connector\Model\ResourceModel\Log');
+        $this->_init(\Akeneo\Connector\Model\ResourceModel\Log::class);
     }
 
     /**

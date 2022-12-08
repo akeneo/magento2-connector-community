@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Helper\AttributeFilters;
@@ -15,7 +17,10 @@ use Akeneo\Connector\Logger\OptionLogger;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Magento\Catalog\Api\Data\ProductAttributeInterface;
+use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Eav\Model\Config;
+use Magento\Eav\Model\Entity\Attribute\Source\Table;
 use Magento\Eav\Setup\EavSetup;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
@@ -27,13 +32,9 @@ use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Interface;
 
 /**
- * Class Option
- *
- * @category  Class
- * @package   Akeneo\Connector\Job
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Option extends Import
@@ -289,6 +290,69 @@ class Option extends Import
                         ),
                         $this->logger
                     );
+                }
+            }
+        }
+    }
+
+    /**
+     * Map select and multiselect options from configuration
+     *
+     * @return void
+     */
+    public function mapOptions(): void
+    {
+        // Get attributes mapped from connector configiration
+        $attributeMapping = $this->configHelper->getAttributeMapping();
+        $connection = $this->entitiesHelper->getConnection();
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
+        $eavAttributeTable = $this->entitiesHelper->getTable('eav_attribute');
+        $productEntityTypeId = $this->eavConfig->getEntityType(ProductAttributeInterface::ENTITY_TYPE_CODE)->getEntityTypeId();
+        $selectTypes = [
+            'pim_catalog_simpleselect',
+            'pim_catalog_multiselect'
+        ];
+
+        foreach ($attributeMapping as $mapping) {
+            $magentoAttribute = $mapping['magento_attribute'];
+            $akeneoAttribute = $mapping['akeneo_attribute'];
+
+            try {
+                $akeneoAttributeData = $this->akeneoClient->getAttributeApi()->get($akeneoAttribute);
+            } catch (Exception $e) {
+                $this->jobExecutor->displayInfo($e->getMessage());
+                continue;
+            }
+
+            // Does the Akeneo attribute an attribute that contains options
+            if (in_array($akeneoAttributeData['type'], $selectTypes)) {
+                $magentoEavAttribute = $connection->fetchRow(
+                    $connection->select()
+                        ->from($eavAttributeTable, ['attribute_code', 'source_model', 'is_user_defined'])
+                        ->where('attribute_code = ?', $magentoAttribute)
+                        ->where(AttributeInterface::ENTITY_TYPE_ID . ' = ?', $productEntityTypeId)
+                );
+
+                // Does the Magento attribute an existing attribute without a specific source model
+                if (isset($magentoEavAttribute['attribute_code']) && $magentoEavAttribute['is_user_defined'] == 1 && ($magentoEavAttribute['source_model'] === null || $magentoEavAttribute['source_model'] === Table::class)) {
+                    // If needed, delete all options currently imported from the Magento mapped attribute to prevent duplicates
+                    $connection->delete($tmpTable, ['attribute = ?' => $magentoAttribute]);
+
+                    $options = $connection->select()->from($tmpTable)->where('attribute = ?', $akeneoAttribute);
+                    $query = $connection->query($options);
+
+                    try {
+                        $allOptions = $query->fetchAll();
+                    } catch (Zend_Db_Statement_Exception $e) {
+                        $this->jobExecutor->displayInfo($e->getMessage());
+                        continue;
+                    }
+
+                    array_walk($allOptions, static function(&$value, $key, $magentoAttr) {
+                        $value['attribute'] = $magentoAttr;
+                    }, $magentoAttribute);
+
+                    $connection->insertMultiple($tmpTable, $allOptions);
                 }
             }
         }

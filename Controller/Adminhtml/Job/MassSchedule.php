@@ -16,16 +16,23 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\AlreadyExistsException;
 
 /**
- * Class MassSchedule
- *
- * @package   Akeneo\Connector\Controller\Adminhtml\Job
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class MassSchedule extends Action
 {
+    /**
+     * In
+     */
+    private const CONDITION_TYPE_IN = 'in';
+
+    /**
+     * Not In
+     */
+    private const CONDITION_TYPE_NIN = 'nin';
+
     /**
      * Description $collectionFactory field
      *
@@ -75,18 +82,30 @@ class MassSchedule extends Action
     public function execute()
     {
         /** @var int[] $ids */
-        $ids = $this->getRequest()->getParam('entity_ids');
+        $ids = $this->getRequest()->getParam('selected') ?? []; // Mass action from checkbox
+        $ids[] = $this->getRequest()->getParam('entity_id'); // Mass action from Action column
+        $condition = self::CONDITION_TYPE_IN;
+
+        if (!!$this->getRequest()->getParam('excluded')) {
+            $ids = $this->getRequest()->getParam('excluded');
+            $condition = self::CONDITION_TYPE_NIN;
+        }
+
         /** @var Collection $collection */
-        $collection = $this->collectionFactory->create()->addFieldToFilter(JobInterface::ENTITY_ID, ['in' => $ids]);
+        $collection = $this->collectionFactory->create();
+        $collection->addFieldToFilter(JobInterface::ENTITY_ID, [$condition => $ids]);
+
+        $message = ($this->configHelper->getEnableJobGridAutoReload())
+            ? 'Job %1 correctly scheduled.'
+            : 'Job %1 correctly scheduled. Please refresh the page in a few minutes to check the progress.'
+        ;
+
         /** @var JobInterface $job */
         foreach ($collection->getItems() as $job) {
             if ($this->jobExecutor->checkStatusConditions($job, true)) {
                 $this->jobExecutor->setJobStatus(JobInterface::JOB_SCHEDULED, $job);
                 $this->messageManager->addSuccessMessage(
-                    __(
-                        'Job %1 correctly scheduled. Please refresh the page in a few minutes to check the progress.',
-                        $job->getName()
-                    )
+                    __($message, $job->getName())
                 );
             }
         }

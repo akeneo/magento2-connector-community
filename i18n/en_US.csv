@@ -174,5 +174,6 @@ For example :<br/>
 "Job(s) successfully reset","Job(s) successfully reset"
 "The job %1 is already running","The job %1 is already running"
 "The job %1 is already scheduled","The job %1 is already scheduled"
+"Job %1 correctly scheduled.","Job %1 correctly scheduled."
 "Job %1 correctly scheduled. Please refresh the page in a few minutes to check the progress.","Job %1 correctly scheduled. Please refresh the page in a few minutes to check the progress."
 "You will receive an email when the job is completed.","You will receive an email when the job is completed."

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Helper\Authenticator;
@@ -25,13 +27,9 @@ use Magento\Indexer\Model\IndexerFactory;
 use Zend_Db_Expr as Expr;
 
 /**
- * Class Family
- *
- * @category  Class
- * @package   Akeneo\Connector\Job
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Family extends Import
@@ -153,7 +151,10 @@ class Family extends Import
         /** @var string[] $filters */
         $filters = $this->familyFilters->getFilters();
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
+            $this->jobExecutor->setAdditionalMessage(
+                __('Path to log file : %1', $this->handler->getFilename()),
+                $this->logger
+            );
             $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
             $this->logger->debug(__('Family API call Filters : ') . print_r($filters, true));
         }
@@ -245,7 +246,12 @@ class Family extends Import
      */
     public function matchEntities()
     {
-        $this->entitiesHelper->matchEntity('code', 'eav_attribute_set', 'attribute_set_id', $this->jobExecutor->getCurrentJob()->getCode());
+        $this->entitiesHelper->matchEntity(
+            'code',
+            'eav_attribute_set',
+            'attribute_set_id',
+            $this->jobExecutor->getCurrentJob()->getCode()
+        );
     }
 
     /**
