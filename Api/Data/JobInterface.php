@@ -102,4 +102,10 @@ interface JobInterface
      * @var string NAME
      */
     public const NAME = 'name';
+    /**
+     * Default family code for product job
+     *
+     * @var string DEFAULT_PRODUCT_JOB_FAMILY_CODE
+     */
+    public const DEFAULT_PRODUCT_JOB_FAMILY_CODE = 'init_default_family_code';
 }

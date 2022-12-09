@@ -77,7 +77,7 @@
     <column xsi:type="varchar" name="job_class" nullable="false" length="255" comment="Job import class"/>
     <column xsi:type="varchar" name="name" nullable="false" length="255" comment="Job import name"/>
     <column xsi:type="int" name="position" padding="11" unsigned="false" nullable="false" identity="false" comment="Job position to priorize launch"/>
-    <column xsi:type="datetime" name="last_success_executed_date" on_update="false" nullable="true" comment="Last executed success date"/>
+    <column xsi:type="text" name="last_success_executed_date" nullable="true" comment="Last executed success date" />
     <constraint xsi:type="primary" referenceId="PRIMARY">
       <column name="entity_id"/>
     </constraint>
