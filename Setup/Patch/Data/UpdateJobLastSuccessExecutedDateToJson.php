@@ -26,19 +26,19 @@ class UpdateJobLastSuccessExecutedDateToJson implements DataPatchInterface
      *
      * @var ModuleDataSetupInterface $moduleDataSetup
      */
-    protected $moduleDataSetup;
+    protected ModuleDataSetupInterface $moduleDataSetup;
     /**
      * Description $jobRepository field
      *
      * @var JobRepository $jobRepository
      */
-    protected $jobRepository;
+    protected JobRepository $jobRepository;
     /**
      * Description $json field
      *
      * @var SerializerInterface $json
      */
-    protected $json;
+    protected SerializerInterface $json;
 
     /**
      * @param ModuleDataSetupInterface $dataSetup

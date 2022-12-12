@@ -74,7 +74,7 @@ class ProductFilters
      *
      * @var SerializerInterface $json
      */
-    protected $json;
+    protected SerializerInterface $json;
 
     /**
      * @param Config $configHelper
@@ -436,14 +436,10 @@ class ProductFilters
         /** @var string $currentFamilyCode */
         $currentFamilyCode = $jobExecutor->getCurrentJobClass()->getFamily();
 
-        if (array_key_exists($currentFamilyCode, $lastSuccessExecutedDateData)) {
+        if (isset($lastSuccessExecutedDateData[$currentFamilyCode])) {
             return $lastSuccessExecutedDateData[$currentFamilyCode];
         }
+        return $lastSuccessExecutedDateData[JobInterface::DEFAULT_PRODUCT_JOB_FAMILY_CODE] ?? null;
 
-        if (array_key_exists(JobInterface::DEFAULT_PRODUCT_JOB_FAMILY_CODE, $lastSuccessExecutedDateData)) {
-            return $lastSuccessExecutedDateData[JobInterface::DEFAULT_PRODUCT_JOB_FAMILY_CODE];
-        }
-
-        return null;
     }
 }

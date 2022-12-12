@@ -158,7 +158,7 @@ class JobExecutor implements JobExecutorInterface
      *
      * @var SerializerInterface $json
      */
-    protected $json;
+    protected SerializerInterface $json;
     /**
      * Description $lastSuccessExecutedDate field
      *
