@@ -391,3 +391,6 @@
 * Manage empty attribute values returned by Akeneo API by creating missing columns inside product temporary table
 * Improve extension coding standards
 * Fix column size improvement to manage uppercase attribute codes
+
+### Version 103.3.1 :
+* Fix product job import for a family with only the SKU attribute inside it
