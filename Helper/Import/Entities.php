@@ -1055,7 +1055,7 @@ class Entities
         /** @var AkeneoPimClientInterface|false $akeneoClient */
         $akeneoClient = $this->authenticator->getAkeneoApiClient();
 
-        if (!empty($this->attributeLength[$familyCode]) || !$akeneoClient) {
+        if (isset($this->attributeLength[$familyCode]) || !$akeneoClient) {
             return $this->attributeLength[$familyCode];
         }
 
@@ -1112,7 +1112,7 @@ class Entities
             }
         }
 
-        return $this->attributeLength[$familyCode];
+        return $this->attributeLength[$familyCode] ?? [];
     }
 
     /**
