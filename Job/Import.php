@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Api\Data\JobInterface;
@@ -17,12 +19,9 @@ use Akeneo\Connector\Helper\Output as OutputHelper;
 use Zend_Db_Statement_Exception;
 
 /**
- * Class Import
- *
- * @package   Akeneo\Connector\Job
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 abstract class Import extends DataObject implements ImportInterface
@@ -130,7 +129,7 @@ abstract class Import extends DataObject implements ImportInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function beforeImport()
     {
@@ -200,7 +199,7 @@ abstract class Import extends DataObject implements ImportInterface
     /**
      * Set import status
      *
-     * @param $status
+     * @param bool $status
      *
      * @return Import
      */
@@ -249,11 +248,11 @@ abstract class Import extends DataObject implements ImportInterface
                 $identifierColumn
             );
             if ($newEntities) {
-                $logger->addDebug(__('Imported new entities : %1', implode(',', $existingEntities)));
+                $logger->debug(__('Imported new entities : %1', implode(',', $existingEntities)));
 
                 return;
             }
-            $logger->addDebug(__('Imported entities : %1', implode(',', $existingEntities)));
+            $logger->debug(__('Imported entities : %1', implode(',', $existingEntities)));
         }
     }
 }

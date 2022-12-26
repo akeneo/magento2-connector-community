@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Model\Config;
 
 use Magento\Framework\App\Cache\TypeListInterface;
@@ -17,13 +19,9 @@ use Magento\Framework\Registry;
 use Magento\Framework\Serialize\Serializer\Json;
 
 /**
- * Class Version
- *
- * @category  Class
- * @package   Akeneo\Connector\Model\Config
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Version extends Value

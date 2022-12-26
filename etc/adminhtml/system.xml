@@ -377,15 +377,14 @@ For example :<br/>
                 <field id="product_status_mode" translate="label" type="select" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Product Status Mode</label>
                     <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
-                    <depends>
-                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth</field>
-                    </depends>
+                    <comment>
+                        <![CDATA[The "Status based on Completeness level" mode is only available for Akeneo version Growth and Serenity.]]>
+                    </comment>
                 </field>
                 <field id="attribute_code_for_simple_product_statuses" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Akeneo Attribute code for Simple product statuses</label>
                     <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
                     <depends>
-                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth</field>
                         <field id="product_status_mode">attribute_product_mapping</field>
                     </depends>
                     <comment>
@@ -396,7 +395,6 @@ For example :<br/>
                     <label>Akeneo Attribute code for Configurable product statuses</label>
                     <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
                     <depends>
-                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth</field>
                         <field id="product_status_mode">attribute_product_mapping</field>
                     </depends>
                     <comment>
@@ -640,6 +638,11 @@ For example :<br/>
                     <depends>
                         <field id="email_job_report_enabled">1</field>
                     </depends>
+                </field>
+                <field id="enable_job_grid_auto_reload" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Job grid auto reload</label>
+                    <comment>Job grid will refresh itself every 5 seconds</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
             </group>
         </section>

@@ -10,12 +10,9 @@ use Magento\Framework\Model\AbstractModel;
 use Magento\Framework\Phrase;
 
 /**
- * Class Job
- *
- * @package   Akeneo\Connector\Model
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Job extends AbstractModel implements JobInterface, IdentityInterface
@@ -25,7 +22,7 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
      *
      * @var string CACHE_TAG
      */
-    const CACHE_TAG = 'akeneo_connector_job';
+    public const CACHE_TAG = 'akeneo_connector_job';
     /**
      * Prefix of model events names
      *
@@ -40,7 +37,7 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
      */
     protected function _construct()
     {
-        $this->_init('Akeneo\Connector\Model\ResourceModel\Job');
+        $this->_init(\Akeneo\Connector\Model\ResourceModel\Job::class);
     }
 
     /**
@@ -132,8 +129,7 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
     {
         return $this->getData(self::JOB_CLASS);
     }
-
-
+    
     /**
      * Description getName function
      *
@@ -181,7 +177,7 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
     /**
      * Set name
      *
-     * @param $date
+     * @param string $date
      *
      * @return Job
      */

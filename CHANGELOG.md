@@ -329,3 +329,68 @@
 ### Version 102.6.0 :
 * Add automatic 301 redirect when the url_key of a product is updated (https://help.akeneo.com/magento2-connector/articles/05-configure-products.html#regenerate-url-rewrites)
 * Fix data patch to correctly encrypt API Client secret when upgrading from previous version
+
+### Version 102.6.1 :
+* Fix "Product Status Mode" not displaying if Akeneo version is different from "Serenity" or "Growth" edition
+* Fix "Since last successful import" mode not working on first product job without successful date
+* Fix relations from "catalog_product_relation" table for grouped and bundle products being deleted during the product job
+* Fix job status to "Error" if missing or wrong API credentials are set in the connector configuration
+
+### Version 103.0.0 :
+* Add compatibility for Magento 2.4.4 and PHP 8.1: (https://help.akeneo.com/magento2-connector/articles/all-pre-requisite.html#compatibility)
+  * Bump Akeneo API client to version 9
+  * Replace Guzzle HTTP client by Symfony HTTP Client
+  * Fix function usage for PHP 8
+  * Update extension PHP compatibility to 7.4 and 8.1
+* Fix "special_price" and "cost" attribute being set to 0 when empty on MariaDB
+
+### Version 103.0.1 :
+* Improve "setRelated" (Associations) and "setWebsites" (Website Attribute) steps performance for Product job
+* Fix job status not displaying in mail report
+* Fix metric unit being displayed twice if the same attribute is configured in "Metric Attributes"
+
+### Version 103.0.2 :
+* Fix "setRelated" temporary table name to MYSQL maximum table name length
+* Fix "price", "special_price" and "cost" attribute import by setting default value for every temporary table columns to `NULL`
+
+### Version 103.0.3 :
+* Fix simple product association with configurable product when a variation from a two-level family variant is imported without the product model
+
+### Version 103.0.4 :
+* Fix "setRelated" temporary table name to unique value
+* Fix product model variant change in `catalog_product_super_attribute` table
+* Fix `Too few arguments to function Laminas\Diactoros\ResponseFactory::__construct()` issue by adding `nyholm/psr7` dependency
+* Fix missing "$edition" variable in `Job/Product.php`
+
+### Version 103.0.5 :
+* Fix product relation deletion for simple products when using differential import
+* Fix default status mode when scheduled changes are used for products
+* Add new dispatch events at error and success in the job executor
+
+### Version 103.0.6 :
+* Fix manually added product videos being deleted by the image attribute import
+
+### Version 103.0.7 :
+* Fix Magento Framework dependency in composer.json
+* Fix advanced filter error when left empty
+* Improve URL generation requests for product job
+
+### Version 103.0.8 :
+* Fix URL rewrite generation when multiple url keys are duplicated
+
+### Version 103.2.0 :
+* Improve column sizes per attribute type inside product temporary table in order to reduce the MYSQL table volume
+
+### Version 103.2.1 :
+* Fix product model completeness filter channel value when multiple channels are mapped to different websites
+
+### Version 103.3.0 :
+* Add localisable and scopable image attribute import (https://help.akeneo.com/magento2-connector/articles/06-import-images-configuration.html#how-can-i-retrieve-images-from-the-image-attributes)
+* Add job grid automatic refresh in order provide real time progress of jobs (https://help.akeneo.com/magento2-connector/articles/trigger.html#how-to-manually-schedule-and-trigger-each-job)
+* Add attribute option mapping when a select / multi-select attribute is mapped with another one (https://help.akeneo.com/magento2-connector/articles/existing-magento.html#attribute-options)
+* Manage empty attribute values returned by Akeneo API by creating missing columns inside product temporary table
+* Improve extension coding standards
+* Fix column size improvement to manage uppercase attribute codes
+
+### Version 103.3.1 :
+* Fix product job import for a family with only the SKU attribute inside it

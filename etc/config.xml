@@ -49,6 +49,7 @@
                 <advanced_log>0</advanced_log>
                 <enable_clean_logs>1</enable_clean_logs>
                 <clean_logs>30</clean_logs>
+                <enable_job_grid_auto_reload>1</enable_job_grid_auto_reload>
             </advanced>
             <attribute>
                 <option_code_as_admin_label>0</option_code_as_admin_label>

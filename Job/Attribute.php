@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Helper\AttributeFilters;
@@ -26,13 +28,9 @@ use Magento\Indexer\Model\IndexerFactory;
 use Zend_Db_Expr as Expr;
 
 /**
- * Class Attribute
- *
- * @category  Class
- * @package   Akeneo\Connector\Job
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Attribute extends Import
@@ -42,7 +40,7 @@ class Attribute extends Import
      *
      * @var string DEFAULT_ATTRIBUTE_SET_NAME
      */
-    const DEFAULT_ATTRIBUTE_SET_NAME = 'Akeneo';
+    public const DEFAULT_ATTRIBUTE_SET_NAME = 'Akeneo';
     /**
      * This variable contains a string value
      *
@@ -196,8 +194,8 @@ class Attribute extends Import
                 __('Path to log file : %1', $this->handler->getFilename()),
                 $this->logger
             );
-            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
-            $this->logger->addDebug(__('Attribute API call Filters : ') . print_r($filters, true));
+            $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
+            $this->logger->debug(__('Attribute API call Filters : ') . print_r($filters, true));
         }
         /** @var PageInterface $attributes */
         $attributes = $this->akeneoClient->getAttributeApi()->listPerPage(1, false, $filters);
@@ -253,10 +251,7 @@ class Attribute extends Import
             $attributeCode     = $attribute['code'];
             $attribute['code'] = strtolower($attributeCode);
 
-            if ($attribute['type'] == 'pim_catalog_metric' && in_array(
-                    $attributeCode,
-                    $metricsSetting
-                )) {
+            if ($attribute['type'] == 'pim_catalog_metric' && in_array($attributeCode, $metricsSetting)) {
                 if ($attribute['scopable'] || $attribute['localizable']) {
                     $this->jobExecutor->setAdditionalMessage(
                         __(
@@ -507,18 +502,16 @@ class Attribute extends Import
             /** @var bool $skipAttribute */
             $skipAttribute = false;
             if ($attributeFrontendInput && $row['frontend_input']) {
-                if ($attributeFrontendInput !== $row['frontend_input'] && !in_array(
-                        $row['code'],
-                        $this->excludedAttributes
-                    )) {
+                if ($attributeFrontendInput !== $row['frontend_input']
+                    && !in_array($row['code'], $this->excludedAttributes)
+                ) {
                     $skipAttribute = true;
                     /* Verify if attribute is mapped to an ignored attribute */
                     if (is_array($mapping)) {
                         foreach ($mapping as $match) {
-                            if (in_array(
-                                    $match['magento_attribute'],
-                                    $this->excludedAttributes
-                                ) && $row['code'] == $match['akeneo_attribute']) {
+                            if (in_array($match['magento_attribute'], $this->excludedAttributes)
+                                && $row['code'] == $match['akeneo_attribute']
+                            ) {
                                 $skipAttribute = false;
                             }
                         }
@@ -640,7 +633,7 @@ class Attribute extends Import
 
             /* Add Attribute to group and family */
             if ($row['_attribute_set_id'] && $row['group']) {
-                $attributeSetIds = explode(',', $row['_attribute_set_id']);
+                $attributeSetIds = explode(',', $row['_attribute_set_id'] ?? '');
 
                 if (is_numeric($row['group'])) {
                     $row['group'] = 'PIM' . $row['group'];
@@ -810,7 +803,7 @@ class Attribute extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $types */
         $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
@@ -843,7 +836,7 @@ class Attribute extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $typesFlushed */
         $typesFlushed = [];
 
