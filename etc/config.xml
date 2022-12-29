@@ -32,6 +32,7 @@
                 <url_generation_enabled>1</url_generation_enabled>
                 <product_status_mode>default_product_status</product_status_mode>
                 <default_configurable_product_status>2</default_configurable_product_status>
+                <visibility_enabled>0</visibility_enabled>
                 <activation>2</activation>
                 <association_related>SUBSTITUTION</association_related>
                 <association_upsell>UPSELL</association_upsell>

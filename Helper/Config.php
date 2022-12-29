@@ -222,6 +222,24 @@ class Config
      */
     public const PRODUCTS_CATEGORY_OVERRIDE_CONTENT_STAGING = 'akeneo_connector/category/override_content_staging';
     /**
+     * Product visibility attribute option enabled path
+     *
+     * @var string PRODUCT_VISIBILITY_ENABLED
+     */
+    public const PRODUCT_VISIBILITY_ENABLED = 'akeneo_connector/product/visibility_enabled';
+    /**
+     * Simple product visibility path
+     *
+     * @var string PRODUCT_VISIBILITY_SIMPLE
+     */
+    public const PRODUCT_VISIBILITY_SIMPLE = 'akeneo_connector/product/visibility_simple';
+    /**
+     * Configuratble product visibility  path
+     *
+     * @var string PRODUCT_VISIBILITY_CONFIGURABLE
+     */
+    public const PRODUCT_VISIBILITY_CONFIGURABLE = 'akeneo_connector/product/visibility_configurable';
+    /**
      * Attribute mapping config path
      *
      * @var string PRODUCT_ATTRIBUTE_MAPPING
@@ -1561,6 +1579,21 @@ class Config
         }
 
         return $loweredMatches;
+    }
+
+    public function isProductVisibilityEnabled(): bool
+    {
+        return $this->scopeConfig->isSetFlag(self::PRODUCT_VISIBILITY_ENABLED);
+    }
+
+    public function getProductVisibilitySimple(): string
+    {
+        return $this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_SIMPLE);
+    }
+
+    public function getProductVisibilityConfigurable(): string
+    {
+        return $this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_CONFIGURABLE);
     }
 
     /**
