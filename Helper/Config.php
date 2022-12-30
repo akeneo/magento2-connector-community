@@ -228,6 +228,12 @@ class Config
      */
     public const PRODUCT_VISIBILITY_ENABLED = 'akeneo_connector/product/visibility_enabled';
     /**
+     * Product default visibility attribute path
+     *
+     * @var string PRODUCT_DEFAULT_VISIBILITY
+     */
+    public const PRODUCT_DEFAULT_VISIBILITY = 'akeneo_connector/product/default_visibility';
+    /**
      * Simple product visibility path
      *
      * @var string PRODUCT_VISIBILITY_SIMPLE
@@ -1584,6 +1590,11 @@ class Config
     public function isProductVisibilityEnabled(): bool
     {
         return $this->scopeConfig->isSetFlag(self::PRODUCT_VISIBILITY_ENABLED);
+    }
+
+    public function getProductDefaultVisibility(): string
+    {
+        return $this->scopeConfig->getValue(self::PRODUCT_DEFAULT_VISIBILITY);
     }
 
     public function getProductVisibilitySimple(): string

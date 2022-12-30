@@ -39,6 +39,7 @@ use Magento\Catalog\Model\ProductLink\Link as ProductLink;
 use Magento\Catalog\Model\ResourceModel\Category\Collection;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ProductConfigurable;
 use Magento\Eav\Model\Config as EavConfig;
 use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
 use Magento\Eav\Model\ResourceModel\Entity\Attribute as EavAttribute;
@@ -282,6 +283,12 @@ class Product extends JobImport
      * @var JobExecutorFactory $jobExecutorFactory
      */
     protected $jobExecutorFactory;
+    /**
+     * This variable contains a 1, 2, 3 or 4 depending on Visibility value
+     *
+     * @var string
+     */
+    protected $productDefaultVisibility = Visibility::VISIBILITY_NOT_VISIBLE;
 
     /**
      * Product constructor.
@@ -310,6 +317,7 @@ class Product extends JobImport
      * @param AttributeTables $attributeTables
      * @param StoreManagerInterface $storeManager
      * @param IndexerFactory $indexFactory
+     * @param JobExecutor $jobExecutor
      * @param JobExecutorFactory $jobExecutorFactory
      * @param array $data
      */
@@ -366,9 +374,11 @@ class Product extends JobImport
         $this->jobExecutor = $jobExecutor;
         $this->jobExecutorFactory = $jobExecutorFactory;
 
-        /** Add configurable column name in the property to avoid data transform from data to option id */
         if ($this->configHelper->isProductVisibilityEnabled()) {
+            // Add configurable column name in the property to avoid data transform from data to option id
             $this->excludeVisibilityAttributeFields();
+            // Gets default Product visibility from configuration
+            $this->productDefaultVisibility = $this->configHelper->getProductDefaultVisibility();
         }
     }
 
@@ -930,7 +940,7 @@ class Product extends JobImport
             [
                 'type' => Table::TYPE_SMALLINT,
                 'length' => 1,
-                'default' => Visibility::VISIBILITY_NOT_VISIBLE,
+                'default' => $this->productDefaultVisibility,
                 'COMMENT' => ' ',
                 'nullable' => false,
             ]
@@ -2154,7 +2164,7 @@ class Product extends JobImport
                     $tmpTable,
                     [
                         '_visibility' => new Expr(
-                            'IF(`' . $groupColumn . '` <> "", ' . Visibility::VISIBILITY_NOT_VISIBLE . ', ' . Visibility::VISIBILITY_BOTH . ')'
+                            'IF(`' . $groupColumn . '` <> "", ' . $this->productDefaultVisibility . ', ' . Visibility::VISIBILITY_BOTH . ')'
                         ),
                     ]
                 );
@@ -2245,6 +2255,9 @@ class Product extends JobImport
                 continue;
             }
 
+            /** @var bool $visibilityScopableLocalizable */
+            $isVisibilityScopableLocalizable = !!($columnPrefix === 'visibility' && count(explode('-', $columnSuffix ?? '')));
+
             /** @var mixed[] $affectedStores */
             $affectedStores = $stores[$columnSuffix];
             /** @var mixed[] $store */
@@ -2266,9 +2279,7 @@ class Product extends JobImport
                 $siblings = $store['siblings'];
                 /** @var string $storeId */
                 foreach ($siblings as $storeId) {
-                    if (!isset($values[$storeId][$columnPrefix]) ||
-                        ($columnPrefix === 'visibility' && count(explode('-', $columnSuffix ?? '')))
-                    ) {
+                    if (!isset($values[$storeId][$columnPrefix]) || $isVisibilityScopableLocalizable) {
                         $values[$storeId][$columnPrefix] = $column;
                     }
                 }
@@ -2411,21 +2422,30 @@ class Product extends JobImport
                 );
             }
 
+            /** @var array $attributesList */
+            $attributesList = $connection->fetchAssoc(
+                $connection->select()
+                           ->from($eavAttrOptionTable, [new Expr('attribute_id')])
+                           ->where('attribute_id IN (?)', $attributes)
+                           ->group('attribute_id')
+            );
+
+            /** @var array $superAttributeList */
+            $superAttributeList = $connection->fetchAssoc(
+                $connection->select()
+                           ->from($productSuperAttrTable)
+                           ->where('attribute_id in (?)', $attributes)
+                           ->where('product_id = ?', $row[$pKeyColumn])
+            );
+
+            $superAttributeListOrdered = [];
+            foreach ($superAttributeList as $key => $superAttribute) {
+                $superAttributeListOrdered[$superAttribute['attribute_id']][$superAttribute['product_id']] = $key;
+            }
+
             /** @var int $id */
             foreach ($attributes as $id) {
-                if (!is_numeric($id) || !isset($row['_entity_id'])) {
-                    continue;
-                }
-
-                /** @var bool $hasOptions */
-                $hasOptions = (bool)$connection->fetchOne(
-                    $connection->select()
-                       ->from($eavAttrOptionTable, [new Expr(1)])
-                       ->where('attribute_id = ?', $id)
-                       ->limit(1)
-                );
-
-                if (!$hasOptions) {
+                if (!is_numeric($id) || !isset($row['_entity_id']) || !isset($attributesList[$id])) {
                     continue;
                 }
 
@@ -2443,21 +2463,13 @@ class Product extends JobImport
 
                 /** @var array $valuesLabels */
                 $valuesLabels = [];
-                /** @var string $superAttributeId */
-                $superAttributeId = $connection->fetchOne(
-                    $connection->select()->from($productSuperAttrTable)->where('attribute_id = ?', $id)->where(
-                        'product_id = ?',
-                        $row[$pKeyColumn]
-                    )->limit(1)
-                );
-
                 /**
                  * @var int $storeId
                  * @var array $affected
                  */
                 foreach ($stores as $storeId => $affected) {
                     $valuesLabels[] = [
-                        'product_super_attribute_id' => $superAttributeId,
+                        'product_super_attribute_id' => $superAttributeListOrdered[$id][$row[$pKeyColumn]],
                         'store_id' => $storeId,
                         'use_default' => 0,
                         'value' => '',
@@ -3493,7 +3505,7 @@ class Product extends JobImport
                         'store_id' => new Expr($store['store_id']),
                         'visibility' => '_visibility',
                     ]
-                )->where('_visibility != ?', Visibility::VISIBILITY_NOT_VISIBLE);
+                )->where('_visibility != ?', $this->productDefaultVisibility);
 
                 if (isset($store['website_id'])) {
                     $select
@@ -4523,6 +4535,9 @@ class Product extends JobImport
         return $isNoError;
     }
 
+    /**
+     * Get visibiliy attribute configuration depending on product type 
+     */
     private function getVisibilityAttribute(string $productType): string
     {
         if (!$this->configHelper->isProductVisibilityEnabled()
@@ -4531,12 +4546,13 @@ class Product extends JobImport
             return '';
         }
 
-        return ($productType === 'configurable')
+        return ($productType === ProductConfigurable::TYPE_CODE)
             ? $this->configHelper->getProductVisibilityConfigurable()
             : $this->configHelper->getProductVisibilitySimple();
     }
 
     /**
+     * Added akeneo visibility attributes to excluded field list to get their values instead of id of their values
      * @return void
      * @throws LocalizedException
      */
@@ -4567,47 +4583,52 @@ class Product extends JobImport
         }
     }
 
+    /**
+     * Create fields in tmp_akeneo_connector_entities_product and update those fields depending on attributes
+     */
     protected function createAndUpdateVisibilityFields(string $tmpTable, array $mappings): void
     {
         $connection = $this->entitiesHelper->getConnection();
         $visibilityColumnToUpdate = $this->updateProductVisibility($tmpTable, $mappings);
+        $binds = [];
 
         foreach ($visibilityColumnToUpdate as $column => $configuration) {
-            if (!$connection->tableColumnExists($tmpTable, $column)
-                && ($connection->tableColumnExists($tmpTable,$configuration['simpleOriginColumn'])
-                    || $connection->tableColumnExists($tmpTable,$configuration['configurableOriginColumn'])
-                )
-            ) {
-                $connection->addColumn(
-                    $tmpTable,
-                    $column,
-                    [
-                        'type' => Table::TYPE_SMALLINT,
-                        'default' => Visibility::VISIBILITY_NOT_VISIBLE,
-                        'COMMENT' => ' ',
-                        'nullable' => false,
-                    ]
-                );
+            if (!$connection->tableColumnExists($tmpTable, $column)) {
+                if ($connection->tableColumnExists($tmpTable, $configuration['simpleOriginColumn'])
+                    || $connection->tableColumnExists($tmpTable, $configuration['configurableOriginColumn'])
+                ) {
+                    $connection->addColumn(
+                        $tmpTable,
+                        $column,
+                        [
+                            'type' => Table::TYPE_SMALLINT,
+                            'default' => $this->productDefaultVisibility,
+                            'COMMENT' => ' ',
+                            'nullable' => false,
+                        ]
+                    );
+                }
+
+                if ($connection->tableColumnExists($tmpTable, $column)) {
+                    $configurationConfigurable = $connection->tableColumnExists(
+                        $tmpTable,
+                        $configuration['configurableOriginColumn']) ? $configuration['configurable'] : $this->productDefaultVisibility;
+                    $configurationSimple = $connection->tableColumnExists(
+                        $tmpTable,
+                        $configuration['simpleOriginColumn']) ? $configuration['simple'] : $this->productDefaultVisibility;
+
+                    $binds[$column] = new Expr(
+                        'IF(`_type_id` <> "' . ProductConfigurable::TYPE_CODE . '",'
+                        . $configurationSimple . ','
+                        . $configurationConfigurable
+                        . ')'
+                    );
+                }
             }
         }
 
-        foreach ($visibilityColumnToUpdate as $column => $configuration) {
-            if ($connection->tableColumnExists($tmpTable, $column)) {
-                $configurationConfigurable = $connection->tableColumnExists($tmpTable, $configuration['configurableOriginColumn']) ? $configuration['configurable'] : Visibility::VISIBILITY_NOT_VISIBLE;
-                $configurationSimple = $connection->tableColumnExists($tmpTable, $configuration['simpleOriginColumn']) ? $configuration['simple'] : Visibility::VISIBILITY_NOT_VISIBLE;
-
-                $connection->update(
-                    $tmpTable,
-                    [
-                        $column => new Expr(
-                            'IF(`_type_id` <> "configurable",'
-                            . $configurationSimple . ','
-                            . $configurationConfigurable
-                            . ')'
-                        ),
-                    ]
-                );
-            }
+        if ($binds !== []) {
+            $connection->update($tmpTable, $binds);
         }
     }
 
@@ -4634,16 +4655,25 @@ class Product extends JobImport
         return true;
     }
 
+    /**
+     * Check if attribute is scopable
+     */
     private function isAttributeScopable(string $attributeToCheck): bool
     {
         return $this->isAttributeHasValue($attributeToCheck, 'scopable');
     }
 
+    /**
+     * Check if attribute is Localizable
+     */
     private function isAttributeLocalizable(string $attributeToCheck): bool
     {
         return $this->isAttributeHasValue($attributeToCheck, 'localizable');
     }
 
+    /**
+     * Check if attribute has a specific value and return its state
+     */
     private function isAttributeHasValue(string $attributeToCheck, string $valueToCheck): bool
     {
         if (!$this->akeneoClient) {
@@ -4658,6 +4688,11 @@ class Product extends JobImport
         return $attribute[$valueToCheck] ?? false;
     }
 
+    /**
+     * Create an array of SQL exprissions depending
+     * on Visibiliy attributes from configurable and simple products
+     * to update with the correct value
+     */
     private function updateProductVisibility(string $tmpTable, array $mappings): array
     {
         $localizableScopeCodes = array_keys($this->storeHelper->getStores(['lang']));
@@ -4667,8 +4702,8 @@ class Product extends JobImport
         // Global
         $visibilityColumnResult = [
             'visibility' => [
-                'configurable' => Visibility::VISIBILITY_NOT_VISIBLE,
-                'simple' => Visibility::VISIBILITY_NOT_VISIBLE,
+                'configurable' => $this->productDefaultVisibility,
+                'simple' => $this->productDefaultVisibility,
                 'simpleOriginColumn' => $visibilityForSimple,
                 'configurableOriginColumn' => $visibilityForConfigurable,
             ],
@@ -4676,30 +4711,29 @@ class Product extends JobImport
         if (!$this->isAttributeScopable($visibilityForSimple)
             && !$this->isAttributeLocalizable($visibilityForSimple)
         ) {
-            $visibilityColumnResult['visibility']['simple'] = 'IF(`' . $visibilityForSimple . '` is NULL, ' . Visibility::VISIBILITY_NOT_VISIBLE . ', `' . $visibilityForSimple . '`)';
+            $visibilityColumnResult['visibility']['simple'] = 'IF(`' . $visibilityForSimple . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForSimple . '`)';
         }
 
         if (!$this->isAttributeScopable($visibilityForConfigurable)
             && !$this->isAttributeLocalizable($visibilityForConfigurable)
         ) {
-            $visibilityColumnResult['visibility']['configurable'] = 'IF(`' . $visibilityForConfigurable . '` is NULL, ' . Visibility::VISIBILITY_NOT_VISIBLE . ', `' . $visibilityForConfigurable . '`)';
+            $visibilityColumnResult['visibility']['configurable'] = 'IF(`' . $visibilityForConfigurable . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForConfigurable . '`)';
         }
 
         // Scopable
         foreach ($mappings as $mapping) {
             $visibilityColumnResult['visibility-' . $mapping['channel']] = [
-                'configurable' => Visibility::VISIBILITY_NOT_VISIBLE,
-                'simple' => Visibility::VISIBILITY_NOT_VISIBLE,
+                'configurable' => $this->productDefaultVisibility,
+                'simple' => $this->productDefaultVisibility,
                 'simpleOriginColumn' => $visibilityForSimple  . '-' . $mapping['channel'],
                 'configurableOriginColumn' => $visibilityForConfigurable  . '-' . $mapping['channel'],
             ];
 
             // Localizable
             foreach ($localizableScopeCodes as $localizableScopeCode) {
-                $suffix = '-' . $localizableScopeCode . '-' . $mapping['channel'];
-                $suffixSimple = '-' . $localizableScopeCode . '-' . $mapping['channel'];
-                $suffixConfig = '-' . $localizableScopeCode . '-' . $mapping['channel'];
+                $suffix = $suffixSimple = $suffixConfig = '-' . $localizableScopeCode . '-' . $mapping['channel'];
 
+                // Simple products
                 if (!$this->isAttributeLocalizable($visibilityForSimple)) {
                     $suffixSimple = '-' . $mapping['channel'];
                 }
@@ -4707,6 +4741,7 @@ class Product extends JobImport
                     $suffixSimple = '-' . $localizableScopeCode;
                 }
 
+                // Configurable products
                 if (!$this->isAttributeLocalizable($visibilityForConfigurable)) {
                     $suffixConfig =  '-' . $mapping['channel'];
                 }
@@ -4715,14 +4750,14 @@ class Product extends JobImport
                 }
 
                 $visibilityColumnResult['visibility' . $suffix] = [
-                    'configurable' => Visibility::VISIBILITY_NOT_VISIBLE,
-                    'simple' => Visibility::VISIBILITY_NOT_VISIBLE,
+                    'configurable' => $this->productDefaultVisibility,
+                    'simple' => $this->productDefaultVisibility,
                     'simpleOriginColumn' => $visibilityForSimple . $suffixSimple,
                     'configurableOriginColumn' => $visibilityForConfigurable . $suffixConfig,
                 ];
 
-                $visibilityColumnResult['visibility' . $suffix]['simple'] = 'IF(`' . $visibilityForSimple . $suffixSimple . '` is NULL, ' . Visibility::VISIBILITY_NOT_VISIBLE . ', `' . $visibilityForSimple . $suffixSimple . '`)';
-                $visibilityColumnResult['visibility' . $suffix]['configurable'] = 'IF(`' . $visibilityForConfigurable . $suffixConfig . '` is NULL, ' . Visibility::VISIBILITY_NOT_VISIBLE . ', `' . $visibilityForConfigurable . $suffixConfig . '`)';
+                $visibilityColumnResult['visibility' . $suffix]['simple'] = 'IF(`' . $visibilityForSimple . $suffixSimple . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForSimple . $suffixSimple . '`)';
+                $visibilityColumnResult['visibility' . $suffix]['configurable'] = 'IF(`' . $visibilityForConfigurable . $suffixConfig . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForConfigurable . $suffixConfig . '`)';
             }
         }
 
