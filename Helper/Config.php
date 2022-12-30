@@ -1030,7 +1030,7 @@ class Config
             /** @var string $adminChannel */
             $adminChannel = $this->getAdminDefaultChannel();
             if (empty($adminChannel)) {
-                throw new Exception(__('No channel found for Admin website channel configuration.'));
+                throw new Exception(__('No channel found for Admin website channel configuration.')->getText());
             }
 
             $mapping[] = [
