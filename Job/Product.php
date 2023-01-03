@@ -2445,7 +2445,7 @@ class Product extends JobImport
 
             /** @var int $id */
             foreach ($attributes as $id) {
-                if (!is_numeric($id) || !isset($row['_entity_id']) || !isset($attributesList[$id])) {
+                if (!isset($row['_entity_id'], $attributesList[$id])) {
                     continue;
                 }
 
@@ -4536,7 +4536,7 @@ class Product extends JobImport
     }
 
     /**
-     * Get visibiliy attribute configuration depending on product type 
+     * Get visibiliy attribute configuration depending on product type
      */
     private function getVisibilityAttribute(string $productType): string
     {
