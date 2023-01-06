@@ -4644,10 +4644,17 @@ class Product extends JobImport
             }
         }
 
-        $attribute = $this->akeneoClient->getAttributeApi()->get($attributeToCheck);
+        try {
+            $attribute = $this->akeneoClient->getAttributeApi()->get($attributeToCheck);
+        } catch (\Exception $e) {
+            $this->jobExecutor->setMessage(__("Akeneo Attribute does not exist"), $this->logger);
+
+            return false;
+        }
+
         if (!isset($attribute['type']) || $attribute['type'] !== $attributeType) {
             $this->jobExecutor->setMessage(
-                __('Akeneo Attribute is not setted or not setted as Simple Select'), $this->logger);
+                __("Akeneo Attribute is not setted or not setted as Simple Select"), $this->logger);
 
             return false;
         }
@@ -4683,9 +4690,38 @@ class Product extends JobImport
             }
         }
 
-        $attribute = $this->akeneoClient->getAttributeApi()->get($attributeToCheck);
+        try {
+            $attribute = $this->akeneoClient->getAttributeApi()->get($attributeToCheck);
+        } catch (\Exception $e) {
+            $this->jobExecutor->setMessage(__("Akeneo Attribute does not exist"), $this->logger);
+
+            return false;
+        }
 
         return $attribute[$valueToCheck] ?? false;
+    }
+
+    /**
+     * Check if attribute exists
+     */
+    private function isAttributeExists(string $attributeToCheck): bool
+    {
+        if (!$this->akeneoClient) {
+            $this->akeneoClient = $this->jobExecutor->getAkeneoClient();
+            if (!$this->akeneoClient) {
+                return false;
+            }
+        }
+
+        try {
+            $attribute = $this->akeneoClient->getAttributeApi()->get($attributeToCheck);
+        } catch (\Exception $e) {
+            $this->jobExecutor->setMessage(__("Akeneo Attribute does not exist"), $this->logger);
+
+            return false;
+        }
+
+        return (bool)$attribute ?? false;
     }
 
     /**
@@ -4699,6 +4735,9 @@ class Product extends JobImport
         $visibilityForSimple = $this->getVisibilityAttribute('simple');
         $visibilityForConfigurable = $this->getVisibilityAttribute('configurable');
 
+        $visibilityForSimpleAttributeExists = $this->isAttributeExists($visibilityForSimple);
+        $visibilityForConfigurableAttributeExists = $this->isAttributeExists($visibilityForConfigurable);
+
         // Global
         $visibilityColumnResult = [
             'visibility' => [
@@ -4708,16 +4747,23 @@ class Product extends JobImport
                 'configurableOriginColumn' => $visibilityForConfigurable,
             ],
         ];
-        if (!$this->isAttributeScopable($visibilityForSimple)
-            && !$this->isAttributeLocalizable($visibilityForSimple)
-        ) {
-            $visibilityColumnResult['visibility']['simple'] = 'IF(`' . $visibilityForSimple . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForSimple . '`)';
+
+        $visibilityColumnResult['visibility']['simple'] = $this->productDefaultVisibility;
+        if ($visibilityForSimpleAttributeExists) {
+            if (!$this->isAttributeScopable($visibilityForSimple)
+                && !$this->isAttributeLocalizable($visibilityForSimple)
+            ) {
+                $visibilityColumnResult['visibility']['simple'] = 'IF(`' . $visibilityForSimple . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForSimple . '`)';
+            }
         }
 
-        if (!$this->isAttributeScopable($visibilityForConfigurable)
-            && !$this->isAttributeLocalizable($visibilityForConfigurable)
-        ) {
-            $visibilityColumnResult['visibility']['configurable'] = 'IF(`' . $visibilityForConfigurable . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForConfigurable . '`)';
+        $visibilityColumnResult['visibility']['configurable'] = $this->productDefaultVisibility;
+        if ($visibilityForConfigurableAttributeExists) {
+            if (!$this->isAttributeScopable($visibilityForConfigurable)
+                && !$this->isAttributeLocalizable($visibilityForConfigurable)
+            ) {
+                $visibilityColumnResult['visibility']['configurable'] = 'IF(`' . $visibilityForConfigurable . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForConfigurable . '`)';
+            }
         }
 
         // Scopable
@@ -4733,20 +4779,24 @@ class Product extends JobImport
             foreach ($localizableScopeCodes as $localizableScopeCode) {
                 $suffix = $suffixSimple = $suffixConfig = '-' . $localizableScopeCode . '-' . $mapping['channel'];
 
-                // Simple products
-                if (!$this->isAttributeLocalizable($visibilityForSimple)) {
-                    $suffixSimple = '-' . $mapping['channel'];
-                }
-                if (!$this->isAttributeScopable($visibilityForSimple)) {
-                    $suffixSimple = '-' . $localizableScopeCode;
+                if ($visibilityForSimpleAttributeExists) {
+                    // Simple products
+                    if (!$this->isAttributeLocalizable($visibilityForSimple)) {
+                        $suffixSimple = '-' . $mapping['channel'];
+                    }
+                    if (!$this->isAttributeScopable($visibilityForSimple)) {
+                        $suffixSimple = '-' . $localizableScopeCode;
+                    }
                 }
 
-                // Configurable products
-                if (!$this->isAttributeLocalizable($visibilityForConfigurable)) {
-                    $suffixConfig =  '-' . $mapping['channel'];
-                }
-                if (!$this->isAttributeScopable($visibilityForConfigurable)) {
-                    $suffixConfig = '-' . $localizableScopeCode;
+                if ($visibilityForConfigurableAttributeExists) {
+                    // Configurable products
+                    if (!$this->isAttributeLocalizable($visibilityForConfigurable)) {
+                        $suffixConfig =  '-' . $mapping['channel'];
+                    }
+                    if (!$this->isAttributeScopable($visibilityForConfigurable)) {
+                        $suffixConfig = '-' . $localizableScopeCode;
+                    }
                 }
 
                 $visibilityColumnResult['visibility' . $suffix] = [
@@ -4756,8 +4806,13 @@ class Product extends JobImport
                     'configurableOriginColumn' => $visibilityForConfigurable . $suffixConfig,
                 ];
 
-                $visibilityColumnResult['visibility' . $suffix]['simple'] = 'IF(`' . $visibilityForSimple . $suffixSimple . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForSimple . $suffixSimple . '`)';
-                $visibilityColumnResult['visibility' . $suffix]['configurable'] = 'IF(`' . $visibilityForConfigurable . $suffixConfig . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForConfigurable . $suffixConfig . '`)';
+                $visibilityColumnResult['visibility' . $suffix]['simple'] = $visibilityForSimpleAttributeExists
+                    ? 'IF(`' . $visibilityForSimple . $suffixSimple . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForSimple . $suffixSimple . '`)'
+                    : $this->productDefaultVisibility
+                ;
+                $visibilityColumnResult['visibility' . $suffix]['configurable'] = $visibilityForConfigurableAttributeExists
+                    ? 'IF(`' . $visibilityForConfigurable . $suffixConfig . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForConfigurable . $suffixConfig . '`)'
+                    : $this->productDefaultVisibility;
             }
         }
 
