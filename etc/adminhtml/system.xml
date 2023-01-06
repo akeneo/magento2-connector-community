@@ -430,6 +430,31 @@ For example :<br/>
                         <![CDATA[Default status for product creation<br/>If a product is updated, status won't be modified unless it is disabled in Akeneo]]>
                     </comment>
                 </field>
+
+                <field id="visibility_enabled" translate="label" type="select" sortOrder="32" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Visibility Mapping From Akeneo Attribute</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="default_visibility" translate="label" type="select" sortOrder="33" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Default product visibility</label>
+                    <source_model>Magento\Catalog\Model\Product\Visibility</source_model>
+                    <depends>
+                        <field id="visibility_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="visibility_simple" translate="label" type="text" sortOrder="34" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Akeneo Attribute Code For Simple Product Visibility</label>
+                    <depends>
+                        <field id="visibility_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="visibility_configurable" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Akeneo Attribute Code For Configurable Product Visibility</label>
+                    <depends>
+                        <field id="visibility_enabled">1</field>
+                    </depends>
+                </field>
+
                 <field id="attribute_mapping" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Attribute Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Attribute</frontend_model>
