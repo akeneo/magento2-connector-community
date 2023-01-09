@@ -4647,14 +4647,14 @@ class Product extends JobImport
         try {
             $attribute = $this->akeneoClient->getAttributeApi()->get($attributeToCheck);
         } catch (\Exception $e) {
-            $this->jobExecutor->setMessage(__("Akeneo Attribute does not exist"), $this->logger);
+            $this->jobExecutor->setMessage(__('Akeneo Attribute does not exist'), $this->logger);
 
             return false;
         }
 
         if (!isset($attribute['type']) || $attribute['type'] !== $attributeType) {
             $this->jobExecutor->setMessage(
-                __("Akeneo Attribute is not setted or not setted as Simple Select"), $this->logger);
+                __('Akeneo Attribute is not setted or not setted as Simple Select'), $this->logger);
 
             return false;
         }
@@ -4693,7 +4693,7 @@ class Product extends JobImport
         try {
             $attribute = $this->akeneoClient->getAttributeApi()->get($attributeToCheck);
         } catch (\Exception $e) {
-            $this->jobExecutor->setMessage(__("Akeneo Attribute does not exist"), $this->logger);
+            $this->jobExecutor->setMessage(__('Akeneo Attribute does not exist'), $this->logger);
 
             return false;
         }
@@ -4714,14 +4714,12 @@ class Product extends JobImport
         }
 
         try {
-            $attribute = $this->akeneoClient->getAttributeApi()->get($attributeToCheck);
+            return !empty($this->akeneoClient->getAttributeApi()->get($attributeToCheck));
         } catch (\Exception $e) {
             $this->jobExecutor->setMessage(__("Akeneo Attribute does not exist"), $this->logger);
 
             return false;
         }
-
-        return (bool)$attribute ?? false;
     }
 
     /**
