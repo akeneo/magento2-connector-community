@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Api\Data\AttributeTypeInterface;
 use Akeneo\Connector\Helper\AttributeFilters;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
@@ -197,7 +198,7 @@ class Option extends Import
         $hasOptions = false;
         /** @var array $attribute */
         foreach ($attributes as $attribute) {
-            if ($attribute['type'] === 'pim_catalog_multiselect' || $attribute['type'] === 'pim_catalog_simpleselect') {
+            if ($attribute['type'] === AttributeTypeInterface::PIM_CATALOG_MULTISELECT || $attribute['type'] === AttributeTypeInterface::PIM_CATALOG_SIMPLESELECT) {
                 if (!$this->akeneoClient) {
                     $this->akeneoClient = $this->jobExecutor->getAkeneoClient();
                 }
@@ -249,7 +250,7 @@ class Option extends Import
         $lines = 0;
         /** @var array $attribute */
         foreach ($attributes as $attribute) {
-            if ($attribute['type'] === 'pim_catalog_multiselect' || $attribute['type'] === 'pim_catalog_simpleselect') {
+            if ($attribute['type'] === AttributeTypeInterface::PIM_CATALOG_MULTISELECT || $attribute['type'] === AttributeTypeInterface::PIM_CATALOG_SIMPLESELECT) {
                 $lines += $this->processAttributeOption($attribute['code'], $paginationSize);
             }
         }
@@ -309,8 +310,8 @@ class Option extends Import
         $eavAttributeTable = $this->entitiesHelper->getTable('eav_attribute');
         $productEntityTypeId = $this->eavConfig->getEntityType(ProductAttributeInterface::ENTITY_TYPE_CODE)->getEntityTypeId();
         $selectTypes = [
-            'pim_catalog_simpleselect',
-            'pim_catalog_multiselect'
+            AttributeTypeInterface::PIM_CATALOG_MULTISELECT,
+            AttributeTypeInterface::PIM_CATALOG_SIMPLESELECT,
         ];
 
         foreach ($attributeMapping as $mapping) {

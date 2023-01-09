@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Api\Data\AttributeTypeInterface;
 use Akeneo\Connector\Helper\AttributeFilters;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
@@ -124,12 +125,6 @@ class Attribute extends Import
      * @var IndexerFactory $indexFactory
      */
     protected $indexFactory;
-    /**
-     * Code of pim table attribute type
-     *
-     * @var string PIM_CATALOG_TABLE
-     */
-    public const PIM_CATALOG_TABLE = 'pim_catalog_table';
 
     /**
      * Attribute constructor
@@ -251,7 +246,9 @@ class Attribute extends Import
             $attributeCode     = $attribute['code'];
             $attribute['code'] = strtolower($attributeCode);
 
-            if ($attribute['type'] == 'pim_catalog_metric' && in_array($attributeCode, $metricsSetting)) {
+            if ($attribute['type'] === AttributeTypeInterface::PIM_CATALOG_METRIC
+                && in_array($attributeCode, $metricsSetting)
+            ) {
                 if ($attribute['scopable'] || $attribute['localizable']) {
                     $this->jobExecutor->setAdditionalMessage(
                         __(
@@ -565,7 +562,7 @@ class Attribute extends Import
             if ((int)$row['scopable'] === 1) {
                 $global = ScopedAttributeInterface::SCOPE_WEBSITE; // Website
             }
-            if ((int)$row['localizable'] === 1 || $row['type'] === self::PIM_CATALOG_TABLE) {
+            if ((int)$row['localizable'] === 1 || $row['type'] === AttributeTypeInterface::PIM_CATALOG_TABLE) {
                 $global = ScopedAttributeInterface::SCOPE_STORE; // Store View
             }
             /** @var array $data */

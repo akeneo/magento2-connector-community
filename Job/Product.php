@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Api\Data\AttributeTypeInterface;
 use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
 use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Executor\JobExecutorFactory;
@@ -92,10 +93,6 @@ class Product extends JobImport
      */
     public const CATALOG_PRODUCT_ENTITY_TABLE_NAME = 'catalog_product_entity';
     public const SUFFIX_SEPARATOR = '-';
-    /**
-     * @var string AKENEO_PRICE_ATTRIBUTE_TYPE
-     */
-    public const AKENEO_PRICE_ATTRIBUTE_TYPE = 'pim_catalog_price_collection';
     /**
      * This variable contains a string value
      *
@@ -1429,7 +1426,7 @@ class Product extends JobImport
                 /** @var bool $isLocalizable */
                 $isLocalizable = $attribute['localizable'] ?? false;
                 /** @var bool $isPrice */
-                $isPrice = $attributeType === self::AKENEO_PRICE_ATTRIBUTE_TYPE;
+                $isPrice = $attributeType === AttributeTypeInterface::PIM_CATALOG_PRICE_COLLECTION;
                 if ($isScopable && $isLocalizable) {
                     $variationsCodes = $localizableScopeCodes;
                 } elseif ($isScopable) {
@@ -1447,7 +1444,7 @@ class Product extends JobImport
                 }
 
                 foreach ($variationsCodes as $code) {
-                    if ($attributeType !== self::AKENEO_PRICE_ATTRIBUTE_TYPE) {
+                    if ($attributeType !== AttributeTypeInterface::PIM_CATALOG_PRICE_COLLECTION) {
                         $columns[] = $attributeCode . '-' . $code; // Column name is attribute code with scope or local or both (case 1, 2, 3)
                         continue;
                     }
@@ -4440,7 +4437,7 @@ class Product extends JobImport
                     $attributeCode
                 );
                 if (!isset($attribute['code'])
-                    || $attribute['type'] !== 'pim_catalog_boolean'
+                    || $attribute['type'] !== AttributeTypeInterface::PIM_CATALOG_BOOLEAN
                     || $attribute['localizable']
                 ) {
                     $this->jobExecutor->setAdditionalMessage(
@@ -4541,7 +4538,8 @@ class Product extends JobImport
     private function getVisibilityAttribute(string $productType): string
     {
         if (!$this->configHelper->isProductVisibilityEnabled()
-            || !$this->isAttributeTypeCorrect($this->configHelper->getProductVisibilitySimple(), 'pim_catalog_simpleselect')
+            || !$this->isAttributeTypeCorrect($this->configHelper->getProductVisibilitySimple(), 
+                                              AttributeTypeInterface::PIM_CATALOG_SIMPLESELECT)
         ) {
             return '';
         }
