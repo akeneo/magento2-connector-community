@@ -135,7 +135,15 @@ class Option extends Entities
         $connection->query($update);
 
         /* Continue with original matchEntities */
-        /* Update entity_id column from akeneo_connector_entities table */
+
+        /*
+         * Update entity_id column from akeneo_connector_entities table
+         *
+         * Beware of "Subquery returns more than 1 row" MySQL error.
+         * The problem is not that the subquery "SELECT `entity_id` FROM ..." return more than one row.
+         * The problem is that for a single attribute option and option value combination, you have 2 row in akeneo_connector_entity.
+         * To find them you can query "SELECT `code`, import FROM akeneo_connector_entities GROUP BY CODE, import HAVING count(*) > 1";
+         */
         $connection->query(
             '
             UPDATE `' . $tableName . '` t
