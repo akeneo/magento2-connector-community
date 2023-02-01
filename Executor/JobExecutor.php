@@ -325,7 +325,12 @@ class JobExecutor implements JobExecutorInterface
                 return false;
             }
 
-            $this->lastSuccessExecutedDate = $this->json->unserialize($this->currentJob->getLastSuccessExecutedDate() ?? '');
+            $this->lastSuccessExecutedDate = [];
+            if ($this->currentJob->getLastSuccessExecutedDate()) {
+                $this->lastSuccessExecutedDate = $this->json->unserialize(
+                    $this->currentJob->getLastSuccessExecutedDate()
+                );
+            }
             $this->beforeRun();
 
             /** @var bool $isError */
