@@ -14,6 +14,7 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface as EventManager;
 use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Swatches\Model\Swatch;
 use Magento\Weee\Model\Attribute\Backend\Weee\Tax;
 
 /**
@@ -93,6 +94,16 @@ class Attribute
     }
 
     /**
+     * Return swatch types attributes configuration, fallback to other types if attribute is not a swatch type
+     */
+    public function getSwatchType(string $attributeCode, string $pimType = 'default'): array
+    {
+        $types = $this->getAdditionalSwatchTypes();
+
+        return isset($types[$attributeCode]) ? $this->getConfiguration($types[$attributeCode]) : $this->getType($pimType);
+    }
+
+    /**
      * Retrieve additional types
      *
      * @return array
@@ -110,6 +121,30 @@ class Attribute
         $types = $this->jsonSerializer->unserialize($types);
         if (is_array($types)) {
             /** @var array $type */
+            foreach ($types as $type) {
+                $additional[$type['pim_type']] = $type['magento_type'];
+            }
+        }
+
+        return $additional;
+    }
+
+    /**
+     * Retrieve swatch types attributes
+     */
+    public function getAdditionalSwatchTypes(): array
+    {
+        /** @var string $types */
+        $types = $this->scopeConfig->getValue(Config::ATTRIBUTE_SWATCH_TYPES);
+        /** @var mixed[] $additional */
+        $additional = [];
+        if (!$types) {
+            return $additional;
+        }
+        /** @var mixed[] $types */
+        $types = $this->jsonSerializer->unserialize($types);
+        if (is_array($types)) {
+            /** @var mixed[] $type */
             foreach ($types as $type) {
                 $additional[$type['pim_type']] = $type['magento_type'];
             }
@@ -192,6 +227,22 @@ class Attribute
                 'source_model'   => null,
                 'frontend_model' => null,
             ],
+            Swatch::SWATCH_TYPE_VISUAL_ATTRIBUTE_FRONTEND_INPUT => [
+                'type' => 'pim_catalog_swatch_visual',
+                'backend_type' => 'int',
+                'frontend_input' => 'select',
+                'backend_model' => null,
+                'source_model' => Table::class,
+                'frontend_model' => null,
+            ],
+            Swatch::SWATCH_TYPE_TEXTUAL_ATTRIBUTE_FRONTEND_INPUT => [
+                'type' => 'pim_catalog_swatch_text',
+                'backend_type' => 'int',
+                'frontend_input' => 'select',
+                'backend_model' => null,
+                'source_model' => Table::class,
+                'frontend_model' => null,
+            ],
         ];
 
         /** @var DataObject $response */
@@ -238,6 +289,26 @@ class Attribute
         $types = $response->getTypes();
 
         return $types;
+    }
+
+    /**
+     * Retrieve available Magento Swatch types
+     */
+    public function getAvailableSwatchTypes(): array
+    {
+        $types = [
+            Swatch::SWATCH_TYPE_VISUAL_ATTRIBUTE_FRONTEND_INPUT => 'Visual Swatch',
+            Swatch::SWATCH_TYPE_TEXTUAL_ATTRIBUTE_FRONTEND_INPUT => 'Text Swatch',
+        ];
+        $response = new DataObject();
+        $response->setSwatchTypes($types);
+
+        $this->eventManager->dispatch(
+            'akeneo_connector_attribute_get_available_swatch_types_add_after',
+            ['response' => $response]
+        );
+
+        return $response->getSwatchTypes();
     }
 
     /**
