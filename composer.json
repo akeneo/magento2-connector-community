@@ -1,6 +1,6 @@
 {
   "name": "akeneo/module-magento2-connector-community",
-  "description": "Akeneo connector for Magento 2",
+  "description": "Akeneo Connector for Adobe Commerce",
   "require": {
     "magento/framework": ">=102.0.0",
     "magento/module-backend": ">=100.0.1",

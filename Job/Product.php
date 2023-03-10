@@ -2748,7 +2748,7 @@ class Product extends JobImport
                             if (!isset($websites[$associatedWebsite])) {
                                 $this->jobExecutor->setAdditionalMessage(
                                     __(
-                                        'Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.',
+                                        'Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a E-commerce website.',
                                         $row['identifier'],
                                         $associatedWebsite
                                     ),
@@ -2775,7 +2775,7 @@ class Product extends JobImport
             } else {
                 $this->jobExecutor->setAdditionalMessage(
                     __(
-                        'Warning: The website attribute code given does not match any Magento attribute.'
+                        'Warning: The website attribute code given does not match any E-commerce attribute.'
                     ),
                     $this->logger
                 );
@@ -3229,7 +3229,7 @@ class Product extends JobImport
             if (!$this->productExistInMagento($row['identifier'])) {
                 $this->jobExecutor->setAdditionalMessage(
                     __(
-                        'The grouped product with identifier %1 does not exist in magento, links will not be imported',
+                        'The grouped product with identifier %1 does not exist in E-commerce, links will not be imported',
                         $row['identifier']
                     ),
                     $this->logger
@@ -3311,7 +3311,7 @@ class Product extends JobImport
                     if (!$this->productExistInMagento($productInfo['identifier'])) {
                         $this->jobExecutor->setAdditionalMessage(
                             __(
-                                'The grouped product %1 is linked to the product %2 but it does not exist in Magento. The association has been skipped.',
+                                'The grouped product %1 is linked to the product %2 but it does not exist in E-commerce. The association has been skipped.',
                                 $row['identifier'],
                                 $productInfo['identifier']
                             ),
@@ -4538,7 +4538,7 @@ class Product extends JobImport
     private function getVisibilityAttribute(string $productType): string
     {
         if (!$this->configHelper->isProductVisibilityEnabled()
-            || !$this->isAttributeTypeCorrect($this->configHelper->getProductVisibilitySimple(), 
+            || !$this->isAttributeTypeCorrect($this->configHelper->getProductVisibilitySimple(),
                                               AttributeTypeInterface::PIM_CATALOG_SIMPLESELECT)
         ) {
             return '';

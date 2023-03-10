@@ -45,7 +45,7 @@
                     </item>
                     <item name="4" xsi:type="array">
                         <item name="method" xsi:type="string">matchEntities</item>
-                        <item name="comment" xsi:type="string">Match code with Magento ID</item>
+                        <item name="comment" xsi:type="string">Match code with E-commerce ID</item>
                     </item>
                     <item name="5" xsi:type="array">
                         <item name="method" xsi:type="string">setStructure</item>
@@ -114,7 +114,7 @@
                     </item>
                     <item name="4" xsi:type="array">
                         <item name="method" xsi:type="string">matchEntities</item>
-                        <item name="comment" xsi:type="string">Match code with Magento ID</item>
+                        <item name="comment" xsi:type="string">Match code with E-commerce ID</item>
                     </item>
                     <item name="5" xsi:type="array">
                         <item name="method" xsi:type="string">insertFamilies</item>
@@ -164,7 +164,7 @@
                     </item>
                     <item name="4" xsi:type="array">
                         <item name="method" xsi:type="string">matchEntities</item>
-                        <item name="comment" xsi:type="string">Match code with Magento ID</item>
+                        <item name="comment" xsi:type="string">Match code with E-commerce ID</item>
                     </item>
                     <item name="5" xsi:type="array">
                         <item name="method" xsi:type="string">matchType</item>
@@ -217,7 +217,7 @@
                     </item>
                     <item name="5" xsi:type="array">
                         <item name="method" xsi:type="string">matchEntities</item>
-                        <item name="comment" xsi:type="string">Match code with Magento ID</item>
+                        <item name="comment" xsi:type="string">Match code with E-commerce ID</item>
                     </item>
                     <item name="6" xsi:type="array">
                         <item name="method" xsi:type="string">insertOptions</item>
@@ -286,11 +286,11 @@
                     </item>
                     <item name="10" xsi:type="array">
                         <item name="method" xsi:type="string">matchEntities</item>
-                        <item name="comment" xsi:type="string">Match code with Magento ID</item>
+                        <item name="comment" xsi:type="string">Match code with E-commerce ID</item>
                     </item>
                     <item name="11" xsi:type="array">
                         <item name="method" xsi:type="string">updateAttributeSetId</item>
-                        <item name="comment" xsi:type="string">Match family code with Magento ID</item>
+                        <item name="comment" xsi:type="string">Match family code with E-commerce ID</item>
                     </item>
                     <item name="12" xsi:type="array">
                         <item name="method" xsi:type="string">updateOption</item>
