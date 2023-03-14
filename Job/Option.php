@@ -326,7 +326,7 @@ class Option extends Import
             }
 
             // Does the Akeneo attribute an attribute that contains options
-            if (in_array($akeneoAttributeData['type'], $selectTypes)) {
+            if (isset($akeneoAttributeData['type']) && in_array($akeneoAttributeData['type'], $selectTypes)) {
                 $magentoEavAttribute = $connection->fetchRow(
                     $connection->select()
                         ->from($eavAttributeTable, ['attribute_code', 'source_model', 'is_user_defined'])
