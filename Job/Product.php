@@ -27,6 +27,7 @@ use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Connector\Model\Source\Filters\Mode;
 use Akeneo\Connector\Model\Source\Filters\ModelCompleteness;
 use Akeneo\Connector\Model\Source\StatusMode;
+use Akeneo\Pim\ApiClient\Exception\HttpException;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursor;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
@@ -93,6 +94,10 @@ class Product extends JobImport
      */
     public const CATALOG_PRODUCT_ENTITY_TABLE_NAME = 'catalog_product_entity';
     public const SUFFIX_SEPARATOR = '-';
+    public const AUTHORIZED_IDENTIFIER_ATTRIBUTE_TYPES = [
+        'pim_catalog_identifier',
+        'pim_catalog_text'
+    ];
     /**
      * This variable contains a string value
      *
@@ -404,11 +409,60 @@ class Product extends JobImport
             return;
         }
 
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+
+        $akeneoClient = $this->akeneoClient;
+        // Check for Akeneo attribute code for sku configuration in UUID editions before job launch
+        // Throw error and stop job if custom attribute as SKU doesn't exist, isn't with the right type or isn't global
+        if ($this->entitiesHelper->isProductUuidEdition()) {
+            $attributeCodeForSku = $this->configHelper->getAkeneoAttributeCodeForSku();
+            if (empty($attributeCodeForSku)) {
+                $this->jobExecutor->setMessage(
+                    __('No Akeneo SKU code mapped. Please check your configurations.'),
+                    $this->logger
+                );
+                $this->jobExecutor->afterRun(true);
+
+                return;
+            }
+            try {
+                $attribute = $akeneoClient->getAttributeApi()->get($attributeCodeForSku);
+            } catch (HttpException $exception) {
+                $this->jobExecutor->setMessage(
+                    __('There is an issue with attribute "' . $attributeCodeForSku . '" : ' . $exception),
+                    $this->logger
+                );
+                $this->jobExecutor->afterRun(true);
+
+                return;
+            }
+            $attributeType = $attribute['type'] ?? '';
+            if (!in_array($attributeType, self::AUTHORIZED_IDENTIFIER_ATTRIBUTE_TYPES)) {
+                $this->jobExecutor->setMessage(
+                    __('Attribute "' . $attributeCodeForSku . '" does not have correct type. Authorized types: ' . implode(', ', self::AUTHORIZED_IDENTIFIER_ATTRIBUTE_TYPES)),
+                    $this->logger
+                );
+                $this->jobExecutor->afterRun(true);
+
+                return;
+            }
+            $isLocalizable = $attribute['localizable'] ?? false;
+            $isScopable = $attribute['scopable'] ?? false;
+            if ($isLocalizable || $isScopable) {
+                $this->jobExecutor->setMessage(
+                    __('Attribute "' . $attributeCodeForSku . '" must be global: not localizable or scopable.'),
+                    $this->logger
+                );
+                $this->jobExecutor->afterRun(true);
+
+                return;
+            }
+        }
+
         // Stop the import if the family is not imported
         $family = $this->getFamily();
         if ($family) {
-            /** @var AdapterInterface $connection */
-            $connection = $this->entitiesHelper->getConnection();
             /** @var string $connectorEntitiesTable */
             $connectorEntitiesTable = $this->entities->getTable($this->entities::TABLE_NAME);
             /** @var bool $isFamilyImported */
@@ -437,8 +491,9 @@ class Product extends JobImport
         }
 
         foreach ($filters as $filter) {
+            $productApi = $this->entitiesHelper->getProductApiEndpoint($akeneoClient);
             /** @var PageInterface $products */
-            $products = $this->akeneoClient->getProductApi()->listPerPage(1, false, $filter);
+            $products = $productApi->listPerPage(1, false, $filter);
             /** @var mixed[] $products */
             $products = $products->getItems();
 
@@ -462,7 +517,7 @@ class Product extends JobImport
             $modelFilters = $this->getProductModelFilters($family);
             foreach ($modelFilters as $filter) {
                 /** @var PageInterface $productModels */
-                $productModels = $this->akeneoClient->getProductModelApi()->listPerPage(1, false, $filter);
+                $productModels = $akeneoClient->listPerPage(1, false, $filter);
                 /** @var array $productModel */
                 $productModels = $productModels->getItems();
 
@@ -497,6 +552,23 @@ class Product extends JobImport
             /** @var string $message */
             $message = __('Family imported in this batch: %1', $family);
             $this->jobExecutor->setAdditionalMessage($message, $this->logger);
+        }
+
+        if ($this->entitiesHelper->isProductUuidEdition()) {
+            $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
+
+            $connection->changeColumn(
+                $tmpTable,
+                'uuid',
+                'uuid',
+                [
+                    'nullable' => true,
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 255,
+                    'comment' => 'UUID',
+                ]
+            );
+            $connection->addIndex($tmpTable, 'UNIQUE_UUID', 'uuid', 'unique');
         }
     }
 
@@ -536,8 +608,9 @@ class Product extends JobImport
             if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
                 $filter['with_completenesses'] = 'true'; //enable with_completenesses on call api
             }
+            $productApi = $this->entitiesHelper->getProductApiEndpoint($this->akeneoClient);
             /** @var ResourceCursorInterface $products */
-            $products = $this->akeneoClient->getProductApi()->all($paginationSize, $filter);
+            $products = $productApi->all($paginationSize, $filter);
 
             /**
              * @var mixed[] $product
@@ -698,6 +771,9 @@ class Product extends JobImport
             }
         }
 
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
+
         // Remove declared file attributes columns if file import is disabled
         if (!$this->configHelper->isFileImportEnabled()) {
             /** @var array $attributesToImport */
@@ -713,8 +789,6 @@ class Product extends JobImport
                     $this->storeHelper->getStores(['lang', 'channel_code']) // en_US-channel
                 );
 
-                /** @var string $tmpTable */
-                $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
                 /** @var array $data */
                 foreach ($attributesToImport as $attribute) {
                     if ($connection->tableColumnExists($tmpTable, $attribute)) {
@@ -741,6 +815,18 @@ class Product extends JobImport
         $this->jobExecutor->setMessage(__('%1 line(s) found', $index), $this->logger);
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logImportedEntities($this->logger, false, 'identifier');
+        }
+
+        if ($this->entitiesHelper->isProductUuidEdition()) {
+            $attributeCodeForSku = $this->configHelper->getAkeneoAttributeCodeForSku();
+            $connection->update($tmpTable, ['identifier' => new Expr('`' . 'uuid' . '`')]);
+            if ($connection->tableColumnExists($tmpTable, $attributeCodeForSku)) {
+                $connection->update(
+                    $tmpTable,
+                    ['identifier' => new Expr('`' . $attributeCodeForSku . '`')],
+                    [$attributeCodeForSku . ' <> ?' => '']
+                );
+            }
         }
     }
 
@@ -871,7 +957,7 @@ class Product extends JobImport
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
         // If family is grouped, create grouped products
-        if (in_array($edition, [Edition::SERENITY, Edition::GROWTH, Edition::GREATER_OR_FIVE])
+        if (in_array($edition, [Edition::SERENITY, Edition::GROWTH, Edition::SEVEN, Edition::GREATER_OR_FIVE])
             && $this->entitiesHelper->isFamilyGrouped($family)
         ) {
             $connection->addColumn(
@@ -1188,6 +1274,10 @@ class Product extends JobImport
             ) ? 'v.family' : 'e.family',
             'categories' => 'v.categories',
         ];
+
+        if ($this->entitiesHelper->isProductUuidEdition()) {
+            $data['uuid'] = 'v.code';
+        }
 
         if ($this->configHelper->isUrlGenerationEnabled()) {
             $data['url_key'] = 'v.code';
@@ -1543,8 +1633,18 @@ class Product extends JobImport
             return;
         }
 
+        if ($this->entitiesHelper->isProductUuidEdition()) {
+            // We replace the sku by the uuid in the Akeneo entities table if needed for retro-compatibility
+            $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
+            $uuids = $connection->select()
+                ->from(false, ['code' => 'tmp.uuid'])
+                ->joinInner(['tmp' => $tmpTable], '`tmp`.`sku` = `ace`.`code`', [])
+                ->where('`ace`.`import` = ?', 'product');
+            $connection->query($connection->updateFromSelect($uuids, ['ace' => $entitiesTable]));
+        }
+
         $this->entitiesHelper->matchEntity(
-            'identifier',
+            $this->entitiesHelper->isProductUuidEdition() ? 'uuid' : 'identifier',
             'catalog_product_entity',
             'entity_id',
             $this->jobExecutor->getCurrentJob()->getCode()
@@ -2561,7 +2661,7 @@ class Product extends JobImport
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
 
-        if ($edition === Edition::SERENITY || $edition === Edition::GROWTH) {
+        if ($edition === Edition::SERENITY || $edition === Edition::GROWTH || $edition === Edition::SEVEN) {
             /** @var string[] $filters */
             $filters = [
                 'search' => [
@@ -2602,7 +2702,7 @@ class Product extends JobImport
             /** @var string $rowEntityId */
             $rowEntityId = $row['_entity_id'];
 
-            if ($edition === Edition::SERENITY || $edition === Edition::GROWTH) {
+            if ($edition === Edition::SERENITY || $edition === Edition::GROWTH || $edition === Edition::SEVEN) {
                 if (!empty($productModelItems) && array_key_exists($row['parent'], $productModelItems)) {
                     $row['parent'] = $productModelItems[$row['parent']];
                     $connection->update(
@@ -2934,6 +3034,7 @@ class Product extends JobImport
         $productsTable = $this->entitiesHelper->getTable('catalog_product_entity');
         $linkTable = $this->entitiesHelper->getTable('catalog_product_link');
         $linkAttributeTable = $this->entitiesHelper->getTable('catalog_product_link_attribute');
+        $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         $related = [];
         $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($productsTable);
         $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productsTable);
@@ -3031,8 +3132,8 @@ class Product extends JobImport
         $select = $connection->select()
             ->from(['tmp' => $tempRelatedTable], ["p.$columnIdentifier", 'p_sku.entity_id', 'link_type_id'])
             ->joinInner(
-                ['p_sku' => $productsTable],
-                'tmp.sku = p_sku.sku',
+                ['p_sku' => $entitiesTable],
+                'tmp.sku = p_sku.code AND p_sku.import = "product"',
                 []
             );
         if ($rowIdExists) {
@@ -3096,8 +3197,11 @@ class Product extends JobImport
     {
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
-        // Is family is not grouped or edition not Serenity, skip
-        if (($edition != Edition::SERENITY && $edition != Edition::GROWTH && $edition != Edition::GREATER_OR_FIVE)
+        // Is family is not grouped or edition not Serenity or five or greater, skip
+        if (($edition != Edition::SERENITY
+                && $edition != Edition::GREATER_OR_FIVE
+                && $edition != Edition::GROWTH
+                && $edition != Edition::SEVEN)
             || !$this->entitiesHelper->isFamilyGrouped($this->getFamily())
         ) {
             return;
@@ -4254,7 +4358,7 @@ class Product extends JobImport
         // If we are in serenity mode, place the mapped grouped families to the end of the imports
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
-        if ($edition === Edition::SERENITY || $edition === Edition::GROWTH || $edition === Edition::GREATER_OR_FIVE) {
+        if ($edition === Edition::SERENITY || $edition === Edition::GROWTH || $edition === Edition::SEVEN || $edition === Edition::GREATER_OR_FIVE) {
             /** @var string[] $groupedFamiliesToImport */
             $groupedFamiliesToImport = $this->configHelper->getGroupedFamiliesToImport();
             /**
@@ -4538,7 +4642,7 @@ class Product extends JobImport
     private function getVisibilityAttribute(string $productType): string
     {
         if (!$this->configHelper->isProductVisibilityEnabled()
-            || !$this->isAttributeTypeCorrect($this->configHelper->getProductVisibilitySimple(), 
+            || !$this->isAttributeTypeCorrect($this->configHelper->getProductVisibilitySimple(),
                                               AttributeTypeInterface::PIM_CATALOG_SIMPLESELECT)
         ) {
             return '';

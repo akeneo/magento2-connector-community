@@ -312,7 +312,7 @@ For example :<br/>
                     </depends>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity,growth</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity,growth,seven</field>
                 </depends>
             </group>
             <group id="attribute" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -359,11 +359,18 @@ For example :<br/>
                     <can_be_empty>1</can_be_empty>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity,growth</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity,growth,seven</field>
                 </depends>
             </group>
             <group id="product" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Products</label>
+                <field id="akeneo_attribute_code_for_sku" translate="label comment" type="text" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Akeneo attribute code for SKU</label>
+                    <comment>Mapping used in Serenity, Growth and V7.0 Akeneo edition. The SKU behavior now looks closer to a normal attribute. If empty, run a fault and stop the product flow.</comment>
+                    <depends>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth,seven</field>
+                    </depends>
+                </field>
                 <field id="website_attribute" translate="label comment" type="text" sortOrder="5" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Website Attribute</label>
                     <comment>Enter the code of the select or multiselect attribute used to associate products to your websites, leave blank to ignore</comment>
@@ -378,7 +385,7 @@ For example :<br/>
                     <label>Product Status Mode</label>
                     <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
                     <comment>
-                        <![CDATA[The "Status based on Completeness level" mode is only available for Akeneo version Growth and Serenity.]]>
+                        <![CDATA[The "Status based on Completeness level" mode is only available for Akeneo version Growth and Serenity and 7.0.]]>
                     </comment>
                 </field>
                 <field id="attribute_code_for_simple_product_statuses" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -405,7 +412,7 @@ For example :<br/>
                     <label>Enable Simple Products per website if completeness in channel is equal or greater than</label>
                     <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
                     <depends>
-                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth</field>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth,seven</field>
                         <field id="product_status_mode">status_based_on_completeness_level</field>
                     </depends>
                     <comment>
@@ -416,7 +423,7 @@ For example :<br/>
                     <label>Default Configurable Products Status</label>
                     <source_model>Akeneo\Connector\Model\Source\Activation</source_model>
                     <depends>
-                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth</field>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth,seven</field>
                         <field id="product_status_mode">status_based_on_completeness_level</field>
                     </depends>
                 </field>
@@ -564,7 +571,7 @@ For example :<br/>
                     <comment><![CDATA[Map each grouped family from Akeneo to its corresponding quantified association.<br />Please make sure to only map quantified association.]]></comment>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_five,serenity,growth</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_five,serenity,growth,seven</field>
                 </depends>
             </group>
             <group id="index" translate="label" sortOrder="70" type="text" showInDefault="1" showInWebsite="0" showInStore="0">

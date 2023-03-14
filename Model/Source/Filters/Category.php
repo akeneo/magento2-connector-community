@@ -35,7 +35,8 @@ class Category implements ArrayInterface
      */
     public const IS_ROOT_ENABLED_VERSIONS = [
         Edition::SERENITY,
-        Edition::GROWTH
+        Edition::GROWTH,
+        Edition::SEVEN
     ];
     /**
      * This variable is used for Akeneo Authenticator

@@ -252,6 +252,10 @@ class Config
      */
     public const PRODUCT_ATTRIBUTE_MAPPING = 'akeneo_connector/product/attribute_mapping';
     /**
+     * Akeneo attribute code for Magento SKU
+     */
+    public const PRODUCT_AKENEO_ATTRIBUTE_CODE_FOR_SKU = 'akeneo_connector/product/akeneo_attribute_code_for_sku';
+    /**
      * Website attribute config path
      *
      * @var string PRODUCT_WEBSITE_ATTRIBUTE
@@ -999,6 +1003,14 @@ class Config
     }
 
     /**
+     * Retrieve the Akeneo attribute code for Magento SKU
+     */
+    public function getAkeneoAttributeCodeForSku(): ?string
+    {
+        return $this->scopeConfig->getValue(self::PRODUCT_AKENEO_ATTRIBUTE_CODE_FOR_SKU);
+    }
+
+    /**
      * Retrieve the name of the website association attribute
      *
      * @return string
@@ -1036,7 +1048,7 @@ class Config
             /** @var string $adminChannel */
             $adminChannel = $this->getAdminDefaultChannel();
             if (empty($adminChannel)) {
-                throw new Exception(__('No channel found for Admin website channel configuration.')->getText());
+                throw new Exception((string)__('No channel found for Admin website channel configuration.'));
             }
 
             $mapping[] = [

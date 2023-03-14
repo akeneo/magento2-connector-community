@@ -105,6 +105,7 @@ class ConfigManagement
     public const BYPASS_BOOLEAN_FIELDS = [
         ConfigHelper::PRODUCT_TAX_CLASS,
         ConfigHelper::PRODUCTS_FILTERS_UPDATED_SINCE,
+        ConfigHelper::PRODUCT_AKENEO_ATTRIBUTE_CODE_FOR_SKU,
         ConfigHelper::PRODUCT_WEBSITE_ATTRIBUTE,
         ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING,
         ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES,
