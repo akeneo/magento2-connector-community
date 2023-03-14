@@ -360,7 +360,7 @@ class Option extends Import
     }
 
     /**
-     * Check already imported entities are still in E-commerce
+     * Check already imported entities are still in Magento/Adobe Commerce
      *
      * @return void
      */
