@@ -15,7 +15,7 @@
     <column xsi:type="int" name="id" padding="11" unsigned="false" nullable="false" identity="true" comment="ID"/>
     <column xsi:type="varchar" name="import" nullable="false" length="255" comment="Import type"/>
     <column xsi:type="varchar" name="code" nullable="false" length="255" comment="Akeneo Code"/>
-    <column xsi:type="int" name="entity_id" padding="11" unsigned="false" nullable="true" identity="false" comment="Magento Entity Id"/>
+    <column xsi:type="int" name="entity_id" padding="11" unsigned="false" nullable="true" identity="false" comment="Magento/Adobe Commerce Entity Id"/>
     <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Creation Time"/>
     <constraint xsi:type="primary" referenceId="PRIMARY">
       <column name="id"/>

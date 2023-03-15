@@ -73,7 +73,7 @@ class Image extends AbstractFieldArray
      */
     protected function _construct()
     {
-        $this->addColumn('attribute', ['label' => __('Magento Attribute')]);
+        $this->addColumn('attribute', ['label' => __('Magento/Adobe Commerce Attribute')]);
         $this->addColumn('column', ['label' => __('Akeneo Attribute')]);
         $this->_addAfter       = false;
         $this->_addButtonLabel = __('Add');
