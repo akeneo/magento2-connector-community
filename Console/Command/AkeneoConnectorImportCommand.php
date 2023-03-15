@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Console\Command;
 
 use Akeneo\Connector\Api\Data\JobInterface;
@@ -129,12 +131,12 @@ class AkeneoConnectorImportCommand extends Command
         $jobs = $this->jobRepository->getList();
 
         // Options
-        $this->displayComment(__('Options:'), $output);
-        $this->displayInfo(__('--code'), $output);
+        $this->displayComment((string)__('Options:'), $output);
+        $this->displayInfo((string)__('--code'), $output);
         $output->writeln('');
 
         // Codes
-        $this->displayComment(__('Available codes:'), $output);
+        $this->displayComment((string)__('Available codes:'), $output);
         /** @var JobInterface $job */
         foreach ($jobs as $job) {
             $this->displayInfo($job->getCode(), $output);
@@ -147,8 +149,8 @@ class AkeneoConnectorImportCommand extends Command
         /** @var string $code */
         $code = $job->getCode();
         if ($code) {
-            $this->displayComment(__('Example:'), $output);
-            $this->displayInfo(__('akeneo_connector:import --code=%1', $code), $output);
+            $this->displayComment((string)__('Example:'), $output);
+            $this->displayInfo((string)__('akeneo_connector:import --code=%1', $code), $output);
         }
     }
 
