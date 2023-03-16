@@ -327,9 +327,13 @@ class JobExecutor implements JobExecutorInterface
 
             $this->lastSuccessExecutedDate = [];
             if ($this->currentJob->getLastSuccessExecutedDate()) {
-                $this->lastSuccessExecutedDate = $this->json->unserialize(
-                    $this->currentJob->getLastSuccessExecutedDate()
-                );
+                try {
+                    $this->lastSuccessExecutedDate = $this->json->unserialize(
+                        $this->currentJob->getLastSuccessExecutedDate()
+                    );
+                } catch (\InvalidArgumentException $invalidArgumentException) {
+                    $this->lastSuccessExecutedDate = [];
+                }
             }
             $this->beforeRun();
 
