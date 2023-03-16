@@ -29,6 +29,7 @@
                 <model_completeness_type>no_condition</model_completeness_type>
             </products_filters>
             <product>
+                <akeneo_attribute_code_for_sku>sku</akeneo_attribute_code_for_sku>
                 <url_generation_enabled>1</url_generation_enabled>
                 <product_status_mode>default_product_status</product_status_mode>
                 <default_configurable_product_status>2</default_configurable_product_status>

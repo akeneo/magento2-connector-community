@@ -64,6 +64,7 @@ Zum Beispiel :<br/>
 "Default Product Status","Standardproduktstatus"
 "Default status for product creation<br/>If a product is updated, status won't be modified unless it is disabled in Akeneo","Standardstatus für die Produkterstellung<br/>Wenn ein Produkt aktualisiert wird, wird der Status nur geändert, wenn er in Akeneo deaktiviert ist"
 "Enabled","Freigegeben"
+"Mapping used in Serenity, Growth and V7.0 Akeneo edition. The SKU behavior now looks closer to a normal attribute. If empty, run a fault and stop the product flow.","Mapping verwendet in Serenity, Growth und V7.0 Akeneo Edition. Das SKU-Verhalten ähnelt jetzt eher einem normalen Attribut. Wenn leer, einen Fehler auslösen und den Produktfluss stoppen."
 "Enter the code of the select or multiselect attribute used to associate products to your websites, leave blank to ignore","Geben Sie den Code des ausgewählten Attributs ein, das zum Zuordnen von Produkten zu Ihren Websites verwendet wird, und lassen Sie das Feld zum Ignorieren leer"
 "Enter all PIM attributes containing product images. All images specified will be imported to the product image gallery.","Geben Sie alle PIM-Attribute ein, die Produktbilder enthalten. Alle angegebenen Bilder werden in die Produkt-Bildergalerie importiert."
 "Equals","Gleich"

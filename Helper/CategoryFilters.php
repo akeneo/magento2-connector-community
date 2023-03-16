@@ -78,9 +78,10 @@ class CategoryFilters
         $edition = $this->configHelper->getEdition();
 
         if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO
-            || $edition === Edition::GREATER_OR_FIVE ||
-            $edition === Edition::SERENITY ||
-            $edition === Edition::GROWTH
+            || $edition === Edition::GREATER_OR_FIVE
+            || $edition === Edition::SERENITY
+            || $edition === Edition::GROWTH
+            || $edition === Edition::SEVEN
         ) {
             $this->searchBuilder = $this->searchBuilderFactory->create();
             /** @var string[] $categoriesToImport */

@@ -6,7 +6,10 @@ namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
+use Akeneo\Pim\ApiClient\Api\ProductApiInterface;
+use Akeneo\Pim\ApiClient\Api\ProductUuidApiInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursor;
 use Exception;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
@@ -1132,5 +1135,31 @@ class Entities
         $attributesLength = $this->getAttributesLength($familyCode);
         $attributeColumnLength = $attributesLength[strtok($attributeCode, '-')] ?? self::LARGE_ATTRIBUTE_LENGTH; // Add 2M by default to ensure "fake" reference entity attributes correct length
         return $attributeColumnLength === self::DEFAULT_ATTRIBUTE_LENGTH ? null : $attributeColumnLength; // Return null value for default attributes length
+    }
+
+    /**
+     * Retrieve product API endpoint with UUID behavior
+     * @see https://api.akeneo.com/getting-started/from-identifiers-to-uuid-7x/welcome.html#from-product-identifier-to-product-uuid
+     *
+     * @return ProductApiInterface|ProductUuidApiInterface
+     */
+    public function getProductApiEndpoint(AkeneoPimClientInterface $akeneoClient)
+    {
+        if ($this->isProductUuidEdition()) {
+            /** @var ProductUuidApiInterface $productApi */
+            return $akeneoClient->getProductUuidApi();
+        }
+
+        return $akeneoClient->getProductApi();
+    }
+
+    /**
+     * Check if Akeneo edition is set on Serenity, Growth or V7.0
+     */
+    public function isProductUuidEdition(): bool
+    {
+        $edition = $this->configHelper->getEdition();
+
+        return $edition === Edition::SERENITY || $edition === Edition::GROWTH || $edition === Edition::SEVEN;
     }
 }
