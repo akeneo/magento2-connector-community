@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Console\Command;
 
 use Akeneo\Connector\Api\Data\JobInterface;
