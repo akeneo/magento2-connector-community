@@ -45,7 +45,7 @@
                     </item>
                     <item name="4" xsi:type="array">
                         <item name="method" xsi:type="string">matchEntities</item>
-                        <item name="comment" xsi:type="string">Match code with Magento/Adobe Commerce ID</item>
+                        <item name="comment" xsi:type="string">Match code with Adobe Commerce/Magento ID</item>
                     </item>
                     <item name="5" xsi:type="array">
                         <item name="method" xsi:type="string">setStructure</item>
@@ -114,7 +114,7 @@
                     </item>
                     <item name="4" xsi:type="array">
                         <item name="method" xsi:type="string">matchEntities</item>
-                        <item name="comment" xsi:type="string">Match code with Magento/Adobe Commerce ID</item>
+                        <item name="comment" xsi:type="string">Match code with Adobe Commerce/Magento ID</item>
                     </item>
                     <item name="5" xsi:type="array">
                         <item name="method" xsi:type="string">insertFamilies</item>

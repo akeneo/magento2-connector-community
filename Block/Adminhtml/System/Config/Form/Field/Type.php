@@ -59,7 +59,7 @@ class Type extends AbstractFieldArray
     protected function _construct()
     {
         $this->addColumn('pim_type', ['label' => __('Akeneo')]);
-        $this->addColumn('magento_type', ['label' => __('Magento/Adobe Commerce')]);
+        $this->addColumn('magento_type', ['label' => __('Adobe Commerce/Magento')]);
         $this->_addAfter       = false;
         $this->_addButtonLabel = __('Add');
         parent::_construct();
