@@ -29,6 +29,7 @@ use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Indexer\IndexerInterface;
 use Magento\Indexer\Model\IndexerFactory;
+use Magento\Swatches\Model\Swatch;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Interface;
 
@@ -492,7 +493,80 @@ class Option extends Import
                 );
             }
         }
+        $this->insertSwatchOption();
     }
+
+    /**
+     * Insert Swatch options Values for swatch attributes (visual swatch have no data on V1)
+     *
+     * @return void
+     */
+    public function insertSwatchOption(): void
+    {
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
+        /** @var array $stores */
+        $stores = $this->storeHelper->getStores('lang');
+        /**
+         * @var string $local
+         * @var array $data
+         */
+
+        // On récupère le mapping akeneo_attribute_code => swatch_type
+        $swatchesAttributes = $this->attributeHelper->getAdditionalSwatchTypes();
+
+        foreach ($stores as $local => $data) {
+            if (!$connection->tableColumnExists($tmpTable, 'labels-' . $local)) {
+                continue;
+            }
+            /** @var array $store */
+            foreach ($data as $store) {
+                /** @var string $value */
+                $value = 'labels-' . $local;
+
+                if ($this->configHelper->getOptionCodeAsAdminLabel() && $store['store_id'] == 0) {
+                    $value = 'code';
+                }
+
+                /** @var Select $options */
+                $options = $connection->select()->from(
+                    ['a' => $tmpTable],
+                    [
+                        'option_id' => '_entity_id',
+                        'store_id' => new Expr($store['store_id']),
+                        'attribute',
+                        'value' => $value,
+                    ]
+                )->joinInner(
+                    ['b' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
+                    'a.attribute = b.code AND b.import = "attribute"',
+                    []
+                )->where('a.attribute in (?)', array_keys($swatchesAttributes));
+
+                $swatchesAttributesData = $connection->fetchAll($options);
+
+                $dataToInsert = [];
+
+                foreach ($swatchesAttributesData as $swatchesAttributeData) {
+                    $dataToInsert[] = [
+                        'option_id' => $swatchesAttributeData['option_id'],
+                        'store_id' => $swatchesAttributeData['store_id'],
+                        'type' => ($swatchesAttributes[$swatchesAttributeData['attribute']] === Swatch::SWATCH_TYPE_TEXTUAL_ATTRIBUTE_FRONTEND_INPUT) ? Swatch::SWATCH_TYPE_TEXTUAL : Swatch::SWATCH_TYPE_EMPTY,
+                        'value' => ($swatchesAttributes[$swatchesAttributeData['attribute']] === Swatch::SWATCH_TYPE_TEXTUAL_ATTRIBUTE_FRONTEND_INPUT) ? $swatchesAttributeData['value'] : null,
+                    ];
+                }
+
+                $connection->insertOnDuplicate(
+                    $this->entitiesHelper->getTable('eav_attribute_option_swatch'),
+                    $dataToInsert,
+                    ['option_id', 'store_id', 'type', 'value']
+                );
+            }
+        }
+    }
+
 
     /**
      * Drop temporary table

@@ -352,6 +352,10 @@ class Config
      */
     public const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
     /**
+     * Attribute swatch types mapping config path
+     */
+    public const ATTRIBUTE_SWATCH_TYPES = 'akeneo_connector/attribute/types_swatch';
+    /**
      * Attribute option code as admin label config path
      *
      * @var string ATTRIBUTE_OPTION_CODE_AS_ADMIN_LABEL

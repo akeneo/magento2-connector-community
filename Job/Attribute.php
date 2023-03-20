@@ -403,7 +403,7 @@ class Attribute extends Import
         $select = $connection->select()->from(
             $tmpTable,
             array_merge(
-                ['_entity_id', 'type'],
+                ['_entity_id', 'type', 'code'],
                 array_keys($columns)
             )
         );
@@ -414,8 +414,7 @@ class Attribute extends Import
          * @var array $attribute
          */
         foreach ($data as $id => $attribute) {
-            /** @var array $type */
-            $type = $this->attributeHelper->getType($attribute['type']);
+            $type = $this->attributeHelper->getSwatchType($attribute['code'], $attribute['type']);
 
             $connection->update($tmpTable, $type, ['_entity_id = ?' => $id]);
         }
@@ -540,9 +539,16 @@ class Attribute extends Import
                 array_keys($values)
             );
 
+            $attributeAdditionalData = [
+                'pim_catalog_swatch_text' => '{"swatch_input_type":"text","update_product_preview_image":"0","use_product_image_for_swatch":0}',
+                'pim_catalog_swatch_visual' => '{"swatch_input_type":"visual","update_product_preview_image":"0","use_product_image_for_swatch":"0"}'
+            ];
+
             $values = [
                 'attribute_id' => $row['_entity_id'],
+                'additional_data' => $attributeAdditionalData[$row['type']] ?? NULL
             ];
+
             $connection->insertOnDuplicate(
                 $this->entitiesHelper->getTable('catalog_eav_attribute'),
                 $values,
