@@ -361,7 +361,7 @@ class Option extends Import
     }
 
     /**
-     * Check already imported entities are still in Magento/Adobe Commerce
+     * Check already imported entities are still in Adobe Commerce/Magento
      *
      * @return void
      */

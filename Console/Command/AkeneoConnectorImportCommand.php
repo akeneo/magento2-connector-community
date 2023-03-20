@@ -81,7 +81,7 @@ class AkeneoConnectorImportCommand extends Command
      */
     protected function configure()
     {
-        $this->setName('akeneo_connector:import')->setDescription('Import Akeneo data to Magento/Adobe Commerce')->addOption(
+        $this->setName('akeneo_connector:import')->setDescription('Import Akeneo data to Adobe Commerce/Magento')->addOption(
             self::IMPORT_CODE,
             null,
             InputOption::VALUE_REQUIRED,

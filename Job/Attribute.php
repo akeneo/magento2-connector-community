@@ -518,7 +518,7 @@ class Attribute extends Import
             if ($skipAttribute === true) {
                 /** @var string $message */
                 $message = __(
-                    'The attribute %1 was skipped because its type is not the same between Akeneo and Magento/Adobe Commerce. Please delete it in Magento/Adobe Commerce and try a new import',
+                    'The attribute %1 was skipped because its type is not the same between Akeneo and Adobe Commerce/Magento. Please delete it in Magento/Adobe Commerce and try a new import',
                     $row['code']
                 );
                 $this->jobExecutor->setAdditionalMessage($message, $this->logger);
