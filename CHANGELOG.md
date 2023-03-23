@@ -394,3 +394,15 @@
 
 ### Version 103.3.1 :
 * Fix product job import for a family with only the SKU attribute inside it
+
+### Version 103.4.0 :
+* Fix error return value must be of type string
+* New endpoint to link product with the UUID
+* Last Successful updated import date by family
+* Allow to import product visibility from Akeneo attribute
+* Improve filter and options in the log grid on family
+* Manage visual and text swatch attributes
+* Export configuration improvement
+* "Product Status Mode" parameter missing when selecting version 5.0 Akeneo edition
+* Magento to Adobe Commerce rebranding
+* Error while importing the attribute option
