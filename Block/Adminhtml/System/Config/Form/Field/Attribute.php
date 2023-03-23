@@ -22,7 +22,7 @@ class Attribute extends AbstractFieldArray
     protected function _construct()
     {
         $this->addColumn('akeneo_attribute', ['label' => __('Akeneo')]);
-        $this->addColumn('magento_attribute', ['label' => __('Magento')]);
+        $this->addColumn('magento_attribute', ['label' => __('Adobe Commerce')]);
         $this->_addAfter       = false;
         $this->_addButtonLabel = __('Add');
 

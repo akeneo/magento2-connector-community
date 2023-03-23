@@ -1,19 +1,19 @@
 {
   "name": "akeneo/module-magento2-connector-community",
-  "description": "Akeneo connector for Magento 2",
+  "description": "Akeneo Connector for Adobe Commerce",
   "require": {
     "magento/framework": ">=102.0.0",
     "magento/module-backend": ">=100.0.1",
     "magento/module-catalog": ">=100.0.1",
     "magento/module-eav": ">=100.0.1",
     "magento/module-store": ">=100.0.1",
-    "akeneo/api-php-client": "^9.0",
+    "akeneo/api-php-client": "^10.0",
     "symfony/http-client": "^5",
     "http-interop/http-factory-guzzle": "^1.0",
     "nyholm/psr7": "^1.5"
   },
   "type": "magento2-module",
-  "version": "103.3.1",
+  "version": "103.4.0",
   "license": [
     "OSL-3.0",
     "AFL-3.0"

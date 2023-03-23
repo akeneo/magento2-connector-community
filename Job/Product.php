@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Api\Data\AttributeTypeInterface;
 use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
 use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Executor\JobExecutorFactory;
@@ -26,6 +27,7 @@ use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Connector\Model\Source\Filters\Mode;
 use Akeneo\Connector\Model\Source\Filters\ModelCompleteness;
 use Akeneo\Connector\Model\Source\StatusMode;
+use Akeneo\Pim\ApiClient\Exception\HttpException;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursor;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
@@ -39,6 +41,7 @@ use Magento\Catalog\Model\ProductLink\Link as ProductLink;
 use Magento\Catalog\Model\ResourceModel\Category\Collection;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ProductConfigurable;
 use Magento\Eav\Model\Config as EavConfig;
 use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
 use Magento\Eav\Model\ResourceModel\Entity\Attribute as EavAttribute;
@@ -91,10 +94,10 @@ class Product extends JobImport
      */
     public const CATALOG_PRODUCT_ENTITY_TABLE_NAME = 'catalog_product_entity';
     public const SUFFIX_SEPARATOR = '-';
-    /**
-     * @var string AKENEO_PRICE_ATTRIBUTE_TYPE
-     */
-    public const AKENEO_PRICE_ATTRIBUTE_TYPE = 'pim_catalog_price_collection';
+    public const AUTHORIZED_IDENTIFIER_ATTRIBUTE_TYPES = [
+        'pim_catalog_identifier',
+        'pim_catalog_text'
+    ];
     /**
      * This variable contains a string value
      *
@@ -282,6 +285,12 @@ class Product extends JobImport
      * @var JobExecutorFactory $jobExecutorFactory
      */
     protected $jobExecutorFactory;
+    /**
+     * This variable contains a 1, 2, 3 or 4 depending on Visibility value
+     *
+     * @var string
+     */
+    protected $productDefaultVisibility = Visibility::VISIBILITY_NOT_VISIBLE;
 
     /**
      * Product constructor.
@@ -305,11 +314,12 @@ class Product extends JobImport
      * @param TypeListInterface $cacheTypeList
      * @param StoreHelper $storeHelper
      * @param Entities $entities
-     * @param Option $jobOption
+     * @param JobOption $jobOption
      * @param AttributeMetrics $attributeMetrics
      * @param AttributeTables $attributeTables
      * @param StoreManagerInterface $storeManager
      * @param IndexerFactory $indexFactory
+     * @param JobExecutor $jobExecutor
      * @param JobExecutorFactory $jobExecutorFactory
      * @param array $data
      */
@@ -338,6 +348,7 @@ class Product extends JobImport
         AttributeTables $attributeTables,
         StoreManagerInterface $storeManager,
         IndexerFactory $indexFactory,
+        JobExecutor $jobExecutor,
         JobExecutorFactory $jobExecutorFactory,
         array $data = []
     ) {
@@ -362,7 +373,15 @@ class Product extends JobImport
         $this->storeManager = $storeManager;
         $this->entities = $entities;
         $this->indexFactory = $indexFactory;
+        $this->jobExecutor = $jobExecutor;
         $this->jobExecutorFactory = $jobExecutorFactory;
+
+        if ($this->configHelper->isProductVisibilityEnabled()) {
+            // Add configurable column name in the property to avoid data transform from data to option id
+            $this->excludeVisibilityAttributeFields();
+            // Gets default Product visibility from configuration
+            $this->productDefaultVisibility = $this->configHelper->getProductDefaultVisibility();
+        }
     }
 
     /**
@@ -390,11 +409,60 @@ class Product extends JobImport
             return;
         }
 
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+
+        $akeneoClient = $this->akeneoClient;
+        // Check for Akeneo attribute code for sku configuration in UUID editions before job launch
+        // Throw error and stop job if custom attribute as SKU doesn't exist, isn't with the right type or isn't global
+        if ($this->entitiesHelper->isProductUuidEdition()) {
+            $attributeCodeForSku = $this->configHelper->getAkeneoAttributeCodeForSku();
+            if (empty($attributeCodeForSku)) {
+                $this->jobExecutor->setMessage(
+                    __('No Akeneo SKU code mapped. Please check your configurations.'),
+                    $this->logger
+                );
+                $this->jobExecutor->afterRun(true);
+
+                return;
+            }
+            try {
+                $attribute = $akeneoClient->getAttributeApi()->get($attributeCodeForSku);
+            } catch (HttpException $exception) {
+                $this->jobExecutor->setMessage(
+                    __('There is an issue with attribute "' . $attributeCodeForSku . '" : ' . $exception),
+                    $this->logger
+                );
+                $this->jobExecutor->afterRun(true);
+
+                return;
+            }
+            $attributeType = $attribute['type'] ?? '';
+            if (!in_array($attributeType, self::AUTHORIZED_IDENTIFIER_ATTRIBUTE_TYPES)) {
+                $this->jobExecutor->setMessage(
+                    __('Attribute "' . $attributeCodeForSku . '" does not have correct type. Authorized types: ' . implode(', ', self::AUTHORIZED_IDENTIFIER_ATTRIBUTE_TYPES)),
+                    $this->logger
+                );
+                $this->jobExecutor->afterRun(true);
+
+                return;
+            }
+            $isLocalizable = $attribute['localizable'] ?? false;
+            $isScopable = $attribute['scopable'] ?? false;
+            if ($isLocalizable || $isScopable) {
+                $this->jobExecutor->setMessage(
+                    __('Attribute "' . $attributeCodeForSku . '" must be global: not localizable or scopable.'),
+                    $this->logger
+                );
+                $this->jobExecutor->afterRun(true);
+
+                return;
+            }
+        }
+
         // Stop the import if the family is not imported
         $family = $this->getFamily();
         if ($family) {
-            /** @var AdapterInterface $connection */
-            $connection = $this->entitiesHelper->getConnection();
             /** @var string $connectorEntitiesTable */
             $connectorEntitiesTable = $this->entities->getTable($this->entities::TABLE_NAME);
             /** @var bool $isFamilyImported */
@@ -423,8 +491,9 @@ class Product extends JobImport
         }
 
         foreach ($filters as $filter) {
+            $productApi = $this->entitiesHelper->getProductApiEndpoint($akeneoClient);
             /** @var PageInterface $products */
-            $products = $this->akeneoClient->getProductApi()->listPerPage(1, false, $filter);
+            $products = $productApi->listPerPage(1, false, $filter);
             /** @var mixed[] $products */
             $products = $products->getItems();
 
@@ -448,7 +517,7 @@ class Product extends JobImport
             $modelFilters = $this->getProductModelFilters($family);
             foreach ($modelFilters as $filter) {
                 /** @var PageInterface $productModels */
-                $productModels = $this->akeneoClient->getProductModelApi()->listPerPage(1, false, $filter);
+                $productModels = $akeneoClient->listPerPage(1, false, $filter);
                 /** @var array $productModel */
                 $productModels = $productModels->getItems();
 
@@ -483,6 +552,23 @@ class Product extends JobImport
             /** @var string $message */
             $message = __('Family imported in this batch: %1', $family);
             $this->jobExecutor->setAdditionalMessage($message, $this->logger);
+        }
+
+        if ($this->entitiesHelper->isProductUuidEdition()) {
+            $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
+
+            $connection->changeColumn(
+                $tmpTable,
+                'uuid',
+                'uuid',
+                [
+                    'nullable' => true,
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 255,
+                    'comment' => 'UUID',
+                ]
+            );
+            $connection->addIndex($tmpTable, 'UNIQUE_UUID', 'uuid', 'unique');
         }
     }
 
@@ -522,8 +608,9 @@ class Product extends JobImport
             if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
                 $filter['with_completenesses'] = 'true'; //enable with_completenesses on call api
             }
+            $productApi = $this->entitiesHelper->getProductApiEndpoint($this->akeneoClient);
             /** @var ResourceCursorInterface $products */
-            $products = $this->akeneoClient->getProductApi()->all($paginationSize, $filter);
+            $products = $productApi->all($paginationSize, $filter);
 
             /**
              * @var mixed[] $product
@@ -536,6 +623,7 @@ class Product extends JobImport
                     if (!isset($product['values'][$attributeTable['code']])) {
                         continue;
                     }
+
                     /** @var string[][][] $tableConfiguration */
                     $tableConfiguration = $attributeTable['table_configuration'];
                     /** @var bool $isTableLocalisable */
@@ -544,7 +632,7 @@ class Product extends JobImport
                     $isTableScopable = $attributeTable['scopable'];
 
                     if (!$isTableLocalisable) {
-                        /** @var string[][] $toInsert */
+                        /** @var string[] $toInsert */
                         $toInsert = [];
                         if (!$isTableScopable) {
                             /** @var string[] $globalData */
@@ -683,6 +771,9 @@ class Product extends JobImport
             }
         }
 
+        /** @var string $tmpTable */
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
+
         // Remove declared file attributes columns if file import is disabled
         if (!$this->configHelper->isFileImportEnabled()) {
             /** @var array $attributesToImport */
@@ -698,8 +789,6 @@ class Product extends JobImport
                     $this->storeHelper->getStores(['lang', 'channel_code']) // en_US-channel
                 );
 
-                /** @var string $tmpTable */
-                $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
                 /** @var array $data */
                 foreach ($attributesToImport as $attribute) {
                     if ($connection->tableColumnExists($tmpTable, $attribute)) {
@@ -726,6 +815,18 @@ class Product extends JobImport
         $this->jobExecutor->setMessage(__('%1 line(s) found', $index), $this->logger);
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logImportedEntities($this->logger, false, 'identifier');
+        }
+
+        if ($this->entitiesHelper->isProductUuidEdition()) {
+            $attributeCodeForSku = $this->configHelper->getAkeneoAttributeCodeForSku();
+            $connection->update($tmpTable, ['identifier' => new Expr('`' . 'uuid' . '`')]);
+            if ($connection->tableColumnExists($tmpTable, $attributeCodeForSku)) {
+                $connection->update(
+                    $tmpTable,
+                    ['identifier' => new Expr('`' . $attributeCodeForSku . '`')],
+                    [$attributeCodeForSku . ' <> ?' => '']
+                );
+            }
         }
     }
 
@@ -856,9 +957,8 @@ class Product extends JobImport
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
         // If family is grouped, create grouped products
-        if (($edition === Edition::SERENITY || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::GROWTH) && $this->entitiesHelper->isFamilyGrouped(
-                $family
-            )
+        if (in_array($edition, [Edition::SERENITY, Edition::GROWTH, Edition::SEVEN, Edition::GREATER_OR_FIVE])
+            && $this->entitiesHelper->isFamilyGrouped($family)
         ) {
             $connection->addColumn(
                 $tmpTable,
@@ -899,7 +999,7 @@ class Product extends JobImport
             $tmpTable,
             '_tax_class_id',
             [
-                'type' => 'integer',
+                'type' => Table::TYPE_INTEGER,
                 'length' => 11,
                 'default' => 0,
                 'COMMENT' => ' ',
@@ -910,7 +1010,7 @@ class Product extends JobImport
             $tmpTable,
             '_attribute_set_id',
             [
-                'type' => 'integer',
+                'type' => Table::TYPE_INTEGER,
                 'length' => 11,
                 'default' => 4,
                 'COMMENT' => ' ',
@@ -921,9 +1021,9 @@ class Product extends JobImport
             $tmpTable,
             '_visibility',
             [
-                'type' => 'integer',
-                'length' => 11,
-                'default' => Visibility::VISIBILITY_BOTH,
+                'type' => Table::TYPE_SMALLINT,
+                'length' => 1,
+                'default' => $this->productDefaultVisibility,
                 'COMMENT' => ' ',
                 'nullable' => false,
             ]
@@ -932,7 +1032,7 @@ class Product extends JobImport
             $tmpTable,
             '_status',
             [
-                'type' => 'integer',
+                'type' => Table::TYPE_INTEGER,
                 'length' => 11,
                 'default' => 2,
                 'COMMENT' => ' ',
@@ -945,7 +1045,7 @@ class Product extends JobImport
                 $tmpTable,
                 'is_returnable',
                 [
-                    'type' => 'integer',
+                    'type' => Table::TYPE_INTEGER,
                     'length' => 11,
                     'default' => 2,
                     'COMMENT' => ' ',
@@ -954,7 +1054,9 @@ class Product extends JobImport
             );
         }
 
-        if (!$connection->tableColumnExists($tmpTable, 'url_key') && $this->configHelper->isUrlGenerationEnabled()) {
+        if (!$connection->tableColumnExists($tmpTable, 'url_key')
+            && $this->configHelper->isUrlGenerationEnabled()
+        ) {
             $connection->addColumn(
                 $tmpTable,
                 'url_key',
@@ -969,25 +1071,6 @@ class Product extends JobImport
             $connection->update($tmpTable, ['url_key' => new Expr('LOWER(`identifier`)')]);
         }
 
-        /** @var string|null $groupColumn */
-        $groupColumn = null;
-        if ($connection->tableColumnExists($tmpTable, 'parent')) {
-            $groupColumn = 'parent';
-        }
-        if ($connection->tableColumnExists($tmpTable, 'groups') && !$groupColumn) {
-            $groupColumn = 'groups';
-        }
-
-        if ($groupColumn) {
-            $connection->update(
-                $tmpTable,
-                [
-                    '_visibility' => new Expr(
-                        'IF(`' . $groupColumn . '` <> "", ' . Visibility::VISIBILITY_NOT_VISIBLE . ', ' . Visibility::VISIBILITY_BOTH . ')'
-                    ),
-                ]
-            );
-        }
         /** @var string $productMappingAttribute */
         $productMappingAttribute = $this->configHelper->getMappingAttribute();
         if ($connection->tableColumnExists($tmpTable, $productMappingAttribute)) {
@@ -1192,6 +1275,10 @@ class Product extends JobImport
             'categories' => 'v.categories',
         ];
 
+        if ($this->entitiesHelper->isProductUuidEdition()) {
+            $data['uuid'] = 'v.code';
+        }
+
         if ($this->configHelper->isUrlGenerationEnabled()) {
             $data['url_key'] = 'v.code';
         }
@@ -1226,6 +1313,7 @@ class Product extends JobImport
         $additional = $this->scopeConfig->getValue(ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES);
         /** @var mixed[] $additional */
         $additional = $this->jsonSerializer->unserialize($additional);
+
         if (!is_array($additional)) {
             $additional = [];
         }
@@ -1428,7 +1516,7 @@ class Product extends JobImport
                 /** @var bool $isLocalizable */
                 $isLocalizable = $attribute['localizable'] ?? false;
                 /** @var bool $isPrice */
-                $isPrice = $attributeType === self::AKENEO_PRICE_ATTRIBUTE_TYPE;
+                $isPrice = $attributeType === AttributeTypeInterface::PIM_CATALOG_PRICE_COLLECTION;
                 if ($isScopable && $isLocalizable) {
                     $variationsCodes = $localizableScopeCodes;
                 } elseif ($isScopable) {
@@ -1446,7 +1534,7 @@ class Product extends JobImport
                 }
 
                 foreach ($variationsCodes as $code) {
-                    if ($attributeType !== self::AKENEO_PRICE_ATTRIBUTE_TYPE) {
+                    if ($attributeType !== AttributeTypeInterface::PIM_CATALOG_PRICE_COLLECTION) {
                         $columns[] = $attributeCode . '-' . $code; // Column name is attribute code with scope or local or both (case 1, 2, 3)
                         continue;
                     }
@@ -1545,8 +1633,18 @@ class Product extends JobImport
             return;
         }
 
+        if ($this->entitiesHelper->isProductUuidEdition()) {
+            // We replace the sku by the uuid in the Akeneo entities table if needed for retro-compatibility
+            $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
+            $uuids = $connection->select()
+                ->from(false, ['code' => 'tmp.uuid'])
+                ->joinInner(['tmp' => $tmpTable], '`tmp`.`sku` = `ace`.`code`', [])
+                ->where('`ace`.`import` = ?', 'product');
+            $connection->query($connection->updateFromSelect($uuids, ['ace' => $entitiesTable]));
+        }
+
         $this->entitiesHelper->matchEntity(
-            'identifier',
+            $this->entitiesHelper->isProductUuidEdition() ? 'uuid' : 'identifier',
             'catalog_product_entity',
             'entity_id',
             $this->jobExecutor->getCurrentJob()->getCode()
@@ -1662,8 +1760,8 @@ class Product extends JobImport
             //in case of multiselect
             /** @var string $conditionJoin */
             $conditionJoin = "IF ( locate(',', `" . $column . "`) > 0 , " . new Expr(
-                "FIND_IN_SET(`c1`.`code`,`p`.`" . $column . "`) > 0"
-            ) . ", `p`.`" . $column . "` = `c1`.`code` )";
+                    "FIND_IN_SET(`c1`.`code`,`p`.`" . $column . "`) > 0"
+                ) . ", `p`.`" . $column . "` = `c1`.`code` )";
 
             /** @var Select $select */
             $select = $connection->select()->from(
@@ -1931,10 +2029,9 @@ class Product extends JobImport
                 'options_container' => '_options_container',
                 'tax_class_id' => '_tax_class_id',
                 'visibility' => '_visibility',
+                'status' => '_status',
             ],
         ];
-
-        $values[0]['status'] = '_status';
 
         // Set products status
         /** @var string $statusAttributeId */
@@ -1966,7 +2063,7 @@ class Product extends JobImport
                     $tmpTable,
                     'status-' . $mapping['channel'],
                     [
-                        'type' => 'integer',
+                        'type' => Table::TYPE_INTEGER,
                         'length' => 11,
                         'default' => 2,
                         'COMMENT' => ' ',
@@ -2039,13 +2136,14 @@ class Product extends JobImport
                                 $tmpTable,
                                 'status-' . $completeness['scope'],
                                 [
-                                    'type' => 'integer',
+                                    'type' => Table::TYPE_INTEGER,
                                     'length' => 11,
                                     'default' => 2,
                                     'COMMENT' => ' ',
                                     'nullable' => false,
                                 ]
                             );
+
                             /** @var int $status */
                             $status = 1;
                             if ($completeness['data'] < $completenessConfig) {
@@ -2089,6 +2187,7 @@ class Product extends JobImport
 
         /*  Configurable status management */
         $select = $connection->select()->from(['a' => $tmpTable], $columnsForStatus);
+
         if ($rowIdExists) {
             $this->entities->addJoinForContentStaging($select, []);
         }
@@ -2103,7 +2202,6 @@ class Product extends JobImport
 
         /** @var Zend_Db_Statement_Pdo $oldConfigurableStatus */
         $oldConfigurableStatus = $connection->query($select);
-        /** @var int $isNoError */
         $isNoError = 1;
         // Update existing configurable status scopable
         if ($this->configHelper->getProductStatusMode() === StatusMode::ATTRIBUTE_PRODUCT_MAPPING) {
@@ -2142,7 +2240,32 @@ class Product extends JobImport
             $valuesToInsert = [
                 '_status' => $status,
             ];
+
             $connection->update($tmpTable, $valuesToInsert, ['_entity_id = ?' => $row['_entity_id']]);
+        }
+
+        if ($this->configHelper->isProductVisibilityEnabled()) {
+            $this->createAndUpdateVisibilityFields($tmpTable, $mappings);
+        } else {
+            /** @var string|null $groupColumn */
+            $groupColumn = null;
+            if ($connection->tableColumnExists($tmpTable, 'parent')) {
+                $groupColumn = 'parent';
+            }
+            if ($connection->tableColumnExists($tmpTable, 'groups') && !$groupColumn) {
+                $groupColumn = 'groups';
+            }
+
+            if ($groupColumn) {
+                $connection->update(
+                    $tmpTable,
+                    [
+                        '_visibility' => new Expr(
+                            'IF(`' . $groupColumn . '` <> "", ' . $this->productDefaultVisibility . ', ' . Visibility::VISIBILITY_BOTH . ')'
+                        ),
+                    ]
+                );
+            }
         }
 
         /** @var string $status */
@@ -2229,6 +2352,9 @@ class Product extends JobImport
                 continue;
             }
 
+            /** @var bool $visibilityScopableLocalizable */
+            $isVisibilityScopableLocalizable = !!($columnPrefix === 'visibility' && count(explode('-', $columnSuffix ?? '')));
+
             /** @var mixed[] $affectedStores */
             $affectedStores = $stores[$columnSuffix];
             /** @var mixed[] $store */
@@ -2239,16 +2365,20 @@ class Product extends JobImport
                 }
 
                 if ($scope === ScopedAttributeInterface::SCOPE_STORE || empty($store['siblings'])) {
-                    $values[$store['store_id']][$columnPrefix] = $column;
+                    if (!isset($values[$store['store_id']][$columnPrefix])) {
+                        $values[$store['store_id']][$columnPrefix] = $column;
 
-                    continue;
+                        continue;
+                    }
                 }
 
                 /** @var string[] $siblings */
                 $siblings = $store['siblings'];
                 /** @var string $storeId */
                 foreach ($siblings as $storeId) {
-                    $values[$storeId][$columnPrefix] = $column;
+                    if (!isset($values[$storeId][$columnPrefix]) || $isVisibilityScopableLocalizable) {
+                        $values[$storeId][$columnPrefix] = $column;
+                    }
                 }
             }
         }
@@ -2301,7 +2431,9 @@ class Product extends JobImport
         /** @var string $productSuperAttrTable */
         $productSuperAttrTable = $this->entitiesHelper->getTable('catalog_product_super_attribute');
         /** @var string $productSuperAttrLabelTable */
-        $productSuperAttrLabelTable = $this->entitiesHelper->getTable('catalog_product_super_attribute_label');
+        $productSuperAttrLabelTable = $this->entitiesHelper->getTable(
+            'catalog_product_super_attribute_label'
+        );
         /** @var string $productRelationTable */
         $productRelationTable = $this->entitiesHelper->getTable('catalog_product_relation');
         /** @var string $productSuperLinkTable */
@@ -2323,7 +2455,10 @@ class Product extends JobImport
         }
 
         /** @var Select $configurableSelect */
-        $configurableSelect = $connection->select()->from($tmpTable, ['_entity_id', '_axis', '_children'])->where(
+        $configurableSelect = $connection->select()->from(
+            $tmpTable,
+            ['_entity_id', '_axis', '_children']
+        )->where(
             '_type_id = ?',
             'configurable'
         )->where('_axis IS NOT NULL');
@@ -2384,21 +2519,30 @@ class Product extends JobImport
                 );
             }
 
+            /** @var array $attributesList */
+            $attributesList = $connection->fetchAssoc(
+                $connection->select()
+                           ->from($eavAttrOptionTable, [new Expr('attribute_id')])
+                           ->where('attribute_id IN (?)', $attributes)
+                           ->group('attribute_id')
+            );
+
+            /** @var array $superAttributeList */
+            $superAttributeList = $connection->fetchAssoc(
+                $connection->select()
+                           ->from($productSuperAttrTable)
+                           ->where('attribute_id in (?)', $attributes)
+                           ->where('product_id = ?', $row[$pKeyColumn])
+            );
+
+            $superAttributeListOrdered = [];
+            foreach ($superAttributeList as $key => $superAttribute) {
+                $superAttributeListOrdered[$superAttribute['attribute_id']][$superAttribute['product_id']] = $key;
+            }
+
             /** @var int $id */
             foreach ($attributes as $id) {
-                if (!is_numeric($id) || !isset($row['_entity_id'])) {
-                    continue;
-                }
-
-                /** @var bool $hasOptions */
-                $hasOptions = (bool)$connection->fetchOne(
-                    $connection->select()
-                        ->from($eavAttrOptionTable, [new Expr(1)])
-                        ->where('attribute_id = ?', $id)
-                        ->limit(1)
-                );
-
-                if (!$hasOptions) {
+                if (!isset($row['_entity_id'], $attributesList[$id])) {
                     continue;
                 }
 
@@ -2416,21 +2560,13 @@ class Product extends JobImport
 
                 /** @var array $valuesLabels */
                 $valuesLabels = [];
-                /** @var string $superAttributeId */
-                $superAttributeId = $connection->fetchOne(
-                    $connection->select()->from($productSuperAttrTable)->where('attribute_id = ?', $id)->where(
-                        'product_id = ?',
-                        $row[$pKeyColumn]
-                    )->limit(1)
-                );
-
                 /**
                  * @var int $storeId
                  * @var array $affected
                  */
                 foreach ($stores as $storeId => $affected) {
                     $valuesLabels[] = [
-                        'product_super_attribute_id' => $superAttributeId,
+                        'product_super_attribute_id' => $superAttributeListOrdered[$id][$row[$pKeyColumn]],
                         'store_id' => $storeId,
                         'use_default' => 0,
                         'value' => '',
@@ -2450,9 +2586,9 @@ class Product extends JobImport
                     /** @var int $childId */
                     $childId = (int)$connection->fetchOne(
                         $connection->select()
-                            ->from($productEntityTable, ['entity_id'])
-                            ->where('sku = ?', $child)
-                            ->limit(1)
+                           ->from($productEntityTable, ['entity_id'])
+                           ->where('sku = ?', $child)
+                           ->limit(1)
                     );
 
                     if (!$childId) {
@@ -2525,7 +2661,7 @@ class Product extends JobImport
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
 
-        if ($edition === Edition::SERENITY || $edition === Edition::GROWTH) {
+        if ($edition === Edition::SERENITY || $edition === Edition::GROWTH || $edition === Edition::SEVEN) {
             /** @var string[] $filters */
             $filters = [
                 'search' => [
@@ -2544,6 +2680,7 @@ class Product extends JobImport
                     ],
                 ]
             ];
+
             /** @var string|int $paginationSize */
             $paginationSize = $this->configHelper->getPaginationSize();
             /** @var ResourceCursorInterface $productModels */
@@ -2565,7 +2702,7 @@ class Product extends JobImport
             /** @var string $rowEntityId */
             $rowEntityId = $row['_entity_id'];
 
-            if ($edition === Edition::SERENITY || $edition === Edition::GROWTH) {
+            if ($edition === Edition::SERENITY || $edition === Edition::GROWTH || $edition === Edition::SEVEN) {
                 if (!empty($productModelItems) && array_key_exists($row['parent'], $productModelItems)) {
                     $row['parent'] = $productModelItems[$row['parent']];
                     $connection->update(
@@ -2711,7 +2848,7 @@ class Product extends JobImport
                             if (!isset($websites[$associatedWebsite])) {
                                 $this->jobExecutor->setAdditionalMessage(
                                     __(
-                                        'Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento website.',
+                                        'Warning: The product with Akeneo id %1 has an option (%2) that does not correspond to a Magento/Adobe Commerce website.',
                                         $row['identifier'],
                                         $associatedWebsite
                                     ),
@@ -2738,7 +2875,7 @@ class Product extends JobImport
             } else {
                 $this->jobExecutor->setAdditionalMessage(
                     __(
-                        'Warning: The website attribute code given does not match any Magento attribute.'
+                        'Warning: The website attribute code given does not match any Magento/Adobe Commerce attribute.'
                     ),
                     $this->logger
                 );
@@ -2897,6 +3034,7 @@ class Product extends JobImport
         $productsTable = $this->entitiesHelper->getTable('catalog_product_entity');
         $linkTable = $this->entitiesHelper->getTable('catalog_product_link');
         $linkAttributeTable = $this->entitiesHelper->getTable('catalog_product_link_attribute');
+        $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         $related = [];
         $columnIdentifier = $this->entitiesHelper->getColumnIdentifier($productsTable);
         $rowIdExists = $this->entitiesHelper->rowIdColumnExists($productsTable);
@@ -2994,8 +3132,8 @@ class Product extends JobImport
         $select = $connection->select()
             ->from(['tmp' => $tempRelatedTable], ["p.$columnIdentifier", 'p_sku.entity_id', 'link_type_id'])
             ->joinInner(
-                ['p_sku' => $productsTable],
-                'tmp.sku = p_sku.sku',
+                ['p_sku' => $entitiesTable],
+                'tmp.sku = p_sku.code AND p_sku.import = "product"',
                 []
             );
         if ($rowIdExists) {
@@ -3059,8 +3197,11 @@ class Product extends JobImport
     {
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
-        // Is family is not grouped or edition not Serenity, skip
-        if (($edition != Edition::SERENITY && $edition != Edition::GROWTH && $edition != Edition::GREATER_OR_FIVE)
+        // Is family is not grouped or edition not Serenity or five or greater, skip
+        if (($edition != Edition::SERENITY
+                && $edition != Edition::GREATER_OR_FIVE
+                && $edition != Edition::GROWTH
+                && $edition != Edition::SEVEN)
             || !$this->entitiesHelper->isFamilyGrouped($this->getFamily())
         ) {
             return;
@@ -3192,7 +3333,7 @@ class Product extends JobImport
             if (!$this->productExistInMagento($row['identifier'])) {
                 $this->jobExecutor->setAdditionalMessage(
                     __(
-                        'The grouped product with identifier %1 does not exist in magento, links will not be imported',
+                        'The grouped product with identifier %1 does not exist in Magento/Adobe Commerce, links will not be imported',
                         $row['identifier']
                     ),
                     $this->logger
@@ -3274,7 +3415,7 @@ class Product extends JobImport
                     if (!$this->productExistInMagento($productInfo['identifier'])) {
                         $this->jobExecutor->setAdditionalMessage(
                             __(
-                                'The grouped product %1 is linked to the product %2 but it does not exist in Magento. The association has been skipped.',
+                                'The grouped product %1 is linked to the product %2 but it does not exist in Magento/Adobe Commerce. The association has been skipped.',
                                 $row['identifier'],
                                 $productInfo['identifier']
                             ),
@@ -3465,7 +3606,7 @@ class Product extends JobImport
                         'store_id' => new Expr($store['store_id']),
                         'visibility' => '_visibility',
                     ]
-                )->where('_visibility != ?', Visibility::VISIBILITY_NOT_VISIBLE);
+                )->where('_visibility != ?', $this->productDefaultVisibility);
 
                 if (isset($store['website_id'])) {
                     $select
@@ -4217,7 +4358,7 @@ class Product extends JobImport
         // If we are in serenity mode, place the mapped grouped families to the end of the imports
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
-        if ($edition === Edition::SERENITY || $edition === Edition::GROWTH || $edition === Edition::GREATER_OR_FIVE) {
+        if ($edition === Edition::SERENITY || $edition === Edition::GROWTH || $edition === Edition::SEVEN || $edition === Edition::GREATER_OR_FIVE) {
             /** @var string[] $groupedFamiliesToImport */
             $groupedFamiliesToImport = $this->configHelper->getGroupedFamiliesToImport();
             /**
@@ -4400,7 +4541,7 @@ class Product extends JobImport
                     $attributeCode
                 );
                 if (!isset($attribute['code'])
-                    || $attribute['type'] !== 'pim_catalog_boolean'
+                    || $attribute['type'] !== AttributeTypeInterface::PIM_CATALOG_BOOLEAN
                     || $attribute['localizable']
                 ) {
                     $this->jobExecutor->setAdditionalMessage(
@@ -4493,5 +4634,298 @@ class Product extends JobImport
         }
 
         return $isNoError;
+    }
+
+    /**
+     * Get visibiliy attribute configuration depending on product type
+     */
+    private function getVisibilityAttribute(string $productType): string
+    {
+        if (!$this->configHelper->isProductVisibilityEnabled()
+            || !$this->isAttributeTypeCorrect($this->configHelper->getProductVisibilitySimple(),
+                                              AttributeTypeInterface::PIM_CATALOG_SIMPLESELECT)
+        ) {
+            return '';
+        }
+
+        return ($productType === ProductConfigurable::TYPE_CODE)
+            ? $this->configHelper->getProductVisibilityConfigurable()
+            : $this->configHelper->getProductVisibilitySimple();
+    }
+
+    /**
+     * Added akeneo visibility attributes to excluded field list to get their values instead of id of their values
+     * @return void
+     * @throws LocalizedException
+     */
+    private function excludeVisibilityAttributeFields(): void
+    {
+        $localizableScopeCodes = array_keys($this->storeHelper->getStores(['lang']));
+        $mappings = $this->configHelper->getWebsiteMapping();
+
+        $simpleProductVisibilityAttribute = $this->configHelper->getProductVisibilitySimple();
+        $configurableProductVisibilityAttribute = $this->configHelper->getProductVisibilityConfigurable();
+
+        $this->excludedColumns[] = $simpleProductVisibilityAttribute;
+        $this->excludedColumns[] = $configurableProductVisibilityAttribute;
+        foreach ($mappings as $mapping) {
+
+            $this->excludedColumns[] = $configurableProductVisibilityAttribute . '-' . $mapping['channel'];
+            $this->excludedColumns[] = $simpleProductVisibilityAttribute . '-' . $mapping['channel'];
+            foreach ($localizableScopeCodes as $localizableScopeCode) {
+                $suffix = '-' . $localizableScopeCode . '-' . $mapping['channel'];
+                $this->excludedColumns[] = $configurableProductVisibilityAttribute . $suffix;
+                $this->excludedColumns[] = $simpleProductVisibilityAttribute . $suffix;
+
+            }
+        }
+        foreach ($localizableScopeCodes as $localizableScopeCode) {
+            $this->excludedColumns[] = $configurableProductVisibilityAttribute . '-' . $localizableScopeCode;
+            $this->excludedColumns[] = $simpleProductVisibilityAttribute . '-' . $localizableScopeCode;
+        }
+    }
+
+    /**
+     * Create fields in tmp_akeneo_connector_entities_product and update those fields depending on attributes
+     */
+    protected function createAndUpdateVisibilityFields(string $tmpTable, array $mappings): void
+    {
+        $connection = $this->entitiesHelper->getConnection();
+        $visibilityColumnToUpdate = $this->updateProductVisibility($tmpTable, $mappings);
+        $binds = [];
+
+        foreach ($visibilityColumnToUpdate as $column => $configuration) {
+            if (!$connection->tableColumnExists($tmpTable, $column)) {
+                if ($connection->tableColumnExists($tmpTable, $configuration['simpleOriginColumn'])
+                    || $connection->tableColumnExists($tmpTable, $configuration['configurableOriginColumn'])
+                ) {
+                    $connection->addColumn(
+                        $tmpTable,
+                        $column,
+                        [
+                            'type' => Table::TYPE_SMALLINT,
+                            'default' => $this->productDefaultVisibility,
+                            'COMMENT' => ' ',
+                            'nullable' => false,
+                        ]
+                    );
+                }
+
+                if ($connection->tableColumnExists($tmpTable, $column)) {
+                    $configurationConfigurable = $connection->tableColumnExists(
+                        $tmpTable,
+                        $configuration['configurableOriginColumn']) ? $configuration['configurable'] : $this->productDefaultVisibility;
+                    $configurationSimple = $connection->tableColumnExists(
+                        $tmpTable,
+                        $configuration['simpleOriginColumn']) ? $configuration['simple'] : $this->productDefaultVisibility;
+
+                    $binds[$column] = new Expr(
+                        'IF(`_type_id` <> "' . ProductConfigurable::TYPE_CODE . '",'
+                        . $configurationSimple . ','
+                        . $configurationConfigurable
+                        . ')'
+                    );
+                }
+            }
+        }
+
+        if ($binds !== []) {
+            $connection->update($tmpTable, $binds);
+        }
+    }
+
+    /**
+     * Check if given attribute is of expected type
+     */
+    private function isAttributeTypeCorrect(string $attributeToCheck, string $attributeType): bool
+    {
+        if (!$this->akeneoClient) {
+            $this->akeneoClient = $this->jobExecutor->getAkeneoClient();
+            if (!$this->akeneoClient) {
+                return false;
+            }
+        }
+
+        try {
+            $attribute = $this->akeneoClient->getAttributeApi()->get($attributeToCheck);
+        } catch (\Exception $e) {
+            $this->jobExecutor->setMessage(__('Akeneo Attribute does not exist'), $this->logger);
+
+            return false;
+        }
+
+        if (!isset($attribute['type']) || $attribute['type'] !== $attributeType) {
+            $this->jobExecutor->setMessage(
+                __('Akeneo Attribute is not setted or not setted as Simple Select'), $this->logger);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if attribute is scopable
+     */
+    private function isAttributeScopable(string $attributeToCheck): bool
+    {
+        return $this->isAttributeHasValue($attributeToCheck, 'scopable');
+    }
+
+    /**
+     * Check if attribute is Localizable
+     */
+    private function isAttributeLocalizable(string $attributeToCheck): bool
+    {
+        return $this->isAttributeHasValue($attributeToCheck, 'localizable');
+    }
+
+    /**
+     * Check if attribute has a specific value and return its state
+     */
+    private function isAttributeHasValue(string $attributeToCheck, string $valueToCheck): bool
+    {
+        if (!$this->akeneoClient) {
+            $this->akeneoClient = $this->jobExecutor->getAkeneoClient();
+            if (!$this->akeneoClient) {
+                return false;
+            }
+        }
+
+        try {
+            $attribute = $this->akeneoClient->getAttributeApi()->get($attributeToCheck);
+        } catch (\Exception $e) {
+            $this->jobExecutor->setMessage(__('Akeneo Attribute does not exist'), $this->logger);
+
+            return false;
+        }
+
+        return $attribute[$valueToCheck] ?? false;
+    }
+
+    /**
+     * Check if attribute exists
+     */
+    private function isAttributeExists(string $attributeToCheck): bool
+    {
+        if (!$this->akeneoClient) {
+            $this->akeneoClient = $this->jobExecutor->getAkeneoClient();
+            if (!$this->akeneoClient) {
+                return false;
+            }
+        }
+
+        try {
+            return !empty($this->akeneoClient->getAttributeApi()->get($attributeToCheck));
+        } catch (\Exception $e) {
+            $this->jobExecutor->setMessage(__("Akeneo Attribute does not exist"), $this->logger);
+
+            return false;
+        }
+    }
+
+    /**
+     * Create an array of SQL exprissions depending
+     * on Visibiliy attributes from configurable and simple products
+     * to update with the correct value
+     */
+    private function updateProductVisibility(string $tmpTable, array $mappings): array
+    {
+        $localizableScopeCodes = array_keys($this->storeHelper->getStores(['lang']));
+        $visibilityForSimple = $this->getVisibilityAttribute('simple');
+        $visibilityForConfigurable = $this->getVisibilityAttribute('configurable');
+
+        $visibilityForSimpleAttributeExists = $this->isAttributeExists($visibilityForSimple);
+        $visibilityForConfigurableAttributeExists = $this->isAttributeExists($visibilityForConfigurable);
+
+        // Global
+        $visibilityColumnResult = [
+            'visibility' => [
+                'configurable' => $this->productDefaultVisibility,
+                'simple' => $this->productDefaultVisibility,
+                'simpleOriginColumn' => $visibilityForSimple,
+                'configurableOriginColumn' => $visibilityForConfigurable,
+            ],
+        ];
+
+        $visibilityColumnResult['visibility']['simple'] = $this->productDefaultVisibility;
+        if ($visibilityForSimpleAttributeExists) {
+            if (!$this->isAttributeScopable($visibilityForSimple)
+                && !$this->isAttributeLocalizable($visibilityForSimple)
+            ) {
+                $visibilityColumnResult['visibility']['simple'] = 'IF(`' . $visibilityForSimple . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForSimple . '`)';
+            }
+        }
+
+        $visibilityColumnResult['visibility']['configurable'] = $this->productDefaultVisibility;
+        if ($visibilityForConfigurableAttributeExists) {
+            if (!$this->isAttributeScopable($visibilityForConfigurable)
+                && !$this->isAttributeLocalizable($visibilityForConfigurable)
+            ) {
+                $visibilityColumnResult['visibility']['configurable'] = 'IF(`' . $visibilityForConfigurable . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForConfigurable . '`)';
+            }
+        }
+
+        // Scopable
+        foreach ($mappings as $mapping) {
+            $visibilityColumnResult['visibility-' . $mapping['channel']] = [
+                'configurable' => $this->productDefaultVisibility,
+                'simple' => $this->productDefaultVisibility,
+                'simpleOriginColumn' => $visibilityForSimple  . '-' . $mapping['channel'],
+                'configurableOriginColumn' => $visibilityForConfigurable  . '-' . $mapping['channel'],
+            ];
+
+            // Localizable
+            foreach ($localizableScopeCodes as $localizableScopeCode) {
+                $suffix = $suffixSimple = $suffixConfig = '-' . $localizableScopeCode . '-' . $mapping['channel'];
+
+                if ($visibilityForSimpleAttributeExists) {
+                    // Simple products
+                    if (!$this->isAttributeLocalizable($visibilityForSimple)) {
+                        $suffixSimple = '-' . $mapping['channel'];
+                    }
+                    if (!$this->isAttributeScopable($visibilityForSimple)) {
+                        $suffixSimple = '-' . $localizableScopeCode;
+                    }
+                }
+
+                if ($visibilityForConfigurableAttributeExists) {
+                    // Configurable products
+                    if (!$this->isAttributeLocalizable($visibilityForConfigurable)) {
+                        $suffixConfig =  '-' . $mapping['channel'];
+                    }
+                    if (!$this->isAttributeScopable($visibilityForConfigurable)) {
+                        $suffixConfig = '-' . $localizableScopeCode;
+                    }
+                }
+
+                $visibilityColumnResult['visibility' . $suffix] = [
+                    'configurable' => $this->productDefaultVisibility,
+                    'simple' => $this->productDefaultVisibility,
+                    'simpleOriginColumn' => $visibilityForSimple . $suffixSimple,
+                    'configurableOriginColumn' => $visibilityForConfigurable . $suffixConfig,
+                ];
+
+                $visibilityColumnResult['visibility' . $suffix]['simple'] = $visibilityForSimpleAttributeExists
+                    ? 'IF(`' . $visibilityForSimple . $suffixSimple . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForSimple . $suffixSimple . '`)'
+                    : $this->productDefaultVisibility
+                ;
+                $visibilityColumnResult['visibility' . $suffix]['configurable'] = $visibilityForConfigurableAttributeExists
+                    ? 'IF(`' . $visibilityForConfigurable . $suffixConfig . '` IS NULL, ' . $this->productDefaultVisibility . ', `' . $visibilityForConfigurable . $suffixConfig . '`)'
+                    : $this->productDefaultVisibility;
+            }
+        }
+
+        // Remove entries where no attribute used
+        foreach ($visibilityColumnResult as $key => $result) {
+            if (isset($result['configurable'])
+                && $result['configurable'] === 1
+                && $result['simple'] === 1
+                && isset($visibilityColumnResult[$key])) {
+                unset($visibilityColumnResult[$key]);
+            }
+        }
+
+        return $visibilityColumnResult;
     }
 }

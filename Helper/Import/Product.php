@@ -293,7 +293,11 @@ class Product extends Entities
                     $finalProducts = [];
                     /** @var string[] $product */
                     foreach ($products as $product) {
-                        $finalProducts[] = $product['identifier'] . ';' . $product['quantity'];
+                        $key = 'identifier';
+                        if ($this->isProductUuidEdition()) {
+                            $key = 'uuid';
+                        }
+                        $finalProducts[] = $product[$key] . ';' . $product['quantity'];
                     }
                     $products = $finalProducts;
                 }
@@ -542,8 +546,8 @@ class Product extends Entities
     /**
      * Verify product url during url rewrite returns the correct request path
      *
-     * @param string                        $requestPath
-     * @param Magento\Catalog\Model\Product $product
+     * @param string           $requestPath
+     * @param BaseProductModel $product
      *
      * @return string
      */
@@ -622,11 +626,8 @@ class Product extends Entities
         $familyAttributesCode = array_diff($familyAttributesCode, $nativePriceAttributes); // Remove native prices attributes from family attributes
         if (!empty($attributesMapping)) {
             foreach ($attributesMapping as $attributeMapping) {
-                if (isset($attributeMapping['akeneo_attribute'], $attributeMapping['magento_attribute']) && in_array(
-                        $attributeMapping['magento_attribute'],
-                        $nativePriceAttributes,
-                        true
-                    )
+                if (isset($attributeMapping['akeneo_attribute'], $attributeMapping['magento_attribute']) &&
+                    in_array($attributeMapping['magento_attribute'], $nativePriceAttributes, true)
                 ) {
                     $familyAttributesCode[] = $attributeMapping['akeneo_attribute']; // Add mapped price attribute
                 }

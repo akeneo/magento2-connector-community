@@ -22,6 +22,7 @@ use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Message\ManagerInterface as MessageManagerInterface;
 use Magento\Framework\Phrase;
+use Magento\Framework\Serialize\SerializerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -152,10 +153,20 @@ class JobExecutor implements JobExecutorInterface
      * @var MessageManagerInterface $messageManager
      */
     protected $messageManager;
+    /**
+     * Description $json field
+     *
+     * @var SerializerInterface $json
+     */
+    protected SerializerInterface $json;
+    /**
+     * Description $lastSuccessExecutedDate field
+     *
+     * @var string[] $lastSuccessExecutedDate
+     */
+    protected array $lastSuccessExecutedDate;
 
     /**
-     * JobExecutor constructor
-     *
      * @param JobRepository $jobRepository
      * @param ProcessClassFactory $processClassFactory
      * @param ConfigHelper $configHelper
@@ -164,6 +175,7 @@ class JobExecutor implements JobExecutorInterface
      * @param Authenticator $authenticator
      * @param CollectionFactory $jobCollectionFactory
      * @param MessageManagerInterface $messageManager
+     * @param SerializerInterface $json
      */
     public function __construct(
         JobRepository $jobRepository,
@@ -173,7 +185,8 @@ class JobExecutor implements JobExecutorInterface
         ManagerInterface $eventManager,
         Authenticator $authenticator,
         CollectionFactory $jobCollectionFactory,
-        MessageManagerInterface $messageManager
+        MessageManagerInterface $messageManager,
+        SerializerInterface $json
     ) {
         $this->jobRepository = $jobRepository;
         $this->processClassFactory = $processClassFactory;
@@ -183,6 +196,7 @@ class JobExecutor implements JobExecutorInterface
         $this->authenticator = $authenticator;
         $this->jobCollectionFactory = $jobCollectionFactory;
         $this->messageManager = $messageManager;
+        $this->json = $json;
     }
 
     /**
@@ -311,6 +325,16 @@ class JobExecutor implements JobExecutorInterface
                 return false;
             }
 
+            $this->lastSuccessExecutedDate = [];
+            if ($this->currentJob->getLastSuccessExecutedDate()) {
+                try {
+                    $this->lastSuccessExecutedDate = $this->json->unserialize(
+                        $this->currentJob->getLastSuccessExecutedDate()
+                    );
+                } catch (\InvalidArgumentException $invalidArgumentException) {
+                    $this->lastSuccessExecutedDate = [];
+                }
+            }
             $this->beforeRun();
 
             /** @var bool $isError */
@@ -328,6 +352,8 @@ class JobExecutor implements JobExecutorInterface
                 if ($this->currentJob->getStatus() === JobInterface::JOB_ERROR) {
                     $isError = true;
                 }
+
+                $this->lastSuccessExecutedDate[$this->getCurrentJobClass()->getFamily()] = date('y-m-d H:i:s');
 
                 // If last family, force proceed with after run steps
                 if (array_slice($productFamiliesToImport, -1)[0] === $family
@@ -710,9 +736,20 @@ class JobExecutor implements JobExecutorInterface
             );
         }
 
-        if ($error === null && $this->currentJob->getStatus() !== JobInterface::JOB_ERROR) {
+        if ($this->currentJob->getCode() === JobExecutor::IMPORT_CODE_PRODUCT) {
             $this->currentJob->setLastSuccessDate(date('y-m-d H:i:s'));
-            $this->currentJob->setLastSuccessExecutedDate($this->currentJob->getLastExecutedDate());
+            $this->currentJob->setLastSuccessExecutedDate($this->json->serialize($this->lastSuccessExecutedDate));
+
+            if ($this->currentJob->getStatus() === JobInterface::JOB_ERROR) {
+                $this->setJobStatus(JobInterface::JOB_ERROR);
+            }
+        }
+
+        if ($error === null && $this->currentJob->getStatus() !== JobInterface::JOB_ERROR) {
+            if ($this->currentJob->getCode() !== JobExecutor::IMPORT_CODE_PRODUCT) {
+                $this->currentJob->setLastSuccessDate(date('y-m-d H:i:s'));
+                $this->currentJob->setLastSuccessExecutedDate($this->currentJob->getLastExecutedDate());
+            }
             $this->setJobStatus(JobInterface::JOB_SUCCESS);
             $this->eventManager->dispatch(
                 'akeneo_connector_import_on_success',

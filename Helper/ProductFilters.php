@@ -15,6 +15,7 @@ use Akeneo\Connector\Model\Source\Filters\Status;
 use Akeneo\Connector\Model\Source\Filters\Update;
 use Akeneo\Pim\ApiClient\Search\SearchBuilder;
 use Akeneo\Pim\ApiClient\Search\SearchBuilderFactory;
+use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 
@@ -68,16 +69,21 @@ class ProductFilters
      * @var TimezoneInterface $timezone
      */
     protected $timezone;
+    /**
+     * Description $json field
+     *
+     * @var SerializerInterface $json
+     */
+    protected SerializerInterface $json;
 
     /**
-     * ProductFilters constructor
-     *
-     * @param ConfigHelper         $configHelper
-     * @param Store                $storeHelper
-     * @param Locales              $localesHelper
+     * @param Config $configHelper
+     * @param Store $storeHelper
+     * @param Locales $localesHelper
      * @param SearchBuilderFactory $searchBuilderFactory
-     * @param DateTime             $date
-     * @param TimezoneInterface    $timezone
+     * @param DateTime $date
+     * @param TimezoneInterface $timezone
+     * @param SerializerInterface $json
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -85,14 +91,16 @@ class ProductFilters
         LocalesHelper $localesHelper,
         SearchBuilderFactory $searchBuilderFactory,
         DateTime $date,
-        TimezoneInterface $timezone
+        TimezoneInterface $timezone,
+        SerializerInterface $json
     ) {
-        $this->configHelper         = $configHelper;
-        $this->storeHelper          = $storeHelper;
-        $this->localesHelper        = $localesHelper;
+        $this->configHelper = $configHelper;
+        $this->storeHelper = $storeHelper;
+        $this->localesHelper = $localesHelper;
         $this->searchBuilderFactory = $searchBuilderFactory;
-        $this->date                 = $date;
-        $this->timezone             = $timezone;
+        $this->date = $date;
+        $this->timezone = $timezone;
+        $this->json = $json;
     }
 
     /**
@@ -405,7 +413,8 @@ class ProductFilters
     }
 
     /**
-     * Description getLastImportDateFilter function
+     * Returning last import date filter, return a string for all job but product one return a json with multiple value, one for each family
+     * Fallback to a default value which fallback on null
      *
      * @param JobExecutor $jobExecutor
      *
@@ -413,6 +422,24 @@ class ProductFilters
      */
     protected function getLastImportDateFilter($jobExecutor)
     {
-        return $jobExecutor->getCurrentJob()->getLastSuccessExecutedDate();
+        /** @var JobInterface $currentJob */
+        $currentJob = $jobExecutor->getCurrentJob();
+        /** @var string|null $lastSuccessExecutedDate */
+        $lastSuccessExecutedDate = $jobExecutor->getCurrentJob()->getLastSuccessExecutedDate();
+
+        if (!isset($lastSuccessExecutedDate) || $currentJob->getCode() !== JobExecutor::IMPORT_CODE_PRODUCT) {
+            return $lastSuccessExecutedDate;
+        }
+
+        /** @var string[] $lastSuccessExecutedDateData */
+        $lastSuccessExecutedDateData = $this->json->unserialize($lastSuccessExecutedDate);
+        /** @var string $currentFamilyCode */
+        $currentFamilyCode = $jobExecutor->getCurrentJobClass()->getFamily();
+
+        if (isset($lastSuccessExecutedDateData[$currentFamilyCode])) {
+            return $lastSuccessExecutedDateData[$currentFamilyCode];
+        }
+        return $lastSuccessExecutedDateData[JobInterface::DEFAULT_PRODUCT_JOB_FAMILY_CODE] ?? null;
+
     }
 }

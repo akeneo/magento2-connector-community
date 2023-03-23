@@ -69,13 +69,13 @@
                 <field id="admin_channel" translate="label comment" type="select" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Admin Website Channel</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Channel</source_model>
-                    <comment>Set Magento Admin website default Akeneo channel</comment>
+                    <comment>Set Adobe Commerce/Magento Admin website default Akeneo channel</comment>
                 </field>
                 <field id="website_mapping" translate="label" type="text" sortOrder="91" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Website Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Website</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment>Match Magento website with Akeneo channel</comment>
+                    <comment>Match Adobe Commerce/Magento website with Akeneo channel</comment>
                     <validate>required-entry</validate>
                 </field>
             </group>
@@ -288,7 +288,7 @@ For example :<br/>
                     <label>Does Akeneo data override category content staging</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>
-                        <![CDATA[This parameter is only used on Magento 2 Enterprise Edition.<br /><br />
+                        <![CDATA[This parameter is only used on Adobe Commerce.<br /><br />
                         <strong>Yes</strong> - Akeneo will override all category versions no matter what changes was scheduled.<br />
                         <strong>No</strong> - Akeneo will only update the "base" version of the scheduled categories.]]>
                     </comment>
@@ -312,7 +312,7 @@ For example :<br/>
                     </depends>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity,growth</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity,growth,seven</field>
                 </depends>
             </group>
             <group id="attribute" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -321,12 +321,18 @@ For example :<br/>
                     <label>Additional types</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Type</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment>Match specific Akeneo type with Magento input field</comment>
+                    <comment>Match specific Akeneo type with Adobe Commerce/Magento input field</comment>
+                </field>
+                <field id="types_swatch" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Swatch types mapping</label>
+                    <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\SwatchType</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <comment>Map akeneo attribute with magento Swatch Text / Visual Swatch attribute</comment>
                 </field>
                 <field id="option_code_as_admin_label" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Set attribute option code as Admin label for attribute options</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <comment>Set this configuration to "Yes" in order to set the Akeneo option code as the attribute option Admin label in Magento. If this configuration is set to "No", the Admin label of the option will be imported from the Magento 2 locale configuration for the Admin scope.</comment>
+                    <comment>Set this configuration to "Yes" in order to set the Akeneo option code as the attribute option Admin label in Adobe Commerce/Magento. If this configuration is set to "No", the Admin label of the option will be imported from Adobe Commerce/Magento locale configuration for the Admin scope.</comment>
                 </field>
             </group>
             <group id="filter_attribute" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -351,7 +357,7 @@ For example :<br/>
                 </field>
                 <field id="filter_attribute_code" translate="label comment" type="multiselect" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Attribute codes to import</label>
-                    <comment>Select the attributes you want to import. Not choosing any attribute in this list will import all your attributes into Magento 2.</comment>
+                    <comment>Select the attributes you want to import. Not choosing any attribute in this list will import all your attributes into Adobe Commerce/Magento.</comment>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Attribute</source_model>
                     <depends>
                         <field id="filter_attribute_code_mode">1</field>
@@ -359,11 +365,18 @@ For example :<br/>
                     <can_be_empty>1</can_be_empty>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity,growth</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_four_point_zero_point_sixty_two,greater_or_five,serenity,growth,seven</field>
                 </depends>
             </group>
             <group id="product" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Products</label>
+                <field id="akeneo_attribute_code_for_sku" translate="label comment" type="text" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Akeneo attribute code for SKU</label>
+                    <comment>Mapping used in Serenity, Growth and V7.0 Akeneo edition. The SKU behavior now looks closer to a normal attribute. If empty, run a fault and stop the product flow.</comment>
+                    <depends>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth,seven</field>
+                    </depends>
+                </field>
                 <field id="website_attribute" translate="label comment" type="text" sortOrder="5" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Website Attribute</label>
                     <comment>Enter the code of the select or multiselect attribute used to associate products to your websites, leave blank to ignore</comment>
@@ -378,7 +391,7 @@ For example :<br/>
                     <label>Product Status Mode</label>
                     <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
                     <comment>
-                        <![CDATA[The "Status based on Completeness level" mode is only available for Akeneo version Growth and Serenity.]]>
+                        <![CDATA[The "Status based on Completeness level" mode is only available for Akeneo version Growth and Serenity and 7.0.]]>
                     </comment>
                 </field>
                 <field id="attribute_code_for_simple_product_statuses" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -405,7 +418,7 @@ For example :<br/>
                     <label>Enable Simple Products per website if completeness in channel is equal or greater than</label>
                     <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
                     <depends>
-                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth</field>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth,seven</field>
                         <field id="product_status_mode">status_based_on_completeness_level</field>
                     </depends>
                     <comment>
@@ -416,7 +429,7 @@ For example :<br/>
                     <label>Default Configurable Products Status</label>
                     <source_model>Akeneo\Connector\Model\Source\Activation</source_model>
                     <depends>
-                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth</field>
+                        <field id="akeneo_connector/akeneo_api/edition" separator=",">serenity,growth,seven</field>
                         <field id="product_status_mode">status_based_on_completeness_level</field>
                     </depends>
                 </field>
@@ -430,12 +443,37 @@ For example :<br/>
                         <![CDATA[Default status for product creation<br/>If a product is updated, status won't be modified unless it is disabled in Akeneo]]>
                     </comment>
                 </field>
+
+                <field id="visibility_enabled" translate="label" type="select" sortOrder="32" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Visibility Mapping From Akeneo Attribute</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="default_visibility" translate="label" type="select" sortOrder="33" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Default product visibility</label>
+                    <source_model>Magento\Catalog\Model\Product\Visibility</source_model>
+                    <depends>
+                        <field id="visibility_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="visibility_simple" translate="label" type="text" sortOrder="34" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Akeneo Attribute Code For Simple Product Visibility</label>
+                    <depends>
+                        <field id="visibility_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="visibility_configurable" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Akeneo Attribute Code For Configurable Product Visibility</label>
+                    <depends>
+                        <field id="visibility_enabled">1</field>
+                    </depends>
+                </field>
+
                 <field id="attribute_mapping" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Attribute Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Attribute</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>
-                        <![CDATA[Fill additional Magento attributes from Akeneo attributes.<br/>
+                        <![CDATA[Fill additional Adobe Commerce/Magento attributes from Akeneo attributes.<br/>
 "price" "special_price" and "cost" attributes won't be automatically mapped unless you explicitely declare them in this configuration.]]>
                     </comment>
                 </field>
@@ -458,9 +496,9 @@ For example :<br/>
                         <![CDATA[
                         <strong>Type:</strong>
                         <br />
-                        - <u>Mapping</u>: Declare each PIM common attributes you want to be mapped with another Magento attribute. Fill the value field with the corresponding Magento attribute. Example: Attribute = name_product_model and Value = name
+                        - <u>Mapping</u>: Declare each PIM common attributes you want to be mapped with another Adobe Commerce/Magento attribute. Fill the value field with the corresponding Adobe Commerce/Magento attribute. Example: Attribute = name_product_model and Value = name
                         <br />
-                        - <u>First Variation value</u>: Declare each PIM variation specific attributes you want to be imported in the Magento configurable products. The value of the first variation associated to the product model will be inserted in the corresponding Magento configurable product attribute. Leave the value field empty.
+                        - <u>First Variation value</u>: Declare each PIM variation specific attributes you want to be imported in Adobe Commerce/Magento configurable products. The value of the first variation associated to the product model will be inserted in the corresponding Adobe Commerce/Magento configurable product attribute. Leave the value field empty.
                         <br />
                         - <u>SQL Statement</u>: Use a SQL statement in the value field for custom value assignation from Akeneo Connector temporary tables. Example: Attribute = url_key and Value = LOWER(url_key)
                         <br />
@@ -498,7 +536,7 @@ For example :<br/>
                     <label>Product Images Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Image</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment>Map Magento image type for products. Associate the image type option to a PIM attribute specified in the Akeneo Attribute for Image Gallery field. After import, all specified options will be filled by their image if provided.</comment>
+                    <comment>Map Adobe Commerce/Magento image type for products. Associate the image type option to a PIM attribute specified in the Akeneo Attribute for Image Gallery field. After import, all specified options will be filled by their image if provided.</comment>
                     <depends>
                         <field id="media_enabled">1</field>
                     </depends>
@@ -520,7 +558,7 @@ For example :<br/>
                     <label>Does Akeneo data override content staging</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>
-                        <![CDATA[This parameter is only used on Magento 2 Enterprise Edition.<br /><br />
+                        <![CDATA[This parameter is only used on Adobe Commerce.<br /><br />
                         <strong>Yes</strong> - Akeneo will override all product versions no matter what changes was scheduled.<br />
                         <strong>No</strong> - Akeneo will only update the "base" version of the scheduled products.]]>
                     </comment>
@@ -539,7 +577,7 @@ For example :<br/>
                     <comment><![CDATA[Map each grouped family from Akeneo to its corresponding quantified association.<br />Please make sure to only map quantified association.]]></comment>
                 </field>
                 <depends>
-                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_five,serenity,growth</field>
+                    <field id="akeneo_connector/akeneo_api/edition" separator=",">greater_or_five,serenity,growth,seven</field>
                 </depends>
             </group>
             <group id="index" translate="label" sortOrder="70" type="text" showInDefault="1" showInWebsite="0" showInStore="0">
