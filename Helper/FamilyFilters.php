@@ -68,6 +68,7 @@ class FamilyFilters
             || $edition === Edition::GREATER_OR_FIVE
             || $edition === Edition::SERENITY
             || $edition === Edition::GROWTH
+            || $edition === Edition::SEVEN
         ) {
             $this->searchBuilder = $this->searchBuilderFactory->create();
             $this->addUpdatedFilter();

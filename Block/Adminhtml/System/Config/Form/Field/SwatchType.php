@@ -16,29 +16,11 @@ use Akeneo\Connector\Helper\Import\Attribute as AttributeHelper;
  * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
-class Type extends AbstractFieldArray
+class SwatchType extends AbstractFieldArray
 {
-    /**
-     * This variable contains an ElementFactory
-     *
-     * @var ElementFactory $elementFactory
-     */
-    protected $elementFactory;
-    /**
-     * This variable contains an AttributeHelper
-     *
-     * @var AttributeHelper $attributeHelper
-     */
-    protected $attributeHelper;
+    protected ElementFactory $elementFactory;
+    protected AttributeHelper $attributeHelper;
 
-    /**
-     * Type constructor
-     *
-     * @param Context $context
-     * @param ElementFactory $elementFactory
-     * @param AttributeHelper $attributeHelper
-     * @param array $data
-     */
     public function __construct(
         Context $context,
         ElementFactory $elementFactory,
@@ -48,19 +30,17 @@ class Type extends AbstractFieldArray
         parent::__construct($context, $data);
 
         $this->attributeHelper = $attributeHelper;
-        $this->elementFactory  = $elementFactory;
+        $this->elementFactory = $elementFactory;
     }
 
     /**
      * Initialise form fields
-     *
-     * @return void
      */
-    protected function _construct()
+    protected function _construct(): void
     {
         $this->addColumn('pim_type', ['label' => __('Akeneo')]);
-        $this->addColumn('magento_type', ['label' => __('Adobe Commerce')]);
-        $this->_addAfter       = false;
+        $this->addColumn('magento_type', ['label' => __('Magento')]);
+        $this->_addAfter = false;
         $this->_addButtonLabel = __('Add');
         parent::_construct();
     }
@@ -69,17 +49,15 @@ class Type extends AbstractFieldArray
      * Render array cell for prototypeJS template
      *
      * @param string $columnName
-     *
-     * @return string
      */
-    public function renderCellTemplate($columnName)
+    public function renderCellTemplate($columnName): string
     {
         if ($columnName != 'magento_type' || !isset($this->_columns[$columnName])) {
             return parent::renderCellTemplate($columnName);
         }
 
         /** @var array $options */
-        $options = $this->attributeHelper->getAvailableTypes();
+        $options = $this->attributeHelper->getAvailableSwatchTypes();
         /** @var AbstractElement $element */
         $element = $this->elementFactory->create('select');
         $element->setForm(

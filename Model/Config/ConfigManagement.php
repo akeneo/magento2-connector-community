@@ -105,6 +105,7 @@ class ConfigManagement
     public const BYPASS_BOOLEAN_FIELDS = [
         ConfigHelper::PRODUCT_TAX_CLASS,
         ConfigHelper::PRODUCTS_FILTERS_UPDATED_SINCE,
+        ConfigHelper::PRODUCT_AKENEO_ATTRIBUTE_CODE_FOR_SKU,
         ConfigHelper::PRODUCT_WEBSITE_ATTRIBUTE,
         ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING,
         ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES,
@@ -548,7 +549,7 @@ class ConfigManagement
     protected function insertHeader(Zend_Pdf_Page $page)
     {
         /** @var string $title */
-        $title = (string)__('Akeneo Connector for Magento 2 - Configuration export');
+        $title = (string)__('Akeneo Connector for Adobe Commerce - Configuration export');
         /** @var float $titleLength */
         $titleLength = $this->widthForStringUsingFontSize($title);
         $page->drawText($title, ($page->getWidth() - $titleLength) / 2, $this->lastPosition);
@@ -694,7 +695,7 @@ class ConfigManagement
         $this->setPageStyle(Zend_Pdf_Font::FONT_HELVETICA_OBLIQUE);
         /** @var string $text */
         $text = (string)__(
-            "If you want to report a bug, ask a question or have a suggestion to make on Akeneo Connector for Magento 2,"
+            "If you want to report a bug, ask a question or have a suggestion to make on Akeneo Connector for Adobe Commerce,"
         );
         /** @var string $text2 */
         $text2 = (string)__("please contact our Support Team.");

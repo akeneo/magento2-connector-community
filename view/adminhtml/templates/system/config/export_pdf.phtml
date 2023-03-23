@@ -6,9 +6,33 @@ use Akeneo\Connector\Block\Adminhtml\System\Config\ExportPdf;
 
 /** @var ExportPdf $block */
 ?>
-<a href="<?= $block->getExportUrl() ?>">
-    <button id="config_export_pdf" title="<?= $block->escapeHtml(__('Export PDF')) ?>" type="button"
-            class="action-default scalable">
-        <?= $block->escapeHtml(__('Export PDF')) ?>
-    </button>
-</a>
+<button id="config_export_pdf" title="<?= $block->escapeHtml(__('Export PDF')) ?>" type="button"
+        class="action-default scalable">
+    <?= $block->escapeHtml(__('Export PDF')) ?>
+</button>
+
+<script>
+{
+    requirejs([
+        'jquery',
+        'domReady!'
+    ], function($) {
+        $(document).on('click', '#config_export_pdf', function() {
+            /** unfold all sections */
+            $('.section-config').each(function (el) {
+                if (!$(this).hasClass('active')) {
+                    $(this).find('a').click();
+                }
+            });
+            /** resize all multiselect to display all options */
+            $('.multiselect').each(function (el) {
+                let currentEl = $(this);
+                let newHeight = currentEl.children().length * 29;
+                currentEl.height(newHeight).parent().parent().height(newHeight);
+            });
+
+            window.print();
+        });
+    });
+}
+</script>

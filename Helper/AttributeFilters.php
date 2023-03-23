@@ -111,6 +111,7 @@ class AttributeFilters
             || $edition == Edition::GREATER_OR_FIVE
             || $edition === Edition::SERENITY
             || $edition === Edition::GROWTH
+            || $edition === Edition::SEVEN
         ) {
             $filters['search']['type'][] = [
                 'operator' => 'IN',
