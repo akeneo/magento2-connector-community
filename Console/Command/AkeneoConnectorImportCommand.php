@@ -51,6 +51,12 @@ class AkeneoConnectorImportCommand extends Command
      * @var JobRepository $jobRepository
      */
     protected $jobRepository;
+    /**
+     * Description $configHelper field
+     *
+     * @var ConfigHelper $configHelper
+     */
+    protected $configHelper;
 
     /**
      * AkeneoConnectorImportCommand constructor
