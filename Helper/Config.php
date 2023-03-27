@@ -1075,6 +1075,14 @@ class Config
 
         $mapping = array_merge($mapping, $websiteMapping);
 
+        foreach ($mapping as $map) {
+            if (!isset($map['channel'], $map['website'])) {
+                throw new Exception(
+                    (string)__('The website mapping is misconfigured, please check the "Website Mapping" config field.')
+                );
+            }
+        }
+
         return $mapping;
     }
 
