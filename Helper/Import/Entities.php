@@ -1111,7 +1111,8 @@ class Entities
                 $attributeCode = strtolower($attribute['code']);
                 $attributeType = $attribute['type'];
 
-                $this->attributeLength[$familyCode][$attributeCode] = $attributeTypesLength[$attributeType];
+                $this->attributeLength[$familyCode][$attributeCode] =
+                    $attributeTypesLength[$attributeType] ?? self::DEFAULT_ATTRIBUTE_LENGTH;
             }
         }
 
