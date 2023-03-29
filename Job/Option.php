@@ -224,7 +224,7 @@ class Option extends Import
         $option = $options->getItems();
         if (empty($option)) {
             $this->jobExecutor->setMessage(__('No results from Akeneo'), $this->logger);
-            $this->jobExecutor->afterRun(1);
+            $this->jobExecutor->afterRun(true);
 
             return;
         }
@@ -517,6 +517,10 @@ class Option extends Import
         // On récupère le mapping akeneo_attribute_code => swatch_type
         $swatchesAttributes = $this->attributeHelper->getAdditionalSwatchTypes();
 
+        if (empty($swatchesAttributes)) {
+            return;
+        }
+
         foreach ($stores as $local => $data) {
             if (!$connection->tableColumnExists($tmpTable, 'labels-' . $local)) {
                 continue;
@@ -556,6 +560,10 @@ class Option extends Import
                         'type' => ($swatchesAttributes[$swatchesAttributeData['attribute']] === Swatch::SWATCH_TYPE_TEXTUAL_ATTRIBUTE_FRONTEND_INPUT) ? Swatch::SWATCH_TYPE_TEXTUAL : Swatch::SWATCH_TYPE_EMPTY,
                         'value' => ($swatchesAttributes[$swatchesAttributeData['attribute']] === Swatch::SWATCH_TYPE_TEXTUAL_ATTRIBUTE_FRONTEND_INPUT) ? $swatchesAttributeData['value'] : null,
                     ];
+                }
+
+                if (empty($dataToInsert)) {
+                    continue;
                 }
 
                 $connection->insertOnDuplicate(
