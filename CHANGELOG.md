@@ -406,3 +406,8 @@
 * "Product Status Mode" parameter missing when selecting version 5.0 Akeneo edition
 * Magento to Adobe Commerce rebranding
 * Error while importing the attribute option
+
+### Version 103.4.1 :
+* Fix length for custom attribute types
+* New error message when website mapping fail
+* Fix error when swatch attribute option is empty
