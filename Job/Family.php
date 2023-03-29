@@ -165,7 +165,7 @@ class Family extends Import
 
         if (empty($family)) {
             $this->jobExecutor->setMessage(__('No results retrieved from Akeneo'), $this->logger);
-            $this->jobExecutor->afterRun(1);
+            $this->jobExecutor->afterRun(true);
 
             return;
         }

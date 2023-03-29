@@ -198,7 +198,7 @@ class Attribute extends Import
         $attribute = $attributes->getItems();
         if (empty($attribute)) {
             $this->jobExecutor->setMessage(__('No results from Akeneo'), $this->logger);
-            $this->jobExecutor->afterRun(1);
+            $this->jobExecutor->afterRun(true);
 
             return;
         }
@@ -283,7 +283,7 @@ class Attribute extends Import
                 __('No attributes with label in the admin locale %1 found.', $localeCode),
                 $this->logger
             );
-            $this->jobExecutor->afterRun(1);
+            $this->jobExecutor->afterRun(true);
 
             return;
         }
