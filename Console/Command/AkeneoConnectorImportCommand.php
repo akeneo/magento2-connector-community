@@ -70,6 +70,8 @@ class AkeneoConnectorImportCommand extends Command
             /** @var string $message */
             $message = __('Area code already set')->getText();
             $output->writeln($message);
+
+            return 1;
         }
         try {
             /** @var string $code */
@@ -83,7 +85,11 @@ class AkeneoConnectorImportCommand extends Command
             $this->jobExecutor->displayError($e->getMessage());
             $currentJob = $this->jobExecutor->getCurrentJob();
             $this->jobExecutor->setJobStatus(JobInterface::JOB_ERROR, $currentJob);
+
+            return 1;
         }
+
+        return 0;
     }
 
     /**
