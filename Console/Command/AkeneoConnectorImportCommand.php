@@ -33,47 +33,15 @@ class AkeneoConnectorImportCommand extends Command
      * @var string IMPORT_CODE
      */
     public const IMPORT_CODE = 'code';
-    /**
-     * This variable contains a State
-     *
-     * @var State $appState
-     */
-    protected $appState;
-    /**
-     * Description $jobExecutor field
-     *
-     * @var JobExecutor $jobExecutor
-     */
-    protected $jobExecutor;
-    /**
-     * Description $jobRepository field
-     *
-     * @var JobRepository $jobRepository
-     */
-    protected $jobRepository;
 
-    /**
-     * AkeneoConnectorImportCommand constructor
-     *
-     * @param State $appState
-     * @param ConfigHelper $configHelper
-     * @param JobExecutor $jobExecutor
-     * @param JobRepository $jobRepository
-     * @param string|null $name
-     */
     public function __construct(
-        State $appState,
-        ConfigHelper $configHelper,
-        JobExecutor $jobExecutor,
-        JobRepository $jobRepository,
-        $name = null
+        protected State $appState,
+        protected ConfigHelper $configHelper,
+        protected JobExecutor $jobExecutor,
+        protected JobRepository $jobRepository,
+        string $name = null
     ) {
         parent::__construct($name);
-
-        $this->appState = $appState;
-        $this->configHelper = $configHelper;
-        $this->jobExecutor = $jobExecutor;
-        $this->jobRepository = $jobRepository;
     }
 
     /**
