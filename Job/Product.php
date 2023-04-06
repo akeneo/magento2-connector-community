@@ -2560,13 +2560,22 @@ class Product extends JobImport
 
                 /** @var array $valuesLabels */
                 $valuesLabels = [];
+                /** @var string $superAttributeId */
+                $superAttributeId = $connection->fetchOne(
+                    $connection->select()
+                               ->from($productSuperAttrTable)
+                               ->where('attribute_id = ?', $id)
+                               ->where('product_id = ?', $row[$pKeyColumn])
+                               ->limit(1)
+                );
+
                 /**
                  * @var int $storeId
                  * @var array $affected
                  */
                 foreach ($stores as $storeId => $affected) {
                     $valuesLabels[] = [
-                        'product_super_attribute_id' => $superAttributeListOrdered[$id][$row[$pKeyColumn]],
+                        'product_super_attribute_id' => $superAttributeId,
                         'store_id' => $storeId,
                         'use_default' => 0,
                         'value' => '',
