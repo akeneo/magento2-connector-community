@@ -411,3 +411,7 @@
 * Fix length for custom attribute types
 * New error message when website mapping fail
 * Fix error when swatch attribute option is empty
+
+### Version 103.4.2 :
+* Magento 2.4.6 / PHP 8.2 compatibility
+* 

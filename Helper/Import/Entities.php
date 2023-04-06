@@ -1040,7 +1040,7 @@ class Entities
         $mysqlVersion = $mysqlVersionQuery->fetch();
 
         if (!$mysqlVersion['version']) {
-            throw new Exception(__('Mysql version not recognized'));
+            throw new Exception((string)__('Mysql version not recognized'));
         }
 
         return $mysqlVersion['version'];
