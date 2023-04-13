@@ -91,12 +91,12 @@ class FamilyVariant
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
 
-        /** @var array $family */
-        $family = $akeneoClient->getFamilyApi()->get($family);
+        /** @var array $familyApi */
+        $familyApi = $akeneoClient->getFamilyApi()->get($family);
         /** @var bool $hasVariant */
         $hasVariant = false;
         /** @var PageInterface $variantFamilies */
-        $variantFamilies = $akeneoClient->getFamilyVariantApi()->listPerPage($family['code'], 1);
+        $variantFamilies = $akeneoClient->getFamilyVariantApi()->listPerPage($familyApi['code'], 1);
         if (count($variantFamilies->getItems()) > 0) {
             $hasVariant = true;
         }
@@ -132,10 +132,10 @@ class FamilyVariant
         $messages = [];
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
-        /** @var array $family */
-        $family = $akeneoClient->getFamilyApi()->get($family);
+        /** @var array $familyApi */
+        $familyApi = $akeneoClient->getFamilyApi()->get($family);
         /** @var string $familyCode */
-        $familyCode = $family['code'];
+        $familyCode = $familyApi['code'];
         /** @var int $count */
         $count = $this->insertFamilyVariantData($familyCode, $paginationSize, $akeneoClient);
         if ($count === 0) {

@@ -1040,7 +1040,7 @@ class Entities
         $mysqlVersion = $mysqlVersionQuery->fetch();
 
         if (!$mysqlVersion['version']) {
-            throw new Exception(__('Mysql version not recognized'));
+            throw new Exception((string)__('Mysql version not recognized'));
         }
 
         return $mysqlVersion['version'];
@@ -1111,7 +1111,8 @@ class Entities
                 $attributeCode = strtolower($attribute['code']);
                 $attributeType = $attribute['type'];
 
-                $this->attributeLength[$familyCode][$attributeCode] = $attributeTypesLength[$attributeType];
+                $this->attributeLength[$familyCode][$attributeCode] =
+                    $attributeTypesLength[$attributeType] ?? self::DEFAULT_ATTRIBUTE_LENGTH;
             }
         }
 
