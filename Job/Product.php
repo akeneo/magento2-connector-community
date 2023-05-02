@@ -4085,14 +4085,19 @@ class Product extends JobImport
 
                         foreach ($columns as $column) {
                             /** @var string $columnName */
-                            $columnName = $column['column'] . self::SUFFIX_SEPARATOR . $suffix;
-                            /** @var mixed[] $mappings */
-                            $mappings = $this->configHelper->getWebsiteMapping();
-                            /** @var string|null $locale */
-                            $locale = null;
-                            /** @var string|null $scope */
-                            $scope = null;
+                            $columnName = $column['column'];
+
                             if ($suffix) {
+                                $columnName .= self::SUFFIX_SEPARATOR . $suffix;
+
+                                /** @var mixed[] $mappings */
+                                $mappings = $this->configHelper->getWebsiteMapping();
+
+                                /** @var string|null $locale */
+                                $locale = null;
+                                /** @var string|null $scope */
+                                $scope = null;
+
                                 if (str_contains($suffix, '-')) {
                                     /** @var string[] $suffixs */
                                     $suffixs = explode('-', $suffix);
@@ -4107,22 +4112,34 @@ class Product extends JobImport
                                 } else {
                                     $scope = $suffix;
                                 }
-                            }
 
-                            foreach ($mappings as $mapping) {
-                                if (((isset($scope, $locale)) && ($columnName !== $image || $store['website_code'] !== $mapping['website'] || $store['channel_code'] !== $scope || $store['lang'] !== $locale))
-                                    || ((isset($scope)) && ($columnName !== $image || $store['website_code'] !== $mapping['website'] || $store['channel_code'] !== $scope))
-                                    || ((isset($locale)) && ($columnName !== $image || $store['website_code'] !== $mapping['website'] || $store['lang'] !== $locale))
-                                ) {
+                                foreach ($mappings as $mapping) {
+                                    if (((isset($scope, $locale)) && ($columnName !== $image || $store['website_code'] !== $mapping['website'] || $store['channel_code'] !== $scope || $store['lang'] !== $locale))
+                                        || ((isset($scope)) && ($columnName !== $image || $store['website_code'] !== $mapping['website'] || $store['channel_code'] !== $scope))
+                                        || ((isset($locale)) && ($columnName !== $image || $store['website_code'] !== $mapping['website'] || $store['lang'] !== $locale))
+                                    ) {
+                                        continue;
+                                    }
+
+                                    /** @var string[] $data */
+                                    $data = [
+                                        'attribute_id' => $column['attribute'],
+                                        'store_id' => $store['store_id'],
+                                        $columnIdentifier => $row[$columnIdentifier],
+                                        'value' => $file,
+                                    ];
+                                    $connection->insertOnDuplicate($productImageTable, $data, array_keys($data));
+                                }
+                            } else {
+                                if ($columnName !== $image) {
                                     continue;
                                 }
-
-                                /** @var string[] $data */
+                                /** @var array $data */
                                 $data = [
-                                    'attribute_id'    => $column['attribute'],
-                                    'store_id'        => $store['store_id'],
+                                    'attribute_id' => $column['attribute'],
+                                    'store_id' => 0,
                                     $columnIdentifier => $row[$columnIdentifier],
-                                    'value'           => $file,
+                                    'value' => $file,
                                 ];
                                 $connection->insertOnDuplicate($productImageTable, $data, array_keys($data));
                             }
