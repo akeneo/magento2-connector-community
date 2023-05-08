@@ -33,6 +33,30 @@ class AkeneoConnectorImportCommand extends Command
      * @var string IMPORT_CODE
      */
     public const IMPORT_CODE = 'code';
+    /**
+     * This variable contains a State
+     *
+     * @var State $appState
+     */
+    protected $appState;
+    /**
+     * Description $jobExecutor field
+     *
+     * @var JobExecutor $jobExecutor
+     */
+    protected $jobExecutor;
+    /**
+     * Description $jobRepository field
+     *
+     * @var JobRepository $jobRepository
+     */
+    protected $jobRepository;
+    /**
+     * Description $configHelper field
+     *
+     * @var ConfigHelper $configHelper
+     */
+    protected $configHelper;
 
     public function __construct(
         protected State $appState,
