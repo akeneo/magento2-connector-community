@@ -140,9 +140,6 @@
                     showInStore="0">
                     <label>Updated mode</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Update</source_model>
-                    <depends>
-                        <field id="mode">standard</field>
-                    </depends>
                 </field>
                 <field id="updated_lower" translate="label" type="date" sortOrder="90" showInDefault="1" showInWebsite="0"
                     showInStore="0">
@@ -150,7 +147,6 @@
                     <comment>Import only product updated before the given date. Leave blank for no filter.</comment>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
                     <depends>
-                        <field id="mode">standard</field>
                         <field id="updated_mode">&lt;</field>
                     </depends>
                 </field>
@@ -160,7 +156,6 @@
                     <comment>Import only product updated after the given date. Leave blank for no filter.</comment>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
                     <depends>
-                        <field id="mode">standard</field>
                         <field id="updated_mode">&gt;</field>
                     </depends>
                 </field>
@@ -170,7 +165,6 @@
                     <comment>Import only product updated after the given date. Leave at least one blank for no filter.</comment>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
                     <depends>
-                        <field id="mode">standard</field>
                         <field id="updated_mode">BETWEEN</field>
                     </depends>
                 </field>
@@ -180,7 +174,6 @@
                     <comment>Import only product updated before the given date. Leave at least one blank for no filter.</comment>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Date</frontend_model>
                     <depends>
-                        <field id="mode">standard</field>
                         <field id="updated_mode">BETWEEN</field>
                     </depends>
                 </field>
@@ -191,7 +184,6 @@
                         <![CDATA[Import only product updated since last X days. Leave blank for no filter.]]>
                     </comment>
                     <depends>
-                        <field id="mode">standard</field>
                         <field id="updated_mode">SINCE LAST N DAYS</field>
                     </depends>
                 </field>
@@ -202,7 +194,6 @@
                         <![CDATA[Import only product updated since last X hours. Leave blank for no filter.]]>
                     </comment>
                     <depends>
-                        <field id="mode">standard</field>
                         <field id="updated_mode">SINCE LAST N HOURS</field>
                     </depends>
                 </field>
