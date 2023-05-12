@@ -2560,13 +2560,22 @@ class Product extends JobImport
 
                 /** @var array $valuesLabels */
                 $valuesLabels = [];
+                /** @var string $superAttributeId */
+                $superAttributeId = $connection->fetchOne(
+                    $connection->select()
+                               ->from($productSuperAttrTable)
+                               ->where('attribute_id = ?', $id)
+                               ->where('product_id = ?', $row[$pKeyColumn])
+                               ->limit(1)
+                );
+
                 /**
                  * @var int $storeId
                  * @var array $affected
                  */
                 foreach ($stores as $storeId => $affected) {
                     $valuesLabels[] = [
-                        'product_super_attribute_id' => $superAttributeListOrdered[$id][$row[$pKeyColumn]],
+                        'product_super_attribute_id' => $superAttributeId,
                         'store_id' => $storeId,
                         'use_default' => 0,
                         'value' => '',
@@ -3044,8 +3053,8 @@ class Product extends JobImport
         $deleteQuery = $connection->select()->from([$linkTableAlias => $linkTable], null);
         if ($rowIdExists) {
             $deleteQuery->joinInner(['p' => $productsTable], "$linkTableAlias.product_id = p.row_id", null)
-                ->joinInner(['tmp' => $tmpTable], 'p.entity_id = tmp._entity_id', null)
-                ->joinLeft(['s' => $this->entitiesHelper->getTable('staging_update')], 'p.created_in = s.id', null);
+                        ->joinInner(['tmp' => $tmpTable], 'p.entity_id = tmp._entity_id', null)
+                        ->joinLeft(['s' => $this->entitiesHelper->getTable('staging_update')], 'p.created_in = s.id', null);
         } else {
             $deleteQuery->joinInner(['tmp' => $tmpTable], "$linkTableAlias.product_id = tmp._entity_id", null);
         }
@@ -3199,9 +3208,9 @@ class Product extends JobImport
         $edition = $this->configHelper->getEdition();
         // Is family is not grouped or edition not Serenity or five or greater, skip
         if (($edition != Edition::SERENITY
-                && $edition != Edition::GREATER_OR_FIVE
-                && $edition != Edition::GROWTH
-                && $edition != Edition::SEVEN)
+            && $edition != Edition::GREATER_OR_FIVE
+            && $edition != Edition::GROWTH
+            && $edition != Edition::SEVEN)
             || !$this->entitiesHelper->isFamilyGrouped($this->getFamily())
         ) {
             return;
@@ -4347,7 +4356,7 @@ class Product extends JobImport
      *
      * @return array
      */
-    public function getFamiliesToImport()
+    public function getFamiliesToImport(): array
     {
         if (!$this->akeneoClient) {
             $this->akeneoClient = $this->getAkeneoClient();
@@ -4355,16 +4364,18 @@ class Product extends JobImport
                 return [];
             }
         }
-        /** @var string[] $families */
-        $families = [];
-        /** @var string[] $familiesIn */
-        $familiesIn = [];
-        /** @var string|int $paginationSize */
+
+        $mode = $this->configHelper->getFilterMode();
+
+        if ($mode == Mode::STANDARD) {
+            $families = $this->configHelper->getFamiliesFilter();
+            return explode(',', $this->configHelper->getFamiliesFilter() ?? '');
+        }
+
+        $families = $familiesIn = [];
         $paginationSize = $this->configHelper->getPaginationSize();
-        /** @var string[] $apiFamilies */
         $apiFamilies = $this->akeneoClient->getFamilyApi()->all($paginationSize);
 
-        /** @var mixed[] $family */
         foreach ($apiFamilies as $family) {
             if (!isset($family['code'])) {
                 continue;
@@ -4373,10 +4384,11 @@ class Product extends JobImport
         }
 
         // If we are in serenity mode, place the mapped grouped families to the end of the imports
-        /** @var string $edition */
         $edition = $this->configHelper->getEdition();
-        if ($edition === Edition::SERENITY || $edition === Edition::GROWTH || $edition === Edition::SEVEN || $edition === Edition::GREATER_OR_FIVE) {
-            /** @var string[] $groupedFamiliesToImport */
+        if ($edition === Edition::SERENITY
+            || $edition === Edition::GROWTH
+            || $edition === Edition::SEVEN
+            || $edition === Edition::GREATER_OR_FIVE) {
             $groupedFamiliesToImport = $this->configHelper->getGroupedFamiliesToImport();
             /**
              * @var int $key
@@ -4390,14 +4402,11 @@ class Product extends JobImport
             }
         }
 
-        /** @var string $mode */
-        $mode = $this->configHelper->getFilterMode();
         if ($mode == Mode::ADVANCED) {
-            /** @var string[] $filters */
             $advancedFilters = $this->configHelper->getAdvancedFilters();
             if (isset($advancedFilters['search']['family'])) {
                 foreach ($advancedFilters['search']['family'] as $key => $familyFilter) {
-                    if (isset($familyFilter['operator']) && $familyFilter['operator'] == 'NOT IN') {
+                    if (isset($familyFilter['operator']) && $familyFilter['operator'] === 'NOT IN') {
                         foreach ($familyFilter['value'] as $familyToRemove) {
                             if (($familyKey = array_search($familyToRemove, $families)) !== false) {
                                 unset($families[$familyKey]);
@@ -4413,22 +4422,8 @@ class Product extends JobImport
                 }
             }
         }
-        if ($mode == Mode::STANDARD) {
-            /** @var mixed $filter */
-            $familiesFilter = $this->configHelper->getFamiliesFilter();
-            if ($familiesFilter) {
-                $familiesFilter = explode(',', $familiesFilter ?? '');
-                foreach ($familiesFilter as $familyFilter) {
-                    if (($key = array_search($familyFilter, $families)) !== false) {
-                        unset($families[$key]);
-                    }
-                }
-            }
-        }
 
-        $families = array_values($families);
-
-        return $familiesIn ?: $families;
+        return $familiesIn ?: array_values($families);
     }
 
     /**
@@ -4615,10 +4610,8 @@ class Product extends JobImport
                             ) {
                                 /** @var int $status */
                                 $status = 2;
-                                if ((isset($row[$attributeCode])
-                                     && $row[$attributeCode])
-                                    || (isset($row[$attributeCodeScopable])
-                                        && $row[$attributeCodeScopable])
+                                if ((isset($row[$attributeCode]) && $row[$attributeCode])
+                                    || (isset($row[$attributeCodeScopable]) && $row[$attributeCodeScopable])
                                 ) {
                                     $status = 1;
                                 }

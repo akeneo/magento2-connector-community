@@ -107,23 +107,7 @@ class CategoryFilters
      */
     public function getCategoriesToImport()
     {
-        /** @var string $excludedCategories */
-        $excludedCategories = $this->configHelper->getCategoriesFilter();
-        /** @var string[] $allParentCategories */
-        $allParentCategories = array_keys($this->categoryFilterSourceModel->getCategories());
-        /** @var string[] $categoriesToImport */
-        $categoriesToImport = [];
-        if ($excludedCategories) {
-            /** @var string[] $explodedCategories */
-            $explodedCategories = explode(',', $excludedCategories ?? '');
-            $categoriesToImport = array_diff($allParentCategories, $explodedCategories);
-        } else {
-            $categoriesToImport = $allParentCategories;
-        }
-
-        $categoriesToImport = array_map('strval', $categoriesToImport);
-
-        return $categoriesToImport;
+        return explode(',', $this->configHelper->getCategoriesFilter() ?? '');
     }
 
     /**
@@ -144,7 +128,7 @@ class CategoryFilters
 
         $this->searchBuilder->addFilter('parent', '=', $parent['code']);
         /** @var string[] $search */
-        $search  = $this->searchBuilder->getFilters();
+        $search = $this->searchBuilder->getFilters();
         $filters = [
             'search' => $search,
         ];
