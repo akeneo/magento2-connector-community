@@ -98,8 +98,8 @@ class TransferFamiliesAndCategoriesToNewFormatPatch implements DataPatchInterfac
         );
 
         // Create Category entries
-        $excludedCategories = $this->configHelper->getCategoriesExcludedFilter();
-        $invertedCategories = $allParentCategories = array_keys($this->categoryFilterSourceModel->getCategories());
+        $excludedCategories = $invertedCategories = $this->configHelper->getCategoriesExcludedFilter();
+        $allParentCategories = array_keys($this->categoryFilterSourceModel->getCategories());
 
         if ($excludedCategories) {
             $invertedCategories = array_diff($allParentCategories, explode(',', $excludedCategories ?? ''));
