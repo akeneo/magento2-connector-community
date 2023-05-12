@@ -136,11 +136,7 @@ class TransferFamiliesAndCategoriesToNewFormatPatch implements DataPatchInterfac
     {
         $allFamilies = [];
 
-        try {
-            $akeneoClient = $this->authenticator->getAkeneoApiClient();
-        } catch (Exception $e) {
-            return $allFamilies;
-        }
+        $akeneoClient = $this->authenticator->getAkeneoApiClient();
 
         $apiFamilies = $akeneoClient->getFamilyApi()->all($this->configHelper->getPaginationSize());
         foreach ($apiFamilies as $family) {
