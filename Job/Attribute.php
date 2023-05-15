@@ -16,6 +16,7 @@ use Akeneo\Connector\Logger\AttributeLogger;
 use Akeneo\Connector\Logger\Handler\AttributeHandler;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Exception;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Eav\Model\Config;
 use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
@@ -25,6 +26,7 @@ use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Indexer\IndexerInterface;
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Indexer\Model\IndexerFactory;
 use Zend_Db_Expr as Expr;
 
@@ -127,6 +129,13 @@ class Attribute extends Import
     protected $indexFactory;
 
     /**
+     * This variable contains a Json
+     *
+     * @var Json $jsonSerializer
+     */
+    protected $jsonSerializer;
+
+    /**
      * Attribute constructor
      *
      * @param AttributeLogger   $logger
@@ -143,6 +152,7 @@ class Attribute extends Import
      * @param StoreHelper       $storeHelper
      * @param EavSetup          $eavSetup
      * @param IndexerFactory    $indexFactory
+     * @param Json              $jsonSerializer
      * @param array             $data
      */
     public function __construct(
@@ -160,6 +170,7 @@ class Attribute extends Import
         StoreHelper $storeHelper,
         EavSetup $eavSetup,
         IndexerFactory $indexFactory,
+        Json $jsonSerializer,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
@@ -173,6 +184,7 @@ class Attribute extends Import
         $this->storeHelper      = $storeHelper;
         $this->eavSetup         = $eavSetup;
         $this->indexFactory     = $indexFactory;
+        $this->jsonSerializer   = $jsonSerializer;
     }
 
     /**
@@ -539,9 +551,26 @@ class Attribute extends Import
                 array_keys($values)
             );
 
+            $uppi = $upifs = '0';
+
+            $additionalData = $connection->fetchOne(
+                $connection->select()
+                    ->from($this->entitiesHelper->getTable('catalog_eav_attribute'), ['additional_data'])
+                    ->where('attribute_id = ?', $row['_entity_id'])
+            );
+            if ($additionalData) {
+                try {
+                    $options = $this->jsonSerializer->unserialize($additionalData);
+                    $uppi = $options['update_product_preview_image'] ?? '0';
+                    $upifs = $options['use_product_image_for_swatch'] ?? '0';
+                } catch (Exception) {}
+            }
+
             $attributeAdditionalData = [
-                'pim_catalog_swatch_text' => '{"swatch_input_type":"text","update_product_preview_image":"0","use_product_image_for_swatch":0}',
-                'pim_catalog_swatch_visual' => '{"swatch_input_type":"visual","update_product_preview_image":"0","use_product_image_for_swatch":"0"}'
+                'pim_catalog_swatch_text' =>
+                    '{"swatch_input_type":"text","update_product_preview_image":"' . $uppi . '","use_product_image_for_swatch":"' . $upifs . '"}',
+                'pim_catalog_swatch_visual' =>
+                    '{"swatch_input_type":"visual","update_product_preview_image":"' . $uppi . '","use_product_image_for_swatch":"' . $upifs . '"}'
             ];
 
             $values = [
