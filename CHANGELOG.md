@@ -414,4 +414,9 @@
 
 ### Version 103.4.2 :
 * Magento 2.4.6 / PHP 8.2 compatibility
-* 
+
+### Version 103.4.3 :
+* Fix PHP < 8.1 compatibility
+* Rolled back previous modification to avoid Undefined array key line 3013
+* Avoid to erase swatch configuration
+* Fix image mapping for scope global
