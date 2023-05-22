@@ -107,7 +107,7 @@ class TransferFamiliesAndCategoriesToNewFormatPatch implements DataPatchInterfac
 
         $this->resourceConfig->saveConfig(
             ConfigHelper::PRODUCTS_CATEGORY_INCLUDED_CATEGORIES,
-            implode(',', array_map('strval', $invertedCategories))
+            implode(',', array_map('strval', $invertedCategories ?? []))
         );
     }
 
