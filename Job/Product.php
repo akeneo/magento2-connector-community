@@ -6,7 +6,6 @@ namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Api\Data\AttributeTypeInterface;
 use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
-use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Executor\JobExecutorFactory;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
@@ -33,12 +32,13 @@ use Akeneo\Pim\ApiClient\Pagination\ResourceCursor;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Exception;
 use Magento\Bundle\Model\Product\Type as BundleType;
+use Magento\Catalog\Api\Data\CategoryInterface;
 use Magento\Catalog\Model\Category as CategoryModel;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ProductLink\Link as ProductLink;
-use Magento\Catalog\Model\ResourceModel\Category\Collection;
+use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ProductConfigurable;
@@ -61,9 +61,12 @@ use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedType;
 use Magento\Indexer\Model\IndexerFactory;
 use Magento\Staging\Model\VersionManager;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\UrlRewrite\Model\OptionProvider;
+use Magento\UrlRewrite\Service\V1\Data\UrlRewrite;
 use Psr\Http\Message\ResponseInterface;
 use Zend_Db_Exception;
 use Zend_Db_Expr as Expr;
+use Zend_Db_Select;
 use Zend_Db_Statement_Exception;
 use Zend_Db_Statement_Pdo;
 
@@ -117,7 +120,7 @@ class Product extends JobImport
      */
     protected $family = null;
     /**
-     * This variable contains a string value
+     * @inheritdoc
      *
      * @var string $name
      */
@@ -159,8 +162,9 @@ class Product extends JobImport
         'UPSELL',
         'X_SELL',
     ];
+
     /**
-     * This variable contains a ProductImportHelper
+     * @inheritdoc
      *
      * @var ProductImportHelper $entitiesHelper
      */
@@ -291,6 +295,12 @@ class Product extends JobImport
      * @var string
      */
     protected $productDefaultVisibility = Visibility::VISIBILITY_NOT_VISIBLE;
+    /**
+     * Collection Factory
+     *
+     * @var CollectionFactory $categoryCollectionFactory
+     */
+    protected $categoryCollectionFactory;
 
     /**
      * Product constructor.
@@ -350,6 +360,7 @@ class Product extends JobImport
         IndexerFactory $indexFactory,
         JobExecutor $jobExecutor,
         JobExecutorFactory $jobExecutorFactory,
+        CollectionFactory $categoryCollectionFactory,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
@@ -375,6 +386,7 @@ class Product extends JobImport
         $this->indexFactory = $indexFactory;
         $this->jobExecutor = $jobExecutor;
         $this->jobExecutorFactory = $jobExecutorFactory;
+        $this->categoryCollectionFactory = $categoryCollectionFactory;
 
         if ($this->configHelper->isProductVisibilityEnabled()) {
             // Add configurable column name in the property to avoid data transform from data to option id
@@ -3535,7 +3547,7 @@ class Product extends JobImport
      * @throws LocalizedException
      * @throws \Zend_Db_Exception
      */
-    public function setUrlRewrite()
+    public function setUrlRewrite(): void
     {
         if (!$this->configHelper->isUrlGenerationEnabled()) {
             $this->setStatus(true);
@@ -3547,18 +3559,18 @@ class Product extends JobImport
             return;
         }
 
-        /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
-        /** @var array $stores */
+        $productWebsiteTable = $this->entitiesHelper->getTable('catalog_product_website');
+        $catalogUrlRewriteTable = $this->entitiesHelper->getTable('catalog_url_rewrite_product_category');
+        $urlRewriteTable = $this->entitiesHelper->getTable('url_rewrite');
+        $productCategoriesTable = $this->entitiesHelper->getTable('catalog_category_product');
         $stores = array_merge(
             $this->storeHelper->getStores(['lang']), // en_US
             $this->storeHelper->getStores(['lang', 'channel_code']), // en_US-channel
             $this->storeHelper->getStores(['channel_code']) // channel
         );
 
-        /** @var bool $isUrlMapped */
         $isUrlMapped = false;
         // Check if url_key is mapped or contains value per store ou website
         foreach ($stores as $local => $affected) {
@@ -3601,49 +3613,111 @@ class Product extends JobImport
              * @var array $store
              */
             foreach ($affected as $store) {
-                if (!$store['store_id']
-                    || !$connection->tableColumnExists($tmpTable, 'url_key-' . $local)
+                if (!$store['store_id'] ||
+                    !$connection->tableColumnExists($tmpTable, 'url_key-' . $local)
                 ) {
                     continue;
                 }
-                /** @var Select $select */
-                $select = $connection->select()->from(
-                    ['tmp' => $tmpTable],
-                    [
-                        'entity_id' => '_entity_id',
-                        'url_key' => 'url_key-' . $local,
-                        'store_id' => new Expr($store['store_id']),
-                        'visibility' => '_visibility',
-                    ]
-                )->where('_visibility != ?', $this->productDefaultVisibility);
 
+                // Get currently visible imported products to be "url rewrote"
+                $productsSelect = $connection->select()
+                    ->from(
+                        $tmpTable,
+                        [
+                            'entity_id' => '_entity_id',
+                            'url_key' => 'url_key-' . $local,
+                            'store_id' => new Expr($store['store_id']),
+                            'visibility' => '_visibility',
+                        ]
+                    )
+                    ->where('_visibility != ?', Visibility::VISIBILITY_NOT_VISIBLE);
                 if (isset($store['website_id'])) {
-                    $select
+                    $productsSelect
                         ->joinInner(
-                            ['pw' => $this->entitiesHelper->getTable('catalog_product_website')],
-                            'tmp._entity_id = pw.product_id',
+                            ['pw' => $productWebsiteTable],
+                            '_entity_id = product_id',
                             []
                         )
                         ->where('website_id = ?', $store['website_id']);
                 }
 
-                /** @var Mysql $query */
-                $query = $connection->query($select);
+                $productRows = $connection->fetchAll($productsSelect);
+
+                // Retrieve rewrite url at one time only for the current batch of products
+                $productsSelect->reset(Zend_Db_Select::COLUMNS)->columns('_entity_id');
+                $urlRewriteQuery = $connection
+                    ->select()
+                    ->from($urlRewriteTable)
+                    ->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)
+                    ->where('store_id = ?', $store['store_id'])
+                    ->where('entity_id IN (?)', $productsSelect);
+                /** @var Mysql $rewriteResults */
+                $rewriteResults = $connection->fetchAll($urlRewriteQuery);
+
+                // Keep rewrite by target_path
+                $rewritesByTarget = [];
+                foreach ($rewriteResults as $rewrite) {
+                    $rewritesByTarget[$rewrite['target_path']][] = $rewrite;
+                }
+
+                // If the configuration "Use category in product url" is checked, we pre-calculate needed categories
+                $isCategoryUsedInProductUrl = $this->configHelper->isCategoryUsedInProductUrl($store['store_id']);
+                if ($isCategoryUsedInProductUrl) {
+                    $productEntities = array_column($productRows, 'entity_id');
+                    // Get category/product links of the current batch of product
+                    $productCategoriesSelect = $connection->select()
+                        ->from($productCategoriesTable, ['product_id', 'category_id'])
+                        ->where('product_id IN (?)', $productEntities);
+                    $productCategories = $connection->fetchAll($productCategoriesSelect);
+
+                    // Get categories by product
+                    $categoryIdsByProduct = [];
+                    foreach ($productCategories as $data) {
+                        $categoryIdsByProduct[$data['product_id']][] = $data['category_id'];
+                    }
+                    // Get only needed categories collection
+                    $filteredCategories = $this->categoryCollectionFactory->create()
+                        ->addAttributeToSelect(['entity_id', CategoryInterface::KEY_NAME, 'url_key', CategoryInterface::KEY_PATH])
+                        ->setStore($store['store_id'])
+                        ->addFieldToFilter(CategoryInterface::KEY_IS_ACTIVE, 1)
+                        ->addFieldToFilter('entity_id', ['in' => array_unique(array_column($productCategories, 'category_id'))])
+                        ->getItems();
+
+                    $result = [];
+                    $currentRootCategoryId = $this->storeManager->getStore($store['store_id'])->getRootCategoryId();
+                    /** @var CategoryModel $category */
+                    foreach ($filteredCategories as $category) {
+                        $path = array_reverse($category->getPathIds());
+                        foreach ($path as $itemId) {
+                            if ($itemId === $currentRootCategoryId) {
+                                break;
+                            }
+                            $result[] = $itemId;
+                        }
+                    }
+                    if (!empty($result)) {
+                        $filteredCategories += $this->categoryCollectionFactory->create()
+                            ->addAttributeToSelect(['entity_id', CategoryInterface::KEY_NAME, 'url_key', CategoryInterface::KEY_PATH])
+                            ->setStore($store['store_id'])
+                            ->addFieldToFilter(CategoryInterface::KEY_IS_ACTIVE, 1)
+                            ->addFieldToFilter('entity_id', ['in' => array_unique($result)])
+                            ->getItems();
+                    }
+
+                    $productCategoryToInsert = [];
+                }
 
                 /** @var array $row */
-                while (($row = $query->fetch())) {
-                    /** @var BaseProductModel $product */
+                foreach ($productRows as $row) {
                     $product = $this->product;
                     $product->setData($row);
 
-                    /** @var string $urlPath */
                     $urlPath = $this->productUrlPathGenerator->getUrlPath($product);
 
                     if (!$urlPath) {
                         continue;
                     }
 
-                    /** @var string $requestPath */
                     $requestPath = $this->productUrlPathGenerator->getUrlPathWithSuffix(
                         $product,
                         $product->getStoreId()
@@ -3661,51 +3735,37 @@ class Product extends JobImport
                         ],
                     ];
 
-                    /** @var bool $isCategoryUsedInProductUrl */
-                    $isCategoryUsedInProductUrl = $this->configHelper->isCategoryUsedInProductUrl(
-                        $product->getStoreId()
-                    );
-
                     if ($isCategoryUsedInProductUrl) {
-                        /** @var Collection $categories */
-                        $categories = $product->getCategoryCollection();
-                        $categories->addAttributeToSelect('url_key');
-
+                        $categoryPathIds = [];
                         /** @var CategoryModel $category */
-                        foreach ($categories as $category) {
-                            /** @var string $requestPath */
+                        foreach ($categoryIdsByProduct[$product->getEntityId()] as $productCategoryId) {
+                            $category = $filteredCategories[$productCategoryId];
+                            $categoryPathIds[] = $category;
+
+                            $parentIds = explode(',', $category->getPathInStore());
+                            foreach ($parentIds as $parentCategoryId) {
+                                $categoryPathIds[] = $filteredCategories[$parentCategoryId];
+                            }
+                        }
+                        foreach ($categoryPathIds as $category) {
                             $requestPath = $this->productUrlPathGenerator->getUrlPathWithSuffix(
                                 $product,
                                 $product->getStoreId(),
                                 $category
                             );
+                            if (isset($paths[$requestPath])) {
+                                continue;
+                            }
                             $paths[$requestPath] = [
                                 'request_path' => $requestPath,
                                 'target_path' => 'catalog/product/view/id/' . $product->getEntityId() . '/category/' . $category->getId(),
                                 'metadata' => '{"category_id":"' . $category->getId() . '"}',
                                 'category_id' => $category->getId(),
                             ];
-                            $parents = $category->getParentCategories();
-                            foreach ($parents as $parent) {
-                                /** @var string $requestPath */
-                                $requestPath = $this->productUrlPathGenerator->getUrlPathWithSuffix(
-                                    $product,
-                                    $product->getStoreId(),
-                                    $parent
-                                );
-                                if (isset($paths[$requestPath])) {
-                                    continue;
-                                }
-                                $paths[$requestPath] = [
-                                    'request_path' => $requestPath,
-                                    'target_path' => 'catalog/product/view/id/' . $product->getEntityId() . '/category/' . $parent->getId(),
-                                    'metadata' => '{"category_id":"' . $parent->getId() . '"}',
-                                    'category_id' => $parent->getId(),
-                                ];
-                            }
                         }
                     }
 
+                    /**  @var string[] $path */
                     foreach ($paths as $path) {
                         if (!isset($path['request_path'], $path['target_path'])) {
                             continue;
@@ -3716,121 +3776,106 @@ class Product extends JobImport
                         $targetPath = $path['target_path'];
                         /** @var string $metadata */
                         $metadata = $path['metadata'];
-
-                        /** @var string|null $rewriteEntity */
-                        $rewriteEntity = $connection->fetchRow(
-                            $connection->select()
-                                ->from($this->entitiesHelper->getTable('url_rewrite'))
-                                ->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)
-                                ->where('target_path = ?', $targetPath)
-                                ->where('entity_id = ?', $product->getEntityId())
-                                ->where('store_id = ?', $product->getStoreId())
-                        );
-
-                        /** @var false|mixed|string $rewriteId */
-                        $rewriteId = $rewriteEntity['url_rewrite_id'] ?? false;
-                        /** @var bool $isNeedUrlForOldUrl */
+                        /** @var string[] $rewriteIds */
+                        $rewriteIds = [];
+                        /** @var string[] $rewriteRequestPaths */
+                        $rewriteRequestPaths = [];
                         $isNeedUrlForOldUrl = false;
-                        if ($rewriteEntity) {
+
+                        if (isset($rewritesByTarget[$targetPath])) {
+                            $rewriteIds = array_column($rewritesByTarget[$targetPath], 'url_rewrite_id');
+                            $rewriteRequestPaths = array_column($rewritesByTarget[$targetPath], 'request_path');
+                        }
+
+                        if (!empty($rewriteIds)) {
                             try {
-                                if ($requestPath !== $rewriteEntity['request_path']) {
+                                if ([$requestPath] !== $rewriteRequestPaths) {
                                     $isNeedUrlForOldUrl = true;
                                     $connection->update(
-                                        $this->entitiesHelper->getTable('url_rewrite'),
+                                        $urlRewriteTable,
                                         [
                                             'target_path' => $requestPath,
-                                            'redirect_type' => 301,
+                                            'redirect_type' => OptionProvider::PERMANENT,
                                             'metadata' => $metadata,
                                         ],
-                                        ['url_rewrite_id = ?' => $rewriteEntity['url_rewrite_id']]
+                                        [
+                                            'store_id = ?' => $store['store_id'],
+                                            'entity_type = ?' => ProductUrlRewriteGenerator::ENTITY_TYPE,
+                                            'entity_id = ?' => $product->getEntityId(),
+                                            'request_path != ?' => $requestPath
+                                        ]
                                     );
                                 }
                             } catch (Exception $e) {
                                 $this->jobExecutor->setAdditionalMessage(
                                     __(
                                         sprintf(
-                                            'Tried to update url_rewrite_id %s : request path (%s) already exists for the store_id.',
-                                            $rewriteEntity['url_rewrite_id'],
-                                            $requestPath
+                                            'Url rewrite update failed : request path "%s" already exists for the store_id %s.',
+                                            $requestPath,
+                                            $store['store_id']
                                         )
                                     )
                                 );
                             }
                         }
 
-                        if (!$rewriteEntity || $isNeedUrlForOldUrl) {
-                            /** @var array $data */
+                        if (empty($rewriteIds) || $isNeedUrlForOldUrl) {
                             $data = [
-                                'entity_type' => ProductUrlRewriteGenerator::ENTITY_TYPE,
-                                'entity_id' => $product->getEntityId(),
-                                'request_path' => $requestPath,
-                                'target_path' => $targetPath,
-                                'redirect_type' => 0,
-                                'store_id' => $product->getStoreId(),
-                                'is_autogenerated' => 1,
-                                'metadata' => $metadata,
+                                UrlRewrite::ENTITY_TYPE => ProductUrlRewriteGenerator::ENTITY_TYPE,
+                                UrlRewrite::ENTITY_ID => $product->getEntityId(),
+                                UrlRewrite::REQUEST_PATH => $requestPath,
+                                UrlRewrite::TARGET_PATH => $targetPath,
+                                UrlRewrite::REDIRECT_TYPE => 0,
+                                UrlRewrite::STORE_ID => $product->getStoreId(),
+                                UrlRewrite::IS_AUTOGENERATED => 1,
+                                UrlRewrite::METADATA => $metadata,
                             ];
 
-                            $connection->insertOnDuplicate(
-                                $this->entitiesHelper->getTable('url_rewrite'),
-                                $data,
-                                array_keys($data)
-                            );
+                            $connection->insertOnDuplicate($urlRewriteTable, $data);
 
                             if ($isCategoryUsedInProductUrl && $path['category_id']) {
-                                /** @var int $rewriteId */
-                                $rewriteId = $connection->fetchOne(
+                                $urlRewriteForCategoryLink = $connection->fetchAll(
                                     $connection->select()
-                                        ->from($this->entitiesHelper->getTable('url_rewrite'), ['url_rewrite_id'])
+                                        ->from($urlRewriteTable, ['url_rewrite_id'])
                                         ->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)
                                         ->where('target_path = ?', $targetPath)
                                         ->where('entity_id = ?', $product->getEntityId())
                                         ->where('store_id = ?', $product->getStoreId())
                                 );
+                                $rewriteIds = array_column($urlRewriteForCategoryLink, 'url_rewrite_id');
                             }
 
+                            $whereConditions = [
+                                'store_id = ?' => $product->getStoreId(),
+                                'entity_id = ?' => $product->getEntityId(),
+                                'redirect_type = ?' => OptionProvider::PERMANENT,
+                            ];
                             if (isset($metadata)) {
-                                $connection->update(
-                                    $this->entitiesHelper->getTable('url_rewrite'),
-                                    ['target_path' => $requestPath],
-                                    [
-                                        'store_id = ?' => $product->getStoreId(),
-                                        'entity_id = ?' => $product->getEntityId(),
-                                        'redirect_type = ?' => 301,
-                                        'metadata = ?' => $metadata,
-                                    ]
-                                );
+                                $whereConditions['metadata = ?'] = $metadata;
                             } else {
-                                $connection->update(
-                                    $this->entitiesHelper->getTable('url_rewrite'),
-                                    ['target_path' => $requestPath],
-                                    [
-                                        'store_id = ?' => $product->getStoreId(),
-                                        'entity_id = ?' => $product->getEntityId(),
-                                        'redirect_type = ?' => 301,
-                                        'metadata IS NULL',
-                                    ]
-                                );
+                                $whereConditions[] = 'metadata IS NULL';
                             }
+                            $connection->update(
+                                $urlRewriteTable,
+                                ['target_path' => $requestPath],
+                                $whereConditions
+                            );
                         }
 
-                        if ($isCategoryUsedInProductUrl && $rewriteId && $path['category_id']) {
-                            $data = [
-                                'url_rewrite_id' => $rewriteId,
-                                'category_id' => $path['category_id'],
-                                'product_id' => $product->getEntityId(),
-                            ];
-                            $connection->delete(
-                                $this->entitiesHelper->getTable('catalog_url_rewrite_product_category'),
-                                ['url_rewrite_id = ?' => $rewriteId]
-                            );
-                            $connection->insertOnDuplicate(
-                                $this->entitiesHelper->getTable('catalog_url_rewrite_product_category'),
-                                $data,
-                                array_keys($data)
-                            );
+                        if ($isCategoryUsedInProductUrl && $rewriteIds && $path['category_id']) {
+                            foreach ($rewriteIds as $rewriteId) {
+                                $productCategoryToInsert[] = [
+                                    'url_rewrite_id' => $rewriteId,
+                                    'category_id' => $path['category_id'],
+                                    'product_id' => $product->getEntityId(),
+                                ];
+                            }
                         }
                     }
+                }
+
+                if (!empty($productCategoryToInsert)) {
+                    $connection->insertOnDuplicate($catalogUrlRewriteTable, $productCategoryToInsert);
                 }
             }
         }
