@@ -6,7 +6,6 @@ namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Api\Data\AttributeTypeInterface;
 use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
-use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Executor\JobExecutorFactory;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
@@ -39,7 +38,6 @@ use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ProductLink\Link as ProductLink;
-use Magento\Catalog\Model\ResourceModel\Category\Collection;
 use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
@@ -68,6 +66,7 @@ use Magento\UrlRewrite\Service\V1\Data\UrlRewrite;
 use Psr\Http\Message\ResponseInterface;
 use Zend_Db_Exception;
 use Zend_Db_Expr as Expr;
+use Zend_Db_Select;
 use Zend_Db_Statement_Exception;
 use Zend_Db_Statement_Pdo;
 
@@ -296,6 +295,12 @@ class Product extends JobImport
      * @var string
      */
     protected $productDefaultVisibility = Visibility::VISIBILITY_NOT_VISIBLE;
+    /**
+     * Collection Factory
+     *
+     * @var CollectionFactory $categoryCollectionFactory
+     */
+    protected $categoryCollectionFactory;
 
     /**
      * Product constructor.
