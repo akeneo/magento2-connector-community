@@ -103,13 +103,23 @@ class Product extends JobImport
         'pim_catalog_text'
     ];
     /**
-     * @inheritdoc
+     * This variable contains a string value
      *
      * @var string $code
      */
     protected $code = 'product';
-    protected Entities $entities;
-    protected ?string $family = null;
+    /**
+     * This variable contains entities
+     *
+     * @var Entities $entities
+     */
+    protected $entities;
+    /**
+     * This variable contains a string
+     *
+     * @var string $step
+     */
+    protected $family = null;
     /**
      * @inheritdoc
      *
@@ -121,13 +131,13 @@ class Product extends JobImport
      *
      * @var string[]
      */
-    protected array $allowedTypeId = ['simple', 'virtual'];
+    protected $allowedTypeId = ['simple', 'virtual'];
     /**
      * List of column to exclude from attribute value setting
      *
      * @var string[]
      */
-    protected array $excludedColumns = [
+    protected $excludedColumns = [
         '_entity_id',
         '_is_new',
         '_status',
