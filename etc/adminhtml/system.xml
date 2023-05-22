@@ -69,18 +69,18 @@
                 <field id="admin_channel" translate="label comment" type="select" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Admin Website Channel</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Channel</source_model>
-                    <comment>Set Adobe Commerce/Magento Admin website default Akeneo channel</comment>
+                    <comment>Set Adobe Commerce/Magento admin website default Akeneo channel</comment>
                 </field>
                 <field id="website_mapping" translate="label" type="text" sortOrder="91" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Website Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Website</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment>Match Adobe Commerce/Magento website with Akeneo channel</comment>
+                    <comment>Match the Adobe Commerce/Magento website with Akeneo channel</comment>
                     <validate>required-entry</validate>
                 </field>
             </group>
             <group id="products_filters" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
-                <label>Filter products</label>
+                <label>Filter Products</label>
                 <field id="mode" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Mode</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Mode</source_model>
@@ -197,11 +197,11 @@
                         <field id="updated_mode">SINCE LAST N HOURS</field>
                     </depends>
                 </field>
-                <field id="families" translate="label comment" type="multiselect" sortOrder="140" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Families</label>
+                <field id="included_families" translate="label comment" type="multiselect" sortOrder="140" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Families to import</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Family</source_model>
                     <comment>
-                        <![CDATA[Select the families you don't want to retrieve products from.<br/> If the multiselect is empty, it means you don't have any families in your Akeneo, or the provided credentials are wrong.]]>
+                        <![CDATA[Select the families you want to retrieve products from.<br/> If the multiselect is empty, it means you don't have any families in your Akeneo, or the provided credentials are wrong.]]>
                     </comment>
                     <depends>
                         <field id="mode">standard</field>
@@ -264,11 +264,11 @@ For example :<br/>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>Newly imported categories will be in anchor mode</comment>
                 </field>
-                <field id="categories" translate="label comment" type="multiselect" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Categories</label>
+                <field id="included_categories" translate="label comment" type="multiselect" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Categories to import</label>
                     <source_model>Akeneo\Connector\Model\Source\Filters\Category</source_model>
                     <comment>
-                        <![CDATA[Select the categories you don't want to import.<br/> If the field is empty, it means you don't have any categories in your Akeneo, or the provided credentials are wrong.]]>
+                        <![CDATA[Select the categories you want to import.<br/> If the field is empty, it means you don't have any categories in your Akeneo, or the provided credentials are wrong.]]>
                     </comment>
                     <can_be_empty>1</can_be_empty>
                     <depends>
@@ -312,13 +312,13 @@ For example :<br/>
                     <label>Additional types</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Type</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment>Match specific Akeneo type with Adobe Commerce/Magento input field</comment>
+                    <comment>Match specific Akeneo type with the Adobe Commerce/Magento input field</comment>
                 </field>
                 <field id="types_swatch" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Swatch types mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\SwatchType</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment>Map akeneo attribute with magento Swatch Text / Visual Swatch attribute</comment>
+                    <comment>Map akeneo attribute with the Adobe Commerce/Magento Swatch Text / Visual Swatch attribute</comment>
                 </field>
                 <field id="option_code_as_admin_label" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Set attribute option code as Admin label for attribute options</label>
@@ -382,7 +382,7 @@ For example :<br/>
                     <label>Product Status Mode</label>
                     <source_model>Akeneo\Connector\Model\Source\StatusMode</source_model>
                     <comment>
-                        <![CDATA[The "Status based on Completeness level" mode is only available for Akeneo version Growth and Serenity and 7.0.]]>
+                        <![CDATA[The "Status based on Completeness level" mode is only available for Akeneo version Growth, Serenity and 7.0.]]>
                     </comment>
                 </field>
                 <field id="attribute_code_for_simple_product_statuses" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -459,7 +459,7 @@ For example :<br/>
                     </depends>
                 </field>
 
-                <field id="attribute_mapping" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="attribute_mapping" translate="label" type="text" sortOrder="38" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Attribute Mapping</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Attribute</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -497,16 +497,18 @@ For example :<br/>
                         ]]>
                     </comment>
                 </field>
-                <field id="association_related" translate="label" type="text" sortOrder="55" showInDefault="1" showInWebsite="0"
-                    showInStore="0">
+                <field id="association_related" translate="label comment" type="text" sortOrder="55" showInDefault="1" showInWebsite="0"
+                    showInStore="0" canRestore="1">
                     <label>Akeneo association code for Related products</label>
+                    <comment>Note: Quantified associations cannot be mapped with Related.</comment>
                 </field>
-                <field id="association_upsell" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="0"
-                    showInStore="0">
+                <field id="association_upsell" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="0"
+                    showInStore="0" canRestore="1">
                     <label>Akeneo association code for Upsell products</label>
+                    <comment>Note: Quantified associations cannot be mapped with Upsell.</comment>
                 </field>
-                <field id="association_crossell" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="0"
-                    showInStore="0">
+                <field id="association_crossell" translate="label comment" type="text" sortOrder="70" showInDefault="1" showInWebsite="0"
+                    showInStore="0" canRestore="1">
                     <label>Akeneo association code for Cross-sell products</label>
                     <comment>Note: Quantified associations cannot be mapped with Cross-sell / Related / Upsell</comment>
                 </field>
@@ -532,12 +534,12 @@ For example :<br/>
                         <field id="media_enabled">1</field>
                     </depends>
                 </field>
-                <field id="file_enabled" translate="label" type="select" sortOrder="110" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="file_enabled" translate="label" type="select" sortOrder="210" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Import File Attributes</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>All files will be downloaded in the 'pub/media/akeneo_connector/media_files' folder.</comment>
                 </field>
-                <field id="file_attribute" translate="label" type="text" sortOrder="120" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="file_attribute" translate="label" type="text" sortOrder="220" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Akeneo File Attributes</label>
                     <frontend_model>Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\File</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -545,7 +547,7 @@ For example :<br/>
                         <![CDATA[List all PIM file attributes you want to download when 'Import File Attributes' is enabled.<br />The path of each file will be imported to the corresponding product text attribute.<br />If 'Import File Attributes' is disabled, it won't override previously imported values from your file attributes in this field.]]>
                     </comment>
                 </field>
-                <field id="akeneo_master" translate="label" type="select" sortOrder="130" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="akeneo_master" translate="label" type="select" sortOrder="230" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Does Akeneo data override content staging</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>
@@ -554,7 +556,7 @@ For example :<br/>
                         <strong>No</strong> - Akeneo will only update the "base" version of the scheduled products.]]>
                     </comment>
                 </field>
-                <field id="url_generation_enabled" translate="label" type="select" sortOrder="140" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="url_generation_enabled" translate="label" type="select" sortOrder="240" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Regenerate url rewrites</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
