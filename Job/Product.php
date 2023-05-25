@@ -6,6 +6,7 @@ namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Api\Data\AttributeTypeInterface;
 use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Configurable as TypeField;
+use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Executor\JobExecutorFactory;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
