@@ -84,6 +84,11 @@ class TransferFamiliesAndCategoriesToNewFormatPatch implements DataPatchInterfac
      */
     public function apply()
     {
+        $akeneoClient = $this->authenticator->getAkeneoApiClient();
+        if (!$akeneoClient) {
+            return;
+        }
+
         // Create inverted Family entries
         $allFamilies = $invertedFamilies = $this->getFamilies();
         $familiesExcluded = $this->configHelper->getFamiliesExcludedFilter();
