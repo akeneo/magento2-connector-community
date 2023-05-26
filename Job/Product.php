@@ -4978,10 +4978,9 @@ class Product extends JobImport
     /**
      * If product has no name in Akeneo, give it an empty string name
      */
-    private function handleNoName(array $product): array
+    protected function handleNoName(array $product): array
     {
-        $productAttributes = array_keys($product['values']);
-        if (in_array(ProductInterface::NAME, $productAttributes, true)) {
+        if (array_key_exists(ProductInterface::NAME, $product)) {
             return $product;
         }
         $product['values'][ProductInterface::NAME][0]['data'] = '';
