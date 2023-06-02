@@ -353,7 +353,7 @@ class JobExecutor implements JobExecutorInterface
                     $isError = true;
                 }
 
-                $this->lastSuccessExecutedDate[$this->getCurrentJobClass()->getFamily()] = date('y-m-d H:i:s');
+                $this->lastSuccessExecutedDate[$this->getCurrentJobClass()->getFamily()] = date('Y-m-d H:i:s');
 
                 // If last family, force proceed with after run steps
                 if (array_slice($productFamiliesToImport, -1)[0] === $family
@@ -679,7 +679,7 @@ class JobExecutor implements JobExecutorInterface
         }
 
         if ($status === JobInterface::JOB_SCHEDULED) {
-            $job->setScheduledAt(date('y-m-d H:i:s'));
+            $job->setScheduledAt(date('Y-m-d H:i:s'));
         }
 
         $job->setStatus($status);
@@ -703,7 +703,7 @@ class JobExecutor implements JobExecutorInterface
             'akeneo_connector_import_start_' . strtolower($this->currentJob->getCode()),
             ['executor' => $this]
         );
-        $this->currentJob->setLastExecutedDate(date('y-m-d H:i:s'));
+        $this->currentJob->setLastExecutedDate(date('Y-m-d H:i:s'));
         $this->setJobStatus(JobInterface::JOB_PROCESSING);
     }
 
@@ -737,7 +737,7 @@ class JobExecutor implements JobExecutorInterface
         }
 
         if ($this->currentJob->getCode() === JobExecutor::IMPORT_CODE_PRODUCT) {
-            $this->currentJob->setLastSuccessDate(date('y-m-d H:i:s'));
+            $this->currentJob->setLastSuccessDate(date('Y-m-d H:i:s'));
             $this->currentJob->setLastSuccessExecutedDate($this->json->serialize($this->lastSuccessExecutedDate));
 
             if ($this->currentJob->getStatus() === JobInterface::JOB_ERROR) {
@@ -747,7 +747,7 @@ class JobExecutor implements JobExecutorInterface
 
         if ($error === null && $this->currentJob->getStatus() !== JobInterface::JOB_ERROR) {
             if ($this->currentJob->getCode() !== JobExecutor::IMPORT_CODE_PRODUCT) {
-                $this->currentJob->setLastSuccessDate(date('y-m-d H:i:s'));
+                $this->currentJob->setLastSuccessDate(date('Y-m-d H:i:s'));
                 $this->currentJob->setLastSuccessExecutedDate($this->currentJob->getLastExecutedDate());
             }
             $this->setJobStatus(JobInterface::JOB_SUCCESS);
