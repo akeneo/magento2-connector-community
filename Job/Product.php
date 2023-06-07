@@ -2365,9 +2365,6 @@ class Product extends JobImport
                 continue;
             }
 
-            /** @var bool $visibilityScopableLocalizable */
-            $isVisibilityScopableLocalizable = !!($columnPrefix === 'visibility' && count(explode('-', $columnSuffix ?? '')));
-
             /** @var mixed[] $affectedStores */
             $affectedStores = $stores[$columnSuffix];
             /** @var mixed[] $store */
@@ -2378,20 +2375,16 @@ class Product extends JobImport
                 }
 
                 if ($scope === ScopedAttributeInterface::SCOPE_STORE || empty($store['siblings'])) {
-                    if (!isset($values[$store['store_id']][$columnPrefix])) {
-                        $values[$store['store_id']][$columnPrefix] = $column;
+                    $values[$store['store_id']][$columnPrefix] = $column;
 
-                        continue;
-                    }
+                    continue;
                 }
 
                 /** @var string[] $siblings */
                 $siblings = $store['siblings'];
                 /** @var string $storeId */
                 foreach ($siblings as $storeId) {
-                    if (!isset($values[$storeId][$columnPrefix]) || $isVisibilityScopableLocalizable) {
-                        $values[$storeId][$columnPrefix] = $column;
-                    }
+                    $values[$storeId][$columnPrefix] = $column;
                 }
             }
         }
