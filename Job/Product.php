@@ -2909,7 +2909,7 @@ class Product extends JobImport
                         'product_id' => '_entity_id',
                         'website_id' => new Expr($id),
                     ]
-                );
+                )->limit(1);
 
                 $connection->query(
                     $connection->insertFromSelect(
