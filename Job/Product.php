@@ -1093,7 +1093,7 @@ class Product extends JobImport
                 $tmpTable,
                 [
                     '_type_id' => new Expr(
-                        "IF($productMappingAttribute IN ($types), $productMappingAttribute, 'simple')"
+                        "IF(`$productMappingAttribute` IN ($types), `$productMappingAttribute`, 'simple')"
                     ),
                 ]
             );
@@ -1103,7 +1103,7 @@ class Product extends JobImport
             $connection->update(
                 $tmpTable,
                 ['_status' => new Expr('IF(`enabled` <> 1, 2, 1)')],
-                ['_type_id = ?' => 'simple']
+                ['_type_id IN (?)' => $this->allowedTypeId]
             );
         }
 
@@ -2101,12 +2101,13 @@ class Product extends JobImport
         }
 
         $select->joinInner(
-            ['b' => $this->entitiesHelper->getTable('catalog_product_entity_int')],
-            $pKeyColumn . ' = b.' . $identifierColumn
-        )->where('a._is_new = ?', 0)->where('a._status = ?', 1)->where('a._type_id = ?', 'simple')->where(
-            'b.attribute_id = ?',
-            $statusAttributeId
-        );
+                ['b' => $this->entitiesHelper->getTable('catalog_product_entity_int')],
+                $pKeyColumn . ' = b.' . $identifierColumn
+            )
+            ->where('a._is_new = ?', 0)
+            ->where('a._status = ?', 1)
+            ->where('a._type_id IN (?)', $this->allowedTypeId)
+            ->where('b.attribute_id = ?', $statusAttributeId);
 
         // Update existing simple status
         /** @var Zend_Db_Statement_Pdo $oldStatus */
@@ -2115,10 +2116,9 @@ class Product extends JobImport
         $status = $this->configHelper->getProductActivation();
         if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
             /** @var Select $selectComplet */
-            $selectComplet = $connection->select()->from(['a' => $tmpTable], $columnsForCompleteness)->where(
-                'a._type_id = ?',
-                'simple'
-            );
+            $selectComplet = $connection->select()
+                ->from(['a' => $tmpTable], $columnsForCompleteness)
+                ->where('a._type_id IN (?)', $this->allowedTypeId);
             /** @var Zend_Db_Statement_Pdo $completQuery */
             $completQuery = $connection->query($selectComplet);
             /** @var string $completenessConfig */
@@ -2195,7 +2195,7 @@ class Product extends JobImport
         $connection->update(
             $tmpTable,
             ['_status' => $status],
-            ['_is_new = ?' => 1, '_status = ?' => 1, '_type_id = ?' => 'simple']
+            ['_is_new = ?' => 1, '_status = ?' => 1, '_type_id IN (?)' => $this->allowedTypeId]
         );
 
         /*  Configurable status management */
