@@ -4871,8 +4871,8 @@ class Product extends JobImport
         $visibilityForSimple = $this->getVisibilityAttribute('simple');
         $visibilityForConfigurable = $this->getVisibilityAttribute('configurable');
 
-        $visibilityForSimpleAttributeExists = $this->isAttributeExists($visibilityForSimple);
-        $visibilityForConfigurableAttributeExists = $this->isAttributeExists($visibilityForConfigurable);
+        $visibilityForSimpleAttributeExists = $visibilityForSimple && $this->isAttributeExists($visibilityForSimple);
+        $visibilityForConfigurableAttributeExists = $visibilityForConfigurable && $this->isAttributeExists($visibilityForConfigurable);
 
         // Global
         $visibilityColumnResult = [

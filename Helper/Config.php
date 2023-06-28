@@ -1650,17 +1650,17 @@ class Config
 
     public function getProductDefaultVisibility(): string
     {
-        return $this->scopeConfig->getValue(self::PRODUCT_DEFAULT_VISIBILITY);
+        return (string)$this->scopeConfig->getValue(self::PRODUCT_DEFAULT_VISIBILITY);
     }
 
     public function getProductVisibilitySimple(): string
     {
-        return $this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_SIMPLE);
+        return (string)$this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_SIMPLE);
     }
 
     public function getProductVisibilityConfigurable(): string
     {
-        return $this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_CONFIGURABLE);
+        return (string)$this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_CONFIGURABLE);
     }
 
     /**
