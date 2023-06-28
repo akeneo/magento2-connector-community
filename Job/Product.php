@@ -530,7 +530,7 @@ class Product extends JobImport
             $modelFilters = $this->getProductModelFilters($family);
             foreach ($modelFilters as $filter) {
                 /** @var PageInterface $productModels */
-                $productModels = $akeneoClient->listPerPage(1, false, $filter);
+                $productModels = $akeneoClient->getProductModelApi()->listPerPage(1, false, $filter);
                 /** @var array $productModel */
                 $productModels = $productModels->getItems();
 
