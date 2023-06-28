@@ -4980,7 +4980,7 @@ class Product extends JobImport
      */
     protected function handleNoName(array $product): array
     {
-        if (array_key_exists(ProductInterface::NAME, $product)) {
+        if (array_key_exists(ProductInterface::NAME, $product['values'])) {
             return $product;
         }
         $product['values'][ProductInterface::NAME][0]['data'] = '';
