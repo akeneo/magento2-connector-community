@@ -420,3 +420,17 @@
 * Rolled back previous modification to avoid Undefined array key line 3013
 * Avoid to erase swatch configuration
 * Fix image mapping for scope global
+
+### Version 103.5.0 :
+* Select category trees to import instead of trees to exclude
+* Select families to import instead of families to exclude
+* Assets compatibility warning removed
+* Allow to override default attribute values (like tax_class_id)
+* Allow attribute named visibility in Akeneo
+* Fix import products without name grid error
+* Fix status assignation with virtual products
+* Fix visibility attribute error
+* Fix association when category does not exist
+* Prevent import from crashing if the tmp table is missing sort_order column
+* Keep the old sort_order for options if the order from Akeneo is null
+* setCategory step improvement

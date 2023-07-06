@@ -138,6 +138,12 @@ class Config
      */
     public const PRODUCTS_FILTERS_FAMILIES = 'akeneo_connector/products_filters/families';
     /**
+     * Product filters families config path
+     *
+     * @var string PRODUCTS_FILTERS_INCLUDED_FAMILIES
+     */
+    public const PRODUCTS_FILTERS_INCLUDED_FAMILIES = 'akeneo_connector/products_filters/included_families';
+    /**
      * Product filters updated mode config path
      *
      * @var string PRODUCTS_FILTERS_UPDATED_MODE
@@ -215,6 +221,12 @@ class Config
      * @var string PRODUCTS_CATEGORY_CATEGORIES
      */
     public const PRODUCTS_CATEGORY_CATEGORIES = 'akeneo_connector/category/categories';
+    /**
+     * Categories to import config path
+     *
+     * @var string PRODUCTS_CATEGORY_INCLUDED_CATEGORIES
+     */
+    public const PRODUCTS_CATEGORY_INCLUDED_CATEGORIES = 'akeneo_connector/category/included_categories';
     /**
      * Categories does override content staging
      *
@@ -913,13 +925,23 @@ class Config
     }
 
     /**
-     * Retrieve the families to filter the products on
+     * Retrieve the excluded families to filter the products on
+     *
+     * @return string
+     */
+    public function getFamiliesExcludedFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_FAMILIES);
+    }
+
+    /**
+     * Retrieve the included families to filter the products on
      *
      * @return string
      */
     public function getFamiliesFilter()
     {
-        return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_FAMILIES);
+        return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_INCLUDED_FAMILIES);
     }
 
     /**
@@ -981,9 +1003,19 @@ class Config
      *
      * @return string
      */
-    public function getCategoriesFilter()
+    public function getCategoriesExcludedFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_CATEGORIES);
+    }
+
+    /**
+     * Retrieve the categories to filter the category import
+     *
+     * @return string
+     */
+    public function getCategoriesFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_INCLUDED_CATEGORIES);
     }
 
     /**
@@ -1618,17 +1650,17 @@ class Config
 
     public function getProductDefaultVisibility(): string
     {
-        return $this->scopeConfig->getValue(self::PRODUCT_DEFAULT_VISIBILITY);
+        return (string)$this->scopeConfig->getValue(self::PRODUCT_DEFAULT_VISIBILITY);
     }
 
     public function getProductVisibilitySimple(): string
     {
-        return $this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_SIMPLE);
+        return (string)$this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_SIMPLE);
     }
 
     public function getProductVisibilityConfigurable(): string
     {
-        return $this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_CONFIGURABLE);
+        return (string)$this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_CONFIGURABLE);
     }
 
     /**
