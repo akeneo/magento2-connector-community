@@ -34,6 +34,7 @@ use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Exception;
 use Magento\Bundle\Model\Product\Type as BundleType;
 use Magento\Catalog\Api\Data\CategoryInterface;
+use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\Category as CategoryModel;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
@@ -765,6 +766,8 @@ class Product extends JobImport
                         $product['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
                     }
                 }
+
+                $product = $this->handleNoName($product);
 
                 /** @var bool $result */
                 $result = $this->entitiesHelper->insertDataFromApi(
@@ -4963,5 +4966,18 @@ class Product extends JobImport
         }
 
         return $visibilityColumnResult;
+    }
+
+    /**
+     * If product has no name in Akeneo, give it an empty string name
+     */
+    protected function handleNoName(array $product): array
+    {
+        if (array_key_exists(ProductInterface::NAME, $product['values'])) {
+            return $product;
+        }
+        $product['values'][ProductInterface::NAME][0]['data'] = '';
+
+        return $product;
     }
 }
