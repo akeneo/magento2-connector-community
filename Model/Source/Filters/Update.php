@@ -60,6 +60,10 @@ class Update implements ArrayInterface
     {
         return [
             [
+                'label' => __('No condition'),
+                'value' => '',
+            ],
+            [
                 'label' => __('Lower than'),
                 'value' => self::LOWER_THAN,
             ],
