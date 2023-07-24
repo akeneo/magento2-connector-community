@@ -25,6 +25,13 @@ With Akeneo Connector for Adobe Commerce/Magento, you can import:
 * Family Variant
 * Products
 
+### Compatibility
+
+| Magento / Adobe Commerce | PHP     | Akeneo Connector | Maintained     |
+|--------------------------|---------|------------------|----------------|
+| \>= 2.3.7 && < 2.4.4     | \>= 7.4 | 103.X.X          | Bug fixes only |
+| \>= 2.4.4                | \>= 8.0 | 104.X.X          | Current        |
+
 ### Requirements:
 
 * Akeneo PIM >= 3.2 (CE & EE) | Akeneo EE features are not included in this version of the Connector
