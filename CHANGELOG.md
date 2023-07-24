@@ -434,3 +434,8 @@
 * Prevent import from crashing if the tmp table is missing sort_order column
 * Keep the old sort_order for options if the order from Akeneo is null
 * setCategory step improvement
+
+### Version 104.0.0 :
+* Upgrade minimal PHP dependency to 8.0
+* Upgrade Akeneo PHP client to 11.2.0
+* Allow to disable updated mode filter
