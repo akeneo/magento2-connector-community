@@ -3728,6 +3728,9 @@ class Product extends JobImport
 
                             $parentIds = explode(',', $category->getPathInStore());
                             foreach ($parentIds as $parentCategoryId) {
+                                if (!isset($filteredCategories[$parentCategoryId])) {
+                                    continue;
+                                }
                                 $categoryPathIds[] = $filteredCategories[$parentCategoryId];
                             }
                         }
