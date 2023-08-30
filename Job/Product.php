@@ -4623,8 +4623,8 @@ class Product extends JobImport
                         ['a' => $tmpTable],
                         $columnsForMapping
                     )->where(
-                        'a._type_id = ?',
-                        $type
+                        'a._type_id IN (?)',
+                        $this->allowedTypeId
                     );
 
                     /** @var Zend_Db_Statement_Pdo $query */
