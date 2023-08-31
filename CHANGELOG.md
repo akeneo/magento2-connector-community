@@ -434,3 +434,8 @@
 * Prevent import from crashing if the tmp table is missing sort_order column
 * Keep the old sort_order for options if the order from Akeneo is null
 * setCategory step improvement
+
+### Version 103.5.1 :
+* PGTO-357: Force "selected" attribute on multiselect before print
+* PGTO-366: Add security check to avoid undefined index
+* PGTO-369: Fix virtual product status update
