@@ -439,3 +439,8 @@
 * Upgrade minimal PHP dependency to 8.0
 * Upgrade Akeneo PHP client to 11.2.0
 * Allow to disable updated mode filter
+
+### Version 104.0.1 :
+* PGTO-357: Force "selected" attribute on multiselect before print
+* PGTO-366: Add security check to avoid undefined index
+* PGTO-369: Fix virtual product status update
