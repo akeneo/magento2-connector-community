@@ -29,6 +29,11 @@ use Akeneo\Connector\Block\Adminhtml\System\Config\ExportPdf;
                 let currentEl = $(this);
                 let newHeight = currentEl.children().length * 29;
                 currentEl.height(newHeight).parent().parent().height(newHeight);
+
+                let options = currentEl.find(':selected');
+                for (let i = 0; i < options.length; i++) {
+                    $(options[i]).attr('selected', 'selected');
+                }
             });
 
             window.print();
