@@ -4767,6 +4767,10 @@ class Product extends JobImport
                         . $configurationConfigurable
                         . ')'
                     );
+
+                    if(($key = array_search($column, $this->excludedColumns)) !== false) {
+                        unset($this->excludedColumns[$key]);
+                    }
                 }
             }
         }
