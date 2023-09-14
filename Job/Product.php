@@ -4627,7 +4627,7 @@ class Product extends JobImport
                         $columnsForMapping
                     )->where(
                         'a._type_id IN (?)',
-                        $this->allowedTypeId
+                        $type === 'simple' ? $this->allowedTypeId : [$type]
                     );
 
                     /** @var Zend_Db_Statement_Pdo $query */
@@ -4767,6 +4767,10 @@ class Product extends JobImport
                         . $configurationConfigurable
                         . ')'
                     );
+
+                    if(($key = array_search($column, $this->excludedColumns)) !== false) {
+                        unset($this->excludedColumns[$key]);
+                    }
                 }
             }
         }

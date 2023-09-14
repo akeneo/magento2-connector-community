@@ -444,3 +444,7 @@
 * PGTO-357: Force "selected" attribute on multiselect before print
 * PGTO-366: Add security check to avoid undefined index
 * PGTO-369: Fix virtual product status update
+
+### Version 104.0.2 :
+* PGTO-369: Fix product status assignment regression
+* PGTO-363: Fix visibility update
