@@ -447,3 +447,4 @@
 
 ### Version 104.0.2 :
 * PGTO-369: Fix product status assignment regression
+* PGTO-363: Fix visibility update
