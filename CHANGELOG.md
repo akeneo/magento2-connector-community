@@ -448,3 +448,7 @@
 ### Version 104.0.2 :
 * PGTO-369: Fix product status assignment regression
 * PGTO-363: Fix visibility update
+
+### Version 104.0.3 :
+* PGTO-378: Fix product without category attribution
+* PGTO-380: Rebuild Visual Merchandiser Dynamic Categories
