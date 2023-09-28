@@ -2965,7 +2965,7 @@ class Product extends JobImport
         // create data to insert in catalog_product_entity
         $notInWhere = [];
         foreach ($categoriesByProduct as $row) {
-            $categoryList = explode(',', $row['categories']);
+            $categoryList = explode(',', (string)$row['categories']);
             foreach ($categoryList as $category) {
                 $data = [
                     $row['_entity_id'],
