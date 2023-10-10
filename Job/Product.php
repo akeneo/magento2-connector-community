@@ -3416,19 +3416,6 @@ class Product extends JobImport
 
                 /** @var string[] $productInfo */
                 foreach ($associationProductInfo as $productInfo) {
-                    // Verify if the product exist in catalog_product_entity
-                    if (!$this->productExistInMagento($productInfo['identifier'])) {
-                        $this->jobExecutor->setAdditionalMessage(
-                            __(
-                                'The grouped product %1 is linked to the product %2 but it does not exist in Magento/Adobe Commerce. The association has been skipped.',
-                                $row['identifier'],
-                                $productInfo['identifier']
-                            ),
-                            $this->logger
-                        );
-                        continue;
-                    }
-
                     /** @var string[] $linkedProductEntityId */
                     $linkedProductEntityId = $connection->query(
                         $connection->select()->from($entitiesTable, 'entity_id')->where(
@@ -3447,6 +3434,18 @@ class Product extends JobImport
                             $linkedProductEntityId['entity_id']
                         )
                     )->fetch();
+
+                    if (!$linkedProductType) {
+                        $this->jobExecutor->setAdditionalMessage(
+                            __(
+                                'The grouped product %1 is linked to the product %2 but it does not exist in Adobe Commerce/Magento. The association has been skipped.',
+                                $row['identifier'],
+                                $productInfo['identifier']
+                            ),
+                            $this->logger
+                        );
+                        continue;
+                    }
 
                     if ($linkedProductType['type_id'] != 'simple') {
                         $this->jobExecutor->setAdditionalMessage(
