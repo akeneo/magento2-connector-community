@@ -447,3 +447,6 @@
 ### Version 103.5.3 :
 * PGTO-378: Fix product without category attribution
 * PGTO-380: Rebuild Visual Merchandiser Dynamic Categories
+
+### Version 103.5.4 :
+* PGTO-376: Fix grouped product association with uuid
