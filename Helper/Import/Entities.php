@@ -985,7 +985,7 @@ class Entities
          * (they are not yet in catalog_category_entity)
          */
         $select->joinLeft(
-            ['p' => 'catalog_category_entity'],
+            ['p' => $this->getTable('catalog_category_entity')],
             '_entity_id = p.entity_id',
             $cols
         )
@@ -993,7 +993,7 @@ class Entities
              * retrieve all the staging update for the givens entities. We use "join left" to get the original entity
              */
             ->joinLeft(
-                ['s' => 'staging_update'],
+                ['s' => $this->getTable('staging_update')],
                 'p.created_in = s.id',
                 []
             );

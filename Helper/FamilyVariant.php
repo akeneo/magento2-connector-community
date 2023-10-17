@@ -248,7 +248,7 @@ class FamilyVariant
         $connection->query(
             $connection->updateFromSelect(
                 $query,
-                ['p' => $this->entitiesHelper->getTable($this->entitiesHelper->getTableName('product_model'))]
+                ['p' => $this->entitiesHelper->getTableName('product_model')]
             )
         );
 
