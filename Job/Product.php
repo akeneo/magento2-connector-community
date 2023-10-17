@@ -2053,7 +2053,9 @@ class Product extends JobImport
         /** @var string $statusAttributeId */
         $statusAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'status');
         /** @var string $identifierColumn */
-        $identifierColumn = $this->entitiesHelper->getColumnIdentifier('catalog_product_entity_int');
+        $identifierColumn = $this->entitiesHelper->getColumnIdentifier(
+            $this->entitiesHelper->getTable('catalog_product_entity_int')
+        );
         /** @var string $productTable */
         $productTable = $this->entitiesHelper->getTable('catalog_product_entity');
         /** @var string[] $pKeyColumn */
