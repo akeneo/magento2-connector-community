@@ -1649,7 +1649,7 @@ class Product extends JobImport
             return;
         }
 
-        if ($this->entitiesHelper->isProductUuidEdition()) {
+        if ($this->entitiesHelper->isProductUuidEdition() && $connection->tableColumnExists($tmpTable, 'sku')) {
             // We replace the sku by the uuid in the Akeneo entities table if needed for retro-compatibility
             $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
             $uuids = $connection->select()
