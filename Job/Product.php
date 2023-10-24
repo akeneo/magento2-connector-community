@@ -122,6 +122,18 @@ class Product extends JobImport
      */
     protected $family = null;
     /**
+     * This variable contains a string
+     *
+     * @var string $firstFamily
+     */
+    protected $firstFamily = null;
+    /**
+     * This variable contains a string
+     *
+     * @var string $lastFamily
+     */
+    protected $lastFamily = null;
+    /**
      * @inheritdoc
      *
      * @var string $name
@@ -2969,6 +2981,9 @@ class Product extends JobImport
         foreach ($categoriesByProduct as $row) {
             $categoryList = explode(',', (string)$row['categories']);
             foreach ($categoryList as $category) {
+                if (!isset($categoryAkeneo[$category])) {
+                    continue;
+                }
                 $data = [
                     $row['_entity_id'],
                     $categoryAkeneo[$category]['entity_id'],
@@ -2976,6 +2991,10 @@ class Product extends JobImport
                 $productCategoryInsertData[] = $data;
                 $notInWhere[] = '(' . $row['_entity_id'] . ',' . $categoryAkeneo[$category]['entity_id'] . ')';
             }
+        }
+
+        if (empty($productCategoryInsertData)) {
+            return;
         }
 
         $connection->insertArray($categoryProductTable, ['product_id', 'category_id'], $productCategoryInsertData, AdapterInterface::INSERT_IGNORE);
@@ -4233,6 +4252,11 @@ class Product extends JobImport
      */
     public function cleanCache()
     {
+        if ($this->getFamily() != $this->getLastFamily()) {
+            $this->jobExecutor->setMessage(__('Waiting for last family to clear cache'), $this->logger);
+            return;
+        }
+
         /** @var string $configurations */
         $configurations = $this->configHelper->getCacheTypeProduct();
 
@@ -4266,6 +4290,11 @@ class Product extends JobImport
      */
     public function refreshIndex()
     {
+        if ($this->getFamily() != $this->getLastFamily()) {
+            $this->jobExecutor->setMessage(__('Waiting for last family to refresh index'), $this->logger);
+            return;
+        }
+
         /** @var string $configurations */
         $configurations = $this->configHelper->getIndexProduct();
 
@@ -4481,6 +4510,54 @@ class Product extends JobImport
     public function getFamily()
     {
         return $this->family;
+    }
+
+    /**
+     * Get first family to import
+     *
+     * @return string
+     */
+    public function getFirstFamily()
+    {
+        return $this->firstFamily;
+    }
+
+    /**
+     * Get last family to import
+     *
+     * @return string
+     */
+    public function getLastFamily()
+    {
+        return $this->lastFamily;
+    }
+
+    /**
+     * Set product import first family
+     *
+     * @param string $family
+     *
+     * @return Import
+     */
+    public function setFirstFamily($family)
+    {
+        $this->firstFamily = $family;
+
+        return $this;
+    }
+
+    /**
+     * Set product import last family
+     *
+     * @param string $family
+     *
+     * @return Import
+     */
+    public function setLastFamily($family)
+    {
+        $this->lastFamily = $family;
+
+        return $this;
     }
 
     /**
