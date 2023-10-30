@@ -593,7 +593,7 @@ class Entities
             /** @var bool $rowIdExists */
             $rowIdExists = $this->rowIdColumnExists($table);
 
-            if ($rowIdExists && $entityTable === $this->getTablePrefix() . 'catalog_product_entity') {
+            if ($rowIdExists && $entityTable === 'catalog_product_entity') {
                 /** @var Select $select */
                 $select = $connection->select()->from(
                     $tableName,
@@ -604,7 +604,7 @@ class Entities
                     ]
                 );
                 $this->addJoinForContentStaging($select, [$identifier => 'row_id']);
-            } elseif ($rowIdExists && $entityTable === $this->getTablePrefix() . 'catalog_category_entity') {
+            } elseif ($rowIdExists && $entityTable === 'catalog_category_entity') {
                 /** @var Select $select */
                 $select = $connection->select()->from(
                     $tableName,
