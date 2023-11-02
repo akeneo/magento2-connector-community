@@ -593,7 +593,7 @@ class Entities
             /** @var bool $rowIdExists */
             $rowIdExists = $this->rowIdColumnExists($table);
 
-            if ($rowIdExists && $entityTable === $this->getTablePrefix() . 'catalog_product_entity') {
+            if ($rowIdExists && $entityTable === 'catalog_product_entity') {
                 /** @var Select $select */
                 $select = $connection->select()->from(
                     $tableName,
@@ -604,7 +604,7 @@ class Entities
                     ]
                 );
                 $this->addJoinForContentStaging($select, [$identifier => 'row_id']);
-            } elseif ($rowIdExists && $entityTable === $this->getTablePrefix() . 'catalog_category_entity') {
+            } elseif ($rowIdExists && $entityTable === 'catalog_category_entity') {
                 /** @var Select $select */
                 $select = $connection->select()->from(
                     $tableName,
@@ -985,7 +985,7 @@ class Entities
          * (they are not yet in catalog_category_entity)
          */
         $select->joinLeft(
-            ['p' => 'catalog_category_entity'],
+            ['p' => $this->getTable('catalog_category_entity')],
             '_entity_id = p.entity_id',
             $cols
         )
@@ -993,7 +993,7 @@ class Entities
              * retrieve all the staging update for the givens entities. We use "join left" to get the original entity
              */
             ->joinLeft(
-                ['s' => 'staging_update'],
+                ['s' => $this->getTable('staging_update')],
                 'p.created_in = s.id',
                 []
             );

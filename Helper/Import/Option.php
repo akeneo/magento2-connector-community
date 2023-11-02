@@ -87,15 +87,15 @@ class Option extends Entities
                 ['t' => $tableName],
                 $columnToSelect
             )->joinInner(
-                ['e' => 'eav_attribute_option_value'],
+                ['e' => $this->getTable('eav_attribute_option_value')],
                 $condition,
                 []
             )->joinInner(
-                ['o' => 'eav_attribute_option'],
+                ['o' => $this->getTable('eav_attribute_option')],
                 'o.`option_id` = e.`option_id`',
                 ['option_id']
             )->joinInner(
-                ['a' => 'eav_attribute'],
+                ['a' => $this->getTable('eav_attribute')],
                 'o.`attribute_id` = a.`attribute_id` AND t.`attribute` = a.`attribute_code`',
                 []
             )->where('e.store_id = ?', 0)->where('a.entity_type_id', $entityTypeId);
