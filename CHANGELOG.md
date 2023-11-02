@@ -455,3 +455,8 @@
 
 ### Version 104.0.4 :
 * PGTO-376: Fix grouped product association with uuid
+
+### Version 104.0.5 :
+* PGTO-388: Fix table names when tables are prefixed
+* PGTO-389: Fix UUID retro-compatibility when sku is missing
+* PGTO-390: does not flush cache and refresh index until the last product family
