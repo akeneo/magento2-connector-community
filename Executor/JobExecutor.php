@@ -325,6 +325,10 @@ class JobExecutor implements JobExecutorInterface
                 return false;
             }
 
+            /** @var string $firstFamily */
+            $firstFamily = $productFamiliesToImport[0];
+            /** @var string $lastFamily */
+            $lastFamily = end($productFamiliesToImport);
             $this->lastSuccessExecutedDate = [];
             if ($this->currentJob->getLastSuccessExecutedDate()) {
                 try {
@@ -346,7 +350,7 @@ class JobExecutor implements JobExecutorInterface
                     ['executor' => $this, 'family' => $family]
                 );
 
-                $this->run($family);
+                $this->run($family, $firstFamily, $lastFamily);
                 $this->setIdentifier(null);
 
                 if ($this->currentJob->getStatus() === JobInterface::JOB_ERROR) {
@@ -430,7 +434,7 @@ class JobExecutor implements JobExecutorInterface
      * @return bool
      * @throws AlreadyExistsException
      */
-    protected function run($family = null)
+    protected function run($family = null, $firstFamily = null, $lastFamily = null)
     {
         try {
             $this->initSteps();
@@ -438,6 +442,12 @@ class JobExecutor implements JobExecutorInterface
             if ($family) {
                 $this->currentJobClass->setFamily($family);
                 $this->setJobStatus(JobInterface::JOB_PROCESSING);
+            }
+            if ($firstFamily) {
+                $this->currentJobClass->setFirstFamily($firstFamily);
+            }
+            if ($lastFamily) {
+                $this->currentJobClass->setLastFamily($lastFamily);
             }
 
             while ($this->canExecute()) {
