@@ -460,3 +460,6 @@
 * PGTO-388: Fix table names when tables are prefixed
 * PGTO-389: Fix UUID retro-compatibility when sku is missing
 * PGTO-390: does not flush cache and refresh index until the last product family
+
+### Version 104.0.6 :
+* PGTO-393: Replace the sku by the child product UUID in tmp related table
