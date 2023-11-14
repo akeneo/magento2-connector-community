@@ -3155,6 +3155,20 @@ class Product extends JobImport
             'sku'
         );
 
+        if ($this->entitiesHelper->isProductUuidEdition()) {
+            // Replace the sku by the child product UUID in tmp related table
+            $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
+            $uuids = $connection->select()
+                ->from(false, ['sku' => 'ace.code'])
+                ->joinInner(
+                    ['cpe' => $connection->getTableName('catalog_product_entity')],
+                    '`cpe`.`sku` = `tr`.`sku`', []
+                )
+                ->joinInner(['ace' => $entitiesTable], '`ace`.`entity_id` = `cpe`.`entity_id`', [])
+                ->where('`ace`.`import` = ?', 'product');
+            $connection->query($connection->updateFromSelect($uuids, ['tr' => $tempRelatedTable]));
+        }
+
         $select = $connection->select()
             ->from(['tmp' => $tempRelatedTable], ["p.$columnIdentifier", 'p_sku.entity_id', 'link_type_id'])
             ->joinInner(
