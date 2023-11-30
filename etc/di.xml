@@ -12,10 +12,6 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <preference for="Akeneo\Connector\Api\LogRepositoryInterface" type="Akeneo\Connector\Model\LogRepository"/>
 
-    <type name="Akeneo\Connector\Job\Product">
-        <plugin name="akeneo_job_product_visual_merchandiser_rebuild" type="Akeneo\Connector\Plugin\RebuildDynamicCategories"/>
-    </type>
-
     <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
         <arguments>
             <argument name="collections" xsi:type="array">
