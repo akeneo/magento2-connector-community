@@ -463,3 +463,6 @@
 
 ### Version 104.0.6 :
 * PGTO-393: Replace the sku by the child product UUID in tmp related table
+
+### Version 104.0.7 :
+* PGTO-397: Never delete products in a virtual category
