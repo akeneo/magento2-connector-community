@@ -3002,9 +3002,24 @@ class Product extends JobImport
         $productIds = implode(',', array_unique(array_column($productCategoryInsertData, 0)));
         $productCategoryExclusion = implode(',', $notInWhere);
         if (!empty($productIds) && !empty($productCategoryExclusion)) {
+            $virtualCategories = [];
+            $visualMerchandiserRuleTable = $connection->getTableName('visual_merchandiser_rule');
+            if ($connection->isTableExists($visualMerchandiserRuleTable)) {
+                $virtualCategories = $connection->fetchCol(
+                    $connection->select()
+                        ->from($visualMerchandiserRuleTable, ['category_id'])
+                        ->where('is_active = ?', 1)
+                        ->where('store_id = ?', 0)
+                );
+            }
+            if (empty($virtualCategories)) {
+                $virtualCategories = [0];
+            }
+            $virtualCategories = join(',', $virtualCategories);
+
             $connection->delete(
                 $categoryProductTable,
-                new \Zend_Db_Expr("product_id IN ($productIds) AND (product_id, category_id) NOT IN ($productCategoryExclusion)")
+                new \Zend_Db_Expr("product_id IN ($productIds) AND category_id NOT IN ($virtualCategories) AND (product_id, category_id) NOT IN ($productCategoryExclusion)")
             );
         }
     }
