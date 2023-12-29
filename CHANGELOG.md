@@ -466,3 +466,6 @@
 
 ### Version 104.0.7 :
 * PGTO-397: Never delete products in a virtual category
+
+### Version 104.3.1 :
+* PGTO-402: Fix admin default value empty name

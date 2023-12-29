@@ -315,6 +315,12 @@ class Product extends JobImport
      * @var CollectionFactory $categoryCollectionFactory
      */
     protected $categoryCollectionFactory;
+    /**
+     * The default name value when empty
+     *
+     * @var ?array $defaultNameValue
+     */
+    protected $defaultNameValue = null;
 
     /**
      * Product constructor.
@@ -5090,7 +5096,21 @@ class Product extends JobImport
         if (array_key_exists(ProductInterface::NAME, $product['values'])) {
             return $product;
         }
-        $product['values'][ProductInterface::NAME][0]['data'] = '';
+
+        if ($this->defaultNameValue === null) {
+            try {
+                $attribute = $this->akeneoClient->getAttributeApi()->get(ProductInterface::NAME);
+                $this->defaultNameValue = [
+                    'locale' => ($attribute['localizable'] ?? false) ? $this->storeHelper->getAdminLang() : null,
+                    'scope' => ($attribute['scopable'] ?? false) ? $this->configHelper->getAdminDefaultChannel() : null,
+                    'data' => '',
+                ];
+            } catch (Exception) {
+                $this->defaultNameValue = ['locale' => null, 'scope' => null, 'data' => ''];
+            }
+        }
+
+        $product['values'][ProductInterface::NAME][0] = $this->defaultNameValue;
 
         return $product;
     }
