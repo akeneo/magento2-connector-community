@@ -68,7 +68,6 @@ use Magento\UrlRewrite\Service\V1\Data\UrlRewrite;
 use Psr\Http\Message\ResponseInterface;
 use Zend_Db_Exception;
 use Zend_Db_Expr as Expr;
-use Zend_Db_Select;
 use Zend_Db_Statement_Exception;
 use Zend_Db_Statement_Pdo;
 
@@ -3683,7 +3682,7 @@ class Product extends JobImport
                 $productRows = $connection->fetchAll($productsSelect);
 
                 // Retrieve rewrite url at one time only for the current batch of products
-                $productsSelect->reset(Zend_Db_Select::COLUMNS)->columns('_entity_id');
+                $productsSelect->reset(Select::COLUMNS)->columns('_entity_id');
                 $urlRewriteQuery = $connection
                     ->select()
                     ->from($urlRewriteTable)
