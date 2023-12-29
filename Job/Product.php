@@ -68,7 +68,6 @@ use Magento\UrlRewrite\Service\V1\Data\UrlRewrite;
 use Psr\Http\Message\ResponseInterface;
 use Zend_Db_Exception;
 use Zend_Db_Expr as Expr;
-use Zend_Db_Select;
 use Zend_Db_Statement_Exception;
 use Zend_Db_Statement_Pdo;
 
@@ -315,6 +314,12 @@ class Product extends JobImport
      * @var CollectionFactory $categoryCollectionFactory
      */
     protected $categoryCollectionFactory;
+    /**
+     * The default name value when empty
+     *
+     * @var ?array $defaultNameValue
+     */
+    protected $defaultNameValue = null;
 
     /**
      * Product constructor.
@@ -3677,7 +3682,7 @@ class Product extends JobImport
                 $productRows = $connection->fetchAll($productsSelect);
 
                 // Retrieve rewrite url at one time only for the current batch of products
-                $productsSelect->reset(Zend_Db_Select::COLUMNS)->columns('_entity_id');
+                $productsSelect->reset(Select::COLUMNS)->columns('_entity_id');
                 $urlRewriteQuery = $connection
                     ->select()
                     ->from($urlRewriteTable)
@@ -5090,7 +5095,21 @@ class Product extends JobImport
         if (array_key_exists(ProductInterface::NAME, $product['values'])) {
             return $product;
         }
-        $product['values'][ProductInterface::NAME][0]['data'] = '';
+
+        if ($this->defaultNameValue === null) {
+            try {
+                $attribute = $this->akeneoClient->getAttributeApi()->get(ProductInterface::NAME);
+                $this->defaultNameValue = [
+                    'locale' => ($attribute['localizable'] ?? false) ? $this->storeHelper->getAdminLang() : null,
+                    'scope' => ($attribute['scopable'] ?? false) ? $this->configHelper->getAdminDefaultChannel() : null,
+                    'data' => '',
+                ];
+            } catch (Exception) {
+                $this->defaultNameValue = ['locale' => null, 'scope' => null, 'data' => ''];
+            }
+        }
+
+        $product['values'][ProductInterface::NAME][0] = $this->defaultNameValue;
 
         return $product;
     }
