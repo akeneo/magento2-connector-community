@@ -469,3 +469,6 @@
 
 ### Version 104.3.1 :
 * PGTO-402: Fix admin default value empty name
+
+### Version 104.3.2 :
+* PGTO-403: Fix attribute is not cleared
