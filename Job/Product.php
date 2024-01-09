@@ -1598,6 +1598,27 @@ class Product extends JobImport
                 );
             }
         }
+
+        // Create empty columns for attributes that are mapped but empty in Akeneo
+        $matches = $this->configHelper->getAttributeMapping();
+        $missingColumns = [];
+        foreach ($matches as $match) {
+            if (in_array($match['magento_attribute'], $columns, true)) {
+                continue;
+            }
+            foreach ($columns as $column) {
+                $columnParts =  explode('-', $column, 2);
+                $columnAttributeCode = $columnParts[0];
+                $columnSuffix = $columnParts[1] ?? '';
+
+                if ($match['akeneo_attribute'] === $columnAttributeCode) {
+                    $missingColumns[$column] = $match['magento_attribute'] . '-' . $columnSuffix;
+                }
+            }
+        }
+        foreach ($missingColumns as $sourceColumn => $destinationColumn) {
+            $this->entitiesHelper->copyColumn($tmpTable, $sourceColumn, $destinationColumn);
+        }
     }
 
     /**
