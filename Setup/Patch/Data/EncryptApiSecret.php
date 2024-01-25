@@ -68,6 +68,9 @@ class EncryptApiSecret implements DataPatchInterface, PatchVersionInterface
             /** @var string $encryptedSecret */
             $encryptedSecret = $this->encryptor->encrypt($unencryptedSecret);
             $this->resourceConfig->saveConfig(Config::AKENEO_API_CLIENT_SECRET, $encryptedSecret);
+
+            // clean scope config cache, so if another patch needs this encrypted secret, it doesn't get the old value still stored in cache
+            $this->scopeConfig->clean();
         }
     }
 
