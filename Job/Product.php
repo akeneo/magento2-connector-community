@@ -1599,8 +1599,15 @@ class Product extends JobImport
             }
         }
 
-        // Create empty columns for attributes that are mapped but empty in Akeneo
+        // Create empty columns for price attributes that are mapped but empty in Akeneo
         $matches = $this->configHelper->getAttributeMapping();
+        $priceAttributes = ['cost', 'price', 'special_price'];
+        $matches = array_filter(
+            $matches,
+            static function ($match) use ($priceAttributes) {
+                return in_array($match['magento_attribute'], $priceAttributes, true);
+            }
+        );
         $missingColumns = [];
         foreach ($matches as $match) {
             if (in_array($match['magento_attribute'], $columns, true)) {
