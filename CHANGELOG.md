@@ -472,3 +472,6 @@
 
 ### Version 104.3.2 :
 * PGTO-403: Fix attribute is not cleared
+
+### Version 104.3.3 :
+* PGTO-409: Create empty columns only for price attributes that are mapped but empty in Akeneo
