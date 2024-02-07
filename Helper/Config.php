@@ -564,6 +564,11 @@ class Config
      */
     public const EMAIL_JOB_REPORT_FROM = 'trans_email/ident_general/email';
     /**
+     * Storage engine to use with temporary tables
+     */
+    protected const TABLE_STORAGE_ENGINE = 'akeneo_connector/akeneo_api/storage_engine';
+
+    /**
      * This variable contains a Encryptor
      *
      * @var Encryptor $encryptor
@@ -1997,4 +2002,10 @@ class Config
             ScopeInterface::SCOPE_STORE
         );
     }
+
+    public function getStorageEngine(): string
+    {
+        return (string)$this->scopeConfig->getValue(self::TABLE_STORAGE_ENGINE);
+    }
+
 }
