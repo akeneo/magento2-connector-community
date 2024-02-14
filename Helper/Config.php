@@ -1326,7 +1326,7 @@ class Config
      */
     public function getDefaultWebsiteId()
     {
-        return $this->storeManager->getStore()->getWebsiteId();
+        return $this->storeManager->getDefaultStoreView()->getWebsiteId();
     }
 
     /**
