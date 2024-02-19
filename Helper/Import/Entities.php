@@ -7,6 +7,7 @@ namespace Akeneo\Connector\Helper\Import;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Model\Source\Edition;
+use Akeneo\Connector\Model\Source\Engine;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Api\ProductApiInterface;
 use Akeneo\Pim\ApiClient\Api\ProductUuidApiInterface;
@@ -295,7 +296,11 @@ class Entities
             'Is New'
         );
 
-        $table->setOption('type', 'MYISAM');
+        if ($this->configHelper->getStorageEngine() === Engine::STORAGE_ENGINE_INNODB) {
+            $table->setOption('row_format', 'dynamic');
+        } else {
+            $table->setOption('type', 'MYISAM');
+        }
 
         $this->connection->createTable($table);
 
