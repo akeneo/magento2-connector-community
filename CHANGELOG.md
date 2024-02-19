@@ -475,3 +475,6 @@
 
 ### Version 104.3.3 :
 * PGTO-409: Create empty columns only for price attributes that are mapped but empty in Akeneo
+
+### Version 104.3.4 :
+* PGTO-419: Add possibility to use InnoDB as temporary table format
