@@ -78,6 +78,11 @@
                     <comment>Match the Adobe Commerce/Magento website with Akeneo channel</comment>
                     <validate>required-entry</validate>
                 </field>
+                <field id="storage_engine" translate="label comment" type="select" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Storage Engine</label>
+                    <source_model>Akeneo\Connector\Model\Source\Engine</source_model>
+                    <comment>Storage engine to use for temporary tables. MyISAM allows high scalability, with important number of attributes. InnoDB is recommended but may cause errors during import for a large catalog.</comment>
+                </field>
             </group>
             <group id="products_filters" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Filter Products</label>
