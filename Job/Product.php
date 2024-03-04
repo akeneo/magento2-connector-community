@@ -4483,7 +4483,7 @@ class Product extends JobImport
     public function getFamiliesToImport(): array
     {
         if (!$this->akeneoClient) {
-            $this->akeneoClient = $this->getAkeneoClient();
+            $this->akeneoClient = $this->jobExecutor->getAkeneoClient();
             if (!$this->akeneoClient) {
                 return [];
             }
