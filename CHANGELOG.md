@@ -478,3 +478,6 @@
 
 ### Version 104.3.4 :
 * PGTO-419: Add possibility to use InnoDB as temporary table format
+
+### Version 104.3.5 :
+* Fix undefined method
