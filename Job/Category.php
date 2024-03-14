@@ -606,7 +606,8 @@ class Category extends Import
         $rowIdExists = $this->entitiesHelper->rowIdColumnExists($table);
         if ($rowIdExists) {
             $this->entities->addJoinForContentStagingCategory($parents, ['p.row_id']);
-            $values['row_id'] = 'IFNULL (p.row_id, _entity_id)'; // on category creation, row_id is null
+            $values['row_id'] = new Expr('IFNULL (p.row_id, _entity_id)'); // on category creation, row_id is null
+            $parents->reset(\Zend_Db_Select::COLUMNS)->columns($values); // update select columns
         }
 
         $connection->query(
