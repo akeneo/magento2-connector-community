@@ -3049,10 +3049,11 @@ class Product extends JobImport
                 $virtualCategories = [0];
             }
             $virtualCategories = join(',', $virtualCategories);
+            $managedCategories = implode(',', array_values(array_map(fn($category) => $category['entity_id'], $categoryAkeneo)));
 
             $connection->delete(
                 $categoryProductTable,
-                new \Zend_Db_Expr("product_id IN ($productIds) AND category_id NOT IN ($virtualCategories) AND (product_id, category_id) NOT IN ($productCategoryExclusion)")
+                new \Zend_Db_Expr("product_id IN ($productIds) AND category_id NOT IN ($virtualCategories) AND category_id IN ($managedCategories) AND (product_id, category_id) NOT IN ($productCategoryExclusion)")
             );
         }
     }
