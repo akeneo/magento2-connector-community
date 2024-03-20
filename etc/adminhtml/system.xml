@@ -83,6 +83,14 @@
                     <source_model>Akeneo\Connector\Model\Source\Engine</source_model>
                     <comment>Storage engine to use for temporary tables. MyISAM allows high scalability, with important number of attributes. InnoDB is recommended but may cause errors during import for a large catalog.</comment>
                 </field>
+                <field id="disable_innodb_strict_mode" translate="label comment" type="select" sortOrder="110" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Disable InnoDB Strict Mode</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>When not possible to use MyISAM, we can disable InnoDB Strict Mode in the session of mysql connections that this module uses. This can also solve imports for catalogs with many attributes.</comment>
+                    <depends>
+                        <field id="storage_engine">innodb</field>
+                    </depends>
+                </field>
             </group>
             <group id="products_filters" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Filter Products</label>

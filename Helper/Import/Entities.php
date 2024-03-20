@@ -151,6 +151,10 @@ class Entities
      */
     public function getConnection()
     {
+        if ($this->configHelper->getShouldDisabledInnoDBStrictMode()) {
+            $this->connection->query('SET SESSION innodb_strict_mode = 0');
+        }
+
         return $this->connection;
     }
 
@@ -297,6 +301,7 @@ class Entities
         );
 
         if ($this->configHelper->getStorageEngine() === Engine::STORAGE_ENGINE_INNODB) {
+            $table->setOption('type', 'InnoDB');
             $table->setOption('row_format', 'dynamic');
         } else {
             $table->setOption('type', 'MYISAM');

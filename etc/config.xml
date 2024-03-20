@@ -20,6 +20,7 @@
                 <pagination_size>100</pagination_size>
                 <edition>less_four_point_zero_point_sixty_two</edition>
                 <storage_engine>myisam</storage_engine>
+                <disable_innodb_strict_mode>0</disable_innodb_strict_mode>
             </akeneo_api>
             <products_filters>
                 <mode>standard</mode>
