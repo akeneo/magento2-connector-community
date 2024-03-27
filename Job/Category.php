@@ -596,7 +596,6 @@ class Category extends Import
             'path'             => 'path',
             'position'         => 'position',
             'level'            => 'level',
-            'children_count'   => new Expr('0'),
         ];
 
         /** @var Select $parents */
@@ -621,6 +620,7 @@ class Category extends Import
         /** @var array $values */
         $values = [
             'created_at' => new Expr('now()'),
+            'children_count'   => new Expr('0'),
         ];
         $connection->update($table, $values, 'created_at IS NULL');
 
