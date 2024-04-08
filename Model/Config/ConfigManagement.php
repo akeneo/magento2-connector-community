@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Model\Config;
 
+use Akeneo\Connector\App\ResourceConnection;
 use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Website;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Model\Backend\Json;
@@ -12,7 +13,6 @@ use Magento\Config\Model\Config\Backend\Serialized\ArraySerialized;
 use Magento\Eav\Model\Entity\Attribute;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Module\Dir;
