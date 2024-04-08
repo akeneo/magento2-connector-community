@@ -481,3 +481,7 @@
 
 ### Version 104.3.5 :
 * Fix undefined method
+
+### Version 104.3.6 :
+* PGTO-427: Custom Resource Connection
+* 
