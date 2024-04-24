@@ -623,6 +623,12 @@ class Config
      */
     protected $scopeConfig;
 
+    public const PRODUCT_IMAGE_TYPE_CHILD = 'child';
+
+    public const PRODUCT_IMAGE_TYPE_PARENT = 'parent';
+
+    public const PRODUCT_IMAGE_TYPE_ALL = 'all';
+
     /**
      * Config constructor
      *
@@ -1441,9 +1447,17 @@ class Config
      *
      * @return array
      */
-    public function getMediaImportGalleryColumns()
+    public function getMediaImportGalleryColumns(?array $types = null): array
     {
-        /** @var mixed[] $images */
+        if ($types === null) {
+            $types = [
+                self::PRODUCT_IMAGE_TYPE_CHILD,
+                self::PRODUCT_IMAGE_TYPE_PARENT,
+                self::PRODUCT_IMAGE_TYPE_ALL,
+            ];
+        }
+
+        /** @var array $images */
         $images = [];
         /** @var string $config */
         $config = $this->scopeConfig->getValue(self::PRODUCT_MEDIA_GALLERY);
@@ -1461,10 +1475,15 @@ class Config
             if (!isset($image['attribute']) || $image['attribute'] === '') {
                 continue;
             }
-            $images[] = $image['attribute'];
+
+            $imageType = $image['type'] ?? self::PRODUCT_IMAGE_TYPE_ALL;
+
+            if (in_array($imageType, $types)) {
+                $images[] = $image['attribute'];
+            }
         }
 
-        return $images;
+        return array_unique($images);
     }
 
     /**
