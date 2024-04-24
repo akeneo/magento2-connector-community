@@ -3992,6 +3992,7 @@ class Product extends JobImport
         $data = [
             $columnIdentifier => '_entity_id',
             'sku'             => 'identifier',
+            '_type_id'        => '_type_id',
         ];
 
         /** @var mixed[] $stores */
@@ -4067,6 +4068,13 @@ class Product extends JobImport
         /** @var string[] $medias */
         $medias = [];
 
+        $childOnlyImages = $this->configHelper->getMediaImportGalleryColumns(
+            [ConfigHelper::PRODUCT_IMAGE_TYPE_CHILD]
+        );
+        $parentOnlyImages = $this->configHelper->getMediaImportGalleryColumns(
+            [ConfigHelper::PRODUCT_IMAGE_TYPE_PARENT]
+        );
+
         /** @var array $row */
         while (($row = $query->fetch())) {
             /** @var int $positionCounter */
@@ -4083,6 +4091,14 @@ class Product extends JobImport
                 }
 
                 if (!$row[$image]) {
+                    continue;
+                }
+
+                if (in_array($row['_type_id'], ['simple', 'virtual']) && in_array($image, $parentOnlyImages)) {
+                    continue;
+                }
+
+                if (in_array($row['_type_id'], ['configurable', 'grouped', 'bundle']) && in_array($image, $childOnlyImages)) {
                     continue;
                 }
 
