@@ -484,4 +484,6 @@
 
 ### Version 104.3.6 :
 * PGTO-427: Custom Resource Connection
-* 
+
+### Version 104.3.7 :
+* PGTO-430: Allow to assign an image to the parent or child only
