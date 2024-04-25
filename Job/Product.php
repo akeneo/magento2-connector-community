@@ -4001,6 +4001,10 @@ class Product extends JobImport
         $dataToImport = [];
         /** @var bool $valueFound */
         $valueFound = false;
+        
+        /** @var array $columns */
+        $columns = $this->configHelper->getMediaImportImagesColumns();
+
         foreach ($gallery as $image) {
             if (!$connection->tableColumnExists($tmpTable, strtolower($image))) {
                 // If not exist, check for each store if the field exist
@@ -4218,9 +4222,6 @@ class Product extends JobImport
                             $data['record_id'] = $recordId;
                         }
                         $connection->insertOnDuplicate($galleryValueTable, $data, array_keys($data));
-
-                        /** @var array $columns */
-                        $columns = $this->configHelper->getMediaImportImagesColumns();
 
                         foreach ($columns as $column) {
                             /** @var string $columnName */
