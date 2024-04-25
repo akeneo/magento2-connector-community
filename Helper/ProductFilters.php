@@ -144,6 +144,11 @@ class ProductFilters
                 $advancedFilters['search']['family'][] = $familyFilter;
             }
 
+            $updatedFilter = $this->getUpdatedFilter($jobExecutor);
+            if (!empty($updatedFilter)) {
+                $advancedFilters['search']['updated'][0] = $updatedFilter;
+            }
+
             return [$advancedFilters];
         }
 
@@ -329,13 +334,13 @@ class ProductFilters
     }
 
     /**
-     * Add updated filter for Akeneo API
+     * Get updated filter Data for Akeneo API
      *
      * @param JobExecutor $jobExecutor
      *
-     * @return void
+     * @return mixed[]
      */
-    protected function addUpdatedFilter($jobExecutor)
+    protected function getUpdatedFilter($jobExecutor)
     {
         /** @var string $mode */
         $mode = $this->configHelper->getUpdatedMode();
@@ -344,28 +349,39 @@ class ProductFilters
             $dateAfter  = $this->configHelper->getUpdatedBetweenAfterFilter() . ' 00:00:00';
             $dateBefore = $this->configHelper->getUpdatedBetweenBeforeFilter() . ' 23:59:59';
             if (empty($dateAfter) || empty($dateBefore)) {
-                return;
+                return [];
             }
             $dates = [$dateAfter, $dateBefore];
-            $this->searchBuilder->addFilter('updated', $mode, $dates);
+
+            return [
+                'operator' => $mode,
+                'value' => $dates,
+            ];
         }
         if ($mode == Update::SINCE_LAST_N_DAYS) {
             /** @var string $filter */
             $filter = $this->configHelper->getUpdatedSinceFilter();
             if (!is_numeric($filter)) {
-                return;
+                return [];
             }
-            $this->searchBuilder->addFilter('updated', $mode, (int)$filter);
+
+            return [
+                'operator' => $mode,
+                'value' => (int)$filter,
+            ];
         }
         if ($mode == Update::SINCE_LAST_IMPORT) {
             // Get the last import date as filter
             /** @var string $filter */
             $filter = $this->getLastImportDateFilter($jobExecutor);
             if (!$filter) {
-                return;
+                return [];
             }
 
-            $this->searchBuilder->addFilter('updated', Update::GREATER_THAN, $filter);
+            return [
+                'operator' => Update::GREATER_THAN,
+                'value' => $filter,
+            ];
         }
         if ($mode == Update::SINCE_LAST_N_HOURS) {
             /** @var int $currentDateTime */
@@ -373,12 +389,12 @@ class ProductFilters
             /** @var string $valueConfig */
             $valueConfig = $this->configHelper->getUpdatedSinceLastHoursFilter();
             if (!$valueConfig) {
-                return;
+                return [];
             }
             /** @var int $filter */
             $filter = ((int)$valueConfig) * 3600;
             if (!is_numeric($filter)) {
-                return;
+                return [];
             }
 
             /** @var int $timestamp */
@@ -387,29 +403,53 @@ class ProductFilters
             $date = (new \DateTime())->setTimestamp($timestamp)->format('Y-m-d H:i:s');
 
             if (!empty($date)) {
-                $this->searchBuilder->addFilter('updated', Update::GREATER_THAN, $date);
+                return [
+                    'operator' => Update::GREATER_THAN,
+                    'value' => $date,
+                ];
             }
 
-            return;
+            return [];
         }
         if ($mode == Update::LOWER_THAN) {
             /** @var string $date */
             $date = $this->configHelper->getUpdatedLowerFilter();
             if (empty($date)) {
-                return;
+                return [];
             }
             $date = $date . ' 23:59:59';
         }
         if ($mode == Update::GREATER_THAN) {
             $date = $this->configHelper->getUpdatedGreaterFilter();
             if (empty($date)) {
-                return;
+                return [];
             }
             $date = $date . ' 00:00:00';
         }
         if (!empty($date)) {
-            $this->searchBuilder->addFilter('updated', $mode, $date);
+            return [
+                'operator' => $mode,
+                'value' => $date,
+            ];
         }
+    }
+
+    /**
+     * Add updated filter for Akeneo API
+     *
+     * @param JobExecutor $jobExecutor
+     *
+     * @return void
+     */
+    protected function addUpdatedFilter($jobExecutor)
+    {
+        $updatedFilter = $this->getUpdatedFilter($jobExecutor);
+
+        if (empty($updatedFilter)) {
+            return;
+        }
+
+        $this->searchBuilder->addFilter('updated', $updatedFilter['operator'], $updatedFilter['value']);
     }
 
     /**

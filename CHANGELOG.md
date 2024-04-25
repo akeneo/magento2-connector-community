@@ -420,3 +420,70 @@
 * Rolled back previous modification to avoid Undefined array key line 3013
 * Avoid to erase swatch configuration
 * Fix image mapping for scope global
+
+### Version 103.5.0 :
+* Select category trees to import instead of trees to exclude
+* Select families to import instead of families to exclude
+* Assets compatibility warning removed
+* Allow to override default attribute values (like tax_class_id)
+* Allow attribute named visibility in Akeneo
+* Fix import products without name grid error
+* Fix status assignation with virtual products
+* Fix visibility attribute error
+* Fix association when category does not exist
+* Prevent import from crashing if the tmp table is missing sort_order column
+* Keep the old sort_order for options if the order from Akeneo is null
+* setCategory step improvement
+
+### Version 104.0.0 :
+* Upgrade minimal PHP dependency to 8.0
+* Upgrade Akeneo PHP client to 11.2.0
+* Allow to disable updated mode filter
+
+### Version 104.0.1 :
+* PGTO-357: Force "selected" attribute on multiselect before print
+* PGTO-366: Add security check to avoid undefined index
+* PGTO-369: Fix virtual product status update
+
+### Version 104.0.2 :
+* PGTO-369: Fix product status assignment regression
+* PGTO-363: Fix visibility update
+
+### Version 104.0.3 :
+* PGTO-378: Fix product without category attribution
+* PGTO-380: Rebuild Visual Merchandiser Dynamic Categories
+
+### Version 104.0.4 :
+* PGTO-376: Fix grouped product association with uuid
+
+### Version 104.0.5 :
+* PGTO-388: Fix table names when tables are prefixed
+* PGTO-389: Fix UUID retro-compatibility when sku is missing
+* PGTO-390: does not flush cache and refresh index until the last product family
+
+### Version 104.0.6 :
+* PGTO-393: Replace the sku by the child product UUID in tmp related table
+
+### Version 104.0.7 :
+* PGTO-397: Never delete products in a virtual category
+
+### Version 104.3.1 :
+* PGTO-402: Fix admin default value empty name
+
+### Version 104.3.2 :
+* PGTO-403: Fix attribute is not cleared
+
+### Version 104.3.3 :
+* PGTO-409: Create empty columns only for price attributes that are mapped but empty in Akeneo
+
+### Version 104.3.4 :
+* PGTO-419: Add possibility to use InnoDB as temporary table format
+
+### Version 104.3.5 :
+* Fix undefined method
+
+### Version 104.3.6 :
+* PGTO-427: Custom Resource Connection
+
+### Version 104.3.7 :
+* PGTO-430: Allow to assign an image to the parent or child only

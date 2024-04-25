@@ -19,6 +19,7 @@
                 <client_secret>demo_secret</client_secret>
                 <pagination_size>100</pagination_size>
                 <edition>less_four_point_zero_point_sixty_two</edition>
+                <storage_engine>myisam</storage_engine>
             </akeneo_api>
             <products_filters>
                 <mode>standard</mode>

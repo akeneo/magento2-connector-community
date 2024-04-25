@@ -446,4 +446,11 @@
             <argument name="jobExecutor" xsi:type="object">Akeneo\Connector\Executor\JobExecutor\Proxy</argument>
         </arguments>
     </type>
+
+    <type name="Akeneo\Connector\App\ResourceConnection">
+        <arguments>
+            <argument name="connectionFactory" xsi:type="object">Magento\Framework\App\ResourceConnection\ConnectionFactory</argument>
+            <argument name="deploymentConfig" xsi:type="object">Magento\Framework\App\DeploymentConfig</argument>
+        </arguments>
+    </type>
 </config>

@@ -33,12 +33,14 @@ use Akeneo\Pim\ApiClient\Pagination\ResourceCursor;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Exception;
 use Magento\Bundle\Model\Product\Type as BundleType;
+use Magento\Catalog\Api\Data\CategoryInterface;
+use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\Category as CategoryModel;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Catalog\Model\Product\Attribute\Backend\Media\ImageEntryConverter;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ProductLink\Link as ProductLink;
-use Magento\Catalog\Model\ResourceModel\Category\Collection;
+use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
 use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ProductConfigurable;
@@ -61,6 +63,8 @@ use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedType;
 use Magento\Indexer\Model\IndexerFactory;
 use Magento\Staging\Model\VersionManager;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\UrlRewrite\Model\OptionProvider;
+use Magento\UrlRewrite\Service\V1\Data\UrlRewrite;
 use Psr\Http\Message\ResponseInterface;
 use Zend_Db_Exception;
 use Zend_Db_Expr as Expr;
@@ -117,7 +121,19 @@ class Product extends JobImport
      */
     protected $family = null;
     /**
-     * This variable contains a string value
+     * This variable contains a string
+     *
+     * @var string $firstFamily
+     */
+    protected $firstFamily = null;
+    /**
+     * This variable contains a string
+     *
+     * @var string $lastFamily
+     */
+    protected $lastFamily = null;
+    /**
+     * @inheritdoc
      *
      * @var string $name
      */
@@ -159,8 +175,9 @@ class Product extends JobImport
         'UPSELL',
         'X_SELL',
     ];
+
     /**
-     * This variable contains a ProductImportHelper
+     * @inheritdoc
      *
      * @var ProductImportHelper $entitiesHelper
      */
@@ -291,6 +308,18 @@ class Product extends JobImport
      * @var string
      */
     protected $productDefaultVisibility = Visibility::VISIBILITY_NOT_VISIBLE;
+    /**
+     * Collection Factory
+     *
+     * @var CollectionFactory $categoryCollectionFactory
+     */
+    protected $categoryCollectionFactory;
+    /**
+     * The default name value when empty
+     *
+     * @var ?array $defaultNameValue
+     */
+    protected $defaultNameValue = null;
 
     /**
      * Product constructor.
@@ -350,6 +379,7 @@ class Product extends JobImport
         IndexerFactory $indexFactory,
         JobExecutor $jobExecutor,
         JobExecutorFactory $jobExecutorFactory,
+        CollectionFactory $categoryCollectionFactory,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
@@ -375,6 +405,7 @@ class Product extends JobImport
         $this->indexFactory = $indexFactory;
         $this->jobExecutor = $jobExecutor;
         $this->jobExecutorFactory = $jobExecutorFactory;
+        $this->categoryCollectionFactory = $categoryCollectionFactory;
 
         if ($this->configHelper->isProductVisibilityEnabled()) {
             // Add configurable column name in the property to avoid data transform from data to option id
@@ -517,7 +548,7 @@ class Product extends JobImport
             $modelFilters = $this->getProductModelFilters($family);
             foreach ($modelFilters as $filter) {
                 /** @var PageInterface $productModels */
-                $productModels = $akeneoClient->listPerPage(1, false, $filter);
+                $productModels = $akeneoClient->getProductModelApi()->listPerPage(1, false, $filter);
                 /** @var array $productModel */
                 $productModels = $productModels->getItems();
 
@@ -752,6 +783,8 @@ class Product extends JobImport
                         $product['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
                     }
                 }
+
+                $product = $this->handleNoName($product);
 
                 /** @var bool $result */
                 $result = $this->entitiesHelper->insertDataFromApi(
@@ -1080,7 +1113,7 @@ class Product extends JobImport
                 $tmpTable,
                 [
                     '_type_id' => new Expr(
-                        "IF($productMappingAttribute IN ($types), $productMappingAttribute, 'simple')"
+                        "IF(`$productMappingAttribute` IN ($types), `$productMappingAttribute`, 'simple')"
                     ),
                 ]
             );
@@ -1090,7 +1123,7 @@ class Product extends JobImport
             $connection->update(
                 $tmpTable,
                 ['_status' => new Expr('IF(`enabled` <> 1, 2, 1)')],
-                ['_type_id = ?' => 'simple']
+                ['_type_id IN (?)' => $this->allowedTypeId]
             );
         }
 
@@ -1565,6 +1598,34 @@ class Product extends JobImport
                 );
             }
         }
+
+        // Create empty columns for price attributes that are mapped but empty in Akeneo
+        $matches = $this->configHelper->getAttributeMapping();
+        $priceAttributes = ['cost', 'price', 'special_price'];
+        $matches = array_filter(
+            $matches,
+            static function ($match) use ($priceAttributes) {
+                return in_array($match['magento_attribute'], $priceAttributes, true);
+            }
+        );
+        $missingColumns = [];
+        foreach ($matches as $match) {
+            if (in_array($match['magento_attribute'], $columns, true)) {
+                continue;
+            }
+            foreach ($columns as $column) {
+                $columnParts =  explode('-', $column, 2);
+                $columnAttributeCode = $columnParts[0];
+                $columnSuffix = $columnParts[1] ?? '';
+
+                if ($match['akeneo_attribute'] === $columnAttributeCode) {
+                    $missingColumns[$column] = $match['magento_attribute'] . '-' . $columnSuffix;
+                }
+            }
+        }
+        foreach ($missingColumns as $sourceColumn => $destinationColumn) {
+            $this->entitiesHelper->copyColumn($tmpTable, $sourceColumn, $destinationColumn);
+        }
     }
 
     /**
@@ -1633,7 +1694,7 @@ class Product extends JobImport
             return;
         }
 
-        if ($this->entitiesHelper->isProductUuidEdition()) {
+        if ($this->entitiesHelper->isProductUuidEdition() && $connection->tableColumnExists($tmpTable, 'sku')) {
             // We replace the sku by the uuid in the Akeneo entities table if needed for retro-compatibility
             $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
             $uuids = $connection->select()
@@ -2037,7 +2098,9 @@ class Product extends JobImport
         /** @var string $statusAttributeId */
         $statusAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'status');
         /** @var string $identifierColumn */
-        $identifierColumn = $this->entitiesHelper->getColumnIdentifier('catalog_product_entity_int');
+        $identifierColumn = $this->entitiesHelper->getColumnIdentifier(
+            $this->entitiesHelper->getTable('catalog_product_entity_int')
+        );
         /** @var string $productTable */
         $productTable = $this->entitiesHelper->getTable('catalog_product_entity');
         /** @var string[] $pKeyColumn */
@@ -2088,12 +2151,13 @@ class Product extends JobImport
         }
 
         $select->joinInner(
-            ['b' => $this->entitiesHelper->getTable('catalog_product_entity_int')],
-            $pKeyColumn . ' = b.' . $identifierColumn
-        )->where('a._is_new = ?', 0)->where('a._status = ?', 1)->where('a._type_id = ?', 'simple')->where(
-            'b.attribute_id = ?',
-            $statusAttributeId
-        );
+                ['b' => $this->entitiesHelper->getTable('catalog_product_entity_int')],
+                $pKeyColumn . ' = b.' . $identifierColumn
+            )
+            ->where('a._is_new = ?', 0)
+            ->where('a._status = ?', 1)
+            ->where('a._type_id IN (?)', $this->allowedTypeId)
+            ->where('b.attribute_id = ?', $statusAttributeId);
 
         // Update existing simple status
         /** @var Zend_Db_Statement_Pdo $oldStatus */
@@ -2102,10 +2166,9 @@ class Product extends JobImport
         $status = $this->configHelper->getProductActivation();
         if ($this->configHelper->getProductStatusMode() === StatusMode::STATUS_BASED_ON_COMPLETENESS_LEVEL) {
             /** @var Select $selectComplet */
-            $selectComplet = $connection->select()->from(['a' => $tmpTable], $columnsForCompleteness)->where(
-                'a._type_id = ?',
-                'simple'
-            );
+            $selectComplet = $connection->select()
+                ->from(['a' => $tmpTable], $columnsForCompleteness)
+                ->where('a._type_id IN (?)', $this->allowedTypeId);
             /** @var Zend_Db_Statement_Pdo $completQuery */
             $completQuery = $connection->query($selectComplet);
             /** @var string $completenessConfig */
@@ -2182,7 +2245,7 @@ class Product extends JobImport
         $connection->update(
             $tmpTable,
             ['_status' => $status],
-            ['_is_new = ?' => 1, '_status = ?' => 1, '_type_id = ?' => 'simple']
+            ['_is_new = ?' => 1, '_status = ?' => 1, '_type_id IN (?)' => $this->allowedTypeId]
         );
 
         /*  Configurable status management */
@@ -2352,9 +2415,6 @@ class Product extends JobImport
                 continue;
             }
 
-            /** @var bool $visibilityScopableLocalizable */
-            $isVisibilityScopableLocalizable = !!($columnPrefix === 'visibility' && count(explode('-', $columnSuffix ?? '')));
-
             /** @var mixed[] $affectedStores */
             $affectedStores = $stores[$columnSuffix];
             /** @var mixed[] $store */
@@ -2365,20 +2425,16 @@ class Product extends JobImport
                 }
 
                 if ($scope === ScopedAttributeInterface::SCOPE_STORE || empty($store['siblings'])) {
-                    if (!isset($values[$store['store_id']][$columnPrefix])) {
-                        $values[$store['store_id']][$columnPrefix] = $column;
+                    $values[$store['store_id']][$columnPrefix] = $column;
 
-                        continue;
-                    }
+                    continue;
                 }
 
                 /** @var string[] $siblings */
                 $siblings = $store['siblings'];
                 /** @var string $storeId */
                 foreach ($siblings as $storeId) {
-                    if (!isset($values[$storeId][$columnPrefix]) || $isVisibilityScopableLocalizable) {
-                        $values[$storeId][$columnPrefix] = $column;
-                    }
+                    $values[$storeId][$columnPrefix] = $column;
                 }
             }
         }
@@ -2922,11 +2978,9 @@ class Product extends JobImport
      *
      * @return void
      */
-    public function setCategories()
+    public function setCategories(): void
     {
-        /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         if (!$connection->tableColumnExists($tmpTable, 'categories')) {
@@ -2936,60 +2990,71 @@ class Product extends JobImport
             return;
         }
 
-        /** @var Select $select */
-        $select = $connection->select()
-            ->from(['c' => $this->entitiesHelper->getTable('akeneo_connector_entities')], [])
-            ->joinInner(
-                ['p' => $tmpTable],
-                'FIND_IN_SET(`c`.`code`, `p`.`categories`) AND `c`.`import` = "category"',
-                [
-                    'category_id' => 'c.entity_id',
-                    'product_id' => 'p._entity_id',
-                ]
+        $akeneoEntitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
+        $categoryProductTable = $this->entitiesHelper->getTable('catalog_category_product');
+
+        $productCategoryInsertData = [];
+        $categoriesByProduct = $connection->fetchAll(
+            $connection->select()->from(
+                [$tmpTable],
+                ['_entity_id', 'categories']
             )
-            ->joinInner(
-                ['e' => $this->entitiesHelper->getTable('catalog_category_entity')],
-                'c.entity_id = e.entity_id',
-                []
+        );
+
+        // we get all link between category code and id
+        $categoryAkeneo = $connection->fetchAssoc(
+            $connection->select()->from(
+                [$akeneoEntitiesTable],
+                ['code', 'entity_id']
+            )->where('import = "category"')
+        );
+
+        // create data to insert in catalog_product_entity
+        $notInWhere = [];
+        foreach ($categoriesByProduct as $row) {
+            $categoryList = explode(',', (string)$row['categories']);
+            foreach ($categoryList as $category) {
+                if (!isset($categoryAkeneo[$category])) {
+                    continue;
+                }
+                $data = [
+                    $row['_entity_id'],
+                    $categoryAkeneo[$category]['entity_id'],
+                ];
+                $productCategoryInsertData[] = $data;
+                $notInWhere[] = '(' . $row['_entity_id'] . ',' . $categoryAkeneo[$category]['entity_id'] . ')';
+            }
+        }
+
+        if (empty($productCategoryInsertData)) {
+            return;
+        }
+
+        $connection->insertArray($categoryProductTable, ['product_id', 'category_id'], $productCategoryInsertData, AdapterInterface::INSERT_IGNORE);
+
+        $productIds = implode(',', array_unique(array_column($productCategoryInsertData, 0)));
+        $productCategoryExclusion = implode(',', $notInWhere);
+        if (!empty($productIds) && !empty($productCategoryExclusion)) {
+            $virtualCategories = [];
+            $visualMerchandiserRuleTable = $connection->getTableName('visual_merchandiser_rule');
+            if ($connection->isTableExists($visualMerchandiserRuleTable)) {
+                $virtualCategories = $connection->fetchCol(
+                    $connection->select()
+                        ->from($visualMerchandiserRuleTable, ['category_id'])
+                        ->where('is_active = ?', 1)
+                        ->where('store_id = ?', 0)
+                );
+            }
+            if (empty($virtualCategories)) {
+                $virtualCategories = [0];
+            }
+            $virtualCategories = join(',', $virtualCategories);
+
+            $connection->delete(
+                $categoryProductTable,
+                new \Zend_Db_Expr("product_id IN ($productIds) AND category_id NOT IN ($virtualCategories) AND (product_id, category_id) NOT IN ($productCategoryExclusion)")
             );
-
-        $connection->query(
-            $connection->insertFromSelect(
-                $select,
-                $this->entitiesHelper->getTable('catalog_category_product'),
-                ['category_id', 'product_id'],
-                1
-            )
-        );
-
-        /** @var Select $selectToDelete */
-        $selectToDelete = $connection->select()
-            ->from($this->entitiesHelper->getTable('catalog_category_product'), [])
-            ->joinInner(
-                ['c' => $this->entitiesHelper->getTable('akeneo_connector_entities')],
-                $this->entitiesHelper->getTable('catalog_category_product') . '.category_id = c.entity_id',
-                []
-            )
-            ->joinInner(
-                ['p' => $tmpTable],
-                $this->entitiesHelper->getTable('catalog_category_product') . '.product_id = `p`.`_entity_id`',
-                [
-                    'category_id' => 'c.entity_id',
-                    'product_id' => 'p._entity_id',
-                ]
-            )
-            ->joinInner(
-                ['e' => $this->entitiesHelper->getTable('catalog_category_entity')],
-                'c.entity_id = e.entity_id',
-                []
-            )
-            ->where('!FIND_IN_SET(`c`.`code`, `p`.`categories`) AND `c`.`import` = "category"');
-
-        $delete = $connection->deleteFromSelect(
-            $selectToDelete,
-            $this->entitiesHelper->getTable('catalog_category_product')
-        );
-        $connection->query($delete);
+        }
     }
 
     /**
@@ -3053,8 +3118,8 @@ class Product extends JobImport
         $deleteQuery = $connection->select()->from([$linkTableAlias => $linkTable], null);
         if ($rowIdExists) {
             $deleteQuery->joinInner(['p' => $productsTable], "$linkTableAlias.product_id = p.row_id", null)
-                ->joinInner(['tmp' => $tmpTable], 'p.entity_id = tmp._entity_id', null)
-                ->joinLeft(['s' => $this->entitiesHelper->getTable('staging_update')], 'p.created_in = s.id', null);
+                        ->joinInner(['tmp' => $tmpTable], 'p.entity_id = tmp._entity_id', null)
+                        ->joinLeft(['s' => $this->entitiesHelper->getTable('staging_update')], 'p.created_in = s.id', null);
         } else {
             $deleteQuery->joinInner(['tmp' => $tmpTable], "$linkTableAlias.product_id = tmp._entity_id", null);
         }
@@ -3138,6 +3203,20 @@ class Product extends JobImport
             'sku'
         );
 
+        if ($this->entitiesHelper->isProductUuidEdition()) {
+            // Replace the sku by the child product UUID in tmp related table
+            $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
+            $uuids = $connection->select()
+                ->from(false, ['sku' => 'ace.code'])
+                ->joinInner(
+                    ['cpe' => $connection->getTableName('catalog_product_entity')],
+                    '`cpe`.`sku` = `tr`.`sku`', []
+                )
+                ->joinInner(['ace' => $entitiesTable], '`ace`.`entity_id` = `cpe`.`entity_id`', [])
+                ->where('`ace`.`import` = ?', 'product');
+            $connection->query($connection->updateFromSelect($uuids, ['tr' => $tempRelatedTable]));
+        }
+
         $select = $connection->select()
             ->from(['tmp' => $tempRelatedTable], ["p.$columnIdentifier", 'p_sku.entity_id', 'link_type_id'])
             ->joinInner(
@@ -3208,9 +3287,9 @@ class Product extends JobImport
         $edition = $this->configHelper->getEdition();
         // Is family is not grouped or edition not Serenity or five or greater, skip
         if (($edition != Edition::SERENITY
-                && $edition != Edition::GREATER_OR_FIVE
-                && $edition != Edition::GROWTH
-                && $edition != Edition::SEVEN)
+            && $edition != Edition::GREATER_OR_FIVE
+            && $edition != Edition::GROWTH
+            && $edition != Edition::SEVEN)
             || !$this->entitiesHelper->isFamilyGrouped($this->getFamily())
         ) {
             return;
@@ -3420,19 +3499,6 @@ class Product extends JobImport
 
                 /** @var string[] $productInfo */
                 foreach ($associationProductInfo as $productInfo) {
-                    // Verify if the product exist in catalog_product_entity
-                    if (!$this->productExistInMagento($productInfo['identifier'])) {
-                        $this->jobExecutor->setAdditionalMessage(
-                            __(
-                                'The grouped product %1 is linked to the product %2 but it does not exist in Magento/Adobe Commerce. The association has been skipped.',
-                                $row['identifier'],
-                                $productInfo['identifier']
-                            ),
-                            $this->logger
-                        );
-                        continue;
-                    }
-
                     /** @var string[] $linkedProductEntityId */
                     $linkedProductEntityId = $connection->query(
                         $connection->select()->from($entitiesTable, 'entity_id')->where(
@@ -3451,6 +3517,18 @@ class Product extends JobImport
                             $linkedProductEntityId['entity_id']
                         )
                     )->fetch();
+
+                    if (!$linkedProductType) {
+                        $this->jobExecutor->setAdditionalMessage(
+                            __(
+                                'The grouped product %1 is linked to the product %2 but it does not exist in Adobe Commerce/Magento. The association has been skipped.',
+                                $row['identifier'],
+                                $productInfo['identifier']
+                            ),
+                            $this->logger
+                        );
+                        continue;
+                    }
 
                     if ($linkedProductType['type_id'] != 'simple') {
                         $this->jobExecutor->setAdditionalMessage(
@@ -3535,7 +3613,7 @@ class Product extends JobImport
      * @throws LocalizedException
      * @throws \Zend_Db_Exception
      */
-    public function setUrlRewrite()
+    public function setUrlRewrite(): void
     {
         if (!$this->configHelper->isUrlGenerationEnabled()) {
             $this->setStatus(true);
@@ -3547,18 +3625,18 @@ class Product extends JobImport
             return;
         }
 
-        /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
-        /** @var array $stores */
+        $productWebsiteTable = $this->entitiesHelper->getTable('catalog_product_website');
+        $catalogUrlRewriteTable = $this->entitiesHelper->getTable('catalog_url_rewrite_product_category');
+        $urlRewriteTable = $this->entitiesHelper->getTable('url_rewrite');
+        $productCategoriesTable = $this->entitiesHelper->getTable('catalog_category_product');
         $stores = array_merge(
             $this->storeHelper->getStores(['lang']), // en_US
             $this->storeHelper->getStores(['lang', 'channel_code']), // en_US-channel
             $this->storeHelper->getStores(['channel_code']) // channel
         );
 
-        /** @var bool $isUrlMapped */
         $isUrlMapped = false;
         // Check if url_key is mapped or contains value per store ou website
         foreach ($stores as $local => $affected) {
@@ -3601,49 +3679,111 @@ class Product extends JobImport
              * @var array $store
              */
             foreach ($affected as $store) {
-                if (!$store['store_id']
-                    || !$connection->tableColumnExists($tmpTable, 'url_key-' . $local)
+                if (!$store['store_id'] ||
+                    !$connection->tableColumnExists($tmpTable, 'url_key-' . $local)
                 ) {
                     continue;
                 }
-                /** @var Select $select */
-                $select = $connection->select()->from(
-                    ['tmp' => $tmpTable],
-                    [
-                        'entity_id' => '_entity_id',
-                        'url_key' => 'url_key-' . $local,
-                        'store_id' => new Expr($store['store_id']),
-                        'visibility' => '_visibility',
-                    ]
-                )->where('_visibility != ?', $this->productDefaultVisibility);
 
+                // Get currently visible imported products to be "url rewrote"
+                $productsSelect = $connection->select()
+                    ->from(
+                        $tmpTable,
+                        [
+                            'entity_id' => '_entity_id',
+                            'url_key' => 'url_key-' . $local,
+                            'store_id' => new Expr($store['store_id']),
+                            'visibility' => '_visibility',
+                        ]
+                    )
+                    ->where('_visibility != ?', Visibility::VISIBILITY_NOT_VISIBLE);
                 if (isset($store['website_id'])) {
-                    $select
+                    $productsSelect
                         ->joinInner(
-                            ['pw' => $this->entitiesHelper->getTable('catalog_product_website')],
-                            'tmp._entity_id = pw.product_id',
+                            ['pw' => $productWebsiteTable],
+                            '_entity_id = product_id',
                             []
                         )
                         ->where('website_id = ?', $store['website_id']);
                 }
 
-                /** @var Mysql $query */
-                $query = $connection->query($select);
+                $productRows = $connection->fetchAll($productsSelect);
+
+                // Retrieve rewrite url at one time only for the current batch of products
+                $productsSelect->reset(Select::COLUMNS)->columns('_entity_id');
+                $urlRewriteQuery = $connection
+                    ->select()
+                    ->from($urlRewriteTable)
+                    ->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)
+                    ->where('store_id = ?', $store['store_id'])
+                    ->where('entity_id IN (?)', $productsSelect);
+                /** @var Mysql $rewriteResults */
+                $rewriteResults = $connection->fetchAll($urlRewriteQuery);
+
+                // Keep rewrite by target_path
+                $rewritesByTarget = [];
+                foreach ($rewriteResults as $rewrite) {
+                    $rewritesByTarget[$rewrite['target_path']][] = $rewrite;
+                }
+
+                // If the configuration "Use category in product url" is checked, we pre-calculate needed categories
+                $isCategoryUsedInProductUrl = $this->configHelper->isCategoryUsedInProductUrl($store['store_id']);
+                if ($isCategoryUsedInProductUrl) {
+                    $productEntities = array_column($productRows, 'entity_id');
+                    // Get category/product links of the current batch of product
+                    $productCategoriesSelect = $connection->select()
+                        ->from($productCategoriesTable, ['product_id', 'category_id'])
+                        ->where('product_id IN (?)', $productEntities);
+                    $productCategories = $connection->fetchAll($productCategoriesSelect);
+
+                    // Get categories by product
+                    $categoryIdsByProduct = [];
+                    foreach ($productCategories as $data) {
+                        $categoryIdsByProduct[$data['product_id']][] = $data['category_id'];
+                    }
+                    // Get only needed categories collection
+                    $filteredCategories = $this->categoryCollectionFactory->create()
+                        ->addAttributeToSelect(['entity_id', CategoryInterface::KEY_NAME, 'url_key', CategoryInterface::KEY_PATH])
+                        ->setStore($store['store_id'])
+                        ->addFieldToFilter(CategoryInterface::KEY_IS_ACTIVE, 1)
+                        ->addFieldToFilter('entity_id', ['in' => array_unique(array_column($productCategories, 'category_id'))])
+                        ->getItems();
+
+                    $result = [];
+                    $currentRootCategoryId = $this->storeManager->getStore($store['store_id'])->getRootCategoryId();
+                    /** @var CategoryModel $category */
+                    foreach ($filteredCategories as $category) {
+                        $path = array_reverse($category->getPathIds());
+                        foreach ($path as $itemId) {
+                            if ($itemId === $currentRootCategoryId) {
+                                break;
+                            }
+                            $result[] = $itemId;
+                        }
+                    }
+                    if (!empty($result)) {
+                        $filteredCategories += $this->categoryCollectionFactory->create()
+                            ->addAttributeToSelect(['entity_id', CategoryInterface::KEY_NAME, 'url_key', CategoryInterface::KEY_PATH])
+                            ->setStore($store['store_id'])
+                            ->addFieldToFilter(CategoryInterface::KEY_IS_ACTIVE, 1)
+                            ->addFieldToFilter('entity_id', ['in' => array_unique($result)])
+                            ->getItems();
+                    }
+
+                    $productCategoryToInsert = [];
+                }
 
                 /** @var array $row */
-                while (($row = $query->fetch())) {
-                    /** @var BaseProductModel $product */
+                foreach ($productRows as $row) {
                     $product = $this->product;
                     $product->setData($row);
 
-                    /** @var string $urlPath */
                     $urlPath = $this->productUrlPathGenerator->getUrlPath($product);
 
                     if (!$urlPath) {
                         continue;
                     }
 
-                    /** @var string $requestPath */
                     $requestPath = $this->productUrlPathGenerator->getUrlPathWithSuffix(
                         $product,
                         $product->getStoreId()
@@ -3661,51 +3801,40 @@ class Product extends JobImport
                         ],
                     ];
 
-                    /** @var bool $isCategoryUsedInProductUrl */
-                    $isCategoryUsedInProductUrl = $this->configHelper->isCategoryUsedInProductUrl(
-                        $product->getStoreId()
-                    );
-
                     if ($isCategoryUsedInProductUrl) {
-                        /** @var Collection $categories */
-                        $categories = $product->getCategoryCollection();
-                        $categories->addAttributeToSelect('url_key');
-
+                        $categoryPathIds = [];
                         /** @var CategoryModel $category */
-                        foreach ($categories as $category) {
-                            /** @var string $requestPath */
+                        foreach ($categoryIdsByProduct[$product->getEntityId()] as $productCategoryId) {
+                            $category = $filteredCategories[$productCategoryId];
+                            $categoryPathIds[] = $category;
+
+                            $parentIds = explode(',', $category->getPathInStore());
+                            foreach ($parentIds as $parentCategoryId) {
+                                if (!isset($filteredCategories[$parentCategoryId])) {
+                                    continue;
+                                }
+                                $categoryPathIds[] = $filteredCategories[$parentCategoryId];
+                            }
+                        }
+                        foreach ($categoryPathIds as $category) {
                             $requestPath = $this->productUrlPathGenerator->getUrlPathWithSuffix(
                                 $product,
                                 $product->getStoreId(),
                                 $category
                             );
+                            if (isset($paths[$requestPath])) {
+                                continue;
+                            }
                             $paths[$requestPath] = [
                                 'request_path' => $requestPath,
                                 'target_path' => 'catalog/product/view/id/' . $product->getEntityId() . '/category/' . $category->getId(),
                                 'metadata' => '{"category_id":"' . $category->getId() . '"}',
                                 'category_id' => $category->getId(),
                             ];
-                            $parents = $category->getParentCategories();
-                            foreach ($parents as $parent) {
-                                /** @var string $requestPath */
-                                $requestPath = $this->productUrlPathGenerator->getUrlPathWithSuffix(
-                                    $product,
-                                    $product->getStoreId(),
-                                    $parent
-                                );
-                                if (isset($paths[$requestPath])) {
-                                    continue;
-                                }
-                                $paths[$requestPath] = [
-                                    'request_path' => $requestPath,
-                                    'target_path' => 'catalog/product/view/id/' . $product->getEntityId() . '/category/' . $parent->getId(),
-                                    'metadata' => '{"category_id":"' . $parent->getId() . '"}',
-                                    'category_id' => $parent->getId(),
-                                ];
-                            }
                         }
                     }
 
+                    /**  @var string[] $path */
                     foreach ($paths as $path) {
                         if (!isset($path['request_path'], $path['target_path'])) {
                             continue;
@@ -3716,121 +3845,106 @@ class Product extends JobImport
                         $targetPath = $path['target_path'];
                         /** @var string $metadata */
                         $metadata = $path['metadata'];
-
-                        /** @var string|null $rewriteEntity */
-                        $rewriteEntity = $connection->fetchRow(
-                            $connection->select()
-                                ->from($this->entitiesHelper->getTable('url_rewrite'))
-                                ->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)
-                                ->where('target_path = ?', $targetPath)
-                                ->where('entity_id = ?', $product->getEntityId())
-                                ->where('store_id = ?', $product->getStoreId())
-                        );
-
-                        /** @var false|mixed|string $rewriteId */
-                        $rewriteId = $rewriteEntity['url_rewrite_id'] ?? false;
-                        /** @var bool $isNeedUrlForOldUrl */
+                        /** @var string[] $rewriteIds */
+                        $rewriteIds = [];
+                        /** @var string[] $rewriteRequestPaths */
+                        $rewriteRequestPaths = [];
                         $isNeedUrlForOldUrl = false;
-                        if ($rewriteEntity) {
+
+                        if (isset($rewritesByTarget[$targetPath])) {
+                            $rewriteIds = array_column($rewritesByTarget[$targetPath], 'url_rewrite_id');
+                            $rewriteRequestPaths = array_column($rewritesByTarget[$targetPath], 'request_path');
+                        }
+
+                        if (!empty($rewriteIds)) {
                             try {
-                                if ($requestPath !== $rewriteEntity['request_path']) {
+                                if ([$requestPath] !== $rewriteRequestPaths) {
                                     $isNeedUrlForOldUrl = true;
                                     $connection->update(
-                                        $this->entitiesHelper->getTable('url_rewrite'),
+                                        $urlRewriteTable,
                                         [
                                             'target_path' => $requestPath,
-                                            'redirect_type' => 301,
+                                            'redirect_type' => OptionProvider::PERMANENT,
                                             'metadata' => $metadata,
                                         ],
-                                        ['url_rewrite_id = ?' => $rewriteEntity['url_rewrite_id']]
+                                        [
+                                            'store_id = ?' => $store['store_id'],
+                                            'entity_type = ?' => ProductUrlRewriteGenerator::ENTITY_TYPE,
+                                            'entity_id = ?' => $product->getEntityId(),
+                                            'request_path != ?' => $requestPath
+                                        ]
                                     );
                                 }
                             } catch (Exception $e) {
                                 $this->jobExecutor->setAdditionalMessage(
                                     __(
                                         sprintf(
-                                            'Tried to update url_rewrite_id %s : request path (%s) already exists for the store_id.',
-                                            $rewriteEntity['url_rewrite_id'],
-                                            $requestPath
+                                            'Url rewrite update failed : request path "%s" already exists for the store_id %s.',
+                                            $requestPath,
+                                            $store['store_id']
                                         )
                                     )
                                 );
                             }
                         }
 
-                        if (!$rewriteEntity || $isNeedUrlForOldUrl) {
-                            /** @var array $data */
+                        if (empty($rewriteIds) || $isNeedUrlForOldUrl) {
                             $data = [
-                                'entity_type' => ProductUrlRewriteGenerator::ENTITY_TYPE,
-                                'entity_id' => $product->getEntityId(),
-                                'request_path' => $requestPath,
-                                'target_path' => $targetPath,
-                                'redirect_type' => 0,
-                                'store_id' => $product->getStoreId(),
-                                'is_autogenerated' => 1,
-                                'metadata' => $metadata,
+                                UrlRewrite::ENTITY_TYPE => ProductUrlRewriteGenerator::ENTITY_TYPE,
+                                UrlRewrite::ENTITY_ID => $product->getEntityId(),
+                                UrlRewrite::REQUEST_PATH => $requestPath,
+                                UrlRewrite::TARGET_PATH => $targetPath,
+                                UrlRewrite::REDIRECT_TYPE => 0,
+                                UrlRewrite::STORE_ID => $product->getStoreId(),
+                                UrlRewrite::IS_AUTOGENERATED => 1,
+                                UrlRewrite::METADATA => $metadata,
                             ];
 
-                            $connection->insertOnDuplicate(
-                                $this->entitiesHelper->getTable('url_rewrite'),
-                                $data,
-                                array_keys($data)
-                            );
+                            $connection->insertOnDuplicate($urlRewriteTable, $data);
 
                             if ($isCategoryUsedInProductUrl && $path['category_id']) {
-                                /** @var int $rewriteId */
-                                $rewriteId = $connection->fetchOne(
+                                $urlRewriteForCategoryLink = $connection->fetchAll(
                                     $connection->select()
-                                        ->from($this->entitiesHelper->getTable('url_rewrite'), ['url_rewrite_id'])
+                                        ->from($urlRewriteTable, ['url_rewrite_id'])
                                         ->where('entity_type = ?', ProductUrlRewriteGenerator::ENTITY_TYPE)
                                         ->where('target_path = ?', $targetPath)
                                         ->where('entity_id = ?', $product->getEntityId())
                                         ->where('store_id = ?', $product->getStoreId())
                                 );
+                                $rewriteIds = array_column($urlRewriteForCategoryLink, 'url_rewrite_id');
                             }
 
+                            $whereConditions = [
+                                'store_id = ?' => $product->getStoreId(),
+                                'entity_id = ?' => $product->getEntityId(),
+                                'redirect_type = ?' => OptionProvider::PERMANENT,
+                            ];
                             if (isset($metadata)) {
-                                $connection->update(
-                                    $this->entitiesHelper->getTable('url_rewrite'),
-                                    ['target_path' => $requestPath],
-                                    [
-                                        'store_id = ?' => $product->getStoreId(),
-                                        'entity_id = ?' => $product->getEntityId(),
-                                        'redirect_type = ?' => 301,
-                                        'metadata = ?' => $metadata,
-                                    ]
-                                );
+                                $whereConditions['metadata = ?'] = $metadata;
                             } else {
-                                $connection->update(
-                                    $this->entitiesHelper->getTable('url_rewrite'),
-                                    ['target_path' => $requestPath],
-                                    [
-                                        'store_id = ?' => $product->getStoreId(),
-                                        'entity_id = ?' => $product->getEntityId(),
-                                        'redirect_type = ?' => 301,
-                                        'metadata IS NULL',
-                                    ]
-                                );
+                                $whereConditions[] = 'metadata IS NULL';
                             }
+                            $connection->update(
+                                $urlRewriteTable,
+                                ['target_path' => $requestPath],
+                                $whereConditions
+                            );
                         }
 
-                        if ($isCategoryUsedInProductUrl && $rewriteId && $path['category_id']) {
-                            $data = [
-                                'url_rewrite_id' => $rewriteId,
-                                'category_id' => $path['category_id'],
-                                'product_id' => $product->getEntityId(),
-                            ];
-                            $connection->delete(
-                                $this->entitiesHelper->getTable('catalog_url_rewrite_product_category'),
-                                ['url_rewrite_id = ?' => $rewriteId]
-                            );
-                            $connection->insertOnDuplicate(
-                                $this->entitiesHelper->getTable('catalog_url_rewrite_product_category'),
-                                $data,
-                                array_keys($data)
-                            );
+                        if ($isCategoryUsedInProductUrl && $rewriteIds && $path['category_id']) {
+                            foreach ($rewriteIds as $rewriteId) {
+                                $productCategoryToInsert[] = [
+                                    'url_rewrite_id' => $rewriteId,
+                                    'category_id' => $path['category_id'],
+                                    'product_id' => $product->getEntityId(),
+                                ];
+                            }
                         }
                     }
+                }
+
+                if (!empty($productCategoryToInsert)) {
+                    $connection->insertOnDuplicate($catalogUrlRewriteTable, $productCategoryToInsert);
                 }
             }
         }
@@ -3878,6 +3992,7 @@ class Product extends JobImport
         $data = [
             $columnIdentifier => '_entity_id',
             'sku'             => 'identifier',
+            '_type_id'        => '_type_id',
         ];
 
         /** @var mixed[] $stores */
@@ -3953,6 +4068,13 @@ class Product extends JobImport
         /** @var string[] $medias */
         $medias = [];
 
+        $childOnlyImages = $this->configHelper->getMediaImportGalleryColumns(
+            [ConfigHelper::PRODUCT_IMAGE_TYPE_CHILD]
+        );
+        $parentOnlyImages = $this->configHelper->getMediaImportGalleryColumns(
+            [ConfigHelper::PRODUCT_IMAGE_TYPE_PARENT]
+        );
+
         /** @var array $row */
         while (($row = $query->fetch())) {
             /** @var int $positionCounter */
@@ -3969,6 +4091,14 @@ class Product extends JobImport
                 }
 
                 if (!$row[$image]) {
+                    continue;
+                }
+
+                if (in_array($row['_type_id'], ['simple', 'virtual']) && in_array($image, $parentOnlyImages)) {
+                    continue;
+                }
+
+                if (in_array($row['_type_id'], ['configurable', 'grouped', 'bundle']) && in_array($image, $childOnlyImages)) {
                     continue;
                 }
 
@@ -4200,6 +4330,11 @@ class Product extends JobImport
      */
     public function cleanCache()
     {
+        if ($this->getFamily() != $this->getLastFamily()) {
+            $this->jobExecutor->setMessage(__('Waiting for last family to clear cache'), $this->logger);
+            return;
+        }
+
         /** @var string $configurations */
         $configurations = $this->configHelper->getCacheTypeProduct();
 
@@ -4233,6 +4368,11 @@ class Product extends JobImport
      */
     public function refreshIndex()
     {
+        if ($this->getFamily() != $this->getLastFamily()) {
+            $this->jobExecutor->setMessage(__('Waiting for last family to refresh index'), $this->logger);
+            return;
+        }
+
         /** @var string $configurations */
         $configurations = $this->configHelper->getIndexProduct();
 
@@ -4356,24 +4496,26 @@ class Product extends JobImport
      *
      * @return array
      */
-    public function getFamiliesToImport()
+    public function getFamiliesToImport(): array
     {
         if (!$this->akeneoClient) {
-            $this->akeneoClient = $this->getAkeneoClient();
+            $this->akeneoClient = $this->jobExecutor->getAkeneoClient();
             if (!$this->akeneoClient) {
                 return [];
             }
         }
-        /** @var string[] $families */
-        $families = [];
-        /** @var string[] $familiesIn */
-        $familiesIn = [];
-        /** @var string|int $paginationSize */
+
+        $mode = $this->configHelper->getFilterMode();
+
+        if ($mode == Mode::STANDARD) {
+            $families = $this->configHelper->getFamiliesFilter();
+            return explode(',', $this->configHelper->getFamiliesFilter() ?? '');
+        }
+
+        $families = $familiesIn = [];
         $paginationSize = $this->configHelper->getPaginationSize();
-        /** @var string[] $apiFamilies */
         $apiFamilies = $this->akeneoClient->getFamilyApi()->all($paginationSize);
 
-        /** @var mixed[] $family */
         foreach ($apiFamilies as $family) {
             if (!isset($family['code'])) {
                 continue;
@@ -4382,10 +4524,11 @@ class Product extends JobImport
         }
 
         // If we are in serenity mode, place the mapped grouped families to the end of the imports
-        /** @var string $edition */
         $edition = $this->configHelper->getEdition();
-        if ($edition === Edition::SERENITY || $edition === Edition::GROWTH || $edition === Edition::SEVEN || $edition === Edition::GREATER_OR_FIVE) {
-            /** @var string[] $groupedFamiliesToImport */
+        if ($edition === Edition::SERENITY
+            || $edition === Edition::GROWTH
+            || $edition === Edition::SEVEN
+            || $edition === Edition::GREATER_OR_FIVE) {
             $groupedFamiliesToImport = $this->configHelper->getGroupedFamiliesToImport();
             /**
              * @var int $key
@@ -4399,14 +4542,11 @@ class Product extends JobImport
             }
         }
 
-        /** @var string $mode */
-        $mode = $this->configHelper->getFilterMode();
         if ($mode == Mode::ADVANCED) {
-            /** @var string[] $filters */
             $advancedFilters = $this->configHelper->getAdvancedFilters();
             if (isset($advancedFilters['search']['family'])) {
                 foreach ($advancedFilters['search']['family'] as $key => $familyFilter) {
-                    if (isset($familyFilter['operator']) && $familyFilter['operator'] == 'NOT IN') {
+                    if (isset($familyFilter['operator']) && $familyFilter['operator'] === 'NOT IN') {
                         foreach ($familyFilter['value'] as $familyToRemove) {
                             if (($familyKey = array_search($familyToRemove, $families)) !== false) {
                                 unset($families[$familyKey]);
@@ -4422,22 +4562,8 @@ class Product extends JobImport
                 }
             }
         }
-        if ($mode == Mode::STANDARD) {
-            /** @var mixed $filter */
-            $familiesFilter = $this->configHelper->getFamiliesFilter();
-            if ($familiesFilter) {
-                $familiesFilter = explode(',', $familiesFilter ?? '');
-                foreach ($familiesFilter as $familyFilter) {
-                    if (($key = array_search($familyFilter, $families)) !== false) {
-                        unset($families[$key]);
-                    }
-                }
-            }
-        }
 
-        $families = array_values($families);
-
-        return $familiesIn ?: $families;
+        return $familiesIn ?: array_values($families);
     }
 
     /**
@@ -4462,6 +4588,54 @@ class Product extends JobImport
     public function getFamily()
     {
         return $this->family;
+    }
+
+    /**
+     * Get first family to import
+     *
+     * @return string
+     */
+    public function getFirstFamily()
+    {
+        return $this->firstFamily;
+    }
+
+    /**
+     * Get last family to import
+     *
+     * @return string
+     */
+    public function getLastFamily()
+    {
+        return $this->lastFamily;
+    }
+
+    /**
+     * Set product import first family
+     *
+     * @param string $family
+     *
+     * @return Import
+     */
+    public function setFirstFamily($family)
+    {
+        $this->firstFamily = $family;
+
+        return $this;
+    }
+
+    /**
+     * Set product import last family
+     *
+     * @param string $family
+     *
+     * @return Import
+     */
+    public function setLastFamily($family)
+    {
+        $this->lastFamily = $family;
+
+        return $this;
     }
 
     /**
@@ -4608,8 +4782,8 @@ class Product extends JobImport
                         ['a' => $tmpTable],
                         $columnsForMapping
                     )->where(
-                        'a._type_id = ?',
-                        $type
+                        'a._type_id IN (?)',
+                        $type === 'simple' ? $this->allowedTypeId : [$type]
                     );
 
                     /** @var Zend_Db_Statement_Pdo $query */
@@ -4624,10 +4798,8 @@ class Product extends JobImport
                             ) {
                                 /** @var int $status */
                                 $status = 2;
-                                if ((isset($row[$attributeCode])
-                                     && $row[$attributeCode])
-                                    || (isset($row[$attributeCodeScopable])
-                                        && $row[$attributeCodeScopable])
+                                if ((isset($row[$attributeCode]) && $row[$attributeCode])
+                                    || (isset($row[$attributeCodeScopable]) && $row[$attributeCodeScopable])
                                 ) {
                                     $status = 1;
                                 }
@@ -4751,6 +4923,10 @@ class Product extends JobImport
                         . $configurationConfigurable
                         . ')'
                     );
+
+                    if(($key = array_search($column, $this->excludedColumns)) !== false) {
+                        unset($this->excludedColumns[$key]);
+                    }
                 }
             }
         }
@@ -4861,8 +5037,8 @@ class Product extends JobImport
         $visibilityForSimple = $this->getVisibilityAttribute('simple');
         $visibilityForConfigurable = $this->getVisibilityAttribute('configurable');
 
-        $visibilityForSimpleAttributeExists = $this->isAttributeExists($visibilityForSimple);
-        $visibilityForConfigurableAttributeExists = $this->isAttributeExists($visibilityForConfigurable);
+        $visibilityForSimpleAttributeExists = $visibilityForSimple && $this->isAttributeExists($visibilityForSimple);
+        $visibilityForConfigurableAttributeExists = $visibilityForConfigurable && $this->isAttributeExists($visibilityForConfigurable);
 
         // Global
         $visibilityColumnResult = [
@@ -4953,5 +5129,32 @@ class Product extends JobImport
         }
 
         return $visibilityColumnResult;
+    }
+
+    /**
+     * If product has no name in Akeneo, give it an empty string name
+     */
+    protected function handleNoName(array $product): array
+    {
+        if (array_key_exists(ProductInterface::NAME, $product['values'])) {
+            return $product;
+        }
+
+        if ($this->defaultNameValue === null) {
+            try {
+                $attribute = $this->akeneoClient->getAttributeApi()->get(ProductInterface::NAME);
+                $this->defaultNameValue = [
+                    'locale' => ($attribute['localizable'] ?? false) ? $this->storeHelper->getAdminLang() : null,
+                    'scope' => ($attribute['scopable'] ?? false) ? $this->configHelper->getAdminDefaultChannel() : null,
+                    'data' => '',
+                ];
+            } catch (Exception) {
+                $this->defaultNameValue = ['locale' => null, 'scope' => null, 'data' => ''];
+            }
+        }
+
+        $product['values'][ProductInterface::NAME][0] = $this->defaultNameValue;
+
+        return $product;
     }
 }

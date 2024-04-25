@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Helper\Import;
 
+use Akeneo\Connector\App\ResourceConnection;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Model\Source\Edition;
+use Akeneo\Connector\Model\Source\Engine;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Api\ProductApiInterface;
 use Akeneo\Pim\ApiClient\Api\ProductUuidApiInterface;
@@ -16,7 +18,6 @@ use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Framework\App\DeploymentConfig;
-use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Config\ConfigOptionsListConstants;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Ddl\Table;
@@ -295,7 +296,11 @@ class Entities
             'Is New'
         );
 
-        $table->setOption('type', 'MYISAM');
+        if ($this->configHelper->getStorageEngine() === Engine::STORAGE_ENGINE_INNODB) {
+            $table->setOption('row_format', 'dynamic');
+        } else {
+            $table->setOption('type', 'MYISAM');
+        }
 
         $this->connection->createTable($table);
 
@@ -593,7 +598,7 @@ class Entities
             /** @var bool $rowIdExists */
             $rowIdExists = $this->rowIdColumnExists($table);
 
-            if ($rowIdExists && $entityTable === $this->getTablePrefix() . 'catalog_product_entity') {
+            if ($rowIdExists && $entityTable === 'catalog_product_entity') {
                 /** @var Select $select */
                 $select = $connection->select()->from(
                     $tableName,
@@ -604,7 +609,7 @@ class Entities
                     ]
                 );
                 $this->addJoinForContentStaging($select, [$identifier => 'row_id']);
-            } elseif ($rowIdExists && $entityTable === $this->getTablePrefix() . 'catalog_category_entity') {
+            } elseif ($rowIdExists && $entityTable === 'catalog_category_entity') {
                 /** @var Select $select */
                 $select = $connection->select()->from(
                     $tableName,
@@ -985,7 +990,7 @@ class Entities
          * (they are not yet in catalog_category_entity)
          */
         $select->joinLeft(
-            ['p' => 'catalog_category_entity'],
+            ['p' => $this->getTable('catalog_category_entity')],
             '_entity_id = p.entity_id',
             $cols
         )
@@ -993,7 +998,7 @@ class Entities
              * retrieve all the staging update for the givens entities. We use "join left" to get the original entity
              */
             ->joinLeft(
-                ['s' => 'staging_update'],
+                ['s' => $this->getTable('staging_update')],
                 'p.created_in = s.id',
                 []
             );

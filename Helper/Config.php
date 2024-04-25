@@ -138,6 +138,12 @@ class Config
      */
     public const PRODUCTS_FILTERS_FAMILIES = 'akeneo_connector/products_filters/families';
     /**
+     * Product filters families config path
+     *
+     * @var string PRODUCTS_FILTERS_INCLUDED_FAMILIES
+     */
+    public const PRODUCTS_FILTERS_INCLUDED_FAMILIES = 'akeneo_connector/products_filters/included_families';
+    /**
      * Product filters updated mode config path
      *
      * @var string PRODUCTS_FILTERS_UPDATED_MODE
@@ -215,6 +221,12 @@ class Config
      * @var string PRODUCTS_CATEGORY_CATEGORIES
      */
     public const PRODUCTS_CATEGORY_CATEGORIES = 'akeneo_connector/category/categories';
+    /**
+     * Categories to import config path
+     *
+     * @var string PRODUCTS_CATEGORY_INCLUDED_CATEGORIES
+     */
+    public const PRODUCTS_CATEGORY_INCLUDED_CATEGORIES = 'akeneo_connector/category/included_categories';
     /**
      * Categories does override content staging
      *
@@ -552,6 +564,11 @@ class Config
      */
     public const EMAIL_JOB_REPORT_FROM = 'trans_email/ident_general/email';
     /**
+     * Storage engine to use with temporary tables
+     */
+    protected const TABLE_STORAGE_ENGINE = 'akeneo_connector/akeneo_api/storage_engine';
+
+    /**
      * This variable contains a Encryptor
      *
      * @var Encryptor $encryptor
@@ -605,6 +622,12 @@ class Config
      * @var ScopeConfigInterface $scopeConfig
      */
     protected $scopeConfig;
+
+    public const PRODUCT_IMAGE_TYPE_CHILD = 'child';
+
+    public const PRODUCT_IMAGE_TYPE_PARENT = 'parent';
+
+    public const PRODUCT_IMAGE_TYPE_ALL = 'all';
 
     /**
      * Config constructor
@@ -913,13 +936,23 @@ class Config
     }
 
     /**
-     * Retrieve the families to filter the products on
+     * Retrieve the excluded families to filter the products on
+     *
+     * @return string
+     */
+    public function getFamiliesExcludedFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_FAMILIES);
+    }
+
+    /**
+     * Retrieve the included families to filter the products on
      *
      * @return string
      */
     public function getFamiliesFilter()
     {
-        return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_FAMILIES);
+        return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_INCLUDED_FAMILIES);
     }
 
     /**
@@ -981,9 +1014,19 @@ class Config
      *
      * @return string
      */
-    public function getCategoriesFilter()
+    public function getCategoriesExcludedFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_CATEGORIES);
+    }
+
+    /**
+     * Retrieve the categories to filter the category import
+     *
+     * @return string
+     */
+    public function getCategoriesFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_INCLUDED_CATEGORIES);
     }
 
     /**
@@ -1404,9 +1447,17 @@ class Config
      *
      * @return array
      */
-    public function getMediaImportGalleryColumns()
+    public function getMediaImportGalleryColumns(?array $types = null): array
     {
-        /** @var mixed[] $images */
+        if ($types === null) {
+            $types = [
+                self::PRODUCT_IMAGE_TYPE_CHILD,
+                self::PRODUCT_IMAGE_TYPE_PARENT,
+                self::PRODUCT_IMAGE_TYPE_ALL,
+            ];
+        }
+
+        /** @var array $images */
         $images = [];
         /** @var string $config */
         $config = $this->scopeConfig->getValue(self::PRODUCT_MEDIA_GALLERY);
@@ -1424,10 +1475,15 @@ class Config
             if (!isset($image['attribute']) || $image['attribute'] === '') {
                 continue;
             }
-            $images[] = $image['attribute'];
+
+            $imageType = $image['type'] ?? self::PRODUCT_IMAGE_TYPE_ALL;
+
+            if (in_array($imageType, $types)) {
+                $images[] = $image['attribute'];
+            }
         }
 
-        return $images;
+        return array_unique($images);
     }
 
     /**
@@ -1618,17 +1674,17 @@ class Config
 
     public function getProductDefaultVisibility(): string
     {
-        return $this->scopeConfig->getValue(self::PRODUCT_DEFAULT_VISIBILITY);
+        return (string)$this->scopeConfig->getValue(self::PRODUCT_DEFAULT_VISIBILITY);
     }
 
     public function getProductVisibilitySimple(): string
     {
-        return $this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_SIMPLE);
+        return (string)$this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_SIMPLE);
     }
 
     public function getProductVisibilityConfigurable(): string
     {
-        return $this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_CONFIGURABLE);
+        return (string)$this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_CONFIGURABLE);
     }
 
     /**
@@ -1965,4 +2021,10 @@ class Config
             ScopeInterface::SCOPE_STORE
         );
     }
+
+    public function getStorageEngine(): string
+    {
+        return (string)$this->scopeConfig->getValue(self::TABLE_STORAGE_ENGINE);
+    }
+
 }
