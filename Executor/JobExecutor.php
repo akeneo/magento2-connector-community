@@ -357,7 +357,7 @@ class JobExecutor implements JobExecutorInterface
                     $isError = true;
                 }
 
-                $this->lastSuccessExecutedDate[$this->getCurrentJobClass()->getFamily()] = date('y-m-d H:i:s');
+                $this->lastSuccessExecutedDate[$this->getCurrentJobClass()->getFamily()] = date('Y-m-d H:i:s');
 
                 // If last family, force proceed with after run steps
                 if (array_slice($productFamiliesToImport, -1)[0] === $family
