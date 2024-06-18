@@ -314,12 +314,6 @@ class Product extends JobImport
      * @var CollectionFactory $categoryCollectionFactory
      */
     protected $categoryCollectionFactory;
-    /**
-     * The default name value when empty
-     *
-     * @var ?array $defaultNameValue
-     */
-    protected $defaultNameValue = null;
 
     /**
      * Product constructor.
@@ -783,8 +777,6 @@ class Product extends JobImport
                         $product['values'][$metricsConcatSetting][$key]['data']['amount'] .= ' ' . $metricSymbols[$unit];
                     }
                 }
-
-                $product = $this->handleNoName($product);
 
                 /** @var bool $result */
                 $result = $this->entitiesHelper->insertDataFromApi(
@@ -2456,6 +2448,8 @@ class Product extends JobImport
                 AdapterInterface::INSERT_ON_DUPLICATE
             );
         }
+
+        $this->handleNoName();
 
         if ($this->configHelper->isAdvancedLogActivated()) {
             $this->logImportedEntities($this->logger, true, 'identifier');
@@ -5132,29 +5126,28 @@ class Product extends JobImport
     }
 
     /**
-     * If product has no name in Akeneo, give it an empty string name
+     * Set default product name for default if empty
      */
-    protected function handleNoName(array $product): array
+    protected function handleNoName(): void
     {
-        if (array_key_exists(ProductInterface::NAME, $product['values'])) {
-            return $product;
+        $connection = $this->entitiesHelper->getConnection();
+
+        $columnIdentifier = $this->entitiesHelper->getColumnIdentifier(
+            $this->entitiesHelper->getTable('catalog_product_entity')
+        );
+
+        $attribute = $this->eavConfig->getAttribute('catalog_product', ProductInterface::NAME);
+        if (!$attribute) {
+            return;
         }
 
-        if ($this->defaultNameValue === null) {
-            try {
-                $attribute = $this->akeneoClient->getAttributeApi()->get(ProductInterface::NAME);
-                $this->defaultNameValue = [
-                    'locale' => ($attribute['localizable'] ?? false) ? $this->storeHelper->getAdminLang() : null,
-                    'scope' => ($attribute['scopable'] ?? false) ? $this->configHelper->getAdminDefaultChannel() : null,
-                    'data' => '',
-                ];
-            } catch (Exception) {
-                $this->defaultNameValue = ['locale' => null, 'scope' => null, 'data' => ''];
-            }
-        }
+        $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
+        $entityTable = $this->entitiesHelper->getTable('catalog_product_entity');
+        $entityVarcharTable = $this->entitiesHelper->getTable('catalog_product_entity_varchar');
 
-        $product['values'][ProductInterface::NAME][0] = $this->defaultNameValue;
-
-        return $product;
+        $connection->query('INSERT IGNORE INTO `' . $entityVarcharTable . '`
+            (`attribute_id`, `store_id`, `value`, `' . $columnIdentifier . '`)
+            SELECT ' . $attribute->getId() . ', 0, NULL, `' . $columnIdentifier . '` FROM `' . $entityTable . '` e
+            INNER JOIN `' . $tmpTable . '` t ON e.`entity_id` = t.`_entity_id`');
     }
 }
