@@ -487,3 +487,6 @@
 
 ### Version 104.3.7 :
 * PGTO-430: Allow to assign an image to the parent or child only
+
+### Version 104.3.8 :
+* PGTO-433: Product default name logic

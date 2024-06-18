@@ -14,7 +14,7 @@
     "nyholm/psr7": "^1.5"
   },
   "type": "magento2-module",
-  "version": "104.3.7",
+  "version": "104.3.8",
   "license": [
     "OSL-3.0",
     "AFL-3.0"
