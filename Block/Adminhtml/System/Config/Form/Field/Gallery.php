@@ -1,33 +1,57 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field;
 
+use Akeneo\Connector\Helper\Config;
+use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray;
+use Magento\Framework\Data\Form\Element\Factory as ElementFactory;
 
-/**
- * Class Gallery
- *
- * @category  Class
- * @package   Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field
- * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
- * @link      https://www.dnd.fr/
- */
 class Gallery extends AbstractFieldArray
 {
-    /**
-     * Initialise form fields
-     *
-     * @return void
-     */
-    protected function _construct()
+    public function __construct(
+        private ElementFactory $elementFactory,
+        Context $context,
+        array $data = []
+    ) {
+        parent::__construct($context, $data);
+    }
+
+    protected function _construct(): void
     {
         $this->addColumn('attribute', ['label' => __('Akeneo Attribute')]);
+        $this->addColumn('type', ['label' => __('Assign to')]);
         $this->addColumn('position', ['label' => __('Position')]);
-        $this->_addAfter       = false;
+        $this->_addAfter = false;
         $this->_addButtonLabel = __('Add');
 
         parent::_construct();
+    }
+
+    public function renderCellTemplate($columnName): string
+    {
+        if ($columnName !== 'type') {
+            return parent::renderCellTemplate($columnName);
+        }
+
+        $options = [
+            Config::PRODUCT_IMAGE_TYPE_ALL => __('All'),
+            Config::PRODUCT_IMAGE_TYPE_PARENT => __('Parent'),
+            Config::PRODUCT_IMAGE_TYPE_CHILD => __('Child'),
+        ];
+        $element = $this->elementFactory->create('select');
+        $element->setForm(
+            $this->getForm()
+        )->setName(
+            $this->_getCellInputElementName($columnName)
+        )->setHtmlId(
+            $this->_getCellInputElementId('<%- _id %>', $columnName)
+        )->setValues(
+            $options
+        );
+
+        return str_replace("\n", '', $element->getElementHtml());
     }
 }

@@ -1,0 +1,79 @@
+{
+    "akeneo_connector_entities": {
+        "column": {
+            "id": true,
+            "import": true,
+            "code": true,
+            "entity_id": true,
+            "created_at": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "AKENEO_CONNECTOR_ENTITIES_IMPORT_CODE_ENTITY_ID": true
+        }
+    },
+    "akeneo_connector_family_attribute_relations": {
+        "column": {
+            "id": true,
+            "family_entity_id": true,
+            "attribute_code": true,
+            "created_at": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    },
+    "akeneo_connector_import_log": {
+        "column": {
+            "log_id": true,
+            "identifier": true,
+            "code": true,
+            "name": true,
+            "status": true,
+            "created_at": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    },
+    "akeneo_connector_import_log_step": {
+        "column": {
+            "step_id": true,
+            "log_id": true,
+            "identifier": true,
+            "number": true,
+            "method": true,
+            "message": true,
+            "continue": true,
+            "status": true,
+            "created_at": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "FK_67D13951C1CAB0735DCC5949E04964BD": true
+        }
+    },
+    "eav_attribute_option_value": {
+        "constraint": {
+            "EAV_ATTRIBUTE_OPTION_VALUE_OPTION_ID_STORE_ID": true
+        }
+    },
+    "akeneo_connector_job": {
+        "column": {
+            "entity_id": true,
+            "code": true,
+            "status": true,
+            "scheduled_at": true,
+            "last_executed_date": true,
+            "last_success_date": true,
+            "job_class": true,
+            "name": true,
+            "position": true,
+            "last_success_executed_date": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    },
+    "akeneo_connector_product_model": []
+}

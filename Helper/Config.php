@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Helper;
 
 use Exception;
@@ -26,13 +28,9 @@ use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
 /**
- * Class Config
- *
- * @category  Class
- * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Config
@@ -140,6 +138,12 @@ class Config
      */
     public const PRODUCTS_FILTERS_FAMILIES = 'akeneo_connector/products_filters/families';
     /**
+     * Product filters families config path
+     *
+     * @var string PRODUCTS_FILTERS_INCLUDED_FAMILIES
+     */
+    public const PRODUCTS_FILTERS_INCLUDED_FAMILIES = 'akeneo_connector/products_filters/included_families';
+    /**
      * Product filters updated mode config path
      *
      * @var string PRODUCTS_FILTERS_UPDATED_MODE
@@ -218,17 +222,51 @@ class Config
      */
     public const PRODUCTS_CATEGORY_CATEGORIES = 'akeneo_connector/category/categories';
     /**
+     * Categories to import config path
+     *
+     * @var string PRODUCTS_CATEGORY_INCLUDED_CATEGORIES
+     */
+    public const PRODUCTS_CATEGORY_INCLUDED_CATEGORIES = 'akeneo_connector/category/included_categories';
+    /**
      * Categories does override content staging
      *
      * @var string PRODUCTS_CATEGORY_OVERRIDE_CONTENT_STAGING
      */
     public const PRODUCTS_CATEGORY_OVERRIDE_CONTENT_STAGING = 'akeneo_connector/category/override_content_staging';
     /**
+     * Product visibility attribute option enabled path
+     *
+     * @var string PRODUCT_VISIBILITY_ENABLED
+     */
+    public const PRODUCT_VISIBILITY_ENABLED = 'akeneo_connector/product/visibility_enabled';
+    /**
+     * Product default visibility attribute path
+     *
+     * @var string PRODUCT_DEFAULT_VISIBILITY
+     */
+    public const PRODUCT_DEFAULT_VISIBILITY = 'akeneo_connector/product/default_visibility';
+    /**
+     * Simple product visibility path
+     *
+     * @var string PRODUCT_VISIBILITY_SIMPLE
+     */
+    public const PRODUCT_VISIBILITY_SIMPLE = 'akeneo_connector/product/visibility_simple';
+    /**
+     * Configuratble product visibility  path
+     *
+     * @var string PRODUCT_VISIBILITY_CONFIGURABLE
+     */
+    public const PRODUCT_VISIBILITY_CONFIGURABLE = 'akeneo_connector/product/visibility_configurable';
+    /**
      * Attribute mapping config path
      *
      * @var string PRODUCT_ATTRIBUTE_MAPPING
      */
     public const PRODUCT_ATTRIBUTE_MAPPING = 'akeneo_connector/product/attribute_mapping';
+    /**
+     * Akeneo attribute code for Magento SKU
+     */
+    public const PRODUCT_AKENEO_ATTRIBUTE_CODE_FOR_SKU = 'akeneo_connector/product/akeneo_attribute_code_for_sku';
     /**
      * Website attribute config path
      *
@@ -240,7 +278,7 @@ class Config
      *
      * @var string PRODUCT_MAPPING_ATTRIBUTE
      */
-    const PRODUCT_MAPPING_ATTRIBUTE = 'akeneo_connector/product/product_mapping_attribute';
+    public const PRODUCT_MAPPING_ATTRIBUTE = 'akeneo_connector/product/product_mapping_attribute';
     /**
      * Configurable attribute mapping config path
      *
@@ -302,11 +340,33 @@ class Config
      */
     public const PRODUCT_AKENEO_MASTER = 'akeneo_connector/product/akeneo_master';
     /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_ASSOCIATION_RELATED
+     */
+    public const PRODUCT_ASSOCIATION_RELATED = 'akeneo_connector/product/association_related';
+    /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_ASSOCIATION_UPSELL
+     */
+    public const PRODUCT_ASSOCIATION_UPSELL = 'akeneo_connector/product/association_upsell';
+    /**
+     * Akeneo master of staging content flag config path
+     *
+     * @var string PRODUCT_AKENEO_MASTER
+     */
+    public const PRODUCT_ASSOCIATION_CROSSELL = 'akeneo_connector/product/association_crossell';
+    /**
      * Attribute types mapping config path
      *
      * @var string ATTRIBUTE_TYPES
      */
     public const ATTRIBUTE_TYPES = 'akeneo_connector/attribute/types';
+    /**
+     * Attribute swatch types mapping config path
+     */
+    public const ATTRIBUTE_SWATCH_TYPES = 'akeneo_connector/attribute/types_swatch';
     /**
      * Attribute option code as admin label config path
      *
@@ -338,24 +398,6 @@ class Config
      */
     public const ATTRIBUTE_FILTERS_BY_CODE = 'akeneo_connector/filter_attribute/filter_attribute_code';
     /**
-     * Akeneo master of staging content flag config path
-     *
-     * @var string PRODUCT_ASSOCIATION_RELATED
-     */
-    public const PRODUCT_ASSOCIATION_RELATED = 'akeneo_connector/product/association_related';
-    /**
-     * Akeneo master of staging content flag config path
-     *
-     * @var string PRODUCT_ASSOCIATION_UPSELL
-     */
-    public const PRODUCT_ASSOCIATION_UPSELL = 'akeneo_connector/product/association_upsell';
-    /**
-     * Akeneo master of staging content flag config path
-     *
-     * @var string PRODUCT_AKENEO_MASTER
-     */
-    public const PRODUCT_ASSOCIATION_CROSSELL = 'akeneo_connector/product/association_crossell';
-    /**
      * Product activation flag config path
      *
      * @var string PRODUCT_ACTIVATION
@@ -366,19 +408,31 @@ class Config
      *
      * @var string PRODUCT_STATUS_MODE
      */
-    const PRODUCT_STATUS_MODE = 'akeneo_connector/product/product_status_mode';
+    public const PRODUCT_STATUS_MODE = 'akeneo_connector/product/product_status_mode';
+    /**
+     * Attribute code for simple product statuses config path
+     *
+     * @var string ATTRIBUTE_CODE_FOR_SIMPLE_PRODUCT_STATUSES
+     */
+    public const ATTRIBUTE_CODE_FOR_SIMPLE_PRODUCT_STATUSES = 'akeneo_connector/product/attribute_code_for_simple_product_statuses';
+    /**
+     * Attribute code for configurable product statuses config path
+     *
+     * @var string ATTRIBUTE_CODE_FOR_CONFIGURABLE_PRODUCT_STATUSES
+     */
+    public const ATTRIBUTE_CODE_FOR_CONFIGURABLE_PRODUCT_STATUSES = 'akeneo_connector/product/attribute_code_for_configurable_product_statuses';
     /**
      * Enable simple products per website config path
      *
      * @var string ENABLE_SIMPLE_PRODUCTS_PER_WEBSITE
      */
-    const ENABLE_SIMPLE_PRODUCTS_PER_WEBSITE = 'akeneo_connector/product/enable_simple_products_per_website';
+    public const ENABLE_SIMPLE_PRODUCTS_PER_WEBSITE = 'akeneo_connector/product/enable_simple_products_per_website';
     /**
      * Default configurable product status config path
      *
      * @var string DEFAULT_CONFIGURABLE_PRODUCT_STATUS
      */
-    const DEFAULT_CONFIGURABLE_PRODUCT_STATUS = 'akeneo_connector/product/default_configurable_product_status';
+    public const DEFAULT_CONFIGURABLE_PRODUCT_STATUS = 'akeneo_connector/product/default_configurable_product_status';
     /**
      * Grouped product families mapping path
      *
@@ -484,25 +538,36 @@ class Config
      *
      * @var string EMAIL_JOB_REPORT_ENABLED
      */
-    const EMAIL_JOB_REPORT_ENABLED = 'akeneo_connector/advanced/email_job_report_enabled';
+    public const EMAIL_JOB_REPORT_ENABLED = 'akeneo_connector/advanced/email_job_report_enabled';
     /**
      * Email job report recicipient path
      *
      * @var string EMAIL_JOB_REPORT_RECIPIENT
      */
-    const EMAIL_JOB_REPORT_RECIPIENT = 'akeneo_connector/advanced/email_job_report_recipient';
+    public const EMAIL_JOB_REPORT_RECIPIENT = 'akeneo_connector/advanced/email_job_report_recipient';
+    /**
+     * Enable job grid auto reload path
+     *
+     * @var string EMAIL_JOB_REPORT_RECIPIENT
+     */
+    public const ENABLE_JOB_GRID_AUTO_RELOAD = 'akeneo_connector/advanced/enable_job_grid_auto_reload';
     /**
      * Email name job report from
      *
      * @var string EMAIL_JOB_REPORT_FROM_NAME
      */
-    const EMAIL_JOB_REPORT_FROM_NAME = 'trans_email/ident_general/name';
+    public const EMAIL_JOB_REPORT_FROM_NAME = 'trans_email/ident_general/name';
     /**
      * Email job report from
      *
      * @var string EMAIL_JOB_REPORT_FROM
      */
-    const EMAIL_JOB_REPORT_FROM = 'trans_email/ident_general/email';
+    public const EMAIL_JOB_REPORT_FROM = 'trans_email/ident_general/email';
+    /**
+     * Storage engine to use with temporary tables
+     */
+    protected const TABLE_STORAGE_ENGINE = 'akeneo_connector/akeneo_api/storage_engine';
+
     /**
      * This variable contains a Encryptor
      *
@@ -558,17 +623,23 @@ class Config
      */
     protected $scopeConfig;
 
+    public const PRODUCT_IMAGE_TYPE_CHILD = 'child';
+
+    public const PRODUCT_IMAGE_TYPE_PARENT = 'parent';
+
+    public const PRODUCT_IMAGE_TYPE_ALL = 'all';
+
     /**
      * Config constructor
      *
-     * @param Encryptor                     $encryptor
-     * @param Json                          $jsonSerializer
-     * @param EavConfig                     $eavConfig
-     * @param StoreManagerInterface         $storeManager
+     * @param Encryptor $encryptor
+     * @param Json $jsonSerializer
+     * @param EavConfig $eavConfig
+     * @param StoreManagerInterface $storeManager
      * @param CatalogInventoryConfiguration $catalogInventoryConfiguration
-     * @param Filesystem                    $filesystem
-     * @param MediaConfig                   $mediaConfig
-     * @param ScopeConfigInterface          $scopeConfig
+     * @param Filesystem $filesystem
+     * @param MediaConfig $mediaConfig
+     * @param ScopeConfigInterface $scopeConfig
      *
      * @throws FileSystemException
      */
@@ -582,14 +653,14 @@ class Config
         MediaConfig $mediaConfig,
         ScopeConfigInterface $scopeConfig
     ) {
-        $this->encryptor                     = $encryptor;
-        $this->jsonSerializer                = $jsonSerializer;
-        $this->eavConfig                     = $eavConfig;
-        $this->storeManager                  = $storeManager;
-        $this->mediaConfig                   = $mediaConfig;
+        $this->encryptor = $encryptor;
+        $this->jsonSerializer = $jsonSerializer;
+        $this->eavConfig = $eavConfig;
+        $this->storeManager = $storeManager;
+        $this->mediaConfig = $mediaConfig;
         $this->catalogInventoryConfiguration = $catalogInventoryConfiguration;
-        $this->mediaDirectory                = $filesystem->getDirectoryWrite(DirectoryList::MEDIA);
-        $this->scopeConfig                   = $scopeConfig;
+        $this->mediaDirectory = $filesystem->getDirectoryWrite(DirectoryList::MEDIA);
+        $this->scopeConfig = $scopeConfig;
     }
 
     /**
@@ -658,8 +729,12 @@ class Config
      */
     public function checkAkeneoApiCredentials()
     {
-        if (!$this->getAkeneoApiBaseUrl() || !$this->getAkeneoApiClientId() || !$this->getAkeneoApiClientSecret(
-            ) || !$this->getAkeneoApiPassword() || !$this->getAkeneoApiUsername()) {
+        if (!$this->getAkeneoApiBaseUrl()
+            || !$this->getAkeneoApiClientId()
+            || !$this->getAkeneoApiClientSecret()
+            || !$this->getAkeneoApiPassword()
+            || !$this->getAkeneoApiUsername()
+        ) {
             return false;
         }
 
@@ -681,7 +756,6 @@ class Config
      *
      * @return string
      * @see \Akeneo\Connector\Model\Source\Filters\Mode
-     *
      */
     public function getFilterMode()
     {
@@ -693,7 +767,6 @@ class Config
      *
      * @return string
      * @see \Akeneo\Connector\Model\Source\Filters\Completeness
-     *
      */
     public function getCompletenessTypeFilter()
     {
@@ -735,7 +808,6 @@ class Config
      *
      * @return string
      * @see \Akeneo\Connector\Model\Source\Filters\ModelCompleteness
-     *
      */
     public function getModelCompletenessTypeFilter()
     {
@@ -747,7 +819,6 @@ class Config
      *
      * @return string
      * @see \Akeneo\Connector\Model\Source\Filters\Status
-     *
      */
     public function getStatusFilter()
     {
@@ -865,13 +936,23 @@ class Config
     }
 
     /**
-     * Retrieve the families to filter the products on
+     * Retrieve the excluded families to filter the products on
+     *
+     * @return string
+     */
+    public function getFamiliesExcludedFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_FAMILIES);
+    }
+
+    /**
+     * Retrieve the included families to filter the products on
      *
      * @return string
      */
     public function getFamiliesFilter()
     {
-        return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_FAMILIES);
+        return $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_INCLUDED_FAMILIES);
     }
 
     /**
@@ -883,7 +964,7 @@ class Config
     {
         $filters = $this->scopeConfig->getValue(self::PRODUCTS_FILTERS_ADVANCED_FILTER);
 
-        return $this->jsonSerializer->unserialize($filters);
+        return !empty($filters) ? $this->jsonSerializer->unserialize($filters) : [];
     }
 
     /**
@@ -895,7 +976,7 @@ class Config
     {
         $filters = $this->scopeConfig->getValue(self::PRODUCTS_MODEL_FILTERS_ADVANCED_FILTER);
 
-        return $this->jsonSerializer->unserialize($filters);
+        return !empty($filters) ? $this->jsonSerializer->unserialize($filters) : [];
     }
 
     /**
@@ -933,9 +1014,19 @@ class Config
      *
      * @return string
      */
-    public function getCategoriesFilter()
+    public function getCategoriesExcludedFilter()
     {
         return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_CATEGORIES);
+    }
+
+    /**
+     * Retrieve the categories to filter the category import
+     *
+     * @return string
+     */
+    public function getCategoriesFilter()
+    {
+        return $this->scopeConfig->getValue(self::PRODUCTS_CATEGORY_INCLUDED_CATEGORIES);
     }
 
     /**
@@ -956,6 +1047,14 @@ class Config
     public function getAdminDefaultChannel()
     {
         return $this->scopeConfig->getValue(self::AKENEO_API_ADMIN_CHANNEL);
+    }
+
+    /**
+     * Retrieve the Akeneo attribute code for Magento SKU
+     */
+    public function getAkeneoAttributeCodeForSku(): ?string
+    {
+        return $this->scopeConfig->getValue(self::PRODUCT_AKENEO_ATTRIBUTE_CODE_FOR_SKU);
     }
 
     /**
@@ -986,7 +1085,6 @@ class Config
      *
      * @return mixed[]
      * @throws Exception
-     *
      */
     public function getWebsiteMapping($withDefault = true)
     {
@@ -997,7 +1095,7 @@ class Config
             /** @var string $adminChannel */
             $adminChannel = $this->getAdminDefaultChannel();
             if (empty($adminChannel)) {
-                throw new Exception(__('No channel found for Admin website channel configuration.'));
+                throw new Exception((string)__('No channel found for Admin website channel configuration.'));
             }
 
             $mapping[] = [
@@ -1019,6 +1117,14 @@ class Config
         }
 
         $mapping = array_merge($mapping, $websiteMapping);
+
+        foreach ($mapping as $map) {
+            if (!isset($map['channel'], $map['website'])) {
+                throw new Exception(
+                    (string)__('The website mapping is misconfigured, please check the "Website Mapping" config field.')
+                );
+            }
+        }
 
         return $mapping;
     }
@@ -1135,6 +1241,26 @@ class Config
     }
 
     /**
+     * Description getAttributeCodeForSimpleProductStatuses function
+     *
+     * @return string
+     */
+    public function getAttributeCodeForSimpleProductStatuses()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_CODE_FOR_SIMPLE_PRODUCT_STATUSES);
+    }
+
+    /**
+     * Description getAttributeCodeForConfigurableProductStatuses function
+     *
+     * @return string
+     */
+    public function getAttributeCodeForConfigurableProductStatuses()
+    {
+        return $this->scopeConfig->getValue(self::ATTRIBUTE_CODE_FOR_CONFIGURABLE_PRODUCT_STATUSES);
+    }
+
+    /**
      * Description getEnableSimpleProductsPerWebsite function
      *
      * @return string
@@ -1172,7 +1298,8 @@ class Config
         if (!$classes) {
             return $result;
         }
-        /** @var mixed[] $classes */
+
+        /** @var string[] $classes */
         $classes = $this->jsonSerializer->unserialize($classes);
         if (!is_array($classes)) {
             return $result;
@@ -1260,15 +1387,12 @@ class Config
      */
     public function getMediaImportImagesColumns()
     {
-        /** @var mixed[] $images */
         $images = [];
-        /** @var string $config */
         $config = $this->scopeConfig->getValue(self::PRODUCT_MEDIA_IMAGES);
         if (!$config) {
             return $images;
         }
 
-        /** @var mixed[] $media */
         $media = $this->jsonSerializer->unserialize($config);
         if (!$media) {
             return $images;
@@ -1323,9 +1447,17 @@ class Config
      *
      * @return array
      */
-    public function getMediaImportGalleryColumns($raw = false)
+    public function getMediaImportGalleryColumns(?array $types = null, $raw = false): array
     {
-        /** @var mixed[] $images */
+        if ($types === null) {
+            $types = [
+                self::PRODUCT_IMAGE_TYPE_CHILD,
+                self::PRODUCT_IMAGE_TYPE_PARENT,
+                self::PRODUCT_IMAGE_TYPE_ALL,
+            ];
+        }
+
+        /** @var array $images */
         $images = [];
         /** @var string $config */
         $config = $this->scopeConfig->getValue(self::PRODUCT_MEDIA_GALLERY);
@@ -1344,17 +1476,22 @@ class Config
                 continue;
             }
 
-            if ($raw) {
-                if(!isset($image['position'])) {
-                    $image['position'] = 0;
+            if(!isset($image['position'])) {
+                $image['position'] = 0;
+            }
+            
+            $imageType = $image['type'] ?? self::PRODUCT_IMAGE_TYPE_ALL;
+
+            if (in_array($imageType, $types)) {
+                if ($raw) {
+                  $images[] = $image;
+                } else {
+                  $images[] = $image['attribute'];
                 }
-                $images[] = $image;
-            } else {
-                $images[] = $image['attribute'];
             }
         }
 
-        return $images;
+        return array_unique($images);
     }
 
     /**
@@ -1421,7 +1558,7 @@ class Config
     /**
      * Get media full path
      *
-     * @param string      $fileName
+     * @param string $fileName
      * @param null|string $subDirectory
      *
      * @return string
@@ -1536,6 +1673,26 @@ class Config
         }
 
         return $loweredMatches;
+    }
+
+    public function isProductVisibilityEnabled(): bool
+    {
+        return $this->scopeConfig->isSetFlag(self::PRODUCT_VISIBILITY_ENABLED);
+    }
+
+    public function getProductDefaultVisibility(): string
+    {
+        return (string)$this->scopeConfig->getValue(self::PRODUCT_DEFAULT_VISIBILITY);
+    }
+
+    public function getProductVisibilitySimple(): string
+    {
+        return (string)$this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_SIMPLE);
+    }
+
+    public function getProductVisibilityConfigurable(): string
+    {
+        return (string)$this->scopeConfig->getValue(self::PRODUCT_VISIBILITY_CONFIGURABLE);
     }
 
     /**
@@ -1808,7 +1965,6 @@ class Config
         return $this->scopeConfig->getValue(self::INDEX_PRODUCT);
     }
 
-
     /**
      * Description getJobReportEnabled function
      *
@@ -1843,6 +1999,11 @@ class Config
         return $matches;
     }
 
+    public function getEnableJobGridAutoReload(): bool
+    {
+        return $this->scopeConfig->isSetFlag(self::ENABLE_JOB_GRID_AUTO_RELOAD, ScopeInterface::SCOPE_STORE);
+    }
+
     /**
      * Description getStoreName function
      *
@@ -1868,4 +2029,10 @@ class Config
             ScopeInterface::SCOPE_STORE
         );
     }
+
+    public function getStorageEngine(): string
+    {
+        return (string)$this->scopeConfig->getValue(self::TABLE_STORAGE_ENGINE);
+    }
+
 }

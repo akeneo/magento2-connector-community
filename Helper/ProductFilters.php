@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Helper;
 
 use Akeneo\Connector\Api\Data\JobInterface;
@@ -13,17 +15,14 @@ use Akeneo\Connector\Model\Source\Filters\Status;
 use Akeneo\Connector\Model\Source\Filters\Update;
 use Akeneo\Pim\ApiClient\Search\SearchBuilder;
 use Akeneo\Pim\ApiClient\Search\SearchBuilderFactory;
+use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 
 /**
- * Class ProductFilters
- *
- * @category  Class
- * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class ProductFilters
@@ -70,16 +69,21 @@ class ProductFilters
      * @var TimezoneInterface $timezone
      */
     protected $timezone;
+    /**
+     * Description $json field
+     *
+     * @var SerializerInterface $json
+     */
+    protected SerializerInterface $json;
 
     /**
-     * ProductFilters constructor
-     *
-     * @param ConfigHelper         $configHelper
-     * @param Store                $storeHelper
-     * @param Locales              $localesHelper
+     * @param Config $configHelper
+     * @param Store $storeHelper
+     * @param Locales $localesHelper
      * @param SearchBuilderFactory $searchBuilderFactory
-     * @param DateTime             $date
-     * @param TimezoneInterface    $timezone
+     * @param DateTime $date
+     * @param TimezoneInterface $timezone
+     * @param SerializerInterface $json
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -87,14 +91,16 @@ class ProductFilters
         LocalesHelper $localesHelper,
         SearchBuilderFactory $searchBuilderFactory,
         DateTime $date,
-        TimezoneInterface $timezone
+        TimezoneInterface $timezone,
+        SerializerInterface $json
     ) {
-        $this->configHelper         = $configHelper;
-        $this->storeHelper          = $storeHelper;
-        $this->localesHelper        = $localesHelper;
+        $this->configHelper = $configHelper;
+        $this->storeHelper = $storeHelper;
+        $this->localesHelper = $localesHelper;
         $this->searchBuilderFactory = $searchBuilderFactory;
-        $this->date                 = $date;
-        $this->timezone             = $timezone;
+        $this->date = $date;
+        $this->timezone = $timezone;
+        $this->json = $json;
     }
 
     /**
@@ -123,8 +129,6 @@ class ProductFilters
         $filters = [];
         /** @var mixed[] $search */
         $search = [];
-        /** @var  $productFilterAdded */
-        $productFilterAdded = false;
         /** @var string $mode */
         $mode = $this->configHelper->getFilterMode();
         if ($mode == Mode::ADVANCED) {
@@ -133,25 +137,16 @@ class ProductFilters
             // If product import gave a family, add it to the filter
             if ($productFamily) {
                 if (isset($advancedFilters['search']['family'])) {
-                    /**
-                     * @var int      $key
-                     * @var string[] $familyFilter
-                     */
-                    foreach ($advancedFilters['search']['family'] as $key => $familyFilter) {
-                        if (isset($familyFilter['operator']) && $familyFilter['operator'] == 'IN') {
-                            $advancedFilters['search']['family'][$key]['value'][] = $productFamily;
-                            $productFilterAdded                                   = true;
-
-                            break;
-                        }
-                    }
+                    unset($advancedFilters['search']['family']);
                 }
+                /** @var string[] $familyFilter */
+                $familyFilter                          = ['operator' => 'IN', 'value' => [$productFamily]];
+                $advancedFilters['search']['family'][] = $familyFilter;
+            }
 
-                if (!$productFilterAdded) {
-                    /** @var string[] $familyFilter */
-                    $familyFilter                          = ['operator' => 'IN', 'value' => [$productFamily]];
-                    $advancedFilters['search']['family'][] = $familyFilter;
-                }
+            $updatedFilter = $this->getUpdatedFilter($jobExecutor);
+            if (!empty($updatedFilter)) {
+                $advancedFilters['search']['updated'][0] = $updatedFilter;
             }
 
             return [$advancedFilters];
@@ -170,6 +165,9 @@ class ProductFilters
             $familyFilter       = ['operator' => 'IN', 'value' => [$productFamily]];
             $search['family'][] = $familyFilter;
         }
+
+        /** @var string[] $akeneoLocales */
+        $akeneoLocales = $this->localesHelper->getAkeneoLocales();
 
         /** @var string $channel */
         foreach ($mappedChannels as $channel) {
@@ -197,8 +195,6 @@ class ProductFilters
             /** @var string[] $locales */
             $locales = $this->storeHelper->getChannelStoreLangs($channel);
             if (!empty($locales)) {
-                /** @var string $locales */
-                $akeneoLocales = $this->localesHelper->getAkeneoLocales();
                 if (!empty($akeneoLocales)) {
                     $locales = array_intersect($locales, $akeneoLocales);
                 }
@@ -315,13 +311,11 @@ class ProductFilters
             /** @var mixed $locales */
             $locales = $this->configHelper->getCompletenessLocalesFilter();
             /** @var string[] $locales */
-            $locales            = explode(',', $locales);
+            $locales            = explode(',', $locales ?? '');
             $options['locales'] = $locales;
         }
 
         $this->searchBuilder->addFilter('completeness', $filterType, $filterValue, $options);
-
-        return;
     }
 
     /**
@@ -337,8 +331,107 @@ class ProductFilters
             return;
         }
         $this->searchBuilder->addFilter('enabled', '=', (bool)$filter);
+    }
 
-        return;
+    /**
+     * Get updated filter Data for Akeneo API
+     *
+     * @param JobExecutor $jobExecutor
+     *
+     * @return mixed[]
+     */
+    protected function getUpdatedFilter($jobExecutor)
+    {
+        /** @var string $mode */
+        $mode = $this->configHelper->getUpdatedMode();
+
+        if ($mode == Update::BETWEEN) {
+            $dateAfter  = $this->configHelper->getUpdatedBetweenAfterFilter() . ' 00:00:00';
+            $dateBefore = $this->configHelper->getUpdatedBetweenBeforeFilter() . ' 23:59:59';
+            if (empty($dateAfter) || empty($dateBefore)) {
+                return [];
+            }
+            $dates = [$dateAfter, $dateBefore];
+
+            return [
+                'operator' => $mode,
+                'value' => $dates,
+            ];
+        }
+        if ($mode == Update::SINCE_LAST_N_DAYS) {
+            /** @var string $filter */
+            $filter = $this->configHelper->getUpdatedSinceFilter();
+            if (!is_numeric($filter)) {
+                return [];
+            }
+
+            return [
+                'operator' => $mode,
+                'value' => (int)$filter,
+            ];
+        }
+        if ($mode == Update::SINCE_LAST_IMPORT) {
+            // Get the last import date as filter
+            /** @var string $filter */
+            $filter = $this->getLastImportDateFilter($jobExecutor);
+            if (!$filter) {
+                return [];
+            }
+
+            return [
+                'operator' => Update::GREATER_THAN,
+                'value' => $filter,
+            ];
+        }
+        if ($mode == Update::SINCE_LAST_N_HOURS) {
+            /** @var int $currentDateTime */
+            $currentDateTime = $this->timezone->date()->getTimestamp();
+            /** @var string $valueConfig */
+            $valueConfig = $this->configHelper->getUpdatedSinceLastHoursFilter();
+            if (!$valueConfig) {
+                return [];
+            }
+            /** @var int $filter */
+            $filter = ((int)$valueConfig) * 3600;
+            if (!is_numeric($filter)) {
+                return [];
+            }
+
+            /** @var int $timestamp */
+            $timestamp = $currentDateTime - $filter;
+            /** @var string $date */
+            $date = (new \DateTime())->setTimestamp($timestamp)->format('Y-m-d H:i:s');
+
+            if (!empty($date)) {
+                return [
+                    'operator' => Update::GREATER_THAN,
+                    'value' => $date,
+                ];
+            }
+
+            return [];
+        }
+        if ($mode == Update::LOWER_THAN) {
+            /** @var string $date */
+            $date = $this->configHelper->getUpdatedLowerFilter();
+            if (empty($date)) {
+                return [];
+            }
+            $date = $date . ' 23:59:59';
+        }
+        if ($mode == Update::GREATER_THAN) {
+            $date = $this->configHelper->getUpdatedGreaterFilter();
+            if (empty($date)) {
+                return [];
+            }
+            $date = $date . ' 00:00:00';
+        }
+        if (!empty($date)) {
+            return [
+                'operator' => $mode,
+                'value' => $date,
+            ];
+        }
     }
 
     /**
@@ -350,85 +443,18 @@ class ProductFilters
      */
     protected function addUpdatedFilter($jobExecutor)
     {
-        /** @var string $mode */
-        $mode = $this->configHelper->getUpdatedMode();
+        $updatedFilter = $this->getUpdatedFilter($jobExecutor);
 
-        if ($mode == Update::BETWEEN) {
-            $dateAfter  = $this->configHelper->getUpdatedBetweenAfterFilter() . ' 00:00:00';
-            $dateBefore = $this->configHelper->getUpdatedBetweenBeforeFilter() . ' 23:59:59';
-            if (empty($dateAfter) || empty($dateBefore)) {
-                return;
-            }
-            $dates = [$dateAfter, $dateBefore];
-            $this->searchBuilder->addFilter('updated', $mode, $dates);
-        }
-        if ($mode == Update::SINCE_LAST_N_DAYS) {
-            /** @var string $filter */
-            $filter = $this->configHelper->getUpdatedSinceFilter();
-            if (!is_numeric($filter)) {
-                return;
-            }
-            $this->searchBuilder->addFilter('updated', $mode, (int)$filter);
-        }
-        if ($mode == Update::SINCE_LAST_IMPORT) {
-            // Get the last import date as filter
-            /** @var string $filter */
-            $filter = $this->getLastImportDateFilter($jobExecutor);
-            if (!$filter) {
-                return;
-            }
-
-            $this->searchBuilder->addFilter('updated', Update::GREATER_THAN, $filter);
-        }
-        if ($mode == Update::SINCE_LAST_N_HOURS) {
-            /** @var int $currentDateTime */
-            $currentDateTime = $this->timezone->date()->getTimestamp();
-            /** @var string $valueConfig */
-            $valueConfig = $this->configHelper->getUpdatedSinceLastHoursFilter();
-            if (!$valueConfig) {
-                return;
-            }
-            /** @var int $filter */
-            $filter = ((int)$valueConfig) * 3600;
-            if (!is_numeric($filter)) {
-                return;
-            }
-
-            /** @var int $timestamp */
-            $timestamp = $currentDateTime - $filter;
-            /** @var string $date */
-            $date = (new \DateTime())->setTimestamp($timestamp)->format('Y-m-d H:i:s');
-
-            if (!empty($date)) {
-                $this->searchBuilder->addFilter('updated', Update::GREATER_THAN, $date);
-            }
-
+        if (empty($updatedFilter)) {
             return;
         }
-        if ($mode == Update::LOWER_THAN) {
-            /** @var string $date */
-            $date = $this->configHelper->getUpdatedLowerFilter();
-            if (empty($date)) {
-                return;
-            }
-            $date = $date . ' 23:59:59';
-        }
-        if ($mode == Update::GREATER_THAN) {
-            $date = $this->configHelper->getUpdatedGreaterFilter();
-            if (empty($date)) {
-                return;
-            }
-            $date = $date . ' 00:00:00';
-        }
-        if (!empty($date)) {
-            $this->searchBuilder->addFilter('updated', $mode, $date);
-        }
 
-        return;
+        $this->searchBuilder->addFilter('updated', $updatedFilter['operator'], $updatedFilter['value']);
     }
 
     /**
-     * Description getLastImportDateFilter function
+     * Returning last import date filter, return a string for all job but product one return a json with multiple value, one for each family
+     * Fallback to a default value which fallback on null
      *
      * @param JobExecutor $jobExecutor
      *
@@ -436,6 +462,24 @@ class ProductFilters
      */
     protected function getLastImportDateFilter($jobExecutor)
     {
-        return $jobExecutor->getCurrentJob()->getLastSuccessExecutedDate();
+        /** @var JobInterface $currentJob */
+        $currentJob = $jobExecutor->getCurrentJob();
+        /** @var string|null $lastSuccessExecutedDate */
+        $lastSuccessExecutedDate = $jobExecutor->getCurrentJob()->getLastSuccessExecutedDate();
+
+        if (!isset($lastSuccessExecutedDate) || $currentJob->getCode() !== JobExecutor::IMPORT_CODE_PRODUCT) {
+            return $lastSuccessExecutedDate;
+        }
+
+        /** @var string[] $lastSuccessExecutedDateData */
+        $lastSuccessExecutedDateData = $this->json->unserialize($lastSuccessExecutedDate);
+        /** @var string $currentFamilyCode */
+        $currentFamilyCode = $jobExecutor->getCurrentJobClass()->getFamily();
+
+        if (isset($lastSuccessExecutedDateData[$currentFamilyCode])) {
+            return $lastSuccessExecutedDateData[$currentFamilyCode];
+        }
+        return $lastSuccessExecutedDateData[JobInterface::DEFAULT_PRODUCT_JOB_FAMILY_CODE] ?? null;
+
     }
 }

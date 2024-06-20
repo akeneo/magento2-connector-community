@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field;
 
 use Magento\Backend\Block\Template\Context;
@@ -8,13 +10,9 @@ use Magento\Framework\Data\Form\Element\Factory;
 use Magento\Framework\Data\Form\Element\Select;
 
 /**
- * Class Configurable
- *
- * @category  Class
- * @package   Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Configurable extends AbstractFieldArray
@@ -24,31 +22,31 @@ class Configurable extends AbstractFieldArray
      *
      * @var string TYPE_DEFAULT
      */
-    const TYPE_DEFAULT = 'default';
+    public const TYPE_DEFAULT = 'default';
     /**
      * Type Simple
      *
      * @var string TYPE_SIMPLE
      */
-    const TYPE_SIMPLE = 'simple';
+    public const TYPE_SIMPLE = 'simple';
     /**
      * Type Mapping
      *
      * @var string TYPE_MAPPING
      */
-    const TYPE_MAPPING = 'mapping';
+    public const TYPE_MAPPING = 'mapping';
     /**
      * Type Query
      *
      * @var string TYPE_QUERY
      */
-    const TYPE_QUERY = 'query';
+    public const TYPE_QUERY = 'query';
     /**
      * Type Value
      *
      * @var string TYPE_VALUE
      */
-    const TYPE_VALUE = 'value';
+    public const TYPE_VALUE = 'value';
 
     /**
      * This variable contains a Factory

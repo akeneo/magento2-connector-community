@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Model\Config;
 
+use Akeneo\Connector\App\ResourceConnection;
 use Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field\Website;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Model\Backend\Json;
@@ -12,7 +13,6 @@ use Magento\Config\Model\Config\Backend\Serialized\ArraySerialized;
 use Magento\Eav\Model\Entity\Attribute;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Module\Dir;
@@ -30,12 +30,9 @@ use Zend_Pdf_Page;
 use Zend_Pdf_Resource_Image;
 
 /**
- * Class ConfigManagement
- *
- * @package   Akeneo\Connector\Model\Config
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class ConfigManagement
@@ -93,7 +90,7 @@ class ConfigManagement
      *
      * @var string[] HIDDEN_FIELDS
      */
-    const HIDDEN_FIELDS = [
+    public const HIDDEN_FIELDS = [
         ConfigHelper::AKENEO_API_BASE_URL,
         ConfigHelper::AKENEO_API_PASSWORD,
         ConfigHelper::AKENEO_API_USERNAME,
@@ -105,9 +102,10 @@ class ConfigManagement
      *
      * @var string[] BYPASS_BOOLEAN_FIELDS
      */
-    const BYPASS_BOOLEAN_FIELDS = [
+    public const BYPASS_BOOLEAN_FIELDS = [
         ConfigHelper::PRODUCT_TAX_CLASS,
         ConfigHelper::PRODUCTS_FILTERS_UPDATED_SINCE,
+        ConfigHelper::PRODUCT_AKENEO_ATTRIBUTE_CODE_FOR_SKU,
         ConfigHelper::PRODUCT_WEBSITE_ATTRIBUTE,
         ConfigHelper::PRODUCT_ATTRIBUTE_MAPPING,
         ConfigHelper::PRODUCT_CONFIGURABLE_ATTRIBUTES,
@@ -118,91 +116,91 @@ class ConfigManagement
      *
      * @var int LINE_BREAK
      */
-    const LINE_BREAK = 20;
+    public const LINE_BREAK = 20;
     /**
      * Indentation for multiselect list
      *
      * @var int INDENT_MULTISELECT
      */
-    const INDENT_MULTISELECT = 120;
+    public const INDENT_MULTISELECT = 120;
     /**
      * Indentation for footer
      *
      * @var int INDENT_FOOTER
      */
-    const INDENT_FOOTER = 50;
+    public const INDENT_FOOTER = 50;
     /**
      * Indentation for attributes list
      *
      * @var int INDENT_TEXT
      */
-    const INDENT_TEXT = 100;
+    public const INDENT_TEXT = 100;
     /**
      * Indentation for group title
      *
      * @var int INDENT_GROUP
      */
-    const INDENT_GROUP = 80;
+    public const INDENT_GROUP = 80;
     /**
      * Indentation for table
      *
      * @var int INDENT_TABLE
      */
-    const INDENT_TABLE = self::INDENT_TEXT;
+    public const INDENT_TABLE = self::INDENT_TEXT;
     /**
      * Default font size
      *
      * @param string DEFAULT_FONT_SIZE
      */
-    const DEFAULT_FONT_SIZE = 10;
+    public const DEFAULT_FONT_SIZE = 10;
     /**
      * Table font size
      *
      * @param string TABLE_FONT_SIZE
      */
-    const TABLE_FONT_SIZE = 10;
+    public const TABLE_FONT_SIZE = 10;
     /**
      * Array line Height
      *
      * @var int ARRAY_LINE_HEIGHT
      */
-    const ARRAY_LINE_HEIGHT = 30;
+    public const ARRAY_LINE_HEIGHT = 30;
     /**
      * Bottom page border constant
      *
      * @var int BOTTOM_BORDER
      */
-    const BOTTOM_PAGE_BORDER = 20;
+    public const BOTTOM_PAGE_BORDER = 20;
     /**
      * Description LOGO_PDF constant
      *
      * @var string LOGO_PDF
      */
-    const LOGO_PDF = 'Akeneo_Connector::images/logo.jpg';
+    public const LOGO_PDF = 'Akeneo_Connector::images/logo.jpg';
     /**
      * Description PASSWORD_CHAR constant
      *
      * @var string PASSWORD_CHAR
      */
-    const PASSWORD_CHAR = '****';
+    public const PASSWORD_CHAR = '****';
     /**
      * Array key to get group in SystemConfigAttribute
      *
      * @var string ATTRIBUTE_GROUP_ARRAY_KEY
      */
-    const SYSTEM_ATTRIBUTE_GROUP_ARRAY_KEY = 'group';
+    public const SYSTEM_ATTRIBUTE_GROUP_ARRAY_KEY = 'group';
     /**
      * Field type text
      *
      * @var string FIELD_TYPE_TEXT
      */
-    const FIELD_TYPE_TEXT = 'TEXT';
+    public const FIELD_TYPE_TEXT = 'TEXT';
     /**
      * Array key to get value in SystemConfigAttribute
      *
      * @var string SYSTEM_ATTRIBUTE_VALUE_ARRAY_KEY
      */
-    const SYSTEM_ATTRIBUTE_VALUE_ARRAY_KEY = 'value';
+    public const SYSTEM_ATTRIBUTE_VALUE_ARRAY_KEY = 'value';
     /**
      * Position on Y axis of the last element
      *
@@ -349,7 +347,7 @@ class ConfigManagement
                 /** @var string $text */
                 $text = $config['value'];
                 /** @var string $cleanValue */
-                $cleanValue = preg_replace("/<br>|\n|\r|\r?|\s\s+/", "", $text);
+                $cleanValue = preg_replace("/<br>|\n|\r|\r?|\s\s+/", "", $text ?? '');
                 /** @var string[] $lines */
                 $lines = str_split($cleanValue, 89);
 
@@ -454,6 +452,7 @@ class ConfigManagement
      * Insert multiselect into the pdf
      *
      * @param string $values
+     * @param string $field
      *
      * @return void
      * @throws Zend_Pdf_Exception
@@ -461,7 +460,7 @@ class ConfigManagement
     protected function insertMultiselect($values, string $field)
     {
         /** @var string[] $valuesArray */
-        $valuesArray = explode(',', $values);
+        $valuesArray = explode(',', $values ?? '');
         /** @var string $value */
         foreach ($valuesArray as $value) {
             $this->addLineBreak(self::LINE_BREAK);
@@ -477,6 +476,7 @@ class ConfigManagement
      *
      * @param string[] $values
      * @param string[] $headers
+     * @param string   $field
      *
      * @return void
      * @throws Zend_Pdf_Exception
@@ -549,7 +549,7 @@ class ConfigManagement
     protected function insertHeader(Zend_Pdf_Page $page)
     {
         /** @var string $title */
-        $title = (string)__('Akeneo Connector for Magento 2 - Configuration export');
+        $title = (string)__('Akeneo Connector for Adobe Commerce - Configuration export');
         /** @var float $titleLength */
         $titleLength = $this->widthForStringUsingFontSize($title);
         $page->drawText($title, ($page->getWidth() - $titleLength) / 2, $this->lastPosition);
@@ -630,7 +630,7 @@ class ConfigManagement
     protected function getSystemConfigAttribute(string $path, string $attributeName)
     {
         /** @var string[] $path */
-        $path = explode('/', $path);
+        $path = explode('/', $path ?? '');
         /** @var string $etcDir */
         $etcDir = $this->moduleReader->getModuleDir(
             Dir::MODULE_ETC_DIR,
@@ -695,7 +695,7 @@ class ConfigManagement
         $this->setPageStyle(Zend_Pdf_Font::FONT_HELVETICA_OBLIQUE);
         /** @var string $text */
         $text = (string)__(
-            "If you want to report a bug, ask a question or have a suggestion to make on Akeneo Connector for Magento 2,"
+            "If you want to report a bug, ask a question or have a suggestion to make on Akeneo Connector for Adobe Commerce,"
         );
         /** @var string $text2 */
         $text2 = (string)__("please contact our Support Team.");
@@ -773,7 +773,9 @@ class ConfigManagement
             $nextElementHeight = 0;
         }
 
-        if ($this->lastPosition <= self::BOTTOM_PAGE_BORDER || ($this->lastPosition - $nextElementHeight <= self::BOTTOM_PAGE_BORDER)) {
+        if ($this->lastPosition <= self::BOTTOM_PAGE_BORDER
+            || ($this->lastPosition - $nextElementHeight <= self::BOTTOM_PAGE_BORDER)
+        ) {
             $this->addNewPage();
         }
 
@@ -790,6 +792,7 @@ class ConfigManagement
      * @param string[] $values
      * @param float    $cellLength
      * @param float    $rowLength
+     * @param string   $field
      *
      * @return void
      * @throws Zend_Pdf_Exception
@@ -817,15 +820,9 @@ class ConfigManagement
             $value = $this->renderValue($value, $field);
 
             /** @var float $indentValueCell */
-            $indentValueCell = ($cellLength * $index) + ($cellLength - $this->widthForStringUsingFontSize(
-                        $value
-                    )) / 2;
+            $indentValueCell = ($cellLength * $index) + ($cellLength - $this->widthForStringUsingFontSize($value)) / 2;
 
-            $this->page->drawText(
-                $value,
-                self::INDENT_TABLE + $indentValueCell,
-                $this->lastPosition - 20
-            );
+            $this->page->drawText($value, self::INDENT_TABLE + $indentValueCell, $this->lastPosition - 20);
 
             // Draw the right line of the cell
             $this->page->drawLine(

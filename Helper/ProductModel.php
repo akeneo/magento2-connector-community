@@ -18,12 +18,9 @@ use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\Serialize\Serializer\Json;
 
 /**
- * Class ProductModel
- *
- * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class ProductModel
@@ -86,15 +83,15 @@ class ProductModel
     /**
      * ProductModel constructor
      *
-     * @param Product          $entitiesHelper
-     * @param ConfigHelper     $configHelper
-     * @param Config           $eavConfig
-     * @param ProductFilters   $productFilters
-     * @param Store            $storeHelper
-     * @param Json             $jsonSerializer
-     * @param EntitiesHelper   $entities
+     * @param Product $entitiesHelper
+     * @param ConfigHelper $configHelper
+     * @param Config $eavConfig
+     * @param ProductFilters $productFilters
+     * @param Store $storeHelper
+     * @param Json $jsonSerializer
+     * @param EntitiesHelper $entities
      * @param AttributeMetrics $attributeMetrics
-     * @param AttributeTables                 $attributeTables
+     * @param AttributeTables $attributeTables
      */
     public function __construct(
         Product $entitiesHelper,
@@ -122,11 +119,12 @@ class ProductModel
      * Description createTable function
      *
      * @param AkeneoPimClientInterface $akeneoClient
-     * @param string[]                 $filters
+     * @param string[] $filters
+     * @param string|null $family
      *
      * @return string[]
      */
-    public function createTable($akeneoClient, $filters)
+    public function createTable(AkeneoPimClientInterface $akeneoClient, array $filters, ?string $family = null)
     {
         /** @var string[] $messages */
         $messages = [];
@@ -155,7 +153,7 @@ class ProductModel
         }
 
         $productModel = reset($productModels);
-        $this->entitiesHelper->createTmpTableFromApi($productModel, 'product_model');
+        $this->entitiesHelper->createTmpTableFromApi($productModel, 'product_model', $family);
 
         return $messages;
     }
@@ -164,11 +162,12 @@ class ProductModel
      * Insert data into temporary table
      *
      * @param AkeneoPimClientInterface $akeneoClient
-     * @param string[]                 $filters
+     * @param string[] $filters
+     * * @param string|null $family
      *
      * @return void
      */
-    public function insertData($akeneoClient, $filters)
+    public function insertData(AkeneoPimClientInterface $akeneoClient, array $filters, ?string $family = null)
     {
         /** @var mixed[] $messages */
         $messages = [];
@@ -273,7 +272,9 @@ class ProductModel
                             foreach ($data as $label => $newData) {
                                 /** @var string[] $config */
                                 foreach ($tableConfiguration as $config) {
-                                    if (isset($locale, $config['labels'][$locale]) && $locale !== null && ($config['code'] === $label)) {
+                                    if (isset($locale, $config['labels'][$locale])
+                                        && $locale !== null && ($config['code'] === $label)
+                                    ) {
                                         /** @var string $newLabel */
                                         $newLabel = $config['labels'][$locale];
                                         if (isset($table['data'][$i][$label], $newLabel)) {
@@ -345,7 +346,7 @@ class ProductModel
                 if (isset($productModel['code'])) {
                     $productModel['identifier'] = $productModel['code'];
                 }
-                $this->entitiesHelper->insertDataFromApi($productModel, 'product_model');
+                $this->entitiesHelper->insertDataFromApi($productModel, 'product_model', $family);
                 $index++;
             }
         }
@@ -414,7 +415,7 @@ class ProductModel
     /**
      * Generate array of metrics with unit in key and symbol for value
      *
-     * @return string[]
+     * @return string[] $akeneoClient
      */
     public function getMetricsSymbols($akeneoClient)
     {
@@ -438,9 +439,12 @@ class ProductModel
     /**
      * Add columns to product table
      *
+     * @param string $code
+     * @param string|null $family
+     * 
      * @return void
      */
-    public function addColumns($code)
+    public function addColumns($code, ?string $family = null)
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
@@ -462,7 +466,17 @@ class ProductModel
             if (in_array($column, $except)) {
                 continue;
             }
-            $connection->addColumn($tmpTable, $this->_columnName($column), 'text');
+            $columnName = $this->_columnName($column);
+            $connection->addColumn(
+                $tmpTable,
+                $columnName,
+                [
+                    'type'    => 'text',
+                    $this->entitiesHelper->getAttributeColumnLength($family, $columnName), // Get correct column length
+                    'default' => '',
+                    'COMMENT' => ' '
+                ]
+            );
         }
         if (!$connection->tableColumnExists($tmpTable, 'axis')) {
             $connection->addColumn(

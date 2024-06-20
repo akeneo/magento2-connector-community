@@ -1,27 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Console\Command;
 
 use Akeneo\Connector\Api\Data\JobInterface;
 use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Model\JobRepository;
+use Akeneo\Pim\ApiClient\Exception\HttpException;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Framework\Data\Collection;
+use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\LocalizedException;
-use \Symfony\Component\Console\Command\Command;
-use \Symfony\Component\Console\Input\InputInterface;
-use \Symfony\Component\Console\Output\OutputInterface;
-use \Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Class AkeneoConnectorImportCommand
- *
- * @package   Akeneo\Connector\Console\Command
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class AkeneoConnectorImportCommand extends Command
@@ -31,34 +32,18 @@ class AkeneoConnectorImportCommand extends Command
      *
      * @var string IMPORT_CODE
      */
-    const IMPORT_CODE = 'code';
-    /**
-     * This variable contains a State
-     *
-     * @var State $appState
-     */
+    public const IMPORT_CODE = 'code';
     protected $appState;
-    /**
-     * Description $jobExecutor field
-     *
-     * @var JobExecutor $jobExecutor
-     */
+    protected $configHelper;
     protected $jobExecutor;
-    /**
-     * Description $jobRepository field
-     *
-     * @var JobRepository $jobRepository
-     */
     protected $jobRepository;
 
     /**
-     * AkeneoConnectorImportCommand constructor
-     *
-     * @param State         $appState
-     * @param ConfigHelper  $configHelper
-     * @param JobExecutor   $jobExecutor
+     * @param State $appState
+     * @param ConfigHelper $configHelper
+     * @param JobExecutor $jobExecutor
      * @param JobRepository $jobRepository
-     * @param null          $name
+     * @param string|null $name
      */
     public function __construct(
         State $appState,
@@ -69,18 +54,18 @@ class AkeneoConnectorImportCommand extends Command
     ) {
         parent::__construct($name);
 
-        $this->appState      = $appState;
-        $this->configHelper  = $configHelper;
-        $this->jobExecutor   = $jobExecutor;
+        $this->appState = $appState;
+        $this->configHelper = $configHelper;
+        $this->jobExecutor = $jobExecutor;
         $this->jobRepository = $jobRepository;
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected function configure()
     {
-        $this->setName('akeneo_connector:import')->setDescription('Import Akeneo data to Magento')->addOption(
+        $this->setName('akeneo_connector:import')->setDescription('Import Akeneo data to Adobe Commerce/Magento')->addOption(
             self::IMPORT_CODE,
             null,
             InputOption::VALUE_REQUIRED,
@@ -89,7 +74,9 @@ class AkeneoConnectorImportCommand extends Command
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
+     *
+     * @throws AlreadyExistsException
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -99,16 +86,26 @@ class AkeneoConnectorImportCommand extends Command
             /** @var string $message */
             $message = __('Area code already set')->getText();
             $output->writeln($message);
+
+            return 1;
+        }
+        try {
+            /** @var string $code */
+            $code = $input->getOption(self::IMPORT_CODE);
+            if (!$code) {
+                $this->usage($output);
+            } else {
+                $this->jobExecutor->execute($code, $output);
+            }
+        } catch (HttpException $e) {
+            $this->jobExecutor->displayError($e->getMessage());
+            $currentJob = $this->jobExecutor->getCurrentJob();
+            $this->jobExecutor->setJobStatus(JobInterface::JOB_ERROR, $currentJob);
+
+            return 1;
         }
 
-        /** @var string $code */
-        $code = $input->getOption(self::IMPORT_CODE);
-
-        if (!$code) {
-            $this->usage($output);
-        } else {
-            $this->jobExecutor->execute($code, $output);
-        }
+        return 0;
     }
 
     /**
@@ -124,12 +121,12 @@ class AkeneoConnectorImportCommand extends Command
         $jobs = $this->jobRepository->getList();
 
         // Options
-        $this->displayComment(__('Options:'), $output);
-        $this->displayInfo(__('--code'), $output);
+        $this->displayComment((string)__('Options:'), $output);
+        $this->displayInfo((string)__('--code'), $output);
         $output->writeln('');
 
         // Codes
-        $this->displayComment(__('Available codes:'), $output);
+        $this->displayComment((string)__('Available codes:'), $output);
         /** @var JobInterface $job */
         foreach ($jobs as $job) {
             $this->displayInfo($job->getCode(), $output);
@@ -142,15 +139,15 @@ class AkeneoConnectorImportCommand extends Command
         /** @var string $code */
         $code = $job->getCode();
         if ($code) {
-            $this->displayComment(__('Example:'), $output);
-            $this->displayInfo(__('akeneo_connector:import --code=%1', $code), $output);
+            $this->displayComment((string)__('Example:'), $output);
+            $this->displayInfo((string)__('akeneo_connector:import --code=%1', $code), $output);
         }
     }
 
     /**
      * Display info in console
      *
-     * @param string          $message
+     * @param string $message
      * @param OutputInterface $output
      *
      * @return void
@@ -167,7 +164,7 @@ class AkeneoConnectorImportCommand extends Command
     /**
      * Display comment in console
      *
-     * @param string          $message
+     * @param string $message
      * @param OutputInterface $output
      *
      * @return void
@@ -184,7 +181,7 @@ class AkeneoConnectorImportCommand extends Command
     /**
      * Display error in console
      *
-     * @param string          $message
+     * @param string $message
      * @param OutputInterface $output
      *
      * @return void

@@ -1,14 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Helper\Import;
 
+use Akeneo\Connector\App\ResourceConnection;
+use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Model\Source\Edition;
+use Akeneo\Connector\Model\Source\Engine;
+use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
+use Akeneo\Pim\ApiClient\Api\ProductApiInterface;
+use Akeneo\Pim\ApiClient\Api\ProductUuidApiInterface;
+use Akeneo\Pim\ApiClient\Pagination\ResourceCursor;
 use Exception;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Catalog\Model\Product as BaseProductModel;
 use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Framework\App\DeploymentConfig;
-use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Config\ConfigOptionsListConstants;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Ddl\Table;
@@ -17,12 +26,9 @@ use Zend_Db_Expr as Expr;
 use Zend_Db_Select_Exception;
 
 /**
- * Class Entities
- *
- * @package   Akeneo\Connector\Helper\Import
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Entities
@@ -30,21 +36,50 @@ class Entities
     /**
      * @var string TABLE_PREFIX
      */
-    const TABLE_PREFIX = 'tmp';
+    public const TABLE_PREFIX = 'tmp';
     /**
      * @var string TABLE_NAME
      */
-    const TABLE_NAME = 'akeneo_connector_entities';
+    public const TABLE_NAME = 'akeneo_connector_entities';
     /**
      * @var array EXCLUDED_COLUMNS
      */
-    const EXCLUDED_COLUMNS = ['_links'];
+    public const EXCLUDED_COLUMNS = ['_links'];
     /**
      * Akeneo Connector product import code
      *
      * @var string IMPORT_CODE_PRODUCT
      */
-    const IMPORT_CODE_PRODUCT = 'product';
+    public const IMPORT_CODE_PRODUCT = 'product';
+    /** @var string DEFAULT_ATTRIBUTE_LENGTH */
+    public const DEFAULT_ATTRIBUTE_LENGTH = 'default';
+    /** @var string TEXTAREA_ATTRIBUTE_LENGTH */
+    public const TEXTAREA_ATTRIBUTE_LENGTH = '65535';
+    /** @var string LARGE_ATTRIBUTE_LENGTH */
+    public const LARGE_ATTRIBUTE_LENGTH = '2M';
+    /**
+     * @var mixed[] ATTRIBUTE_TYPES_LENGTH
+     */
+    public const ATTRIBUTE_TYPES_LENGTH = [
+        'pim_catalog_identifier' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_text' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_textarea' => self::TEXTAREA_ATTRIBUTE_LENGTH,
+        'pim_catalog_simpleselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_multiselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_boolean' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_date' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_number' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_metric' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_price_collection' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_image' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_file' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_asset_collection' => self::LARGE_ATTRIBUTE_LENGTH,
+        'akeneo_reference_entity' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'akeneo_reference_entity_collection' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_reference_data_simpleselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_reference_data_multiselect' => self::DEFAULT_ATTRIBUTE_LENGTH,
+        'pim_catalog_table' => self::LARGE_ATTRIBUTE_LENGTH,
+    ];
     /**
      * This variable contains a ResourceConnection
      *
@@ -57,6 +92,7 @@ class Entities
      * @var BaseProductModel $product
      */
     protected $product;
+    protected Authenticator $authenticator;
     /**
      * This variable contains a ConfigHelper
      *
@@ -72,14 +108,6 @@ class Entities
      */
     protected $tablePrefix;
     /**
-     * Product attributes to pass if empty value
-     *
-     * @var string[] $passIfEmpty
-     */
-    protected $passIfEmpty = [
-        'price',
-    ];
-    /**
      * Mapped catalog attributes with relative scope
      *
      * @var string[] $attributeScopeMapping
@@ -91,26 +119,29 @@ class Entities
      * @var bool[] $rowIdExists
      */
     protected $rowIdExists = [];
+    protected array $attributeLength = [];
 
     /**
      * Entities constructor
      *
-     * @param Context            $context
      * @param ResourceConnection $connection
-     * @param DeploymentConfig   $deploymentConfig
-     * @param ConfigHelper       $configHelper
-     * @param BaseProductModel   $product
+     * @param DeploymentConfig $deploymentConfig
+     * @param BaseProductModel $product
+     * @param ConfigHelper $configHelper
+     * @param Authenticator $authenticator
      */
     public function __construct(
         ResourceConnection $connection,
         DeploymentConfig $deploymentConfig,
         BaseProductModel $product,
-        ConfigHelper $configHelper
+        ConfigHelper $configHelper,
+        Authenticator $authenticator
     ) {
         $this->connection       = $connection->getConnection();
         $this->deploymentConfig = $deploymentConfig;
         $this->configHelper     = $configHelper;
         $this->product          = $product;
+        $this->authenticator    = $authenticator;
     }
 
     /**
@@ -126,7 +157,7 @@ class Entities
     /**
      * Get temporary table name
      *
-     * @param null $tableSuffix
+     * @param string|null $tableSuffix
      *
      * @return string
      */
@@ -178,14 +209,15 @@ class Entities
      *
      * @param array  $result
      * @param string $tableSuffix
+     * @param string|null $family
      *
      * @return $this
      */
-    public function createTmpTableFromApi($result, $tableSuffix)
+    public function createTmpTableFromApi(array $result, string $tableSuffix, ?string $family = null)
     {
         /** @var array $columns */
         $columns = $this->getColumnsFromResult($result);
-        $this->createTmpTable(array_keys($columns), $tableSuffix);
+        $this->createTmpTable(array_keys($columns), $tableSuffix, $family);
 
         return $this;
     }
@@ -195,11 +227,12 @@ class Entities
      *
      * @param array  $fields
      * @param string $tableSuffix
+     * @param string|null $family
      *
      * @return $this
      * @throws \Zend_Db_Exception
      */
-    public function createTmpTable($fields, $tableSuffix)
+    public function createTmpTable(array $fields, string $tableSuffix, ?string $family = null)
     {
         /* Delete table if exists */
         $this->dropTable($tableSuffix);
@@ -234,7 +267,7 @@ class Entities
                 $table->addColumn(
                     $column,
                     Table::TYPE_TEXT,
-                    null,
+                    $this->getAttributeColumnLength($family, $column),
                     [],
                     $column
                 );
@@ -263,7 +296,11 @@ class Entities
             'Is New'
         );
 
-        $table->setOption('type', 'MYISAM');
+        if ($this->configHelper->getStorageEngine() === Engine::STORAGE_ENGINE_INNODB) {
+            $table->setOption('row_format', 'dynamic');
+        } else {
+            $table->setOption('type', 'MYISAM');
+        }
 
         $this->connection->createTable($table);
 
@@ -355,10 +392,11 @@ class Entities
      *
      * @param array       $result
      * @param null|string $tableSuffix
+     * @param null|string $family
      *
      * @return bool
      */
-    public function insertDataFromApi(array $result, $tableSuffix = null)
+    public function insertDataFromApi(array $result, ?string $tableSuffix = null, ?string $family = null)
     {
         if (empty($result)) {
             return false;
@@ -380,7 +418,16 @@ class Entities
          */
         foreach ($result as $key => $value) {
             if (!$this->connection->tableColumnExists($tableName, $key)) {
-                $this->connection->addColumn($tableName, $key, 'text');
+                $this->connection->addColumn(
+                    $tableName,
+                    $key,
+                    [
+                        'type'    => 'text',
+                        'length'  => $this->getAttributeColumnLength($family, $key), // Get correct column length
+                        'default' => null,
+                        'COMMENT' => ' '
+                    ]
+                );
             }
         }
 
@@ -551,7 +598,7 @@ class Entities
             /** @var bool $rowIdExists */
             $rowIdExists = $this->rowIdColumnExists($table);
 
-            if ($rowIdExists && $entityTable === $this->getTablePrefix() . 'catalog_product_entity') {
+            if ($rowIdExists && $entityTable === 'catalog_product_entity') {
                 /** @var Select $select */
                 $select = $connection->select()->from(
                     $tableName,
@@ -562,7 +609,7 @@ class Entities
                     ]
                 );
                 $this->addJoinForContentStaging($select, [$identifier => 'row_id']);
-            } elseif ($rowIdExists && $entityTable === $this->getTablePrefix() . 'catalog_category_entity') {
+            } elseif ($rowIdExists && $entityTable === 'catalog_category_entity') {
                 /** @var Select $select */
                 $select = $connection->select()->from(
                     $tableName,
@@ -584,12 +631,6 @@ class Entities
                         $identifier    => '_entity_id',
                     ]
                 );
-            }
-
-            /** @var bool $columnExists */
-            $columnExists = $connection->tableColumnExists($tableName, $value);
-            if ($columnExists && ($import !== self::IMPORT_CODE_PRODUCT || in_array($code, $this->passIfEmpty))) {
-                $select->where(sprintf('TRIM(`%s`) > ?', $value), new Expr('""'));
             }
 
             /** @var string $insert */
@@ -726,16 +767,26 @@ class Entities
      * @param string $tableName
      * @param string $source
      * @param string $target
+     * @param string|null $family
      *
      * @return \Akeneo\Connector\Helper\Import\Entities
      */
-    public function copyColumn($tableName, $source, $target)
+    public function copyColumn(string $tableName, string $source, string $target, ?string $family = null)
     {
         /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
 
         if ($connection->tableColumnExists($tableName, $source)) {
-            $connection->addColumn($tableName, $target, 'text');
+            $connection->addColumn(
+                $tableName,
+                $target,
+                [
+                    'type'    => 'text',
+                    'length'  => $this->getAttributeColumnLength($family, $target), // Get correct column length
+                    'default' => '',
+                    'COMMENT' => ' '
+                ]
+            );
             $connection->update(
                 $tableName,
                 [$target => new Expr('`' . $source . '`')]
@@ -771,8 +822,7 @@ class Entities
     }
 
     /**
-     * Set prefix to lower case
-     * to avoid problems with values import
+     * Set prefix to lower case to avoid problems with values import
      *
      * @param string[] $values
      *
@@ -784,7 +834,7 @@ class Entities
         $newValues = [];
         foreach ($values as $key => $data) {
             /** @var string[] $keyParts */
-            $keyParts    = explode('-', $key, 2);
+            $keyParts    = explode('-', $key ?? '', 2);
             $keyParts[0] = strtolower($keyParts[0]);
             if (count($keyParts) > 1) {
                 $newValues[$keyParts[0] . '-' . $keyParts[1]] = $data;
@@ -851,13 +901,13 @@ class Entities
     public function formatMediaName($filename)
     {
         /** @var string[] $filenameParts */
-        $filenameParts = explode('.', $filename);
+        $filenameParts = explode('.', $filename ?? '');
         // Get the extention
         /** @var string $extension */
         $extension = array_pop($filenameParts);
         // Get the hash
         $filename = implode('.', $filenameParts);
-        $filename = explode('_', $filename);
+        $filename = explode('_', $filename ?? '');
         /** @var string $shortHash */
         $shortHash = array_shift($filename);
         $shortHash = substr($shortHash, 0, 4);
@@ -881,32 +931,43 @@ class Entities
      */
     public function addJoinForContentStaging($select, $cols)
     {
+        $productTable = $this->getTable('catalog_product_entity');
+        $stagingTable = $this->getTable('staging_update');
+
         $select->joinLeft(
         // retrieve each product entity for each row_id.
         // We use "left join" to be able to create new product from Akeneo (they are not yet in catalog_product_entity)
-            ['p' => 'catalog_product_entity'],
+            ['p' => $productTable],
             '_entity_id = p.entity_id',
             $cols
         )
-            ->joinLeft( // retrieve all the staging update for the givens entities. We use "join left" to get the original entity
-                ['s' => 'staging_update'],
+            // retrieve all the staging update for the givens entities. We use "join left" to get the original entity
+            ->joinLeft(
+                ['s' => $stagingTable],
                 'p.created_in = s.id',
                 []
             );
 
         if (!$this->configHelper->isAkeneoMaster()) {
+            /**
+             * filter to get only "default product entities"
+             * ie. product with 2 stagings scheduled will appear 5 times in catalog_product_entity table.
+             * We only want row not updated by the content staging (the first, the one between
+             * the 2 scheduled and the last).
+             */
             $select->where(
             // filter to get only "default product entities"
             // ie. product with 2 stagings scheduled will appear 5 times in catalog_product_entity table.
             // We only want row not updated by the content staging (the first, the one between the 2 scheduled and the last).
-                's.is_rollback = 1'
-            )->orWhere(
-                's.id IS NULL'
+                's.is_rollback = 1 OR s.id IS NULL'
             );
         }
 
         try {
-            // if possible, we remove behaviour of the ContentStaging override on FromRenderer @see \Magento\Staging\Model\Select\FromRenderer
+            /**
+             * if possible, we remove behaviour of the ContentStaging override on FromRenderer
+             * @see \Magento\Staging\Model\Select\FromRenderer
+             */
             $select->setPart('disable_staging_preview', true);
         } catch (Zend_Db_Select_Exception $e) {
             $this->_logger->error($e->getMessage());
@@ -923,32 +984,45 @@ class Entities
      */
     public function addJoinForContentStagingCategory($select, $cols)
     {
+        /**
+         * retrieve each category entity for each row_id.
+         * We use "left join" to be able to create new category from Akeneo
+         * (they are not yet in catalog_category_entity)
+         */
         $select->joinLeft(
-        // retrieve each category entity for each row_id.
-        // We use "left join" to be able to create new category from Akeneo (they are not yet in catalog_category_entity)
-            ['p' => 'catalog_category_entity'],
+            ['p' => $this->getTable('catalog_category_entity')],
             '_entity_id = p.entity_id',
             $cols
         )
-            ->joinLeft( // retrieve all the staging update for the givens entities. We use "join left" to get the original entity
-                ['s' => 'staging_update'],
+            /**
+             * retrieve all the staging update for the givens entities. We use "join left" to get the original entity
+             */
+            ->joinLeft(
+                ['s' => $this->getTable('staging_update')],
                 'p.created_in = s.id',
                 []
             );
 
         if (!$this->configHelper->getCategoriesIsOverrideContentStaging()) {
+            /**
+             * filter to get only "default category entities"
+             * ie. category with 2 stagings scheduled will appear 5 times in catalog_category_entity table.
+             * We only want row not updated by the content staging
+             * (the first, the one between the 2 scheduled and the last).
+             */
             $select->where(
             // filter to get only "default category entities"
             // ie. category with 2 stagings scheduled will appear 5 times in catalog_category_entity table.
             // We only want row not updated by the content staging (the first, the one between the 2 scheduled and the last).
-                's.is_rollback = 1'
-            )->orWhere(
-                's.id IS NULL'
+                's.is_rollback = 1 OR s.id IS NULL'
             );
         }
 
         try {
-            // if possible, we remove behaviour of the ContentStaging override on FromRenderer @see \Magento\Staging\Model\Select\FromRenderer
+            /**
+             * if possible, we remove behaviour of the ContentStaging override on FromRenderer
+             * @see \Magento\Staging\Model\Select\FromRenderer
+             */
             $select->setPart('disable_staging_preview', true);
         } catch (Zend_Db_Select_Exception $e) {
             $this->_logger->error($e->getMessage());
@@ -971,9 +1045,127 @@ class Entities
         $mysqlVersion = $mysqlVersionQuery->fetch();
 
         if (!$mysqlVersion['version']) {
-            throw new Exception(__('Mysql version not recognized'));
+            throw new Exception((string)__('Mysql version not recognized'));
         }
 
         return $mysqlVersion['version'];
+    }
+
+    /**
+     * Get family attributes database recommended length
+     *
+     * @param string $familyCode
+     *
+     * @return mixed[]
+     */
+    protected function getAttributesLength(string $familyCode): array
+    {
+        /** @var AkeneoPimClientInterface|false $akeneoClient */
+        $akeneoClient = $this->authenticator->getAkeneoApiClient();
+
+        if (isset($this->attributeLength[$familyCode]) || !$akeneoClient) {
+            return $this->attributeLength[$familyCode];
+        }
+
+        $attributeTypesLength = self::ATTRIBUTE_TYPES_LENGTH;
+        /** @var mixed[] $family */
+        $family = $akeneoClient->getFamilyApi()->get($familyCode);
+        /** @var string[] $familyAttributesCode */
+        $familyAttributesCode = $family['attributes'] ?? [];
+        /** @var string|int $paginationSize */
+        $paginationSize = $this->configHelper->getPaginationSize();
+        $searchAttributesResult = [];
+        $searchAttributesCode = [];
+        // Batch API calls to avoid too large request URI
+        foreach ($familyAttributesCode as $attributeCode) {
+            $searchAttributesCode[] = $attributeCode;
+            if (count($searchAttributesCode) === $paginationSize) {
+                $searchAttributesResult[] = $akeneoClient->getAttributeApi()->all($paginationSize, [
+                    'search' => [
+                        'code' => [
+                            [
+                                'operator' => 'IN',
+                                'value' => $searchAttributesCode,
+                            ],
+                        ],
+                    ],
+                ]);
+                $searchAttributesCode = [];
+            }
+        }
+        // Don't forget last page of attributes
+        if (count($searchAttributesCode) > 1) {
+            $searchAttributesResult[] = $akeneoClient->getAttributeApi()->all($paginationSize, [
+                'search' => [
+                    'code' => [
+                        [
+                            'operator' => 'IN',
+                            'value' => $searchAttributesCode,
+                        ],
+                    ],
+                ],
+            ]);
+        }
+
+        /** @var ResourceCursor $familyAttributes */
+        foreach ($searchAttributesResult as $familyAttributes) {
+            foreach ($familyAttributes as $attribute) {
+                if (!isset($attribute['code'], $attribute['type'])) {
+                    continue;
+                }
+                $attributeCode = strtolower($attribute['code']);
+                $attributeType = $attribute['type'];
+
+                $this->attributeLength[$familyCode][$attributeCode] =
+                    $attributeTypesLength[$attributeType] ?? self::DEFAULT_ATTRIBUTE_LENGTH;
+            }
+        }
+
+        return $this->attributeLength[$familyCode] ?? [];
+    }
+
+    /**
+     * Get attribute column length with family ATTRIBUTE_TYPES_LENGTH
+     *
+     * @param string|null $familyCode
+     * @param string $attributeCode
+     *
+     * @return string|null
+     */
+    public function getAttributeColumnLength(?string $familyCode, string $attributeCode): ?string
+    {
+        if (!$familyCode) {
+            return null;
+        }
+
+        $attributesLength = $this->getAttributesLength($familyCode);
+        $attributeColumnLength = $attributesLength[strtok($attributeCode, '-')] ?? self::LARGE_ATTRIBUTE_LENGTH; // Add 2M by default to ensure "fake" reference entity attributes correct length
+        return $attributeColumnLength === self::DEFAULT_ATTRIBUTE_LENGTH ? null : $attributeColumnLength; // Return null value for default attributes length
+    }
+
+    /**
+     * Retrieve product API endpoint with UUID behavior
+     * @see https://api.akeneo.com/getting-started/from-identifiers-to-uuid-7x/welcome.html#from-product-identifier-to-product-uuid
+     *
+     * @return ProductApiInterface|ProductUuidApiInterface
+     */
+    public function getProductApiEndpoint(AkeneoPimClientInterface $akeneoClient)
+    {
+        if ($this->isProductUuidEdition()) {
+            /** @var ProductUuidApiInterface $productApi */
+            return $akeneoClient->getProductUuidApi();
+        }
+
+        return $akeneoClient->getProductApi();
+    }
+
+    /**
+     * Check if Akeneo edition is set on Serenity, Growth or V7.0
+     */
+    public function isProductUuidEdition(): bool
+    {
+        $edition = $this->configHelper->getEdition();
+
+        return $edition === Edition::SERENITY || $edition === Edition::GROWTH || $edition === Edition::SEVEN;
     }
 }

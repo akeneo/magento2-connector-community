@@ -16,12 +16,9 @@ use Magento\Framework\DB\Select;
 use Zend_Db_Expr as Expr;
 
 /**
- * Class FamilyVariant
- *
- * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class FamilyVariant
@@ -83,6 +80,7 @@ class FamilyVariant
      * Create temporary table
      *
      * @param AkeneoPimClientInterface $akeneoClient
+     * @param string $family
      *
      * @return array|string[]
      */
@@ -93,12 +91,12 @@ class FamilyVariant
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
 
-        /** @var array $family */
-        $family = $akeneoClient->getFamilyApi()->get($family);
+        /** @var array $familyApi */
+        $familyApi = $akeneoClient->getFamilyApi()->get($family);
         /** @var bool $hasVariant */
         $hasVariant = false;
         /** @var PageInterface $variantFamilies */
-        $variantFamilies = $akeneoClient->getFamilyVariantApi()->listPerPage($family['code'], 1);
+        $variantFamilies = $akeneoClient->getFamilyVariantApi()->listPerPage($familyApi['code'], 1);
         if (count($variantFamilies->getItems()) > 0) {
             $hasVariant = true;
         }
@@ -134,10 +132,10 @@ class FamilyVariant
         $messages = [];
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
-        /** @var array $family */
-        $family = $akeneoClient->getFamilyApi()->get($family);
+        /** @var array $familyApi */
+        $familyApi = $akeneoClient->getFamilyApi()->get($family);
         /** @var string $familyCode */
-        $familyCode = $family['code'];
+        $familyCode = $familyApi['code'];
         /** @var int $count */
         $count = $this->insertFamilyVariantData($familyCode, $paginationSize, $akeneoClient);
         if ($count === 0) {
@@ -193,9 +191,9 @@ class FamilyVariant
         if (!empty($columns)) {
             /** @var string $update */
             $update = 'TRIM(BOTH "," FROM CONCAT(COALESCE(`' . join(
-                    '`, \'\' ), "," , COALESCE(`',
-                    $columns
-                ) . '`, \'\')))';
+                '`, \'\' ), "," , COALESCE(`',
+                $columns
+            ) . '`, \'\')))';
             $connection->update($tmpTable, ['_axis' => new Expr($update)]);
         }
         /** @var \Zend_Db_Statement_Interface $variantFamily */
@@ -211,7 +209,7 @@ class FamilyVariant
         );
         while (($row = $variantFamily->fetch())) {
             /** @var array $axisAttributes */
-            $axisAttributes = explode(',', $row['_axis']);
+            $axisAttributes = explode(',', $row['_axis'] ?? '');
             /** @var array $axis */
             $axis = [];
             /** @var string $code */
@@ -250,7 +248,7 @@ class FamilyVariant
         $connection->query(
             $connection->updateFromSelect(
                 $query,
-                ['p' => $this->entitiesHelper->getTable($this->entitiesHelper->getTableName('product_model'))]
+                ['p' => $this->entitiesHelper->getTableName('product_model')]
             )
         );
 

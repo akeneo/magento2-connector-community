@@ -19,6 +19,7 @@
                 <client_secret>demo_secret</client_secret>
                 <pagination_size>100</pagination_size>
                 <edition>less_four_point_zero_point_sixty_two</edition>
+                <storage_engine>myisam</storage_engine>
             </akeneo_api>
             <products_filters>
                 <mode>standard</mode>
@@ -29,9 +30,12 @@
                 <model_completeness_type>no_condition</model_completeness_type>
             </products_filters>
             <product>
+                <akeneo_attribute_code_for_sku>sku</akeneo_attribute_code_for_sku>
                 <url_generation_enabled>1</url_generation_enabled>
                 <product_status_mode>default_product_status</product_status_mode>
                 <default_configurable_product_status>2</default_configurable_product_status>
+                <visibility_enabled>0</visibility_enabled>
+                <default_visibility>1</default_visibility>
                 <activation>2</activation>
                 <association_related>SUBSTITUTION</association_related>
                 <association_upsell>UPSELL</association_upsell>
@@ -49,6 +53,7 @@
                 <advanced_log>0</advanced_log>
                 <enable_clean_logs>1</enable_clean_logs>
                 <clean_logs>30</clean_logs>
+                <enable_job_grid_auto_reload>1</enable_job_grid_auto_reload>
             </advanced>
             <attribute>
                 <option_code_as_admin_label>0</option_code_as_admin_label>

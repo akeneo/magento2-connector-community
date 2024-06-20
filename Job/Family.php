@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Job;
 
 use Akeneo\Connector\Helper\Authenticator;
@@ -25,13 +27,9 @@ use Magento\Indexer\Model\IndexerFactory;
 use Zend_Db_Expr as Expr;
 
 /**
- * Class Family
- *
- * @category  Class
- * @package   Akeneo\Connector\Job
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Family extends Import
@@ -153,9 +151,12 @@ class Family extends Import
         /** @var string[] $filters */
         $filters = $this->familyFilters->getFilters();
         if ($this->configHelper->isAdvancedLogActivated()) {
-            $this->jobExecutor->setAdditionalMessage(__('Path to log file : %1', $this->handler->getFilename()), $this->logger);
-            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
-            $this->logger->addDebug(__('Family API call Filters : ') . print_r($filters, true));
+            $this->jobExecutor->setAdditionalMessage(
+                __('Path to log file : %1', $this->handler->getFilename()),
+                $this->logger
+            );
+            $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
+            $this->logger->debug(__('Family API call Filters : ') . print_r($filters, true));
         }
         /** @var PageInterface $families */
         $families = $this->akeneoClient->getFamilyApi()->listPerPage(1, false, $filters);
@@ -164,7 +165,7 @@ class Family extends Import
 
         if (empty($family)) {
             $this->jobExecutor->setMessage(__('No results retrieved from Akeneo'), $this->logger);
-            $this->jobExecutor->afterRun(1);
+            $this->jobExecutor->afterRun(true);
 
             return;
         }
@@ -245,7 +246,12 @@ class Family extends Import
      */
     public function matchEntities()
     {
-        $this->entitiesHelper->matchEntity('code', 'eav_attribute_set', 'attribute_set_id', $this->jobExecutor->getCurrentJob()->getCode());
+        $this->entitiesHelper->matchEntity(
+            'code',
+            'eav_attribute_set',
+            'attribute_set_id',
+            $this->jobExecutor->getCurrentJob()->getCode()
+        );
     }
 
     /**
@@ -313,7 +319,7 @@ class Family extends Import
         /** @var array $row */
         while ($row = $query->fetch()) {
             /** @var array $attributes */
-            $attributes = explode(',', $row['attribute_code']);
+            $attributes = explode(',', $row['attribute_code'] ?? '');
             /** @var string $attribute */
             foreach ($attributes as $attribute) {
                 $connection->insert(
@@ -371,7 +377,9 @@ class Family extends Import
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
+        if (!$this->configHelper->isAdvancedLogActivated()) {
+            $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
+        }
     }
 
     /**
@@ -391,7 +399,7 @@ class Family extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $types */
         $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
@@ -424,7 +432,7 @@ class Family extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $typesFlushed */
         $typesFlushed = [];
 

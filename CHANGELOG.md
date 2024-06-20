@@ -311,3 +311,182 @@
 
 ### Version 102.3.1 :
 * Improve option job performance by optimizing existing option mapping requests and process
+
+### Version 102.3.2 :
+* Fix product job status still being "Processing" if the last family imported have no product to update
+
+### Version 102.4.0 :
+* Update temporary tables default column type from "text" to "mediumtext" in order to manage maximum field size for "textfield" attributes in Magento
+* Fix "IN" family filter for advanced product filter mode importing every family instead of only one
+
+### Version 102.5.0 :
+* Add product status mode "Attribute mapping" in order to map a Yes/No attribute to the status attribute (https://help.akeneo.com/magento2-connector/articles/05-configure-products.html#attribute-mapping-for-status)
+* Use "is_root" Akeneo API parameter for category endpoint in order to generate options for the category import configuration in the admin page
+
+### Version 102.5.1 :
+* Fix every family being fetched while using IN family search with advanced filter mode
+
+### Version 102.6.0 :
+* Add automatic 301 redirect when the url_key of a product is updated (https://help.akeneo.com/magento2-connector/articles/05-configure-products.html#regenerate-url-rewrites)
+* Fix data patch to correctly encrypt API Client secret when upgrading from previous version
+
+### Version 102.6.1 :
+* Fix "Product Status Mode" not displaying if Akeneo version is different from "Serenity" or "Growth" edition
+* Fix "Since last successful import" mode not working on first product job without successful date
+* Fix relations from "catalog_product_relation" table for grouped and bundle products being deleted during the product job
+* Fix job status to "Error" if missing or wrong API credentials are set in the connector configuration
+
+### Version 103.0.0 :
+* Add compatibility for Magento 2.4.4 and PHP 8.1: (https://help.akeneo.com/magento2-connector/articles/all-pre-requisite.html#compatibility)
+  * Bump Akeneo API client to version 9
+  * Replace Guzzle HTTP client by Symfony HTTP Client
+  * Fix function usage for PHP 8
+  * Update extension PHP compatibility to 7.4 and 8.1
+* Fix "special_price" and "cost" attribute being set to 0 when empty on MariaDB
+
+### Version 103.0.1 :
+* Improve "setRelated" (Associations) and "setWebsites" (Website Attribute) steps performance for Product job
+* Fix job status not displaying in mail report
+* Fix metric unit being displayed twice if the same attribute is configured in "Metric Attributes"
+
+### Version 103.0.2 :
+* Fix "setRelated" temporary table name to MYSQL maximum table name length
+* Fix "price", "special_price" and "cost" attribute import by setting default value for every temporary table columns to `NULL`
+
+### Version 103.0.3 :
+* Fix simple product association with configurable product when a variation from a two-level family variant is imported without the product model
+
+### Version 103.0.4 :
+* Fix "setRelated" temporary table name to unique value
+* Fix product model variant change in `catalog_product_super_attribute` table
+* Fix `Too few arguments to function Laminas\Diactoros\ResponseFactory::__construct()` issue by adding `nyholm/psr7` dependency
+* Fix missing "$edition" variable in `Job/Product.php`
+
+### Version 103.0.5 :
+* Fix product relation deletion for simple products when using differential import
+* Fix default status mode when scheduled changes are used for products
+* Add new dispatch events at error and success in the job executor
+
+### Version 103.0.6 :
+* Fix manually added product videos being deleted by the image attribute import
+
+### Version 103.0.7 :
+* Fix Magento Framework dependency in composer.json
+* Fix advanced filter error when left empty
+* Improve URL generation requests for product job
+
+### Version 103.0.8 :
+* Fix URL rewrite generation when multiple url keys are duplicated
+
+### Version 103.2.0 :
+* Improve column sizes per attribute type inside product temporary table in order to reduce the MYSQL table volume
+
+### Version 103.2.1 :
+* Fix product model completeness filter channel value when multiple channels are mapped to different websites
+
+### Version 103.3.0 :
+* Add localisable and scopable image attribute import (https://help.akeneo.com/magento2-connector/articles/06-import-images-configuration.html#how-can-i-retrieve-images-from-the-image-attributes)
+* Add job grid automatic refresh in order provide real time progress of jobs (https://help.akeneo.com/magento2-connector/articles/trigger.html#how-to-manually-schedule-and-trigger-each-job)
+* Add attribute option mapping when a select / multi-select attribute is mapped with another one (https://help.akeneo.com/magento2-connector/articles/existing-magento.html#attribute-options)
+* Manage empty attribute values returned by Akeneo API by creating missing columns inside product temporary table
+* Improve extension coding standards
+* Fix column size improvement to manage uppercase attribute codes
+
+### Version 103.3.1 :
+* Fix product job import for a family with only the SKU attribute inside it
+
+### Version 103.4.0 :
+* Fix error return value must be of type string
+* New endpoint to link product with the UUID
+* Last Successful updated import date by family
+* Allow to import product visibility from Akeneo attribute
+* Improve filter and options in the log grid on family
+* Manage visual and text swatch attributes
+* Export configuration improvement
+* "Product Status Mode" parameter missing when selecting version 5.0 Akeneo edition
+* Magento to Adobe Commerce rebranding
+* Error while importing the attribute option
+
+### Version 103.4.1 :
+* Fix length for custom attribute types
+* New error message when website mapping fail
+* Fix error when swatch attribute option is empty
+
+### Version 103.4.2 :
+* Magento 2.4.6 / PHP 8.2 compatibility
+
+### Version 103.4.3 :
+* Fix PHP < 8.1 compatibility
+* Rolled back previous modification to avoid Undefined array key line 3013
+* Avoid to erase swatch configuration
+* Fix image mapping for scope global
+
+### Version 103.5.0 :
+* Select category trees to import instead of trees to exclude
+* Select families to import instead of families to exclude
+* Assets compatibility warning removed
+* Allow to override default attribute values (like tax_class_id)
+* Allow attribute named visibility in Akeneo
+* Fix import products without name grid error
+* Fix status assignation with virtual products
+* Fix visibility attribute error
+* Fix association when category does not exist
+* Prevent import from crashing if the tmp table is missing sort_order column
+* Keep the old sort_order for options if the order from Akeneo is null
+* setCategory step improvement
+
+### Version 104.0.0 :
+* Upgrade minimal PHP dependency to 8.0
+* Upgrade Akeneo PHP client to 11.2.0
+* Allow to disable updated mode filter
+
+### Version 104.0.1 :
+* PGTO-357: Force "selected" attribute on multiselect before print
+* PGTO-366: Add security check to avoid undefined index
+* PGTO-369: Fix virtual product status update
+
+### Version 104.0.2 :
+* PGTO-369: Fix product status assignment regression
+* PGTO-363: Fix visibility update
+
+### Version 104.0.3 :
+* PGTO-378: Fix product without category attribution
+* PGTO-380: Rebuild Visual Merchandiser Dynamic Categories
+
+### Version 104.0.4 :
+* PGTO-376: Fix grouped product association with uuid
+
+### Version 104.0.5 :
+* PGTO-388: Fix table names when tables are prefixed
+* PGTO-389: Fix UUID retro-compatibility when sku is missing
+* PGTO-390: does not flush cache and refresh index until the last product family
+
+### Version 104.0.6 :
+* PGTO-393: Replace the sku by the child product UUID in tmp related table
+
+### Version 104.0.7 :
+* PGTO-397: Never delete products in a virtual category
+
+### Version 104.3.1 :
+* PGTO-402: Fix admin default value empty name
+
+### Version 104.3.2 :
+* PGTO-403: Fix attribute is not cleared
+
+### Version 104.3.3 :
+* PGTO-409: Create empty columns only for price attributes that are mapped but empty in Akeneo
+
+### Version 104.3.4 :
+* PGTO-419: Add possibility to use InnoDB as temporary table format
+
+### Version 104.3.5 :
+* Fix undefined method
+
+### Version 104.3.6 :
+* PGTO-427: Custom Resource Connection
+
+### Version 104.3.7 :
+* PGTO-430: Allow to assign an image to the parent or child only
+
+### Version 104.3.8 :
+* PGTO-433: Product default name logic

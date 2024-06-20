@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Helper;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
@@ -9,12 +11,9 @@ use Akeneo\Pim\ApiClient\Search\SearchBuilder;
 use Akeneo\Pim\ApiClient\Search\SearchBuilderFactory;
 
 /**
- * Class AttributeFilters
- *
- * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class AttributeFilters
@@ -24,31 +23,31 @@ class AttributeFilters
      *
      * @var string ATTRIBUTE_TYPE_CATALOG_FILE
      */
-    const ATTRIBUTE_TYPE_CATALOG_FILE = 'pim_catalog_file';
+    public const ATTRIBUTE_TYPE_CATALOG_FILE = 'pim_catalog_file';
     /**
      * Attribute type for catalog metric
      *
      * @var string ATTRIBUTE_TYPE_CATALOG_METRIC
      */
-    const ATTRIBUTE_TYPE_CATALOG_METRIC = 'pim_catalog_metric';
+    public const ATTRIBUTE_TYPE_CATALOG_METRIC = 'pim_catalog_metric';
     /**
      * Attribute type for catalog table
      *
      * @var string ATTRIBUTE_TYPE_CATALOG_TABLE
      */
-    const ATTRIBUTE_TYPE_CATALOG_TABLE = 'pim_catalog_table';
+    public const ATTRIBUTE_TYPE_CATALOG_TABLE = 'pim_catalog_table';
     /**
      * Attribute type for reference entity
      *
      * @var string ATTRIBUTE_TYPE_REFERENCE_ENTITY
      */
-    const ATTRIBUTE_TYPE_REFERENCE_ENTITY = 'akeneo_reference_entity';
+    public const ATTRIBUTE_TYPE_REFERENCE_ENTITY = 'akeneo_reference_entity';
     /**
      * Attribute type for reference entity collection
      *
      * @var string ATTRIBUTE_TYPE_REFERENCE_ENTITY_COLLECTION
      */
-    const ATTRIBUTE_TYPE_REFERENCE_ENTITY_COLLECTION = 'akeneo_reference_entity_collection';
+    public const ATTRIBUTE_TYPE_REFERENCE_ENTITY_COLLECTION = 'akeneo_reference_entity_collection';
     /**
      * This variable contains a ConfigHelper
      *
@@ -108,7 +107,12 @@ class AttributeFilters
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
 
-        if ($edition == Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition == Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY || $edition === Edition::GROWTH) {
+        if ($edition == Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO
+            || $edition == Edition::GREATER_OR_FIVE
+            || $edition === Edition::SERENITY
+            || $edition === Edition::GROWTH
+            || $edition === Edition::SEVEN
+        ) {
             $filters['search']['type'][] = [
                 'operator' => 'IN',
                 'value'    => $attributeTypes,
@@ -162,8 +166,6 @@ class AttributeFilters
         if (!empty($date)) {
             $this->searchBuilder->addFilter('updated', $mode, $date);
         }
-
-        return;
     }
 
     /**
@@ -182,9 +184,7 @@ class AttributeFilters
         if (!$codes || empty($codes)) {
             return;
         }
-        $codes = explode(',', $codes);
+        $codes = explode(',', $codes ?? '');
         $this->searchBuilder->addFilter('code', 'IN', $codes);
-
-        return;
     }
 }

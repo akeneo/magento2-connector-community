@@ -1,56 +1,59 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Model\Source;
 
 use Magento\Framework\Option\ArrayInterface;
 
 /**
- * Class Edition
- *
- * @package   Akeneo\Connector\Model\Source
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Edition implements ArrayInterface
 {
     /**
-     * Version 3.2 constant
+     * Version 3.2 public constant
      *
      * @var string THREE_POINT_TWO
      */
-    const THREE_POINT_TWO = 'three';
+    public const THREE_POINT_TWO = 'three';
     /**
-     * Version < 4.0.62 constant
+     * Version < 4.0.62 public constant
      *
      * @var string LESS_FOUR_POINT_ZERO_POINT_SIXTY_TWO
      */
-    const LESS_FOUR_POINT_ZERO_POINT_SIXTY_TWO = 'less_four_point_zero_point_sixty_two';
+    public const LESS_FOUR_POINT_ZERO_POINT_SIXTY_TWO = 'less_four_point_zero_point_sixty_two';
     /**
-     * Version >= 4.0.62 and up constant
+     * Version >= 4.0.62 and up public constant
      *
      * @var string GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO
      */
-    const GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO = 'greater_or_four_point_zero_point_sixty_two';
+    public const GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO = 'greater_or_four_point_zero_point_sixty_two';
     /**
-     * Version >= 5.0 and up constant
+     * Version >= 5.0 and up public constant
      *
      * @var string GREATER_OR_FIVE
      */
-    const GREATER_OR_FIVE = 'greater_or_five';
+    public const GREATER_OR_FIVE = 'greater_or_five';
     /**
-     * Version Serenity constant
+     * Version Serenity public constant
      *
      * @var string SERENITY
      */
-    const SERENITY = 'serenity';
+    public const SERENITY = 'serenity';
     /**
-     * Version Growth constant
+     * Version Growth public constant
      *
      * @var string GROWTH
      */
-    const GROWTH = 'growth';
+    public const GROWTH = 'growth';
+    /**
+     * Version 7.0 constant
+     */
+    public const SEVEN = 'seven';
 
     /**
      * Return array of options for the filter mode
@@ -66,6 +69,7 @@ class Edition implements ArrayInterface
             self::GREATER_OR_FIVE => __('5.0 or greater'),
             self::SERENITY => __('Serenity Edition'),
             self::GROWTH => __('Growth Edition'),
+            self::SEVEN => __('7.0'),
         ];
     }
 }

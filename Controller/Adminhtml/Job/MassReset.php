@@ -15,12 +15,9 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\AlreadyExistsException;
 
 /**
- * Class MassReset
- *
- * @package   Akeneo\Connector\Controller\Adminhtml\Job
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class MassReset extends Action
@@ -65,9 +62,12 @@ class MassReset extends Action
     public function execute()
     {
         /** @var int[] $ids */
-        $ids = $this->getRequest()->getParam('entity_ids');
+        $ids = $this->getRequest()->getParam('selected');
         /** @var Collection $collection */
-        $collection = $this->collectionFactory->create()->addFieldToFilter(JobInterface::ENTITY_ID, ['in' => $ids]);
+        $collection = $this->collectionFactory->create();
+        if (!$this->getRequest()->getParam('excluded')) {
+            $collection->addFieldToFilter(JobInterface::ENTITY_ID, ['in' => $ids]);
+        }
         /** @var JobInterface $job */
         foreach ($collection->getItems() as $job) {
             $this->jobExecutor->setJobStatus(JobInterface::JOB_PENDING, $job);

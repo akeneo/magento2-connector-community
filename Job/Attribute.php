@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Job;
 
+use Akeneo\Connector\Api\Data\AttributeTypeInterface;
 use Akeneo\Connector\Helper\AttributeFilters;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
@@ -13,6 +16,7 @@ use Akeneo\Connector\Logger\AttributeLogger;
 use Akeneo\Connector\Logger\Handler\AttributeHandler;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Exception;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Eav\Model\Config;
 use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
@@ -22,17 +26,14 @@ use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Indexer\IndexerInterface;
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Indexer\Model\IndexerFactory;
 use Zend_Db_Expr as Expr;
 
 /**
- * Class Attribute
- *
- * @category  Class
- * @package   Akeneo\Connector\Job
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Attribute extends Import
@@ -42,7 +43,7 @@ class Attribute extends Import
      *
      * @var string DEFAULT_ATTRIBUTE_SET_NAME
      */
-    const DEFAULT_ATTRIBUTE_SET_NAME = 'Akeneo';
+    public const DEFAULT_ATTRIBUTE_SET_NAME = 'Akeneo';
     /**
      * This variable contains a string value
      *
@@ -126,12 +127,13 @@ class Attribute extends Import
      * @var IndexerFactory $indexFactory
      */
     protected $indexFactory;
+
     /**
-     * Code of pim table attribute type
+     * This variable contains a Json
      *
-     * @var string PIM_CATALOG_TABLE
+     * @var Json $jsonSerializer
      */
-    public const PIM_CATALOG_TABLE = 'pim_catalog_table';
+    protected $jsonSerializer;
 
     /**
      * Attribute constructor
@@ -150,6 +152,7 @@ class Attribute extends Import
      * @param StoreHelper       $storeHelper
      * @param EavSetup          $eavSetup
      * @param IndexerFactory    $indexFactory
+     * @param Json              $jsonSerializer
      * @param array             $data
      */
     public function __construct(
@@ -167,6 +170,7 @@ class Attribute extends Import
         StoreHelper $storeHelper,
         EavSetup $eavSetup,
         IndexerFactory $indexFactory,
+        Json $jsonSerializer,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
@@ -180,6 +184,7 @@ class Attribute extends Import
         $this->storeHelper      = $storeHelper;
         $this->eavSetup         = $eavSetup;
         $this->indexFactory     = $indexFactory;
+        $this->jsonSerializer   = $jsonSerializer;
     }
 
     /**
@@ -196,8 +201,8 @@ class Attribute extends Import
                 __('Path to log file : %1', $this->handler->getFilename()),
                 $this->logger
             );
-            $this->logger->addDebug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
-            $this->logger->addDebug(__('Attribute API call Filters : ') . print_r($filters, true));
+            $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
+            $this->logger->debug(__('Attribute API call Filters : ') . print_r($filters, true));
         }
         /** @var PageInterface $attributes */
         $attributes = $this->akeneoClient->getAttributeApi()->listPerPage(1, false, $filters);
@@ -205,7 +210,7 @@ class Attribute extends Import
         $attribute = $attributes->getItems();
         if (empty($attribute)) {
             $this->jobExecutor->setMessage(__('No results from Akeneo'), $this->logger);
-            $this->jobExecutor->afterRun(1);
+            $this->jobExecutor->afterRun(true);
 
             return;
         }
@@ -253,10 +258,9 @@ class Attribute extends Import
             $attributeCode     = $attribute['code'];
             $attribute['code'] = strtolower($attributeCode);
 
-            if ($attribute['type'] == 'pim_catalog_metric' && in_array(
-                    $attributeCode,
-                    $metricsSetting
-                )) {
+            if ($attribute['type'] === AttributeTypeInterface::PIM_CATALOG_METRIC
+                && in_array($attributeCode, $metricsSetting)
+            ) {
                 if ($attribute['scopable'] || $attribute['localizable']) {
                     $this->jobExecutor->setAdditionalMessage(
                         __(
@@ -291,7 +295,7 @@ class Attribute extends Import
                 __('No attributes with label in the admin locale %1 found.', $localeCode),
                 $this->logger
             );
-            $this->jobExecutor->afterRun(1);
+            $this->jobExecutor->afterRun(true);
 
             return;
         }
@@ -411,7 +415,7 @@ class Attribute extends Import
         $select = $connection->select()->from(
             $tmpTable,
             array_merge(
-                ['_entity_id', 'type'],
+                ['_entity_id', 'type', 'code'],
                 array_keys($columns)
             )
         );
@@ -422,8 +426,7 @@ class Attribute extends Import
          * @var array $attribute
          */
         foreach ($data as $id => $attribute) {
-            /** @var array $type */
-            $type = $this->attributeHelper->getType($attribute['type']);
+            $type = $this->attributeHelper->getSwatchType($attribute['code'], $attribute['type']);
 
             $connection->update($tmpTable, $type, ['_entity_id = ?' => $id]);
         }
@@ -507,18 +510,16 @@ class Attribute extends Import
             /** @var bool $skipAttribute */
             $skipAttribute = false;
             if ($attributeFrontendInput && $row['frontend_input']) {
-                if ($attributeFrontendInput !== $row['frontend_input'] && !in_array(
-                        $row['code'],
-                        $this->excludedAttributes
-                    )) {
+                if ($attributeFrontendInput !== $row['frontend_input']
+                    && !in_array($row['code'], $this->excludedAttributes)
+                ) {
                     $skipAttribute = true;
                     /* Verify if attribute is mapped to an ignored attribute */
                     if (is_array($mapping)) {
                         foreach ($mapping as $match) {
-                            if (in_array(
-                                    $match['magento_attribute'],
-                                    $this->excludedAttributes
-                                ) && $row['code'] == $match['akeneo_attribute']) {
+                            if (in_array($match['magento_attribute'], $this->excludedAttributes)
+                                && $row['code'] == $match['akeneo_attribute']
+                            ) {
                                 $skipAttribute = false;
                             }
                         }
@@ -529,7 +530,7 @@ class Attribute extends Import
             if ($skipAttribute === true) {
                 /** @var string $message */
                 $message = __(
-                    'The attribute %1 was skipped because its type is not the same between Akeneo and Magento. Please delete it in Magento and try a new import',
+                    'The attribute %1 was skipped because its type is not the same between Akeneo and Adobe Commerce/Magento. Please delete it in Magento/Adobe Commerce and try a new import',
                     $row['code']
                 );
                 $this->jobExecutor->setAdditionalMessage($message, $this->logger);
@@ -550,9 +551,33 @@ class Attribute extends Import
                 array_keys($values)
             );
 
+            $uppi = $upifs = '0';
+
+            $additionalData = $connection->fetchOne(
+                $connection->select()
+                    ->from($this->entitiesHelper->getTable('catalog_eav_attribute'), ['additional_data'])
+                    ->where('attribute_id = ?', $row['_entity_id'])
+            );
+            if ($additionalData) {
+                try {
+                    $options = $this->jsonSerializer->unserialize($additionalData);
+                    $uppi = $options['update_product_preview_image'] ?? '0';
+                    $upifs = $options['use_product_image_for_swatch'] ?? '0';
+                } catch (Exception) {}
+            }
+
+            $attributeAdditionalData = [
+                'pim_catalog_swatch_text' =>
+                    '{"swatch_input_type":"text","update_product_preview_image":"' . $uppi . '","use_product_image_for_swatch":"' . $upifs . '"}',
+                'pim_catalog_swatch_visual' =>
+                    '{"swatch_input_type":"visual","update_product_preview_image":"' . $uppi . '","use_product_image_for_swatch":"' . $upifs . '"}'
+            ];
+
             $values = [
                 'attribute_id' => $row['_entity_id'],
+                'additional_data' => $attributeAdditionalData[$row['type']] ?? NULL
             ];
+
             $connection->insertOnDuplicate(
                 $this->entitiesHelper->getTable('catalog_eav_attribute'),
                 $values,
@@ -572,7 +597,7 @@ class Attribute extends Import
             if ((int)$row['scopable'] === 1) {
                 $global = ScopedAttributeInterface::SCOPE_WEBSITE; // Website
             }
-            if ((int)$row['localizable'] === 1 || $row['type'] === self::PIM_CATALOG_TABLE) {
+            if ((int)$row['localizable'] === 1 || $row['type'] === AttributeTypeInterface::PIM_CATALOG_TABLE) {
                 $global = ScopedAttributeInterface::SCOPE_STORE; // Store View
             }
             /** @var array $data */
@@ -640,7 +665,7 @@ class Attribute extends Import
 
             /* Add Attribute to group and family */
             if ($row['_attribute_set_id'] && $row['group']) {
-                $attributeSetIds = explode(',', $row['_attribute_set_id']);
+                $attributeSetIds = explode(',', $row['_attribute_set_id'] ?? '');
 
                 if (is_numeric($row['group'])) {
                     $row['group'] = 'PIM' . $row['group'];
@@ -788,7 +813,9 @@ class Attribute extends Import
      */
     public function dropTable()
     {
-        $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
+        if (!$this->configHelper->isAdvancedLogActivated()) {
+            $this->entitiesHelper->dropTable($this->jobExecutor->getCurrentJob()->getCode());
+        }
     }
 
     /**
@@ -808,7 +835,7 @@ class Attribute extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $types */
         $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
@@ -841,7 +868,7 @@ class Attribute extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations);
+        $types = explode(',', $configurations ?? '');
         /** @var string[] $typesFlushed */
         $typesFlushed = [];
 

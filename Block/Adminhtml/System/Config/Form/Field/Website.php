@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field;
 
 use Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray;
@@ -8,13 +10,9 @@ use Magento\Backend\Block\Template\Context;
 use Akeneo\Connector\Model\Source\Filters\Channel;
 
 /**
- * Class Website
- *
- * @category  Class
- * @package   Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Website extends AbstractFieldArray
@@ -38,7 +36,7 @@ class Website extends AbstractFieldArray
      *
      * @param Context $context
      * @param Factory $elementFactory
-     * @param Channel $channel,
+     * @param Channel $channel
      * @param array   $data
      */
     public function __construct(

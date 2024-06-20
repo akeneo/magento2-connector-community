@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Helper\Import;
 
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
@@ -10,13 +12,9 @@ use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Exception;
 
 /**
- * Class Option
- *
- * @category  Class
- * @package   Akeneo\Connector\Helper\Import
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class Option extends Entities
@@ -89,15 +87,15 @@ class Option extends Entities
                 ['t' => $tableName],
                 $columnToSelect
             )->joinInner(
-                ['e' => 'eav_attribute_option_value'],
+                ['e' => $this->getTable('eav_attribute_option_value')],
                 $condition,
                 []
             )->joinInner(
-                ['o' => 'eav_attribute_option'],
+                ['o' => $this->getTable('eav_attribute_option')],
                 'o.`option_id` = e.`option_id`',
                 ['option_id']
             )->joinInner(
-                ['a' => 'eav_attribute'],
+                ['a' => $this->getTable('eav_attribute')],
                 'o.`attribute_id` = a.`attribute_id` AND t.`attribute` = a.`attribute_code`',
                 []
             )->where('e.store_id = ?', 0)->where('a.entity_type_id', $entityTypeId);
@@ -137,7 +135,15 @@ class Option extends Entities
         $connection->query($update);
 
         /* Continue with original matchEntities */
-        /* Update entity_id column from akeneo_connector_entities table */
+
+        /*
+         * Update entity_id column from akeneo_connector_entities table
+         *
+         * Beware of "Subquery returns more than 1 row" MySQL error.
+         * The problem is not that the subquery "SELECT `entity_id` FROM ..." return more than one row.
+         * The problem is that for a single attribute option and option value combination, you have 2 row in akeneo_connector_entity.
+         * To find them you can query "SELECT `code`, import FROM akeneo_connector_entities GROUP BY CODE, import HAVING count(*) > 1";
+         */
         $connection->query(
             '
             UPDATE `' . $tableName . '` t

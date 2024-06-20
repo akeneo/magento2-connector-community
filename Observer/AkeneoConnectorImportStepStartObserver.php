@@ -13,12 +13,9 @@ use Akeneo\Connector\Model\Log as LogModel;
 use Akeneo\Connector\Model\LogFactory;
 
 /**
- * Class AkeneoConnectorImportStepStartObserver
- *
- * @package   Akeneo\Connector\Observer
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class AkeneoConnectorImportStepStartObserver implements ObserverInterface
@@ -61,12 +58,17 @@ class AkeneoConnectorImportStepStartObserver implements ObserverInterface
     {
         /** @var JobExecutor $executor */
         $executor = $observer->getEvent()->getImport();
+        /** @var Import $currentJobClass */
+        $currentJobClass = $executor->getCurrentJobClass();
+        /** @var string $nameExtension */
+        $nameExtension = $currentJobClass->getFamily() ? ' - ' . $currentJobClass->getFamily() : '';
+
         if ($executor->getStep() == 0) {
             /** @var LogModel $log */
             $log = $this->logFactory->create();
             $log->setIdentifier($executor->getIdentifier());
             $log->setCode($executor->getCurrentJob()->getCode());
-            $log->setName($executor->getCurrentJobClass()->getName());
+            $log->setName($executor->getCurrentJobClass()->getName() . $nameExtension);
             $log->setStatus(JobInterface::JOB_PROCESSING); // processing
             $this->logRepository->save($log);
         } else {

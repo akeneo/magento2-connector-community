@@ -18,19 +18,14 @@ use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
 
 /**
- * Class CreateJobs
- *
- * @package   Akeneo\Connector\Setup\Patch\Data
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class CreateJobs implements DataPatchInterface
 {
     /**
-     * Module Data Setup
-     *
      * @var ModuleDataSetupInterface $moduleDataSetup
      */
     protected $moduleDataSetup;
@@ -51,7 +46,7 @@ class CreateJobs implements DataPatchInterface
      *
      * @var string[] JOBS_CODES
      */
-    const JOBS_CODES = [
+    protected const JOBS_CODES = [
         'category'  => Category::class,
         'family'    => Family::class,
         'attribute' => Attribute::class,

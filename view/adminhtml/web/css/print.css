@@ -1,0 +1,101 @@
+@page
+{
+    size: auto;
+    margin: 16mm 15mm 20mm;
+}
+
+/** Hiding useless parts */
+.menu-wrapper,
+.notices-wrapper,
+.page-header,
+.page-main-actions,
+.side-col,
+.apt-widget-top-container,
+.col-actions,
+p.note,
+._has-datepicker + .ui-datepicker-trigger,
+tfoot,
+footer.page-footer {
+    width: 0 !important;
+    display: none !important;
+}
+
+/** formatting printable data to fullfil page */
+.page-wrapper {
+    margin-left: 0 !important;
+    padding-left: 1cm;
+    width: 100% !important;
+}
+
+.page-layout-admin-2columns-left .page-columns .main-col {
+    width: 100% !important;
+}
+
+td {
+    margin-bottom: .5rem !important;
+    margin-bottom: 1rem !important;
+}
+
+td.label {
+    padding-top: 1rem !important;
+}
+
+td.label span::before {
+    content: unset !important;
+}
+
+td.value {
+    padding-top: 0.2rem !important;
+}
+
+.admin__control-multiselect {
+    max-height: unset !important;
+    position: relative;
+}
+
+.entry-edit {
+    position: relative;
+}
+
+.section-config {
+    margin-top: 0.8rem;
+}
+
+.section-config .entry-edit-head > a {
+    padding-bottom: 0;
+}
+
+.section-config .entry-edit-head > a::before {
+    content: unset !important;
+}
+
+option {
+    padding: 0 !important;
+}
+
+option:not([selected]) {
+    font-style: italic;
+}
+
+option::before {
+    margin-right: .5rem;
+    font-size: 2rem;
+    font-style: normal;
+}
+
+option:not([selected])::before {
+    content: '☐';
+}
+
+option[selected]::before {
+    content: '☑';
+    font-weight: 700;
+}
+
+.accordion .config .value {
+    width: auto;
+}
+
+.design_theme_ua_regexp {
+    border: 1px solid #adadad;
+}

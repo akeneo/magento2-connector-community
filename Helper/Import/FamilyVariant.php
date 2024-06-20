@@ -1,17 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Helper\Import;
 
 use Akeneo\Connector\Helper\Import\Entities;
 
 /**
- * Class FamilyVariant
- *
- * @category  Class
- * @package   Akeneo\Connector\Helper\Import
  * @author    Agence Dn'D <contact@dnd.fr>
- * @copyright 2019 Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @copyright 2004-present Agence Dn'D
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class FamilyVariant extends Entities

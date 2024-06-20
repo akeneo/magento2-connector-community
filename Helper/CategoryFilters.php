@@ -10,12 +10,9 @@ use Akeneo\Pim\ApiClient\Search\SearchBuilder;
 use Akeneo\Pim\ApiClient\Search\SearchBuilderFactory;
 
 /**
- * Class CategoryFilters
- *
- * @package   Akeneo\Connector\Helper
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
- * @license   https://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @license   https://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://www.dnd.fr/
  */
 class CategoryFilters
@@ -80,7 +77,12 @@ class CategoryFilters
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
 
-        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO || $edition === Edition::GREATER_OR_FIVE || $edition === Edition::SERENITY || $edition === Edition::GROWTH) {
+        if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO
+            || $edition === Edition::GREATER_OR_FIVE
+            || $edition === Edition::SERENITY
+            || $edition === Edition::GROWTH
+            || $edition === Edition::SEVEN
+        ) {
             $this->searchBuilder = $this->searchBuilderFactory->create();
             /** @var string[] $categoriesToImport */
             $categoriesToImport = $this->getCategoriesToImport();
@@ -105,23 +107,7 @@ class CategoryFilters
      */
     public function getCategoriesToImport()
     {
-        /** @var string $excludedCategories */
-        $excludedCategories = $this->configHelper->getCategoriesFilter();
-        /** @var string[] $allParentCategories */
-        $allParentCategories = array_keys($this->categoryFilterSourceModel->getCategories());
-        /** @var string[] $categoriesToImport */
-        $categoriesToImport = [];
-        if ($excludedCategories) {
-            /** @var string[] $explodedCategories */
-            $explodedCategories = explode(',', $excludedCategories);
-            $categoriesToImport = array_diff($allParentCategories, $explodedCategories);
-        } else {
-            $categoriesToImport = $allParentCategories;
-        }
-
-        $categoriesToImport = array_map('strval', $categoriesToImport);
-
-        return $categoriesToImport;
+        return explode(',', $this->configHelper->getCategoriesFilter() ?? '');
     }
 
     /**
@@ -142,7 +128,7 @@ class CategoryFilters
 
         $this->searchBuilder->addFilter('parent', '=', $parent['code']);
         /** @var string[] $search */
-        $search  = $this->searchBuilder->getFilters();
+        $search = $this->searchBuilder->getFilters();
         $filters = [
             'search' => $search,
         ];
