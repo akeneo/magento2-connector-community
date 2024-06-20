@@ -4077,7 +4077,6 @@ class Product extends JobImport
             $positionCounter = 0;
             /** @var array $files */
             $files = [];
-
             /**
              * @var string $image
              * @var string $suffix
@@ -4115,7 +4114,6 @@ class Product extends JobImport
                 if (!$this->configHelper->mediaFileExists($filePath)) {
                     /** @var ResponseInterface $binary */
                     $binary = $this->akeneoClient->getProductMediaFileApi()->download($row[$image]);
-
                     /** @var string $imageContent */
                     $imageContent = $binary->getBody()->getContents();
                     $this->configHelper->saveMediaFile($filePath, $imageContent);
