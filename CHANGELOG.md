@@ -490,3 +490,9 @@
 
 ### Version 104.3.8 :
 * PGTO-433: Product default name logic
+
+### Version 104.3.9 :
+* Adds a config option to disable InnoDB Strict Mode in the session
+* Only remove products from categories managed in Akeneo
+* Optimize media import
+* Only fill completeness when we have products
