@@ -554,11 +554,12 @@ class Option extends Import
                 $dataToInsert = [];
 
                 foreach ($swatchesAttributesData as $swatchesAttributeData) {
+                    $optionData = $this->processSwatchOption($swatchesAttributes,$swatchesAttributeData);
                     $dataToInsert[] = [
                         'option_id' => $swatchesAttributeData['option_id'],
                         'store_id' => $swatchesAttributeData['store_id'],
-                        'type' => ($swatchesAttributes[$swatchesAttributeData['attribute']] === Swatch::SWATCH_TYPE_TEXTUAL_ATTRIBUTE_FRONTEND_INPUT) ? Swatch::SWATCH_TYPE_TEXTUAL : Swatch::SWATCH_TYPE_EMPTY,
-                        'value' => ($swatchesAttributes[$swatchesAttributeData['attribute']] === Swatch::SWATCH_TYPE_TEXTUAL_ATTRIBUTE_FRONTEND_INPUT) ? $swatchesAttributeData['value'] : null,
+                        'type' => $optionData['type'],
+                        'value' => $optionData['value'],
                     ];
                 }
 
@@ -680,6 +681,47 @@ class Option extends Import
         $index++;
 
         return $index;
+    }
+
+    protected function processSwatchOption($swatchesAttributes, $swatchesAttributeData)
+    {
+        //firstly, determine the value
+        $value = null;
+
+        if($swatchesAttributes[$swatchesAttributeData['attribute']] === Swatch::SWATCH_TYPE_TEXTUAL_ATTRIBUTE_FRONTEND_INPUT) {
+            $value = $swatchesAttributeData['value'];
+        }
+
+        if($swatchesAttributes[$swatchesAttributeData['attribute']] === Swatch::SWATCH_TYPE_VISUAL_ATTRIBUTE_FRONTEND_INPUT) {
+            //query the original value from magento
+            $connection = $this->entitiesHelper->getConnection();
+
+            $swatchOptions = $connection->select()->from(
+                $this->entitiesHelper->getTable('eav_attribute_option_swatch'), 'value'
+            )->where('option_id = ?', $swatchesAttributeData['option_id']
+            )->where('store_id = ?', $swatchesAttributeData['store_id']);
+
+            $value = $connection->fetchOne($swatchOptions);
+        }
+
+        //secondly, determine the type
+        $type = Swatch::SWATCH_TYPE_EMPTY;
+
+        if($swatchesAttributes[$swatchesAttributeData['attribute']] === Swatch::SWATCH_TYPE_TEXTUAL_ATTRIBUTE_FRONTEND_INPUT) {
+            $type = Swatch::SWATCH_TYPE_TEXTUAL;
+        }
+
+        if($swatchesAttributes[$swatchesAttributeData['attribute']] === Swatch::SWATCH_TYPE_VISUAL_ATTRIBUTE_FRONTEND_INPUT) {
+            $type = Swatch::SWATCH_TYPE_VISUAL_IMAGE;
+            if($value && preg_match('/^#[a-f0-9]{6}$/i', $value)) {//hex color
+                $type = Swatch::SWATCH_TYPE_VISUAL_COLOR;
+            }
+        }
+
+        return [
+            'type' => $type,
+            'value' => $value,
+        ];
     }
 
     /**
