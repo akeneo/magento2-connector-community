@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Helper;
 
+use Akeneo\Connector\Model\Source\Engine as EngineSourceModel;
 use Exception;
 use Magento\Catalog\Helper\Product as ProductHelper;
 use Magento\Catalog\Model\Product\Link;
@@ -567,6 +568,10 @@ class Config
      * Storage engine to use with temporary tables
      */
     protected const TABLE_STORAGE_ENGINE = 'akeneo_connector/akeneo_api/storage_engine';
+    /**
+     * Flag to disable InnoDB Strict Mode in mysql connections
+     */
+    private const CONNECTION_DISABLE_INNODB_STRICT_MODE = 'akeneo_connector/akeneo_api/disable_innodb_strict_mode';
 
     /**
      * This variable contains a Encryptor
@@ -1337,7 +1342,7 @@ class Config
      */
     public function getDefaultWebsiteId()
     {
-        return $this->storeManager->getStore()->getWebsiteId();
+        return $this->storeManager->getDefaultStoreView()->getWebsiteId();
     }
 
     /**
@@ -2027,4 +2032,9 @@ class Config
         return (string)$this->scopeConfig->getValue(self::TABLE_STORAGE_ENGINE);
     }
 
+    public function getShouldDisabledInnoDBStrictMode(): bool
+    {
+        return (bool) $this->scopeConfig->getValue(self::CONNECTION_DISABLE_INNODB_STRICT_MODE)
+            && $this->getStorageEngine() === EngineSourceModel::STORAGE_ENGINE_INNODB;
+    }
 }
