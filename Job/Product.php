@@ -3968,7 +3968,7 @@ class Product extends JobImport
         /** @var string $tableName */
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $gallery */
-        $gallery = $this->configHelper->getMediaImportGalleryColumns();
+        $gallery = $this->configHelper->getMediaImportGalleryColumns(null, true);
 
         if (empty($gallery)) {
             $this->setStatus(true);
@@ -3976,8 +3976,6 @@ class Product extends JobImport
 
             return;
         }
-
-        $gallery = array_unique($gallery);
 
         /** @var string $table */
         $table = $this->entitiesHelper->getTable('catalog_product_entity');
@@ -3994,6 +3992,8 @@ class Product extends JobImport
         $stores = $this->storeHelper->getAllStores();
         /** @var string[] $dataToImport */
         $dataToImport = [];
+        /** @var string[] $positionsToImport */
+        $positionsToImport = [];
         /** @var bool $valueFound */
         $valueFound = false;
 
@@ -4001,7 +4001,7 @@ class Product extends JobImport
         $columns = $this->configHelper->getMediaImportImagesColumns();
 
         foreach ($gallery as $image) {
-            if (!$connection->tableColumnExists($tmpTable, strtolower($image))) {
+            if (!$connection->tableColumnExists($tmpTable, strtolower($image['attribute']))) {
                 // If not exist, check for each store if the field exist
                 /**
                  * @var string  $suffix
@@ -4010,25 +4010,27 @@ class Product extends JobImport
                 foreach ($stores as $suffix => $storeData) {
                     if (!$connection->tableColumnExists(
                         $tmpTable,
-                        strtolower($image) . self::SUFFIX_SEPARATOR . $suffix
+                        strtolower($image['attribute']) . self::SUFFIX_SEPARATOR . $suffix
                     )) {
                         continue;
                     }
                     $valueFound = true;
-                    $data[$image . self::SUFFIX_SEPARATOR . $suffix] = strtolower($image) . self::SUFFIX_SEPARATOR . $suffix;
-                    $dataToImport[strtolower($image) . self::SUFFIX_SEPARATOR . $suffix] = $suffix;
+                    $data[$image['attribute'] . self::SUFFIX_SEPARATOR . $suffix] = strtolower($image['attribute']) . self::SUFFIX_SEPARATOR . $suffix;
+                    $dataToImport[strtolower($image['attribute']) . self::SUFFIX_SEPARATOR . $suffix] = $suffix;
+                    $positionsToImport[strtolower($image['attribute']) . self::SUFFIX_SEPARATOR . $suffix] = $image['position']
                 }
                 if (!$valueFound) {
                     $this->jobExecutor->setMessage(
-                        __('Info: No value found in the current batch for the attribute %1', $image),
+                        __('Info: No value found in the current batch for the attribute %1', $image['attribute']),
                         $this->logger
                     );
                 }
                 continue;
             }
             // Global image
-            $data[$image] = strtolower($image);
-            $dataToImport[$image] = null;
+            $data[$image['attribute']] = strtolower($image['attribute']);
+            $dataToImport[$image['attribute']] = null;
+            $positionsToImport[$image['attribute']] = $image['position']
         }
 
         /** @var bool $rowIdExists */
@@ -4092,6 +4094,7 @@ class Product extends JobImport
                 if (!$row[$image]) {
                     continue;
                 }
+                $positionCounter = $positionsToImport[$image] ?? $positionCounter;
 
                 if (in_array($row['_type_id'], ['simple', 'virtual']) && in_array($image, $parentOnlyImages)) {
                     continue;
