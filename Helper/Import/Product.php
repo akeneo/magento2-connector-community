@@ -342,7 +342,7 @@ class Product extends Entities
             }
         }
 
-        if (isset($finalProducts)) {
+        if (!empty($finalProducts)) {
             $completeness['completenesses_' . $product['scope']] = $this->jsonSerializer->serialize($finalProducts);
         }
 
