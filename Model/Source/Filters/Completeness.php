@@ -37,15 +37,15 @@ class Completeness implements ArrayInterface
         return [
             self::NO_CONDITION => __('No condition'),
             self::LOWER_THAN  => __('Lower than'),
-            self::LOWER_OR_EQUALS_THAN => __('Lower or equals than'),
+            self::LOWER_OR_EQUALS_THAN => __('Lower than or equals to'),
             self::GREATER_THAN  => __('Greater than'),
-            self::GREATER_OR_EQUALS_THAN => __('Greater or equals than'),
+            self::GREATER_OR_EQUALS_THAN => __('Greater than or equals to'),
             self::EQUALS => __('Equals'),
             self::DIFFER => __('Differ'),
             self::GREATER_THAN_ON_ALL_LOCALES => __('Greater than on all locales'),
-            self::GREATER_OR_EQUALS_THAN_ON_ALL_LOCALES => __('Greater or equals than on all locales'),
+            self::GREATER_OR_EQUALS_THAN_ON_ALL_LOCALES => __('Greater than or equals to on all locales'),
             self::LOWER_THAN_ON_ALL_LOCALES => __('Lower than on all locales'),
-            self::LOWER_OR_EQUALS_THAN_ON_ALL_LOCALES => __('Lower or equals than on all locales')
+            self::LOWER_OR_EQUALS_THAN_ON_ALL_LOCALES => __('Lower than or equals to on all locales')
         ];
     }
 }
