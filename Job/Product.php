@@ -410,6 +410,45 @@ class Product extends JobImport
     }
 
     /**
+     * We need to reset the product UUID when the PIM instance URL has been updated since the last import
+     *
+     * @return void
+     */
+    public function resetUuid(): void
+    {
+        if (!$this->entitiesHelper->isProductUuidEdition()) {
+            $this->jobExecutor->setMessage(__('Akeneo version does not use UUIDs'), $this->logger);
+            return;
+        }
+
+        if (!$this->entitiesHelper->isNeedResetUuid()) {
+            $this->jobExecutor->setMessage(__('There is no need to reset the UUID'), $this->logger);
+            return;
+        }
+
+        $connection = $this->entitiesHelper->getConnection();
+
+        $select = $connection->select()
+            ->from(false, ['code' => 'cpe.sku'])->joinInner(
+                ['cpe' => $this->entitiesHelper->getTable('catalog_product_entity')],
+                'cpe.entity_id = ace.entity_id',
+                []
+            )
+            ->where('ace.import = ?', 'product');
+
+        $connection->query(
+            $connection->updateFromSelect(
+                $select,
+                ['ace' => $this->entitiesHelper->getTable('akeneo_connector_entities')]
+            )
+        );
+
+        $this->entitiesHelper->setLastImportBaseUrl($this->configHelper->getAkeneoApiBaseUrl());
+
+        $this->jobExecutor->setMessage(__('Product UUID has been reset'), $this->logger);
+    }
+
+    /**
      * Create temporary table
      *
      * @return void
