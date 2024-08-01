@@ -248,6 +248,10 @@
         <arguments>
             <argument name="data" xsi:type="array">
                 <item name="steps" xsi:type="array">
+                    <item name="0" xsi:type="array">
+                        <item name="method" xsi:type="string">resetUuid</item>
+                        <item name="comment" xsi:type="string">Reset UUID</item>
+                    </item>
                     <item name="1" xsi:type="array">
                         <item name="method" xsi:type="string">createTable</item>
                         <item name="comment" xsi:type="string">Create temporary table</item>

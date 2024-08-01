@@ -12,6 +12,7 @@ use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\DeploymentConfig;
 use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\FlagManager;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Serialize\Serializer\Json;
 use Zend_Db_Expr as Expr;
@@ -71,7 +72,10 @@ class Product extends Entities
      * @var ScopeConfigInterface $scopeConfig
      */
     protected $scopeConfig;
+
     protected Authenticator $authenticator;
+
+    protected FlagManager $flagManager;
 
     /**
      * Product constructor
@@ -84,6 +88,7 @@ class Product extends Entities
      * @param Authenticator           $authenticator
      * @param Json                    $jsonSerializer
      * @param ScopeConfigInterface    $scopeConfig
+     * @param FlagManager             $flagManager
      */
     public function __construct(
         ResourceConnection $connection,
@@ -93,13 +98,31 @@ class Product extends Entities
         ConfigHelper $configHelper,
         Authenticator $authenticator,
         Json $jsonSerializer,
-        ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig,
+        FlagManager $flagManager
     ) {
         parent::__construct($connection, $deploymentConfig, $product, $configHelper, $authenticator);
 
         $this->jsonSerializer          = $jsonSerializer;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
         $this->scopeConfig             = $scopeConfig;
+        $this->flagManager             = $flagManager;
+    }
+
+    public function isNeedResetUuid(): bool
+    {
+        $lastBaseUrl = (string)$this->flagManager->getFlagData('akeneo_last_import_base_url');
+
+        if ($this->configHelper->getAkeneoApiBaseUrl() !== $lastBaseUrl) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function setLastImportBaseUrl(string $baseUrl): void
+    {
+        $this->flagManager->saveFlag('akeneo_last_import_base_url', $baseUrl);
     }
 
     /**

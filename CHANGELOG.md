@@ -496,3 +496,6 @@
 * Only remove products from categories managed in Akeneo
 * Optimize media import
 * Only fill completeness when we have products
+
+### Version 104.3.10 :
+* AMC-479: Reset product UUID when URL has been updated
