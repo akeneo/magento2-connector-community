@@ -499,3 +499,7 @@
 
 ### Version 104.3.10 :
 * AMC-479: Reset product UUID when URL has been updated
+
+### Version 104.3.11 :
+* PGTO-398: keep the swatch option if exists
+* AMC-483: Single store mode feature
