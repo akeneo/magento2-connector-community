@@ -111,6 +111,10 @@ class Store
                 continue;
             }
 
+            if ($this->storeManager->isSingleStoreMode() && (int)$websiteId !== 0) {
+                continue;
+            }
+
             /** @var string $currency */
             $currency = $website->getBaseCurrencyCode();
             /** @var string[] $siblings */

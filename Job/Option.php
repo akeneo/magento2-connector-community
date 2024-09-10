@@ -554,11 +554,12 @@ class Option extends Import
                 $dataToInsert = [];
 
                 foreach ($swatchesAttributesData as $swatchesAttributeData) {
+                    $optionTypeAndValue = $this->getTypeAndValue($swatchesAttributes, $swatchesAttributeData);
                     $dataToInsert[] = [
                         'option_id' => $swatchesAttributeData['option_id'],
                         'store_id' => $swatchesAttributeData['store_id'],
-                        'type' => ($swatchesAttributes[$swatchesAttributeData['attribute']] === Swatch::SWATCH_TYPE_TEXTUAL_ATTRIBUTE_FRONTEND_INPUT) ? Swatch::SWATCH_TYPE_TEXTUAL : Swatch::SWATCH_TYPE_EMPTY,
-                        'value' => ($swatchesAttributes[$swatchesAttributeData['attribute']] === Swatch::SWATCH_TYPE_TEXTUAL_ATTRIBUTE_FRONTEND_INPUT) ? $swatchesAttributeData['value'] : null,
+                        'type' => $optionTypeAndValue['type'],
+                        'value' => $optionTypeAndValue['value'],
                     ];
                 }
 
@@ -575,6 +576,42 @@ class Option extends Import
         }
     }
 
+    /**
+     * Dispatch logic for getting type / value for each type of swatch option
+     */
+    public function getTypeAndValue(array $swatchesAttributes, array $swatchesAttributeData): array
+    {
+        // If swatch attribute is a textual swatch returning textual data
+        if ($swatchesAttributes[$swatchesAttributeData['attribute']] === Swatch::SWATCH_TYPE_TEXTUAL_ATTRIBUTE_FRONTEND_INPUT) {
+            return [
+                'type' => Swatch::SWATCH_TYPE_TEXTUAL,
+                'value' => $swatchesAttributeData['value'],
+            ];
+        }
+
+        // Keep the current data for visual swatch
+        /** @var AdapterInterface $connection */
+        $connection = $this->entitiesHelper->getConnection();
+        $current = $connection->fetchRow(
+            $connection->select()
+                ->from($this->entitiesHelper->getTable('eav_attribute_option_swatch'), ['value', 'type'])
+                ->where('store_id = ?', $swatchesAttributeData['store_id'])
+                ->where('option_id = ?', $swatchesAttributeData['option_id'])
+                ->limit(1)
+        );
+        if (!empty($current)) {
+            return [
+                'type' => $current['type'],
+                'value' => $current['value'],
+            ];
+        }
+
+        // Init default data
+        return [
+            'type' => Swatch::SWATCH_TYPE_EMPTY,
+            'value' => null,
+        ];
+    }
 
     /**
      * Drop temporary table
