@@ -1323,10 +1323,12 @@ class Config
                 $result[0] = $class['tax_class'];
             }
 
-            /** @var StoreInterface $store */
-            foreach ($stores as $store) {
-                if ($store->getWebsiteId() === $class['website']) {
-                    $result[$store->getId()] = $class['tax_class'];
+            if (!$this->storeManager->isSingleStoreMode()) {
+                /** @var StoreInterface $store */
+                foreach ($stores as $store) {
+                    if ($store->getWebsiteId() === $class['website']) {
+                        $result[$store->getId()] = $class['tax_class'];
+                    }
                 }
             }
         }
