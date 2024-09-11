@@ -503,3 +503,6 @@
 ### Version 104.3.11 :
 * PGTO-398: keep the swatch option if exists
 * AMC-483: Single store mode feature
+
+### Version 104.3.12 :
+* AMC-483: Fix single store mode tax class
