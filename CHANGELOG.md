@@ -506,3 +506,6 @@
 
 ### Version 104.3.12 :
 * AMC-483: Fix single store mode tax class
+
+### Version 104.3.13 :
+* Symfony HTTP Client requirement updated
