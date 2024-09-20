@@ -129,7 +129,9 @@ class TransferFamiliesAndCategoriesToNewFormatPatch implements DataPatchInterfac
      */
     public static function getDependencies(): array
     {
-        return [];
+        return [
+            EncryptApiSecret::class,
+        ];
     }
 
     /**
