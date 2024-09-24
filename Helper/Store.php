@@ -210,6 +210,7 @@ class Store
             $this->getStores(['channel_code']), // channel
             $this->getStores(['currency']), // USD
             $this->getStores(['channel_code', 'currency']), // channel-USD
+            $this->getStores(['lang', 'currency']), // en_US-USD
             $this->getStores(['lang', 'channel_code', 'currency']) // en_US-channel-USD
         );
 
