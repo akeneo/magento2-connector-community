@@ -509,3 +509,8 @@
 
 ### Version 104.3.13 :
 * Symfony HTTP Client requirement updated
+
+### Version 104.3.14 :
+* PGTO-340: Fix job executor date format
+* PGTO-462: Set attribute code to lowercase for options
+* Fix non-scopable localizable attribute import
