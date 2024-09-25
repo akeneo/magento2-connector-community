@@ -264,6 +264,8 @@ class Option extends Import
             $this->logImportedEntities($this->logger);
         }
 
+        $connection->update($tmpTable, ['attribute' => new Expr('LOWER(`attribute`)')]);
+
         /* Remove option without an admin store label */
         if (!$this->configHelper->getOptionCodeAsAdminLabel()) {
             /** @var string $localeCode */
