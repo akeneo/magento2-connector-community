@@ -1344,7 +1344,7 @@ class Product extends JobImport
         }
 
         if ($this->configHelper->isUrlGenerationEnabled()) {
-            $data['url_key'] = 'v.code';
+            $data['url_key'] = new Expr('LOWER(v.code)');
         }
 
         /** @var array $columnsModel */
