@@ -557,6 +557,11 @@ class Option extends Import
 
                 foreach ($swatchesAttributesData as $swatchesAttributeData) {
                     $optionTypeAndValue = $this->getTypeAndValue($swatchesAttributes, $swatchesAttributeData);
+                    if ((int)$optionTypeAndValue['type'] === Swatch::SWATCH_TYPE_VISUAL_IMAGE &&
+                        (int)$swatchesAttributeData['store_id'] !== 0)
+                    {
+                        continue;
+                    }
                     $dataToInsert[] = [
                         'option_id' => $swatchesAttributeData['option_id'],
                         'store_id' => $swatchesAttributeData['store_id'],
@@ -597,8 +602,9 @@ class Option extends Import
         $current = $connection->fetchRow(
             $connection->select()
                 ->from($this->entitiesHelper->getTable('eav_attribute_option_swatch'), ['value', 'type'])
-                ->where('store_id = ?', $swatchesAttributeData['store_id'])
+                ->where('store_id = 0 OR store_id = ?', $swatchesAttributeData['store_id'])
                 ->where('option_id = ?', $swatchesAttributeData['option_id'])
+                ->order('store_id DESC')
                 ->limit(1)
         );
         if (!empty($current)) {
