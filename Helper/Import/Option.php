@@ -98,7 +98,7 @@ class Option extends Entities
                 ['a' => $this->getTable('eav_attribute')],
                 'o.`attribute_id` = a.`attribute_id` AND t.`attribute` = a.`attribute_code`',
                 []
-            )->where('e.store_id = ?', 0)->where('a.entity_type_id', $entityTypeId);
+            )->where('e.store_id = ?', 0)->where('a.entity_type_id = ?', $entityTypeId);
             /** @var string[] $existingMagentoOptions */
             $existingMagentoOptions = $connection->query($select)->fetchAll();
             /** @var string[] $existingMagentoOptionIds */
