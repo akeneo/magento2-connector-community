@@ -752,7 +752,7 @@ class Product extends JobImport
                                                 /** @var string[][] $option */
                                                 foreach ($config['options'] as $option) {
                                                     if ($option['code'] === $newData || $option['code'] === $label) {
-                                                        $table['data'][$i][$label] = [$newLabel => $option['labels'][$locale]];
+                                                        $table['data'][$i][$label] = [$newLabel => $option['labels'][$locale] ?? ''];
                                                     }
                                                 }
                                             }
