@@ -605,8 +605,6 @@ class Product extends JobImport
                 __('No product found for family: %1 but product model found, process with import', $family),
                 $this->logger
             );
-
-            return;
         } else {
             $product = reset($products);
             // Make sure to delete product model table
@@ -621,17 +619,20 @@ class Product extends JobImport
         if ($this->entitiesHelper->isProductUuidEdition()) {
             $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
-            $connection->changeColumn(
-                $tmpTable,
-                'uuid',
-                'uuid',
-                [
-                    'nullable' => true,
-                    'type' => Table::TYPE_TEXT,
-                    'length' => 255,
-                    'comment' => 'UUID',
-                ]
-            );
+            $definition = [
+                'nullable' => true,
+                'type' => Table::TYPE_TEXT,
+                'length' => 255,
+                'comment' => 'UUID',
+            ];
+
+            if ($connection->tableColumnExists($tmpTable, 'uuid')) {
+                $connection->changeColumn($tmpTable, 'uuid', 'uuid', $definition);
+            } else {
+                // We have no product (like product models without variant) with applied filters
+                // We need to add manually the column
+                $connection->addColumn($tmpTable, 'uuid', $definition);
+            }
             $connection->addIndex($tmpTable, 'UNIQUE_UUID', 'uuid', 'unique');
         }
     }
