@@ -1726,12 +1726,14 @@ class Product extends JobImport
             return;
         }
 
-        if ($this->entitiesHelper->isProductUuidEdition() && $connection->tableColumnExists($tmpTable, 'sku')) {
-            // We replace the sku by the uuid in the Akeneo entities table if needed for retro-compatibility
+        $skuColumn = $this->configHelper->getAkeneoAttributeCodeForSku() ?: 'sku';
+
+        if ($this->entitiesHelper->isProductUuidEdition() && $connection->tableColumnExists($tmpTable, $skuColumn)) {
+            // We replace the sku by the uuid in the Akeneo entities table if needed
             $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
             $uuids = $connection->select()
                 ->from(false, ['code' => 'tmp.uuid'])
-                ->joinInner(['tmp' => $tmpTable], '`tmp`.`sku` = `ace`.`code`', [])
+                ->joinInner(['tmp' => $tmpTable], '`tmp`.`' . $skuColumn . '` = `ace`.`code`', [])
                 ->where('`ace`.`import` = ?', 'product');
             $connection->query($connection->updateFromSelect($uuids, ['ace' => $entitiesTable]));
         }
