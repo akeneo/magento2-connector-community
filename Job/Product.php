@@ -5188,7 +5188,7 @@ class Product extends JobImport
 
         $connection->query('INSERT IGNORE INTO `' . $entityVarcharTable . '`
             (`attribute_id`, `store_id`, `value`, `' . $columnIdentifier . '`)
-            SELECT ' . $attribute->getId() . ', 0, NULL, `' . $columnIdentifier . '` FROM `' . $entityTable . '` e
+            SELECT ' . $attribute->getId() . ', 0, "", `' . $columnIdentifier . '` FROM `' . $entityTable . '` e
             INNER JOIN `' . $tmpTable . '` t ON e.`entity_id` = t.`_entity_id`');
     }
 }
