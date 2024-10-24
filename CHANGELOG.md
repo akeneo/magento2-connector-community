@@ -514,3 +514,12 @@
 * PGTO-340: Fix job executor date format
 * PGTO-462: Set attribute code to lowercase for options
 * Fix non-scopable localizable attribute import
+
+### Version 104.3.15 :
+* PGTO-398: Do not create an empty value for visual swatch in stores
+* PGTO-463: Fix empty option label error for table attributes
+* PGTO-472: Empty product model option label if not exist for local
+* PGTO-479: Fix UUID error when product models have no variant
+* PGTO-480: Fix request to match existing options
+* Set default product name to empty instead of null
+* Update UUID according sku configured column
