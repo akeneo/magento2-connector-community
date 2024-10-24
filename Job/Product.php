@@ -605,8 +605,6 @@ class Product extends JobImport
                 __('No product found for family: %1 but product model found, process with import', $family),
                 $this->logger
             );
-
-            return;
         } else {
             $product = reset($products);
             // Make sure to delete product model table
@@ -621,17 +619,20 @@ class Product extends JobImport
         if ($this->entitiesHelper->isProductUuidEdition()) {
             $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
-            $connection->changeColumn(
-                $tmpTable,
-                'uuid',
-                'uuid',
-                [
-                    'nullable' => true,
-                    'type' => Table::TYPE_TEXT,
-                    'length' => 255,
-                    'comment' => 'UUID',
-                ]
-            );
+            $definition = [
+                'nullable' => true,
+                'type' => Table::TYPE_TEXT,
+                'length' => 255,
+                'comment' => 'UUID',
+            ];
+
+            if ($connection->tableColumnExists($tmpTable, 'uuid')) {
+                $connection->changeColumn($tmpTable, 'uuid', 'uuid', $definition);
+            } else {
+                // We have no product (like product models without variant) with applied filters
+                // We need to add manually the column
+                $connection->addColumn($tmpTable, 'uuid', $definition);
+            }
             $connection->addIndex($tmpTable, 'UNIQUE_UUID', 'uuid', 'unique');
         }
     }
@@ -752,7 +753,7 @@ class Product extends JobImport
                                                 /** @var string[][] $option */
                                                 foreach ($config['options'] as $option) {
                                                     if ($option['code'] === $newData || $option['code'] === $label) {
-                                                        $table['data'][$i][$label] = [$newLabel => $option['labels'][$locale]];
+                                                        $table['data'][$i][$label] = [$newLabel => $option['labels'][$locale] ?? ''];
                                                     }
                                                 }
                                             }
@@ -1725,12 +1726,14 @@ class Product extends JobImport
             return;
         }
 
-        if ($this->entitiesHelper->isProductUuidEdition() && $connection->tableColumnExists($tmpTable, 'sku')) {
-            // We replace the sku by the uuid in the Akeneo entities table if needed for retro-compatibility
+        $skuColumn = $this->configHelper->getAkeneoAttributeCodeForSku() ?: 'sku';
+
+        if ($this->entitiesHelper->isProductUuidEdition() && $connection->tableColumnExists($tmpTable, $skuColumn)) {
+            // We replace the sku by the uuid in the Akeneo entities table if needed
             $entitiesTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
             $uuids = $connection->select()
                 ->from(false, ['code' => 'tmp.uuid'])
-                ->joinInner(['tmp' => $tmpTable], '`tmp`.`sku` = `ace`.`code`', [])
+                ->joinInner(['tmp' => $tmpTable], '`tmp`.`' . $skuColumn . '` = `ace`.`code`', [])
                 ->where('`ace`.`import` = ?', 'product');
             $connection->query($connection->updateFromSelect($uuids, ['ace' => $entitiesTable]));
         }
@@ -5188,7 +5191,7 @@ class Product extends JobImport
 
         $connection->query('INSERT IGNORE INTO `' . $entityVarcharTable . '`
             (`attribute_id`, `store_id`, `value`, `' . $columnIdentifier . '`)
-            SELECT ' . $attribute->getId() . ', 0, NULL, `' . $columnIdentifier . '` FROM `' . $entityTable . '` e
+            SELECT ' . $attribute->getId() . ', 0, "", `' . $columnIdentifier . '` FROM `' . $entityTable . '` e
             INNER JOIN `' . $tmpTable . '` t ON e.`entity_id` = t.`_entity_id`');
     }
 }

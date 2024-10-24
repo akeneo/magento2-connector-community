@@ -283,7 +283,7 @@ class ProductModel
                                                 /** @var string[][] $option */
                                                 foreach ($config['options'] as $option) {
                                                     if ($option['code'] === $newData || $option['code'] === $label) {
-                                                        $table['data'][$i][$label] = [$newLabel => $option['labels'][$locale]];
+                                                        $table['data'][$i][$label] = [$newLabel => $option['labels'][$locale] ?? ''];
                                                     }
                                                 }
                                             }
@@ -441,7 +441,7 @@ class ProductModel
      *
      * @param string $code
      * @param string|null $family
-     * 
+     *
      * @return void
      */
     public function addColumns($code, ?string $family = null)
