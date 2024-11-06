@@ -111,7 +111,7 @@ class Store
                 continue;
             }
 
-            if ($this->storeManager->isSingleStoreMode() && (int)$websiteId !== 0) {
+            if ($this->isSingleStoreMode() && (int)$websiteId !== 0) {
                 continue;
             }
 
@@ -193,6 +193,14 @@ class Store
         }
 
         return $data;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSingleStoreMode(): bool
+    {
+        return $this->storeManager->isSingleStoreMode();
     }
 
     /**

@@ -532,7 +532,7 @@ class Option extends Import
                 /** @var string $value */
                 $value = 'labels-' . $local;
 
-                if ($this->configHelper->getOptionCodeAsAdminLabel() && $store['store_id'] == 0) {
+                if (!$this->storeHelper->isSingleStoreMode() && $this->configHelper->getOptionCodeAsAdminLabel() && $store['store_id'] == 0) {
                     $value = 'code';
                 }
 
