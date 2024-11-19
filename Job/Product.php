@@ -3669,9 +3669,9 @@ class Product extends JobImport
         $urlRewriteTable = $this->entitiesHelper->getTable('url_rewrite');
         $productCategoriesTable = $this->entitiesHelper->getTable('catalog_category_product');
         $stores = array_merge(
-            $this->storeHelper->getStores(['lang']), // en_US
-            $this->storeHelper->getStores(['lang', 'channel_code']), // en_US-channel
-            $this->storeHelper->getStores(['channel_code']) // channel
+            $this->storeHelper->getStores(['lang'], true), // en_US
+            $this->storeHelper->getStores(['lang', 'channel_code'], true), // en_US-channel
+            $this->storeHelper->getStores(['channel_code'], true) // channel
         );
 
         $isUrlMapped = false;
@@ -3687,7 +3687,7 @@ class Product extends JobImport
         // Reset stores variable to generate a column per store when nothing is mapped or url_key is global
         if (!$isUrlMapped) {
             $stores = array_merge(
-                $this->storeHelper->getStores(['lang']) // en_US
+                $this->storeHelper->getStores(['lang'], true) // en_US
             );
         }
 
