@@ -33,7 +33,8 @@
             "created_at": true
         },
         "constraint": {
-            "PRIMARY": true
+            "PRIMARY": true,
+            "AKENEO_CONNECTOR_IMPORT_LOG_IDENTIFIER": true
         }
     },
     "akeneo_connector_import_log_step": {
@@ -50,7 +51,8 @@
         },
         "constraint": {
             "PRIMARY": true,
-            "FK_67D13951C1CAB0735DCC5949E04964BD": true
+            "FK_67D13951C1CAB0735DCC5949E04964BD": true,
+            "AKENEO_CONNECTOR_IMPORT_LOG_STEP_IDENTIFIER": true
         }
     },
     "eav_attribute_option_value": {
