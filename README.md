@@ -29,8 +29,13 @@ With Akeneo Connector for Adobe Commerce/Magento, you can import:
 
 | Magento / Adobe Commerce | PHP     | Akeneo Connector | Maintained     |
 |--------------------------|---------|------------------|----------------|
-| \>= 2.3.7 && < 2.4.4     | \>= 7.4 | 103.X.X          | Bug fixes only |
-| \>= 2.4.4                | \>= 8.0 | 104.X.X          | Current        |
+| \>= 2.3.7 && < 2.4.4     | \>= 7.4 | 103.X.X          | EOL            |
+| \>= 2.4.4 && < 2.4.7     | \>= 8.0 | 104.X.X          | Bug fixes only |
+| \>= 2.4.7                | \>= 8.2 | 105.X.X          | Current        |
+
+The [akeneo/api-php-client](https://github.com/akeneo/api-php-client) requires [psr/http-message](https://github.com/php-fig/http-message) >= 2.0.
+
+For any issue with the *psr/http-message* package, use Akeneo Connector 104.X.X.
 
 ### Requirements:
 
