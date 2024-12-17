@@ -530,3 +530,6 @@
 ### Version 104.3.17 :
 * AMC-483: Dot not use option code as admin label in single store mode
 * AMC-483: Fix single store mode URL rewrite
+
+### Version 105.0.0 :
+* Akeneo PHP API client updated to 11.4.0

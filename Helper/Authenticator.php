@@ -69,7 +69,6 @@ class Authenticator
         }
 
         $akeneoClientBuilder = new AkeneoPimClientBuilder($baseUri);
-        $akeneoClientBuilder->setHttpClient(new Psr18Client());
         $akeneoClientBuilder->setStreamFactory(new StreamFactory());
         $akeneoClientBuilder->setRequestFactory(new RequestFactory());
 
