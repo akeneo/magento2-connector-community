@@ -532,7 +532,7 @@ class Option extends Import
                 /** @var string $value */
                 $value = 'labels-' . $local;
 
-                if ($this->configHelper->getOptionCodeAsAdminLabel() && $store['store_id'] == 0) {
+                if (!$this->storeHelper->isSingleStoreMode() && $this->configHelper->getOptionCodeAsAdminLabel() && $store['store_id'] == 0) {
                     $value = 'code';
                 }
 
@@ -556,12 +556,13 @@ class Option extends Import
                 $dataToInsert = [];
 
                 foreach ($swatchesAttributesData as $swatchesAttributeData) {
-                    $optionTypeAndValue = $this->getTypeAndValue($swatchesAttributes, $swatchesAttributeData);
-                    if ((int)$optionTypeAndValue['type'] === Swatch::SWATCH_TYPE_VISUAL_IMAGE &&
+                    // Do not add value for visual and color swatch if store is not default
+                    if ($swatchesAttributes[$swatchesAttributeData['attribute']] !== Swatch::SWATCH_TYPE_TEXTUAL_ATTRIBUTE_FRONTEND_INPUT &&
                         (int)$swatchesAttributeData['store_id'] !== 0)
                     {
                         continue;
                     }
+                    $optionTypeAndValue = $this->getTypeAndValue($swatchesAttributes, $swatchesAttributeData);
                     $dataToInsert[] = [
                         'option_id' => $swatchesAttributeData['option_id'],
                         'store_id' => $swatchesAttributeData['store_id'],
@@ -596,7 +597,7 @@ class Option extends Import
             ];
         }
 
-        // Keep the current data for visual swatch
+        // Keep the current data for visual and color swatch
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
         $current = $connection->fetchRow(

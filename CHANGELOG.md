@@ -523,3 +523,10 @@
 * PGTO-480: Fix request to match existing options
 * Set default product name to empty instead of null
 * Update UUID according sku configured column
+
+### Version 104.3.16 :
+* PGTO-398: Do not create an empty value for visual and color swatch in stores
+
+### Version 104.3.17 :
+* AMC-483: Dot not use option code as admin label in single store mode
+* AMC-483: Fix single store mode URL rewrite
