@@ -788,7 +788,7 @@ class Category extends Import
         /** @var string $tableName */
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $stores */
-        $stores = $this->storeHelper->getStores('lang');
+        $stores = $this->storeHelper->getStores('lang', true);
         /** @var mixed[] $categoryPath */
         $categoryPath = $this->getCategoryPath();
         /** @var mixed[] $rootCatAndStore */

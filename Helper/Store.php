@@ -79,10 +79,11 @@ class Store
      * Retrieve all stores information
      *
      * @param string|string[] $arrayKey
+     * @param bool $ignoreSingleStore
      *
      * @return mixed[]
      */
-    public function getStores($arrayKey = 'store_id')
+    public function getStores($arrayKey = 'store_id', bool $ignoreSingleStore = false)
     {
         if (!is_array($arrayKey)) {
             $arrayKey = [$arrayKey];
@@ -111,7 +112,7 @@ class Store
                 continue;
             }
 
-            if ($this->storeManager->isSingleStoreMode() && (int)$websiteId !== 0) {
+            if (!$ignoreSingleStore && $this->isSingleStoreMode() && (int)$websiteId !== 0) {
                 continue;
             }
 
@@ -193,6 +194,14 @@ class Store
         }
 
         return $data;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSingleStoreMode(): bool
+    {
+        return $this->storeManager->isSingleStoreMode();
     }
 
     /**
