@@ -60,7 +60,7 @@ class EncryptApiSecret implements DataPatchInterface, PatchVersionInterface
      *
      * @return void
      */
-    public function apply(): void
+    public function apply()
     {
         /** @var string|null $unencryptedSecret */
         $unencryptedSecret = $this->scopeConfig->getValue(Config::AKENEO_API_CLIENT_SECRET);

@@ -37,7 +37,7 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
      */
     protected function _construct()
     {
-        $this->_init(\Akeneo\Connector\Model\ResourceModel\Job::class);
+        $this->_init(ResourceModel\Job::class);
     }
 
     /**
@@ -129,7 +129,7 @@ class Job extends AbstractModel implements JobInterface, IdentityInterface
     {
         return $this->getData(self::JOB_CLASS);
     }
-    
+
     /**
      * Description getName function
      *

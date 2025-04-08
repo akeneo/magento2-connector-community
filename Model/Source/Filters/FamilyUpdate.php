@@ -24,7 +24,7 @@ class FamilyUpdate implements ArrayInterface
     /**
      * Description toOptionArray function
      *
-     * @return string[]
+     * @return array
      */
     public function toOptionArray()
     {

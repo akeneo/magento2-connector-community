@@ -3,11 +3,10 @@
 namespace Akeneo\Connector\Observer;
 
 use Akeneo\Connector\Api\Data\JobInterface;
-use Akeneo\Connector\Api\JobExecutorInterface;
+use Akeneo\Connector\Executor\JobExecutor;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer;
 use Akeneo\Connector\Api\Data\ImportInterface;
-use Akeneo\Connector\Api\Data\LogInterface;
 use Akeneo\Connector\Api\LogRepositoryInterface;
 
 /**
@@ -45,10 +44,10 @@ class AkeneoConnectorImportStepFinishObserver implements ObserverInterface
      */
     public function execute(Observer $observer)
     {
-        /** @var JobExecutorInterface $executor */
+        /** @var JobExecutor $executor */
         $executor   = $observer->getEvent()->getImport();
         $currentJob = $executor->getCurrentJob();
-        /** @var LogInterface $log */
+
         $log = $this->logRepository->getByIdentifier($executor->getIdentifier());
 
         if (!$log->hasData()) {
@@ -67,7 +66,7 @@ class AkeneoConnectorImportStepFinishObserver implements ObserverInterface
             $this->logRepository->save($log);
         }
 
-        $log->addStep(
+        $this->logRepository->addStep(
             [
                 'log_id'     => $log->getId(),
                 'identifier' => $executor->getIdentifier(),

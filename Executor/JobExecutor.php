@@ -18,6 +18,7 @@ use Akeneo\Connector\Model\ResourceModel\Job\Collection;
 use Akeneo\Connector\Model\ResourceModel\Job\CollectionFactory;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Exception;
+use InvalidArgumentException;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Message\ManagerInterface as MessageManagerInterface;
@@ -127,7 +128,7 @@ class JobExecutor implements JobExecutorInterface
     /**
      * This variable contains an Authenticator
      *
-     * @var \Akeneo\Connector\Helper\Authenticator $authenticator
+     * @var Authenticator $authenticator
      */
     protected $authenticator;
     /**
@@ -165,7 +166,7 @@ class JobExecutor implements JobExecutorInterface
      *
      * @var string[] $lastSuccessExecutedDate
      */
-    protected array $lastSuccessExecutedDate;
+    protected array $lastSuccessExecutedDate = [];
 
     /**
      * @param JobRepository $jobRepository
@@ -266,7 +267,6 @@ class JobExecutor implements JobExecutorInterface
     public function execute(string $code, ?OutputInterface $output = null)
     {
         if (!$this->configHelper->checkAkeneoApiCredentials()) {
-            /** @var Phrase $message */
             $message = __('API credentials are missing. Please configure the connector and retry.');
 
             $this->displayError((string)$message);
@@ -274,8 +274,7 @@ class JobExecutor implements JobExecutorInterface
             return false;
         }
 
-        /** @var string[] $entities */
-        $entities = explode(',', $code ?? '');
+        $entities = explode(',', $code);
         if (count($entities) > 1) {
             $entities = $this->sortJobs($entities);
 
@@ -292,7 +291,6 @@ class JobExecutor implements JobExecutorInterface
         /** @var Job $job */
         $job = $this->jobRepository->getByCode($code);
         if (!$job->getData()) {
-            /** @var Phrase $message */
             $message = __('Job code not found');
 
             $this->displayError((string)$message);
@@ -312,7 +310,7 @@ class JobExecutor implements JobExecutorInterface
             try {
                 /** @var array $productFamiliesToImport */
                 $productFamiliesToImport = $this->currentJobClass->getFamiliesToImport();
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->setJobStatus(JobInterface::JOB_ERROR, $this->currentJob);
                 $this->displayError($e->getMessage());
 
@@ -336,13 +334,12 @@ class JobExecutor implements JobExecutorInterface
                     $this->lastSuccessExecutedDate = $this->json->unserialize(
                         $this->currentJob->getLastSuccessExecutedDate()
                     );
-                } catch (\InvalidArgumentException $invalidArgumentException) {
+                } catch (InvalidArgumentException $invalidArgumentException) {
                     $this->lastSuccessExecutedDate = [];
                 }
             }
             $this->beforeRun();
 
-            /** @var bool $isError */
             $isError = null;
             /** @var string $family */
             foreach ($productFamiliesToImport as $family) {

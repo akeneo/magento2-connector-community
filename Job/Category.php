@@ -13,19 +13,21 @@ use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Logger\CategoryLogger;
 use Akeneo\Connector\Logger\Handler\CategoryHandler;
 use Akeneo\Connector\Model\Source\Edition;
-use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Exception;
 use Magento\Catalog\Model\Category as CategoryModel;
 use Magento\CatalogUrlRewrite\Model\CategoryUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\CategoryUrlRewriteGenerator;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
+use Magento\Framework\DB\Statement\Pdo\Mysql;
 use Magento\Framework\Event\ManagerInterface;
-use Magento\Framework\Indexer\IndexerInterface;
+use Magento\Indexer\Model\Indexer;
 use Magento\Staging\Model\VersionManager;
 use Magento\Indexer\Model\IndexerFactory;
 use Zend_Db_Expr as Expr;
+use Zend_Db_Statement_Interface;
 
 /**
  * @author    Agence Dn'D <contact@dnd.fr>
@@ -178,7 +180,7 @@ class Category extends Import
             );
             $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
             $this->logger->debug(
-                __('Category API call Filters : ') . print_r($this->categoryFilters->getParentFilters(), true)
+                __('Category API call Filters : ') . json_encode($this->categoryFilters->getParentFilters())
             );
         }
         if (!$this->categoryFilters->getCategoriesToImport()) {
@@ -190,13 +192,13 @@ class Category extends Import
 
             return;
         }
-        /** @var PageInterface $families */
+
         $categories = $this->akeneoClient->getCategoryApi()->listPerPage(
             1,
             false,
             $this->categoryFilters->getParentFilters()
         );
-        /** @var array $category */
+
         $category = $categories->getItems();
 
         if (empty($category)) {
@@ -222,7 +224,6 @@ class Category extends Import
         /** @var string $edition */
         $edition = $this->configHelper->getEdition();
 
-        /** @var ResourceCursorInterface $categories */
         $categories = [];
         if ($edition === Edition::GREATER_OR_FOUR_POINT_ZERO_POINT_SIXTY_TWO
             || $edition === Edition::GREATER_OR_FIVE
@@ -271,14 +272,11 @@ class Category extends Import
             $categories = $this->akeneoClient->getCategoryApi()->all($paginationSize);
         }
 
-        /** @var string $warning */
         $warning = '';
         /** @var string[] $lang */
         $lang = $this->storeHelper->getStores('lang');
-        /**
-         * @var int   $index
-         * @var array $category
-         */
+
+        $index = 0;
         foreach ($categories as $index => $category) {
             $warning = $this->checkLabelPerLocales($category, $lang, $warning);
 
@@ -309,7 +307,7 @@ class Category extends Import
         $akeneoConnectorTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         /** @var string $entityTable */
         $entityTable = $this->entitiesHelper->getTable('catalog_category_entity');
-        /** @var \Magento\Framework\DB\Select $selectExistingEntities */
+        /** @var Select $selectExistingEntities */
         $selectExistingEntities = $connection->select()->from($entityTable, 'entity_id');
         /** @var string[] $existingEntities */
         $existingEntities = array_column($connection->query($selectExistingEntities)->fetchAll(), 'entity_id');
@@ -344,7 +342,7 @@ class Category extends Import
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tableName */
+
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         $connection->addColumn(
@@ -414,7 +412,7 @@ class Category extends Import
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tableName */
+
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $stores */
         $stores = $this->storeHelper->getStores('lang');
@@ -462,7 +460,7 @@ class Category extends Import
                     $select->where('_is_new = ?', 1);
                 }
 
-                /** @var \Zend_Db_Statement_Interface $query */
+                /** @var Zend_Db_Statement_Interface $query */
                 $query = $connection->query($select);
 
                 /** @var array $row */
@@ -512,7 +510,7 @@ class Category extends Import
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tableName */
+
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         $connection->addColumn(
@@ -527,7 +525,7 @@ class Category extends Import
             ]
         );
 
-        /** @var \Zend_Db_Statement_Interface $query */
+        /** @var Zend_Db_Statement_Interface $query */
         $query = $connection->query(
             $connection->select()->from(
                 $tmpTable,
@@ -538,7 +536,6 @@ class Category extends Import
             )
         );
 
-        /** @var array $row */
         while (($row = $query->fetch())) {
             /** @var int $position */
             $position = $connection->fetchOne(
@@ -564,7 +561,7 @@ class Category extends Import
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tableName */
+
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
 
         if ($connection->isTableExists($this->entitiesHelper->getTable('sequence_catalog_category'))) {
@@ -572,7 +569,7 @@ class Category extends Import
             $values = [
                 'sequence_value' => '_entity_id',
             ];
-            /** @var \Magento\Framework\DB\Select $parents */
+            /** @var Select $parents */
             $parents = $connection->select()->from($tmpTable, $values);
             $connection->query(
                 $connection->insertFromSelect(
@@ -643,7 +640,7 @@ class Category extends Import
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tableName */
+
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $values */
         $values = [
@@ -742,7 +739,7 @@ class Category extends Import
 
         /** @var string|string[] $filteredCategories */
         $filteredCategories = $this->configHelper->getCategoriesFilter();
-        if (!$filteredCategories || empty($filteredCategories)) {
+        if (empty($filteredCategories)) {
             $this->jobExecutor->setMessage(
                 __('No category to ignore'),
                 $this->logger
@@ -750,11 +747,10 @@ class Category extends Import
 
             return;
         }
-        /** @var string $tableName */
         $tableName = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var AdapterInterface $connection */
         $connection         = $this->entitiesHelper->getConnection();
-        $filteredCategories = explode(',', $filteredCategories ?? '');
+        $filteredCategories = explode(',', $filteredCategories);
         /** @var mixed[]|null $categoriesToDelete */
         $categoriesToDelete = $connection->fetchAll(
             $connection->select()->from($tableName)->where('code IN (?)', $filteredCategories)
@@ -785,7 +781,7 @@ class Category extends Import
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var string $tableName */
+
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $stores */
         $stores = $this->storeHelper->getStores('lang', true);
@@ -811,7 +807,7 @@ class Category extends Import
                 if (!$store['store_id']) {
                     continue;
                 }
-                /** @var \Magento\Framework\DB\Select $select */
+                /** @var Select $select */
                 $select = $connection->select()->from(
                     $tmpTable,
                     [
@@ -824,7 +820,7 @@ class Category extends Import
                     ]
                 );
 
-                /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+                /** @var Mysql $query */
                 $query = $connection->query($select);
 
                 /** @var array $row */
@@ -893,7 +889,7 @@ class Category extends Import
                                 ['request_path' => $requestPath],
                                 ['url_rewrite_id = ?' => $rewriteId]
                             );
-                        } catch (\Exception $e) {
+                        } catch (Exception $e) {
                             $this->jobExecutor->setAdditionalMessage(
                                 __(
                                     sprintf(
@@ -989,12 +985,10 @@ class Category extends Import
         $storeId,
         $categoryId
     ) {
-        /** @var string $rootCategoryId */
         $currentRootCategoryId = $rootCategoriesAndStores[$storeId];
-        /** @var string[] $currentCategoryPath */
         $currentCategoryPath = explode('/', $categoriesPath[$categoryId] ?? '');
 
-        return in_array($currentRootCategoryId, $currentCategoryPath, false);
+        return in_array($currentRootCategoryId, $currentCategoryPath);
     }
 
     /**
@@ -1026,7 +1020,7 @@ class Category extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations ?? '');
+        $types = explode(',', $configurations);
         /** @var string[] $types */
         $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
@@ -1045,7 +1039,7 @@ class Category extends Import
      * Refresh index
      *
      * @return void
-     * @throws \Exception
+     * @throws Exception
      */
     public function refreshIndex()
     {
@@ -1059,13 +1053,13 @@ class Category extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations ?? '');
+        $types = explode(',', $configurations);
         /** @var string[] $typesFlushed */
         $typesFlushed = [];
 
         /** @var string $type */
         foreach ($types as $type) {
-            /** @var IndexerInterface $index */
+            /** @var Indexer $index */
             $index = $this->indexFactory->create()->load($type);
             $index->reindexAll();
             $typesFlushed[] = $index->getTitle();

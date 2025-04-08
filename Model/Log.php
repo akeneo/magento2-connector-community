@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akeneo\Connector\Model;
 
 use Akeneo\Connector\Api\Data\LogInterface;
+use Exception;
 use Magento\Framework\DataObject\IdentityInterface;
 use Magento\Framework\Model\AbstractModel;
 
@@ -37,32 +38,7 @@ class Log extends AbstractModel implements LogInterface, IdentityInterface
      */
     protected function _construct()
     {
-        $this->_init(\Akeneo\Connector\Model\ResourceModel\Log::class);
-    }
-
-    /**
-     * Add step to log
-     *
-     * @param array $data
-     *
-     * @return $this
-     * @throws \Exception
-     */
-    public function addStep(array $data)
-    {
-        $this->_getResource()->addStep($data);
-
-        return $this;
-    }
-
-    /**
-     * Retrieve steps
-     *
-     * @return array
-     */
-    public function getSteps()
-    {
-        return $this->_getResource()->getSteps($this->getId());
+        $this->_init(ResourceModel\Log::class);
     }
 
     /**

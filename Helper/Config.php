@@ -671,7 +671,7 @@ class Config
     /**
      * Retrieve Akeneo base URL
      *
-     * @return string
+     * @return string|null
      */
     public function getAkeneoApiBaseUrl()
     {
@@ -681,7 +681,7 @@ class Config
     /**
      * Retrieve Akeneo username
      *
-     * @return string
+     * @return string|null
      */
     public function getAkeneoApiUsername()
     {
@@ -705,7 +705,7 @@ class Config
     /**
      * Retrieve Akeneo client_id
      *
-     * @return string
+     * @return string|null
      */
     public function getAkeneoApiClientId()
     {
@@ -749,7 +749,7 @@ class Config
     /**
      * Get pim edition
      *
-     * @return string
+     * @return string|null
      */
     public function getEdition()
     {
@@ -759,7 +759,7 @@ class Config
     /**
      * Retrieve the filter mode used
      *
-     * @return string
+     * @return string|null
      * @see \Akeneo\Connector\Model\Source\Filters\Mode
      */
     public function getFilterMode()
@@ -770,7 +770,7 @@ class Config
     /**
      * Retrieve the type of filter to apply on the completeness
      *
-     * @return string
+     * @return string|null
      * @see \Akeneo\Connector\Model\Source\Filters\Completeness
      */
     public function getCompletenessTypeFilter()
@@ -781,7 +781,7 @@ class Config
     /**
      * Retrieve the value to filter the completeness
      *
-     * @return string
+     * @return string|null
      */
     public function getCompletenessValueFilter()
     {
@@ -791,7 +791,7 @@ class Config
     /**
      * Retrieve the locales to apply the completeness filter on
      *
-     * @return string
+     * @return string|null
      */
     public function getCompletenessLocalesFilter()
     {
@@ -801,7 +801,7 @@ class Config
     /**
      * Retrieve the locales to apply the completeness filter on
      *
-     * @return string
+     * @return string|null
      */
     public function getModelCompletenessLocalesFilter()
     {
@@ -811,7 +811,7 @@ class Config
     /**
      * Retrieve the type of filter to apply on the completeness for product model
      *
-     * @return string
+     * @return string|null
      * @see \Akeneo\Connector\Model\Source\Filters\ModelCompleteness
      */
     public function getModelCompletenessTypeFilter()
@@ -822,7 +822,7 @@ class Config
     /**
      * Retrieve the status filter
      *
-     * @return string
+     * @return string|null
      * @see \Akeneo\Connector\Model\Source\Filters\Status
      */
     public function getStatusFilter()
@@ -833,7 +833,7 @@ class Config
     /**
      * Retrieve updated mode
      *
-     * @return string
+     * @return string|null
      */
     public function getUpdatedMode()
     {
@@ -843,7 +843,7 @@ class Config
     /**
      * Retrieve the updated before filter
      *
-     * @return string
+     * @return string|null
      */
     public function getUpdatedLowerFilter()
     {
@@ -853,7 +853,7 @@ class Config
     /**
      * Retrieve the updated after filter
      *
-     * @return string
+     * @return string|null
      */
     public function getUpdatedGreaterFilter()
     {
@@ -863,7 +863,7 @@ class Config
     /**
      * Retrieve the updated after for between filter
      *
-     * @return string
+     * @return string|null
      */
     public function getUpdatedBetweenAfterFilter()
     {
@@ -873,7 +873,7 @@ class Config
     /**
      * Retrieve the updated before for between filter
      *
-     * @return string
+     * @return string|null
      */
     public function getUpdatedBetweenBeforeFilter()
     {
@@ -883,7 +883,7 @@ class Config
     /**
      * Retrieve the updated since filter
      *
-     * @return string
+     * @return string|null
      */
     public function getUpdatedSinceFilter()
     {
@@ -893,7 +893,7 @@ class Config
     /**
      * Retrieve the updated since last hours filter
      *
-     * @return string
+     * @return string|null
      */
     public function getUpdatedSinceLastHoursFilter()
     {
@@ -903,7 +903,7 @@ class Config
     /**
      * Retrieve attribute updated mode
      *
-     * @return string
+     * @return string|null
      */
     public function getAttributeUpdatedMode()
     {
@@ -913,7 +913,7 @@ class Config
     /**
      * Retrieve the attribute updated after filter
      *
-     * @return string
+     * @return string|null
      */
     public function getAttributeUpdatedGreaterFilter()
     {
@@ -923,7 +923,7 @@ class Config
     /**
      * Retrieve the attribute filter by code mode
      *
-     * @return bool
+     * @return string|null
      */
     public function getAttributeFilterByCodeMode()
     {
@@ -933,7 +933,7 @@ class Config
     /**
      * Retrieve the attribute filter by code
      *
-     * @return array
+     * @return string|null
      */
     public function getAttributeFilterByCode()
     {
@@ -943,7 +943,7 @@ class Config
     /**
      * Retrieve the excluded families to filter the products on
      *
-     * @return string
+     * @return string|null
      */
     public function getFamiliesExcludedFilter()
     {
@@ -953,7 +953,7 @@ class Config
     /**
      * Retrieve the included families to filter the products on
      *
-     * @return string
+     * @return string|null
      */
     public function getFamiliesFilter()
     {
@@ -987,7 +987,7 @@ class Config
     /**
      * Retrieve the status of imported categories
      *
-     * @return string
+     * @return string|null
      */
     public function getIsCategoryActive()
     {
@@ -997,7 +997,7 @@ class Config
     /**
      * Retrieve the inclusion in menu of imported categories
      *
-     * @return string
+     * @return string|null
      */
     public function getIsCategoryInMenu()
     {
@@ -1007,7 +1007,7 @@ class Config
     /**
      * Retrieve the anchor state of imported categories
      *
-     * @return string
+     * @return string|null
      */
     public function getIsCategoryAnchor()
     {
@@ -1017,7 +1017,7 @@ class Config
     /**
      * Retrieve the categories to filter the category import
      *
-     * @return string
+     * @return string|null
      */
     public function getCategoriesExcludedFilter()
     {
@@ -1027,7 +1027,7 @@ class Config
     /**
      * Retrieve the categories to filter the category import
      *
-     * @return string
+     * @return string|null
      */
     public function getCategoriesFilter()
     {
@@ -1037,7 +1037,7 @@ class Config
     /**
      * Retrieve the categories does override content staging
      *
-     * @return string
+     * @return string|null
      */
     public function getCategoriesIsOverrideContentStaging()
     {
@@ -1047,7 +1047,7 @@ class Config
     /**
      * Get Admin Website Default Channel from configuration
      *
-     * @return string
+     * @return string|null
      */
     public function getAdminDefaultChannel()
     {
@@ -1065,7 +1065,7 @@ class Config
     /**
      * Retrieve the name of the website association attribute
      *
-     * @return string
+     * @return string|null
      */
     public function getWebsiteAttribute()
     {
@@ -1075,8 +1075,7 @@ class Config
     /**
      * Retrieve the Akeneo attribute code for product type mapping
      *
-     * @return string
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @return string|null
      */
     public function getMappingAttribute()
     {
@@ -1155,7 +1154,7 @@ class Config
      *
      * @param int $storeId
      *
-     * @return string
+     * @return string|null
      */
     public function getDefaultLocale($storeId = null)
     {
@@ -1171,7 +1170,7 @@ class Config
      *
      * @param int $storeId
      *
-     * @return string
+     * @return string|null
      */
     public function getDefaultCurrency($storeId = null)
     {
@@ -1185,11 +1184,10 @@ class Config
     /**
      * Retrieve pagination size
      *
-     * @return string|int
+     * @return int
      */
     public function getPaginationSize()
     {
-        /** @var string|int $paginationSize */
         $paginationSize = (int)$this->scopeConfig->getValue(self::AKENEO_API_PAGINATION_SIZE);
         if (!$paginationSize) {
             $paginationSize = self::PAGINATION_SIZE_DEFAULT_VALUE;
@@ -1228,7 +1226,7 @@ class Config
     /**
      * Retrieve the status of newly imported products
      *
-     * @return string
+     * @return string|null
      */
     public function getProductActivation()
     {
@@ -1238,7 +1236,7 @@ class Config
     /**
      * Description getProductStatusMode function
      *
-     * @return string
+     * @return string|null
      */
     public function getProductStatusMode()
     {
@@ -1248,7 +1246,7 @@ class Config
     /**
      * Description getAttributeCodeForSimpleProductStatuses function
      *
-     * @return string
+     * @return string|null
      */
     public function getAttributeCodeForSimpleProductStatuses()
     {
@@ -1258,7 +1256,7 @@ class Config
     /**
      * Description getAttributeCodeForConfigurableProductStatuses function
      *
-     * @return string
+     * @return string|null
      */
     public function getAttributeCodeForConfigurableProductStatuses()
     {
@@ -1268,7 +1266,7 @@ class Config
     /**
      * Description getEnableSimpleProductsPerWebsite function
      *
-     * @return string
+     * @return string|null
      */
     public function getEnableSimpleProductsPerWebsite()
     {
@@ -1278,7 +1276,7 @@ class Config
     /**
      * Description getDefaultConfigurableProductStatus function
      *
-     * @return string
+     * @return string|null
      */
     public function getDefaultConfigurableProductStatus()
     {
@@ -1425,15 +1423,12 @@ class Config
      */
     public function getFileImportColumns()
     {
-        /** @var mixed[] $fileAttributes */
         $fileAttributes = [];
-        /** @var string $config */
         $config = $this->scopeConfig->getValue(self::PRODUCT_FILE_ATTRIBUTE);
         if (!$config) {
             return $fileAttributes;
         }
 
-        /** @var mixed[] $media */
         $attributes = $this->jsonSerializer->unserialize($config);
         if (!$attributes) {
             return $fileAttributes;
@@ -1659,15 +1654,13 @@ class Config
      */
     public function getAttributeMapping()
     {
-        /** @var mixed $matches */
         $matches = $this->scopeConfig->getValue(self::PRODUCT_ATTRIBUTE_MAPPING);
-        /** @var mixed[] $matches */
         $matches = $this->jsonSerializer->unserialize($matches);
-        /** @var mixed $loweredMatchs */
+
         $loweredMatches = [];
         /** @var string[] $match */
         foreach ($matches as $match) {
-            $match            = array_map('strtolower', $match);
+            $match = array_map('strtolower', $match);
             $loweredMatches[] = $match;
         }
 

@@ -115,24 +115,17 @@ class CategoryFilters
      *
      * @param string[] $parent
      *
-     * @return string[]
+     * @return array
      */
     public function getChildFilters(array $parent)
     {
-        /** @var string[] $filters */
-        $filters = [];
-        /** @var string[] $search */
-        $search = [];
-        /** @var SearchBuilder searchBuilder */
         $this->searchBuilder = $this->searchBuilderFactory->create();
 
         $this->searchBuilder->addFilter('parent', '=', $parent['code']);
         /** @var string[] $search */
         $search = $this->searchBuilder->getFilters();
-        $filters = [
+        return [
             'search' => $search,
         ];
-
-        return $filters;
     }
 }

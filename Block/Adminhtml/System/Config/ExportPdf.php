@@ -19,7 +19,7 @@ class ExportPdf extends Field
     /**
      * Description $_template field
      *
-     * @var string $template
+     * @var string $_template
      */
     protected $_template = 'Akeneo_Connector::system/config/export_pdf.phtml';
 
@@ -47,15 +47,5 @@ class ExportPdf extends Field
     protected function _getElementHtml(AbstractElement $element)
     {
         return $this->_toHtml();
-    }
-
-    /**
-     * Description getCustomUrl function
-     *
-     * @return mixed
-     */
-    public function getExportUrl()
-    {
-        return $this->getUrl('akeneo_connector/config/exportpdf');
     }
 }

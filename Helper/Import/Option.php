@@ -162,9 +162,8 @@ class Option extends Entities
         }
 
         /* Set entity_id for new entities */
-        /** @var string $query */
         $query = $connection->query('SHOW TABLE STATUS LIKE "' . $entityTable . '"');
-        /** @var mixed $row */
+
         $row = $query->fetch();
 
         $connection->query('SET @id = ' . (int)$row['Auto_increment']);

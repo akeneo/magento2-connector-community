@@ -22,6 +22,8 @@ use Magento\Framework\Config\ConfigOptionsListConstants;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Ddl\Table;
 use Magento\Framework\DB\Select;
+use Magento\Framework\DB\Statement\Pdo\Mysql;
+use Zend_Db_Exception;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Select_Exception;
 
@@ -147,7 +149,7 @@ class Entities
     /**
      * Retrieve Connection object
      *
-     * @return \Magento\Framework\DB\Adapter\AdapterInterface
+     * @return AdapterInterface
      */
     public function getConnection()
     {
@@ -234,7 +236,7 @@ class Entities
      * @param string|null $family
      *
      * @return $this
-     * @throws \Zend_Db_Exception
+     * @throws Zend_Db_Exception
      */
     public function createTmpTable(array $fields, string $tableSuffix, ?string $family = null)
     {
@@ -417,10 +419,6 @@ class Entities
         $fields = array_diff_key($result, ['identifier' => null]);
         $fields = array_keys($fields);
 
-        /**
-         * @var string $key
-         * @var        $string $value
-         */
         foreach ($result as $key => $value) {
             if (!$this->connection->tableColumnExists($tableName, $key)) {
                 $this->connection->addColumn(
@@ -450,12 +448,12 @@ class Entities
      * @param string $import
      * @param string $prefix
      *
-     * @return \Akeneo\Connector\Helper\Import\Entities
+     * @return Entities
      * @throws Exception
      */
     public function matchEntity($pimKey, $entityTable, $entityKey, $import, $prefix = null)
     {
-        /** @var \Magento\Framework\DB\Adapter\AdapterInterface $connection */
+        /** @var AdapterInterface $connection */
         $connection = $this->connection;
         /** @var string $tableName */
         $tableName = $this->getTableName($import);
@@ -494,10 +492,8 @@ class Entities
             $connection->query('SET @@SESSION.information_schema_stats_expiry = 0;');
         }
 
-        /* Set entity_id for new entities */
-        /** @var string $query */
         $query = $connection->query('SHOW TABLE STATUS LIKE "' . $entityTable . '"');
-        /** @var mixed $row */
+
         $row = $query->fetch();
 
         $connection->query('SET @id = ' . (int)$row['Auto_increment']);
@@ -559,7 +555,7 @@ class Entities
      * @param int    $storeId
      * @param int    $mode
      *
-     * @return \Akeneo\Connector\Helper\Import\Entities
+     * @return Entities
      */
     public function setValues(
         $import,
@@ -569,9 +565,9 @@ class Entities
         $storeId,
         $mode = AdapterInterface::INSERT_ON_DUPLICATE
     ) {
-        /** @var \Magento\Framework\DB\Adapter\AdapterInterface $connection */
+        /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
-        /** @var string $tableName */
+
         $tableName = $this->getTableName($import);
 
         /**
@@ -594,17 +590,15 @@ class Entities
                 continue;
             }
 
-            /** @var string $backendType */
             $backendType = $attribute[AttributeInterface::BACKEND_TYPE];
-            /** @var string $table */
+
             $table = $this->getTable($entityTable . '_' . $backendType);
-            /** @var string $identifier */
+
             $identifier = $this->getColumnIdentifier($table);
-            /** @var bool $rowIdExists */
+
             $rowIdExists = $this->rowIdColumnExists($table);
 
             if ($rowIdExists && $entityTable === 'catalog_product_entity') {
-                /** @var Select $select */
                 $select = $connection->select()->from(
                     $tableName,
                     [
@@ -615,7 +609,6 @@ class Entities
                 );
                 $this->addJoinForContentStaging($select, [$identifier => 'row_id']);
             } elseif ($rowIdExists && $entityTable === 'catalog_category_entity') {
-                /** @var Select $select */
                 $select = $connection->select()->from(
                     $tableName,
                     [
@@ -626,7 +619,6 @@ class Entities
                 );
                 $this->addJoinForContentStagingCategory($select, [$identifier => 'row_id']);
             } else {
-                /** @var Select $select */
                 $select = $connection->select()->from(
                     $tableName,
                     [
@@ -638,7 +630,6 @@ class Entities
                 );
             }
 
-            /** @var string $insert */
             $insert = $connection->insertFromSelect(
                 $select,
                 $this->getTable($entityTable . '_' . $backendType),
@@ -675,7 +666,7 @@ class Entities
      */
     public function getAttribute($code, $entityTypeId)
     {
-        /** @var \Magento\Framework\DB\Adapter\AdapterInterface $connection */
+        /** @var AdapterInterface $connection */
         $connection = $this->connection;
 
         /** @var array $attribute */
@@ -710,7 +701,7 @@ class Entities
             return $this->attributeScopeMapping;
         }
 
-        /** @var \Magento\Framework\DB\Adapter\AdapterInterface $connection */
+        /** @var AdapterInterface $connection */
         $connection = $this->connection;
         /** @var string $catalogAttribute */
         $catalogAttribute = $this->getTable('catalog_eav_attribute');
@@ -774,7 +765,7 @@ class Entities
      * @param string $target
      * @param string|null $family
      *
-     * @return \Akeneo\Connector\Helper\Import\Entities
+     * @return Entities
      */
     public function copyColumn(string $tableName, string $source, string $target, ?string $family = null)
     {
@@ -838,8 +829,7 @@ class Entities
         /** @var string[] $newValues */
         $newValues = [];
         foreach ($values as $key => $data) {
-            /** @var string[] $keyParts */
-            $keyParts    = explode('-', $key ?? '', 2);
+            $keyParts = explode('-', $key, 2);
             $keyParts[0] = strtolower($keyParts[0]);
             if (count($keyParts) > 1) {
                 $newValues[$keyParts[0] . '-' . $keyParts[1]] = $data;
@@ -869,7 +859,7 @@ class Entities
             $columnKey = 'url_key-' . $local;
         }
         if ($isUrlKeyMapped && $this->connection->tableColumnExists($tmpTable, $columnKey)) {
-            /** @var \Magento\Framework\DB\Select $select */
+            /** @var Select $select */
             $select = $this->connection->select()->from(
                 $tmpTable,
                 [
@@ -877,10 +867,9 @@ class Entities
                     'url_key'    => $columnKey,
                 ]
             );
-            /** @var \Magento\Framework\DB\Statement\Pdo\Mysql $query */
+            /** @var Mysql $query */
             $query = $this->connection->query($select);
 
-            /** @var array $row */
             while (($row = $query->fetch())) {
                 if (isset($row['url_key'])) {
                     $row['url_key'] = $this->product->formatUrlKey($row['url_key']);
@@ -906,24 +895,21 @@ class Entities
     public function formatMediaName($filename)
     {
         /** @var string[] $filenameParts */
-        $filenameParts = explode('.', $filename ?? '');
+        $filenameParts = explode('.', (string)$filename);
         // Get the extention
         /** @var string $extension */
         $extension = array_pop($filenameParts);
         // Get the hash
         $filename = implode('.', $filenameParts);
-        $filename = explode('_', $filename ?? '');
+        $filename = explode('_', $filename);
         /** @var string $shortHash */
         $shortHash = array_shift($filename);
         $shortHash = substr($shortHash, 0, 4);
         $filename  = implode('_', $filename);
         // Form the final file name
-        /** @var string $shortName */
         $shortName = substr($filename, 0, 79);
-        /** @var string $finalName */
-        $finalName = $shortName . '_' . $shortHash . '.' . $extension;
 
-        return $finalName;
+        return $shortName . '_' . $shortHash . '.' . $extension;
     }
 
     /**
@@ -974,9 +960,7 @@ class Entities
              * @see \Magento\Staging\Model\Select\FromRenderer
              */
             $select->setPart('disable_staging_preview', true);
-        } catch (Zend_Db_Select_Exception $e) {
-            $this->_logger->error($e->getMessage());
-        }
+        } catch (Zend_Db_Select_Exception) {}
     }
 
     /**
@@ -1029,9 +1013,7 @@ class Entities
              * @see \Magento\Staging\Model\Select\FromRenderer
              */
             $select->setPart('disable_staging_preview', true);
-        } catch (Zend_Db_Select_Exception $e) {
-            $this->_logger->error($e->getMessage());
-        }
+        } catch (Zend_Db_Select_Exception) {}
     }
 
     /**
@@ -1044,9 +1026,8 @@ class Entities
     {
         /** @var AdapterInterface $connection */
         $connection = $this->getConnection();
-        /** @var string $mysqlVersionQuery */
+
         $mysqlVersionQuery = $connection->query('SELECT VERSION() AS version');
-        /** @var mixed $mysqlVersion */
         $mysqlVersion = $mysqlVersionQuery->fetch();
 
         if (!$mysqlVersion['version']) {
@@ -1065,7 +1046,6 @@ class Entities
      */
     protected function getAttributesLength(string $familyCode): array
     {
-        /** @var AkeneoPimClientInterface|false $akeneoClient */
         $akeneoClient = $this->authenticator->getAkeneoApiClient();
 
         if (isset($this->attributeLength[$familyCode]) || !$akeneoClient) {
@@ -1157,7 +1137,6 @@ class Entities
     public function getProductApiEndpoint(AkeneoPimClientInterface $akeneoClient)
     {
         if ($this->isProductUuidEdition()) {
-            /** @var ProductUuidApiInterface $productApi */
             return $akeneoClient->getProductUuidApi();
         }
 

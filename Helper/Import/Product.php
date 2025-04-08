@@ -73,8 +73,6 @@ class Product extends Entities
      */
     protected $scopeConfig;
 
-    protected Authenticator $authenticator;
-
     protected FlagManager $flagManager;
 
     /**
@@ -292,7 +290,6 @@ class Product extends Entities
      */
     public function formatAssociations(array $values, ?string $assoKey = null)
     {
-        /** @var array $associations */
         $associations = [];
 
         /**
@@ -300,10 +297,6 @@ class Product extends Entities
          * @var array  $types
          */
         foreach ($values as $group => $types) {
-            /**
-             * @var string $key
-             * @var array  $product
-             */
             foreach ($types as $key => $products) {
                 if (empty(array_filter($products))) {
                     continue;
@@ -346,7 +339,6 @@ class Product extends Entities
      */
     public function formatCompleteness(array $values, ?string $assoKey = null)
     {
-        /** @var array $completeness */
         $completeness = [];
 
         /** @var string[] $finalProducts */
@@ -365,12 +357,8 @@ class Product extends Entities
             }
         }
 
-        if (!empty($finalProducts)) {
+        if (!empty($finalProducts) && isset($product)) {
             $completeness['completenesses_' . $product['scope']] = $this->jsonSerializer->serialize($finalProducts);
-        }
-
-        if (empty($completeness)) {
-            return [];
         }
 
         return $completeness;
@@ -478,9 +466,8 @@ class Product extends Entities
             ['e' => $entityTable],
             't.identifier = e.sku'
         );
-        /** @var string $query */
         $query = $connection->query($select);
-        /** @var mixed $row */
+
         while ($row = $query->fetch()) {
             // Create a row in Akeneo table for products present in Magento and Akeneo that were never imported before
             if (!in_array($row['entity_id'], $existingEntities)) {
@@ -512,9 +499,8 @@ class Product extends Entities
         }
 
         /* Set entity_id for new entities */
-        /** @var string $query */
         $query = $connection->query('SHOW TABLE STATUS LIKE "' . $entityTable . '"');
-        /** @var mixed $row */
+
         $row = $query->fetch();
 
         $connection->query('SET @id = ' . (int)$row['Auto_increment']);
@@ -580,7 +566,6 @@ class Product extends Entities
         $connection = $this->getConnection();
         /** @var int $suffix */
         $suffix = 1;
-        /** @var string|null $exists */
         do {
             /** @var bool $exists */
             $exists = $connection->fetchOne(
@@ -614,7 +599,7 @@ class Product extends Entities
     /**
      * Check if given family is a grouped family
      *
-     * @param string[] $family
+     * @param string $family
      *
      * @return bool
      */

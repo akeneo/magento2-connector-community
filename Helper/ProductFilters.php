@@ -42,7 +42,7 @@ class ProductFilters
     /**
      * This variable contains a LocaleHelper
      *
-     * @var Akeneo\Connector\Helper\Locales $localesHelper
+     * @var Locales $localesHelper
      */
     protected $localesHelper;
     /**
@@ -238,17 +238,14 @@ class ProductFilters
                 'scope' => $channel,
             ];
 
-            /** @var string[] $locales */
             $locales = $this->storeHelper->getChannelStoreLangs($channel);
             if (!empty($locales)) {
-                /** @var string $locales */
                 $akeneoLocales = $this->localesHelper->getAkeneoLocales();
                 if (!empty($akeneoLocales)) {
                     $locales = array_intersect($locales, $akeneoLocales);
                 }
 
-                /** @var string $locales */
-                $locales           = implode(',', $locales);
+                $locales = implode(',', $locales);
                 $filter['locales'] = $locales;
             }
 
@@ -338,7 +335,7 @@ class ProductFilters
      *
      * @param JobExecutor $jobExecutor
      *
-     * @return mixed[]
+     * @return array
      */
     protected function getUpdatedFilter($jobExecutor)
     {
@@ -348,9 +345,7 @@ class ProductFilters
         if ($mode == Update::BETWEEN) {
             $dateAfter  = $this->configHelper->getUpdatedBetweenAfterFilter() . ' 00:00:00';
             $dateBefore = $this->configHelper->getUpdatedBetweenBeforeFilter() . ' 23:59:59';
-            if (empty($dateAfter) || empty($dateBefore)) {
-                return [];
-            }
+
             $dates = [$dateAfter, $dateBefore];
 
             return [
@@ -432,6 +427,8 @@ class ProductFilters
                 'value' => $date,
             ];
         }
+
+        return [];
     }
 
     /**

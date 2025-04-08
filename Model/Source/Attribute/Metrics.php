@@ -9,6 +9,7 @@ use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Exception;
 use Magento\Eav\Model\Entity\Attribute\Source\AbstractSource;
 
 /**
@@ -68,9 +69,7 @@ class Metrics extends AbstractSource
      */
     public function getAllOptions()
     {
-        /** @var ResourceCursorInterface|mixed[] $attributes */
         $attributes = $this->getAttributes();
-
         if (!$attributes) {
             return $this->_options;
         }
@@ -93,9 +92,7 @@ class Metrics extends AbstractSource
     public function getAttributes()
     {
         try {
-            /** @var AkeneoPimClientInterface $akeneoClient */
             $akeneoClient = $this->akeneoAuthenticator->getAkeneoApiClient();
-
             if (!$akeneoClient) {
                 return $this->_options;
             }
@@ -109,7 +106,7 @@ class Metrics extends AbstractSource
             );
 
             return $akeneoClient->getAttributeApi()->all($paginationSize, $attributeTypeFilter);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return [];
         }
     }
@@ -121,9 +118,7 @@ class Metrics extends AbstractSource
      */
     public function getMetricsAttributes()
     {
-        /** @var string[] $metrics */
         $metrics = [];
-        /** @var ResourceCursorInterface|mixed[] $attributes */
         $attributes = $this->getAttributes();
 
         if (!$attributes) {

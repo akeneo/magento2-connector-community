@@ -94,7 +94,7 @@ class TransferFamiliesAndCategoriesToNewFormatPatch implements DataPatchInterfac
         $familiesExcluded = $this->configHelper->getFamiliesExcludedFilter();
 
         if ($familiesExcluded) {
-            $invertedFamilies = array_diff($allFamilies, explode(',', $familiesExcluded ?? ''));
+            $invertedFamilies = array_diff($allFamilies, explode(',', $familiesExcluded));
         }
 
         $this->resourceConfig->saveConfig(
@@ -107,7 +107,7 @@ class TransferFamiliesAndCategoriesToNewFormatPatch implements DataPatchInterfac
         $allParentCategories = array_keys($this->categoryFilterSourceModel->getCategories());
 
         if ($excludedCategories) {
-            $invertedCategories = array_diff($allParentCategories, explode(',', $excludedCategories ?? ''));
+            $invertedCategories = array_diff($allParentCategories, explode(',', $excludedCategories));
         }
 
         $this->resourceConfig->saveConfig(
@@ -132,11 +132,6 @@ class TransferFamiliesAndCategoriesToNewFormatPatch implements DataPatchInterfac
         return [];
     }
 
-    /**
-     * @param \Akeneo\Pim\ApiClient\AkeneoPimClientInterface|null $akeneoClient
-     *
-     * @return array
-     */
     protected function getFamilies(): array
     {
         $allFamilies = [];

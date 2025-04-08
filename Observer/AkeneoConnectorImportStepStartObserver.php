@@ -76,7 +76,7 @@ class AkeneoConnectorImportStepStartObserver implements ObserverInterface
         }
 
         if ($log->hasData()) {
-            $log->addStep(
+            $this->logRepository->addStep(
                 [
                     'log_id'     => $log->getId(),
                     'identifier' => $executor->getIdentifier(),

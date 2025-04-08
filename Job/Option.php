@@ -18,6 +18,7 @@ use Akeneo\Connector\Logger\OptionLogger;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Exception;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Eav\Model\Config;
@@ -27,10 +28,11 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
-use Magento\Framework\Indexer\IndexerInterface;
+use Magento\Indexer\Model\Indexer;
 use Magento\Indexer\Model\IndexerFactory;
 use Magento\Swatches\Model\Swatch;
 use Zend_Db_Expr as Expr;
+use Zend_Db_Statement_Exception;
 use Zend_Db_Statement_Interface;
 
 /**
@@ -193,9 +195,7 @@ class Option extends Import
             );
             $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
         }
-        /** @var PageInterface $attributes */
         $attributes = $this->getAllAttributes(true);
-        /** @var bool $hasOptions */
         $hasOptions = false;
         /** @var array $attribute */
         foreach ($attributes as $attribute) {
@@ -220,7 +220,7 @@ class Option extends Import
 
             return;
         }
-        /** @var array $option */
+
         $option = $options->getItems();
         if (empty($option)) {
             $this->jobExecutor->setMessage(__('No results from Akeneo'), $this->logger);
@@ -281,7 +281,7 @@ class Option extends Import
             )->where('`labels-' . $localeCode . '` IS NULL');
             /** @var Zend_Db_Statement_Interface $query */
             $query = $connection->query($select);
-            /** @var array $row */
+
             while (($row = $query->fetch())) {
                 if (!isset($row['label']) || $row['label'] === null) {
                     $connection->delete($tmpTable, ['code = ?' => $row['code'], 'attribute = ?' => $row['attribute']]);
@@ -511,10 +511,6 @@ class Option extends Import
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var array $stores */
         $stores = $this->storeHelper->getStores('lang');
-        /**
-         * @var string $local
-         * @var array $data
-         */
 
         // On récupère le mapping akeneo_attribute_code => swatch_type
         $swatchesAttributes = $this->attributeHelper->getAdditionalSwatchTypes();
@@ -651,7 +647,7 @@ class Option extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations ?? '');
+        $types = explode(',', $configurations);
         /** @var string[] $types */
         $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
@@ -670,7 +666,7 @@ class Option extends Import
      * Refresh index
      *
      * @return void
-     * @throws \Exception
+     * @throws Exception
      */
     public function refreshIndex()
     {
@@ -684,13 +680,13 @@ class Option extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations ?? '');
+        $types = explode(',', $configurations);
         /** @var string[] $typesFlushed */
         $typesFlushed = [];
 
         /** @var string $type */
         foreach ($types as $type) {
-            /** @var IndexerInterface $index */
+            /** @var Indexer $index */
             $index = $this->indexFactory->create()->load($type);
             $index->reindexAll();
             $typesFlushed[] = $index->getTitle();
@@ -733,7 +729,7 @@ class Option extends Import
      *
      * @param bool $logging
      *
-     * @return ResourceCursorInterface|mixed
+     * @return ResourceCursorInterface
      */
     public function getAllAttributes($logging = false)
     {
@@ -746,7 +742,7 @@ class Option extends Import
             /** @var string[] $filters */
             $filters = $this->attributeFilters->getFilters();
             if ($this->configHelper->isAdvancedLogActivated() && $logging) {
-                $this->logger->debug(__('Attribute API call Filters : ') . print_r($filters, true));
+                $this->logger->debug(__('Attribute API call Filters : ') . json_encode($filters));
             }
             $this->attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize, $filters);
         }

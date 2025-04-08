@@ -6,8 +6,8 @@ namespace Akeneo\Connector\Model\Source\Filters;
 
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Exception;
 use Psr\Log\LoggerInterface as Logger;
 use Magento\Framework\Option\ArrayInterface;
 
@@ -66,10 +66,8 @@ class Attribute implements ArrayInterface
         $attributes = [];
 
         try {
-            /** @var AkeneoPimClientInterface $client */
             $client = $this->akeneoAuthenticator->getAkeneoApiClient();
-
-            if (empty($client)) {
+            if (!$client) {
                 return $attributes;
             }
 
@@ -84,7 +82,7 @@ class Attribute implements ArrayInterface
                 }
                 $attributes[$attribute['code']] = $attribute['code'];
             }
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->logger->warning($exception->getMessage());
         }
 

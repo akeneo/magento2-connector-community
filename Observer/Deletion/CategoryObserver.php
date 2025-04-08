@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Observer\Deletion;
 
+use Magento\Catalog\Model\Category;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer;
 use Akeneo\Connector\Helper\Import\Entities;
@@ -50,7 +51,7 @@ class CategoryObserver implements ObserverInterface
      */
     public function execute(Observer $observer)
     {
-        /** @var $category \Magento\Catalog\Model\Category */
+        /** @var Category $category */
         $category = $observer->getEvent()->getCategory();
 
         $this->entities->delete($this->job->getCode(), $category->getId());
