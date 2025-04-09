@@ -74,6 +74,5 @@
         "constraint": {
             "PRIMARY": true
         }
-    },
-    "akeneo_connector_product_model": []
+    }
 }
