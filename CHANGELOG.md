@@ -530,3 +530,6 @@
 ### Version 104.3.17 :
 * AMC-483: Dot not use option code as admin label in single store mode
 * AMC-483: Fix single store mode URL rewrite
+
+### Version 104.3.18 :
+* PGTO-526: Fix setup with security patches 
