@@ -82,5 +82,4 @@
       <column name="entity_id"/>
     </constraint>
   </table>
-  <table name="akeneo_connector_product_model" disabled="true"/>
 </schema>

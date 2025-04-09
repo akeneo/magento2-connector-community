@@ -533,3 +533,6 @@
 
 ### Version 105.0.0 :
 * Akeneo PHP API client updated to 11.4.0
+
+### Version 105.0.1 :
+* PGTO-526: Fix setup with security patches 
