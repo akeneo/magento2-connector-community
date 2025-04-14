@@ -10,6 +10,7 @@ use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Helper\Output as OutputHelper;
 use Akeneo\Connector\Job\Import as JobImport;
+use Akeneo\Connector\Job\Product;
 use Akeneo\Connector\Logger\AttributeLogger;
 use Akeneo\Connector\Model\Job;
 use Akeneo\Connector\Model\JobRepository;
@@ -440,6 +441,13 @@ class JobExecutor implements JobExecutorInterface
         try {
             $this->initSteps();
             $this->setStep(0);
+            if (empty($family) && $this->currentJobClass instanceof Product) {
+                $message = __('No family given for current product import');
+                $this->displayError((string)$message);
+                throw new Exception(
+                    (string)__('The website mapping is misconfigured, please check the "Website Mapping" config field.')
+                );
+            }
             if ($family) {
                 $this->currentJobClass->setFamily($family);
                 $this->setJobStatus(JobInterface::JOB_PROCESSING);
