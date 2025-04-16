@@ -16,6 +16,7 @@ use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Magento\Catalog\Model\Category as CategoryModel;
+use Akeneo\Connector\Model\Source\Filters\Category as CategoryModelFilter;
 use Magento\CatalogUrlRewrite\Model\CategoryUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\CategoryUrlRewriteGenerator;
 use Magento\Framework\App\Cache\TypeListInterface;
@@ -111,6 +112,12 @@ class Category extends Import
      * @var IndexerFactory $indexFactory
      */
     protected $indexFactory;
+    /**
+     * This variable contains a CategoryModelFilter
+     *
+     * @var CategoryModelFilter $categoryModelFilter
+     */
+    protected $categoryModelFilter;
 
     /**
      * Category constructor
@@ -130,6 +137,7 @@ class Category extends Import
      * @param Edition                  $editionSource
      * @param Entities                 $entities
      * @param IndexerFactory           $indexFactory
+     * @param CategoryModelFilter      $categoryModelFilter
      * @param array                    $data
      */
     public function __construct(
@@ -148,6 +156,7 @@ class Category extends Import
         Edition $editionSource,
         Entities $entities,
         IndexerFactory $indexFactory,
+        CategoryModelFilter $categoryModelFilter,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
@@ -162,6 +171,7 @@ class Category extends Import
         $this->editionSource            = $editionSource;
         $this->entities                 = $entities;
         $this->indexFactory             = $indexFactory;
+        $this->categoryModelFilter      = $categoryModelFilter;
     }
 
     /**
@@ -750,14 +760,18 @@ class Category extends Import
 
             return;
         }
+
         /** @var string $tableName */
         $tableName = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
         /** @var AdapterInterface $connection */
         $connection         = $this->entitiesHelper->getConnection();
         $filteredCategories = explode(',', $filteredCategories ?? '');
+        $parentCategories = $this->categoryModelFilter->getCategories();
+        $excludedCategories = array_diff($parentCategories, $filteredCategories);
+
         /** @var mixed[]|null $categoriesToDelete */
         $categoriesToDelete = $connection->fetchAll(
-            $connection->select()->from($tableName)->where('code IN (?)', $filteredCategories)
+            $connection->select()->from($tableName)->where('code IN (?)', $excludedCategories)
         );
         if (!$categoriesToDelete) {
             $this->jobExecutor->setMessage(
