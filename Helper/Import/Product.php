@@ -474,7 +474,7 @@ class Product extends Entities
         $existingEntities = array_column($existingEntities, 'entity_id');
 
         // Get all entities that are being imported and already present in Magento
-        $select = $connection->select()->from(['t' => $tableName], ['sku' => 't.identifier'])->joinInner(
+        $select = $connection->select()->from(['t' => $tableName], ['code' => 't.' . $pimKey])->joinInner(
             ['e' => $entityTable],
             't.identifier = e.sku'
         );
@@ -486,7 +486,7 @@ class Product extends Entities
             if (!in_array($row['entity_id'], $existingEntities)) {
                 $values = [
                     'import'    => 'product',
-                    'code'      => $row['sku'],
+                    'code'      => $row['code'],
                     'entity_id' => $row['entity_id'],
                 ];
                 $connection->insertOnDuplicate($akeneoConnectorTable, $values);
