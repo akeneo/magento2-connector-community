@@ -563,7 +563,7 @@ class Attribute extends Import
                     $options = $this->jsonSerializer->unserialize($additionalData);
                     $uppi = $options['update_product_preview_image'] ?? '0';
                     $upifs = $options['use_product_image_for_swatch'] ?? '0';
-                } catch (Exception) {}
+                } catch (Exception $exception) {}
             }
 
             $attributeAdditionalData = [
