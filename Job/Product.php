@@ -143,7 +143,7 @@ class Product extends JobImport
      *
      * @var string[]
      */
-    protected $allowedTypeId = ['simple', 'virtual'];
+    protected $allowedTypeId = ['simple', 'virtual', 'grouped'];
     /**
      * List of column to exclude from attribute value setting
      *
