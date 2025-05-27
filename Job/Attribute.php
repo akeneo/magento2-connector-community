@@ -25,10 +25,13 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
-use Magento\Framework\Indexer\IndexerInterface;
 use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Framework\Setup\ModuleDataSetupInterface;
+use Magento\Indexer\Model\Indexer;
 use Magento\Indexer\Model\IndexerFactory;
 use Zend_Db_Expr as Expr;
+use Zend_Db_Statement_Exception;
+use Zend_Db_Statement_Interface;
 
 /**
  * @author    Agence Dn'D <contact@dnd.fr>
@@ -105,6 +108,10 @@ class Attribute extends Import
      */
     protected $eavSetup;
     /**
+     * @var ModuleDataSetupInterface $setup
+     */
+    protected ModuleDataSetupInterface $setup;
+    /**
      * This variable contains attribute filters
      *
      * @var mixed[] $filters
@@ -151,6 +158,7 @@ class Attribute extends Import
      * @param TypeListInterface $cacheTypeList
      * @param StoreHelper       $storeHelper
      * @param EavSetup          $eavSetup
+     * @param ModuleDataSetupInterface $setup
      * @param IndexerFactory    $indexFactory
      * @param Json              $jsonSerializer
      * @param array             $data
@@ -169,6 +177,7 @@ class Attribute extends Import
         TypeListInterface $cacheTypeList,
         StoreHelper $storeHelper,
         EavSetup $eavSetup,
+        ModuleDataSetupInterface $setup,
         IndexerFactory $indexFactory,
         Json $jsonSerializer,
         array $data = []
@@ -183,6 +192,7 @@ class Attribute extends Import
         $this->cacheTypeList    = $cacheTypeList;
         $this->storeHelper      = $storeHelper;
         $this->eavSetup         = $eavSetup;
+        $this->setup            = $setup;
         $this->indexFactory     = $indexFactory;
         $this->jsonSerializer   = $jsonSerializer;
     }
@@ -202,7 +212,7 @@ class Attribute extends Import
                 $this->logger
             );
             $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
-            $this->logger->debug(__('Attribute API call Filters : ') . print_r($filters, true));
+            $this->logger->debug(__('Attribute API call Filters : ') . json_encode($filters));
         }
         /** @var PageInterface $attributes */
         $attributes = $this->akeneoClient->getAttributeApi()->listPerPage(1, false, $filters);
@@ -235,13 +245,10 @@ class Attribute extends Import
         $filters = $this->getFilters();
         /** @var ResourceCursorInterface $attributes */
         $attributes = $this->akeneoClient->getAttributeApi()->all($paginationSize, $filters);
-        /** @var [] $metricsSetting */
+
         $metricsSetting = $this->configHelper->getMetricsColumns(true);
 
-        /**
-         * @var int   $index
-         * @var array $attribute
-         */
+        $index = 0;
         foreach ($attributes as $index => $attribute) {
             // If the attribute starts with a number, skip
             if (ctype_digit(substr($attribute['code'], 0, 1))) {
@@ -300,7 +307,7 @@ class Attribute extends Import
             return;
         }
 
-        /** @var \Magento\Framework\DB\Select $select */
+        /** @var Select $select */
         $select = $connection->select()->from(
             $tmpTable,
             [
@@ -309,11 +316,10 @@ class Attribute extends Import
             ]
         )->where('`labels-' . $localeCode . '` IS NULL');
 
-        /** @var \Zend_Db_Statement_Interface $query */
+        /** @var Zend_Db_Statement_Interface $query */
         $query = $connection->query($select);
-        /** @var array $row */
         while (($row = $query->fetch())) {
-            if (!isset($row['label']) || $row['label'] === null) {
+            if (!isset($row['label'])) {
                 $this->jobExecutor->setAdditionalMessage(
                     __(
                         'The attribute %1 was not imported because it did not have a translation in admin store language : %2',
@@ -340,7 +346,7 @@ class Attribute extends Import
         $akeneoConnectorTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         /** @var string $entityTable */
         $entityTable = $this->entitiesHelper->getTable('eav_attribute');
-        /** @var \Magento\Framework\DB\Select $selectExistingEntities */
+        /** @var Select $selectExistingEntities */
         $selectExistingEntities = $connection->select()->from($entityTable, 'attribute_id');
         /** @var string[] $existingEntities */
         $existingEntities = array_column($connection->query($selectExistingEntities)->fetchAll(), 'attribute_id');
@@ -436,6 +442,7 @@ class Attribute extends Import
      * Match family code with Magento group id
      *
      * @return void
+     * @throws Zend_Db_Statement_Exception
      */
     public function matchFamily()
     {
@@ -449,7 +456,7 @@ class Attribute extends Import
         $connection->addColumn($tmpTable, '_attribute_set_id', 'text');
         /** @var string $importTmpTable */
         $importTmpTable = $connection->select()->from($tmpTable, ['code', '_entity_id']);
-        /** @var string $queryTmpTable */
+
         $queryTmpTable = $connection->query($importTmpTable);
 
         while ($row = $queryTmpTable->fetch()) {
@@ -459,7 +466,7 @@ class Attribute extends Import
             $importRelations = $connection->select()->from($familyAttributeRelationsTable, 'family_entity_id')->where(
                 $connection->prepareSqlCondition('attribute_code', ['like' => $attributeCode])
             );
-            /** @var \Zend_Db_Statement_Interface $queryRelations */
+            /** @var Zend_Db_Statement_Interface $queryRelations */
             $queryRelations = $connection->query($importRelations);
             /** @var string $attributeIds */
             $attributeIds = '';
@@ -493,7 +500,7 @@ class Attribute extends Import
 
         /** @var Select $import */
         $import = $connection->select()->from($tmpTable);
-        /** @var \Zend_Db_Statement_Interface $query */
+        /** @var Zend_Db_Statement_Interface $query */
         $query = $connection->query($import);
         /** @var string[] $mapping */
         $mapping = $this->configHelper->getAttributeMapping();
@@ -677,7 +684,7 @@ class Attribute extends Import
                         /** @var int $setId */
                         $setId = $this->eavSetup->getAttributeSetId($this->getEntityTypeId(), $attributeSetId);
                         /** @var int $groupId */
-                        $groupId = $this->eavSetup->getSetup()->getTableRow(
+                        $groupId = $this->setup->getTableRow(
                             'eav_attribute_group',
                             'attribute_group_name',
                             ucfirst($row['group']),
@@ -690,7 +697,7 @@ class Attribute extends Import
                         /* Test if the default group was created instead */
                         if (!$groupId) {
                             $akeneoGroup = true;
-                            $groupId     = $this->eavSetup->getSetup()->getTableRow(
+                            $groupId = $this->setup->getTableRow(
                                 'eav_attribute_group',
                                 'attribute_group_name',
                                 self::DEFAULT_ATTRIBUTE_SET_NAME,
@@ -835,7 +842,7 @@ class Attribute extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations ?? '');
+        $types = explode(',', $configurations);
         /** @var string[] $types */
         $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
@@ -854,7 +861,7 @@ class Attribute extends Import
      * Refresh index
      *
      * @return void
-     * @throws \Exception
+     * @throws Exception
      */
     public function refreshIndex()
     {
@@ -868,13 +875,13 @@ class Attribute extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations ?? '');
+        $types = explode(',', $configurations);
         /** @var string[] $typesFlushed */
         $typesFlushed = [];
 
         /** @var string $type */
         foreach ($types as $type) {
-            /** @var IndexerInterface $index */
+            /** @var Indexer $index */
             $index = $this->indexFactory->create()->load($type);
             $index->reindexAll();
             $typesFlushed[] = $index->getTitle();

@@ -9,6 +9,7 @@ use Akeneo\Connector\Api\Data\LogInterface;
 use Akeneo\Connector\Api\JobExecutorInterface;
 use Akeneo\Connector\Helper\Config;
 use Akeneo\Connector\Model\LogRepository;
+use Exception;
 use Magento\Framework\App\Area;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
@@ -191,7 +192,7 @@ class SendJobReportEmailNotification implements ObserverInterface
             /** @var TransportInterface $transport */
             $transport = $transportBuilder->getTransport();
             $transport->sendMessage();
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->logger->warning($exception->getMessage());
         }
 

@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Observer\Deletion;
 
+use Magento\Catalog\Model\Product;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer;
 use Akeneo\Connector\Helper\Import\Entities;
@@ -50,7 +51,7 @@ class ProductObserver implements ObserverInterface
      */
     public function execute(Observer $observer)
     {
-        /** @var $product \Magento\Catalog\Model\Product */
+        /** @var Product $product */
         $product = $observer->getEvent()->getProduct();
 
         $this->entities->delete($this->job->getCode(), $product->getId());

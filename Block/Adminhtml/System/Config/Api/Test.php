@@ -9,6 +9,7 @@ use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Backend\Block\Widget\Button;
 use Magento\Framework\Data\Form\Element\AbstractElement;
+use Magento\Framework\Phrase;
 
 /**
  * @author    Agence Dn'D <contact@dnd.fr>
@@ -51,7 +52,7 @@ class Test extends Field
      */
     protected function _getElementHtml(AbstractElement $element)
     {
-        /** @var \Magento\Backend\Block\Widget\Button $buttonBlock  */
+        /** @var Button $buttonBlock  */
         $buttonBlock = $this->getForm()->getLayout()->createBlock(Button::class);
 
         $website = $buttonBlock->getRequest()->getParam('website');
@@ -90,7 +91,7 @@ class Test extends Field
     /**
      * Retrieve button label
      *
-     * @return \Magento\Framework\Phrase
+     * @return Phrase
      */
     public function getLabel()
     {
@@ -100,7 +101,7 @@ class Test extends Field
     /**
      * Retrieve Button URL
      *
-     * @param array
+     * @param array $params
      * @return string
      */
     public function getTestUrl($params = [])

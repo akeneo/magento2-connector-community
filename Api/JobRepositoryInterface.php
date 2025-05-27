@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Api;
 
+use Akeneo\Connector\Api\Data\JobInterface;
+
 /**
  * @author    Agence Dn'D <contact@dnd.fr>
  * @copyright 2004-present Agence Dn'D
@@ -17,7 +19,7 @@ interface JobRepositoryInterface
      *
      * @param int $id
      *
-     * @return \Akeneo\Connector\Api\Data\JobInterface
+     * @return JobInterface
      */
     public function get($id);
 
@@ -26,7 +28,7 @@ interface JobRepositoryInterface
      *
      * @param string $code
      *
-     * @return \Akeneo\Connector\Api\Data\JobInterface
+     * @return JobInterface
      */
     public function getByCode($code);
 }

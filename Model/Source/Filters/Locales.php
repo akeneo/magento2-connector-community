@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Model\Source\Filters;
 
-use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Exception;
 use Magento\Framework\Option\ArrayInterface;
 use Akeneo\Connector\Helper\Authenticator;
 
@@ -66,9 +66,7 @@ class Locales implements ArrayInterface
     public function getLocales()
     {
         try {
-            /** @var AkeneoPimClientInterface $akeneoClient */
             $akeneoClient = $this->akeneoAuthenticator->getAkeneoApiClient();
-
             if (!$akeneoClient) {
                 return [];
             }
@@ -84,7 +82,7 @@ class Locales implements ArrayInterface
                 ]
             ]);
 
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return [];
         }
     }

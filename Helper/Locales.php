@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akeneo\Connector\Helper;
 
 use Akeneo\Connector\Helper\Authenticator as Authenticator;
+use Exception;
 
 /**
  * @author    Agence Dn'D <contact@dnd.fr>
@@ -36,15 +37,14 @@ class Locales
      * Get active Akeneo locales
      *
      * @return string[]
-     * @throws Akeneo_Connector_Api_Exception
+     * @throws Exception
      */
     public function getAkeneoLocales()
     {
-        /** @var Akeneo\Pim\ApiClient\AkeneoPimClientInterface $apiClient */
         $apiClient = $this->authenticator->getAkeneoApiClient();
-        /** @var \Akeneo\Pim\ApiClient\Api\LocaleApiInterface $localeApi */
+
         $localeApi = $apiClient->getLocaleApi();
-        /** @var Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface $locales */
+
         $locales = $localeApi->all(
             10,
             [

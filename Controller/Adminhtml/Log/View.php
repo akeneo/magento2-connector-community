@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Akeneo\Connector\Controller\Adminhtml\Log;
 
 use Magento\Backend\App\Action;
+use Magento\Backend\App\Action\Context;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\View\Result\PageFactory;
 
 /**
  * @author    Agence Dn'D <contact@dnd.fr>
@@ -14,34 +17,26 @@ use Magento\Backend\App\Action;
  */
 class View extends Action
 {
-    /**
-     * Action
-     *
-     * @return void
-     */
-    public function execute()
-    {
-        $this->_view->loadLayout();
+    public const ADMIN_RESOURCE = 'Akeneo_Connector::akeneo_connector_log';
 
-        /* @var $block \Akeneo\Connector\Block\Adminhtml\Log\View */
-        $block = $this->_view->getLayout()->getBlock('adminhtml.akeneo_connector.log.view');
-        $block->setLogId(
-            $this->getRequest()->getParam('log_id')
-        );
+    protected PageFactory $resultPageFactory;
 
-        $this->_setActiveMenu('Magento_Backend::system');
-        $this->_addBreadcrumb(__('Akeneo Connector'), __('Log'));
+    public function __construct(
+        Context $context,
+        PageFactory $resultPageFactory
+    ) {
+        parent::__construct($context);
 
-        $this->_view->renderLayout();
+        $this->resultPageFactory = $resultPageFactory;
     }
 
-    /**
-     * Description isAllowed function
-     *
-     * @return bool
-     */
-    protected function _isAllowed()
+    public function execute(): ResultInterface
     {
-        return $this->_authorization->isAllowed('Akeneo_Connector::akeneo_connector_log');
+        $resultPage = $this->resultPageFactory->create();
+        $resultPage->getConfig()->getTitle()->prepend(
+            join(' > ', [__('Akeneo Connector'), __('Logs')])
+        );
+
+        return $resultPage;
     }
 }

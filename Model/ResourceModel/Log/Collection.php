@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Model\ResourceModel\Log;
 
+use Akeneo\Connector\Model\ResourceModel\Log;
 use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
 
 /**
@@ -28,6 +29,6 @@ class Collection extends AbstractCollection
      */
     protected function _construct()
     {
-        $this->_init(\Akeneo\Connector\Model\Log::class, \Akeneo\Connector\Model\ResourceModel\Log::class);
+        $this->_init(\Akeneo\Connector\Model\Log::class, Log::class);
     }
 }

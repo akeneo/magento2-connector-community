@@ -2,6 +2,7 @@
 
 namespace Akeneo\Connector\Observer\Deletion;
 
+use Magento\Eav\Model\Entity\Attribute;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer;
 use Akeneo\Connector\Helper\Import\Entities;
@@ -50,7 +51,7 @@ class AttributeObserver implements ObserverInterface
      */
     public function execute(Observer $observer)
     {
-        /** @var $attribute \Magento\Eav\Model\Entity\Attribute */
+        /** @var Attribute $attribute */
         $attribute = $observer->getEvent()->getAttribute();
 
         $this->entities->delete($this->job->getCode(), $attribute->getId());

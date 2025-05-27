@@ -7,9 +7,9 @@ namespace Akeneo\Connector\Model\Source\Filters;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Connector\Model\Source\Edition;
-use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
 use Akeneo\Pim\ApiClient\Search\SearchBuilderFactory;
+use Exception;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Option\ArrayInterface;
 use Psr\Log\LoggerInterface as Logger;
@@ -103,9 +103,8 @@ class Category implements ArrayInterface
         $categories = [];
 
         try {
-            /** @var AkeneoPimClientInterface $client */
             $client = $this->akeneoAuthenticator->getAkeneoApiClient();
-            if (empty($client)) {
+            if (!$client) {
                 return $categories;
             }
             /** @var string|int $paginationSize */
@@ -141,7 +140,7 @@ class Category implements ArrayInterface
                     $categories[$category['code']] = $category['code'];
                 }
             }
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->logger->warning($exception->getMessage());
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field;
 
+use Exception;
 use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray;
 use Magento\Framework\Data\Form\Element\Factory;
@@ -62,7 +63,7 @@ class Tax extends AbstractFieldArray
         $this->addColumn('website', ['label' => __('Website')]);
         $this->addColumn('tax_class', ['label' => __('Tax Class')]);
         $this->_addAfter       = false;
-        $this->_addButtonLabel = __('Add');
+        $this->_addButtonLabel = (string)__('Add');
 
         parent::_construct();
     }
@@ -73,7 +74,7 @@ class Tax extends AbstractFieldArray
      * @param string $columnName
      *
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
     public function renderCellTemplate($columnName)
     {

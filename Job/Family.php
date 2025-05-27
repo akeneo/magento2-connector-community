@@ -14,6 +14,7 @@ use Akeneo\Connector\Logger\FamilyLogger;
 use Akeneo\Connector\Logger\Handler\FamilyHandler;
 use Akeneo\Pim\ApiClient\Pagination\PageInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Exception;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Eav\Model\Config;
 use Magento\Eav\Model\Entity\Attribute\Set;
@@ -22,9 +23,11 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Event\ManagerInterface;
-use Magento\Framework\Indexer\IndexerInterface;
+use Magento\Indexer\Model\Indexer;
 use Magento\Indexer\Model\IndexerFactory;
 use Zend_Db_Expr as Expr;
+use Zend_Db_Statement_Exception;
+use Zend_Db_Statement_Interface;
 
 /**
  * @author    Agence Dn'D <contact@dnd.fr>
@@ -156,7 +159,7 @@ class Family extends Import
                 $this->logger
             );
             $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
-            $this->logger->debug(__('Family API call Filters : ') . print_r($filters, true));
+            $this->logger->debug(__('Family API call Filters : ') . json_encode($filters));
         }
         /** @var PageInterface $families */
         $families = $this->akeneoClient->getFamilyApi()->listPerPage(1, false, $filters);
@@ -190,10 +193,8 @@ class Family extends Import
         $warning = '';
         /** @var string[] $lang */
         $lang = $this->storeHelper->getStores('lang');
-        /**
-         * @var int   $index
-         * @var array $family
-         */
+
+        $index = 0;
         foreach ($families as $index => $family) {
             $warning = $this->checkLabelPerLocales($family, $lang, $warning);
 
@@ -224,7 +225,7 @@ class Family extends Import
         $akeneoConnectorTable = $this->entitiesHelper->getTable('akeneo_connector_entities');
         /** @var string $entityTable */
         $entityTable = $this->entitiesHelper->getTable('eav_attribute_set');
-        /** @var \Magento\Framework\DB\Select $selectExistingEntities */
+        /** @var Select $selectExistingEntities */
         $selectExistingEntities = $connection->select()->from($entityTable, 'attribute_set_id');
         /** @var string[] $existingEntities */
         $existingEntities = array_column($connection->query($selectExistingEntities)->fetchAll(), 'attribute_set_id');
@@ -295,7 +296,7 @@ class Family extends Import
      * Insert relations between family and list of attributes
      *
      * @return void
-     * @throws \Zend_Db_Statement_Exception
+     * @throws Zend_Db_Statement_Exception
      */
     public function insertFamiliesAttributeRelations()
     {
@@ -314,13 +315,11 @@ class Family extends Import
         ];
         /** @var Select $relations */
         $relations = $connection->select()->from($tmpTable, $values);
-        /** @var \Zend_Db_Statement_Interface $query */
+        /** @var Zend_Db_Statement_Interface $query */
         $query = $connection->query($relations);
-        /** @var array $row */
+
         while ($row = $query->fetch()) {
-            /** @var array $attributes */
             $attributes = explode(',', $row['attribute_code'] ?? '');
-            /** @var string $attribute */
             foreach ($attributes as $attribute) {
                 $connection->insert(
                     $familyAttributeRelationsTable,
@@ -334,8 +333,8 @@ class Family extends Import
      * Init group
      *
      * @return void
-     * @throws \Exception
-     * @throws \Zend_Db_Statement_Exception
+     * @throws Exception
+     * @throws Zend_Db_Statement_Exception
      */
     public function initGroup()
     {
@@ -343,16 +342,15 @@ class Family extends Import
         $connection = $this->entitiesHelper->getConnection();
         /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
-        /** @var \Zend_Db_Statement_Interface $query */
+        /** @var Zend_Db_Statement_Interface $query */
         $query = $connection->query(
             $connection->select()->from($tmpTable, ['_entity_id'])->where('_is_new = ?', 1)
         );
         /** @var string $defaultAttributeSetId */
         $defaultAttributeSetId = $this->eavConfig->getEntityType(ProductAttributeInterface::ENTITY_TYPE_CODE)
             ->getDefaultAttributeSetId();
-        /** @var int $count */
+
         $count = 0;
-        /** @var array $row */
         while (($row = $query->fetch())) {
             /** @var Set $attributeSet */
             $attributeSet = $this->attributeSetFactory->create();
@@ -399,7 +397,7 @@ class Family extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations ?? '');
+        $types = explode(',', $configurations);
         /** @var string[] $types */
         $cacheTypeLabels = $this->cacheTypeList->getTypeLabels();
 
@@ -418,7 +416,7 @@ class Family extends Import
      * Refresh index
      *
      * @return void
-     * @throws \Exception
+     * @throws Exception
      */
     public function refreshIndex()
     {
@@ -432,13 +430,13 @@ class Family extends Import
         }
 
         /** @var string[] $types */
-        $types = explode(',', $configurations ?? '');
+        $types = explode(',', $configurations);
         /** @var string[] $typesFlushed */
         $typesFlushed = [];
 
         /** @var string $type */
         foreach ($types as $type) {
-            /** @var IndexerInterface $index */
+            /** @var Indexer $index */
             $index = $this->indexFactory->create()->load($type);
             $index->reindexAll();
             $typesFlushed[] = $index->getTitle();

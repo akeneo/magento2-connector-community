@@ -14,6 +14,7 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
 use Zend_Db_Expr as Expr;
+use Zend_Db_Statement_Interface;
 
 /**
  * @author    Agence Dn'D <contact@dnd.fr>
@@ -124,7 +125,7 @@ class FamilyVariant
      * @param AkeneoPimClientInterface $akeneoClient
      * @param string                   $family
      *
-     * @return void
+     * @return array
      */
     public function insertData($akeneoClient, $family)
     {
@@ -151,7 +152,7 @@ class FamilyVariant
     /**
      * Update Axis column
      *
-     * @return void
+     * @return array
      */
     public function updateAxis()
     {
@@ -172,16 +173,11 @@ class FamilyVariant
                 'COMMENT' => ' ',
             ]
         );
-        /** @var array $columns */
         $columns = [];
-        /** @var int $i */
         for ($i = 1; $i <= self::MAX_AXIS_NUMBER; $i++) {
             $columns[] = 'variant-axes_' . $i;
         }
-        /**
-         * @var int    $key
-         * @var string $column
-         */
+
         foreach ($columns as $key => $column) {
             if (!$connection->tableColumnExists($tmpTable, $column)) {
                 unset($columns[$key]);
@@ -196,7 +192,7 @@ class FamilyVariant
             ) . '`, \'\')))';
             $connection->update($tmpTable, ['_axis' => new Expr($update)]);
         }
-        /** @var \Zend_Db_Statement_Interface $variantFamily */
+        /** @var Zend_Db_Statement_Interface $variantFamily */
         $variantFamily = $connection->query(
             $connection->select()->from($tmpTable)
         );
@@ -208,11 +204,9 @@ class FamilyVariant
             )->where('entity_type_id = ?', $this->getEntityTypeId())
         );
         while (($row = $variantFamily->fetch())) {
-            /** @var array $axisAttributes */
             $axisAttributes = explode(',', $row['_axis'] ?? '');
-            /** @var array $axis */
             $axis = [];
-            /** @var string $code */
+
             foreach ($axisAttributes as $code) {
                 if (isset($attributes[$code])) {
                     $axis[] = $attributes[$code];
@@ -228,7 +222,7 @@ class FamilyVariant
     /**
      * Update Product Model
      *
-     * @return void
+     * @return array
      */
     public function updateProductModel()
     {
@@ -276,7 +270,6 @@ class FamilyVariant
      */
     protected function insertFamilyVariantData($familyCode, $paginationSize, $akeneoClient)
     {
-        /** @var ResourceCursorInterface $families */
         $families = $akeneoClient->getFamilyVariantApi()->all($familyCode, $paginationSize);
         /**
          * @var int   $index

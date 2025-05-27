@@ -8,6 +8,7 @@ use Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray;
 use Magento\Framework\Data\Form\Element\Factory;
 use Magento\Backend\Block\Template\Context;
 use Akeneo\Connector\Model\Source\Filters\Channel;
+use Magento\Framework\Data\Form\Element\Select;
 
 /**
  * @author    Agence Dn'D <contact@dnd.fr>
@@ -72,7 +73,7 @@ class Website extends AbstractFieldArray
             ]
         );
         $this->_addAfter       = false;
-        $this->_addButtonLabel = __('Add');
+        $this->_addButtonLabel = (string)__('Add');
 
         parent::_construct();
     }
@@ -86,30 +87,25 @@ class Website extends AbstractFieldArray
      */
     public function renderCellTemplate($columnName)
     {
-        /** @var array $options */
         $options = [];
 
         if ($columnName === 'website') {
-            /** @var \Magento\Store\Api\Data\WebsiteInterface[] $websites */
             $websites = $this->_storeManager->getWebsites();
 
-            /** @var \Magento\Store\Api\Data\WebsiteInterface $website */
             foreach ($websites as $website) {
                 $options[$website->getCode()] = $website->getCode();
             }
         }
 
         if ($columnName === 'channel') {
-            /** @var ResourceCursorInterface[] $channels */
             $channels = $this->channel->getChannels();
 
-            /** @var ResourceCursorInterface $channel */
             foreach ($channels as $channel) {
                 $options[$channel['code']] = $channel['code'];
             }
         }
 
-        /** @var \Magento\Framework\Data\Form\Element\Select $element */
+        /** @var Select $element */
         $element = $this->elementFactory->create('select');
         $element->setForm(
             $this->getForm()

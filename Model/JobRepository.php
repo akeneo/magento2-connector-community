@@ -65,7 +65,7 @@ class JobRepository implements JobRepositoryInterface
      */
     public function get($id)
     {
-        /** @var JobInterface $log */
+        /** @var JobInterface $job */
         $job = $this->jobFactory->create();
         $this->jobResourceModel->load($job, $id);
 

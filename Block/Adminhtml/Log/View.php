@@ -10,7 +10,7 @@ use Magento\Backend\Model\UrlFactory;
 use Magento\Backend\Model\UrlInterface;
 use Akeneo\Connector\Api\Data\LogInterface;
 use Akeneo\Connector\Api\LogRepositoryInterface;
-use Akeneo\Connector\Model\Log as LogModel;
+use Magento\Framework\App\RequestInterface;
 
 /**
  * @author    Agence Dn'D <contact@dnd.fr>
@@ -20,30 +20,25 @@ use Akeneo\Connector\Model\Log as LogModel;
  */
 class View extends Template
 {
-    /**
-     * Model Url instance
-     *
-     * @var UrlInterface $urlModel
-     */
-    protected $urlModel;
-    /**
-     * This variable contains a LogRepository
-     *
-     * @var LogRepositoryInterface $logRepository
-     */
-    protected $logRepository;
+    protected UrlInterface $urlModel;
+
+    protected LogRepositoryInterface $logRepository;
+
+    protected RequestInterface $request;
 
     /**
      * View constructor
      *
      * @param LogRepositoryInterface $logRepository
      * @param UrlFactory $backendUrlFactory
+     * @param RequestInterface $request
      * @param Context $context
      * @param array $data
      */
     public function __construct(
         LogRepositoryInterface $logRepository,
         UrlFactory $backendUrlFactory,
+        RequestInterface $request,
         Context $context,
         array $data = []
     ) {
@@ -51,12 +46,13 @@ class View extends Template
 
         $this->urlModel = $backendUrlFactory->create();
         $this->logRepository = $logRepository;
+        $this->request = $request;
     }
 
     /**
      * Retrieve log
      *
-     * @return LogModel
+     * @return LogInterface
      */
     public function getLog()
     {
@@ -70,13 +66,13 @@ class View extends Template
      */
     public function getSteps()
     {
-        /** @var array $steps */
-        $steps = [];
-        /** @var LogInterface $log */
+        $steps = [
+            ['status' => 'error', 'number' => 0, 'message' => __('No Log')]
+        ];
         $log = $this->getLog();
 
         if ($log->hasData()) {
-            $steps = $log->getSteps();
+            $steps = $this->logRepository->getSteps((int)$log->getId());
         }
 
         return $steps;
@@ -89,7 +85,7 @@ class View extends Template
      */
     public function getLogId()
     {
-        return $this->getData('log_id');
+        return (int)$this->request->getParam('log_id');
     }
 
     /**
@@ -100,19 +96,5 @@ class View extends Template
     public function getBackUrl()
     {
         return $this->urlModel->getUrl('akeneo_connector/log');
-    }
-
-    /**
-     * Set log id
-     *
-     * @param int $logId
-     *
-     * @return $this
-     */
-    public function setLogId($logId)
-    {
-        $this->setData('log_id', $logId);
-
-        return $this;
     }
 }

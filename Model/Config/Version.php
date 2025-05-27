@@ -50,16 +50,16 @@ class Version extends Value
     /**
      * Version constructor
      *
-     * @param Context                     $context
-     * @param Registry                    $registry
-     * @param ScopeConfigInterface        $config
-     * @param TypeListInterface           $cacheTypeList
-     * @param AbstractResource|null       $resource
-     * @param AbstractDb|null             $resourceCollection
+     * @param Context $context
+     * @param Registry $registry
+     * @param ScopeConfigInterface $config
+     * @param TypeListInterface $cacheTypeList
+     * @param AbstractResource $resource
+     * @param AbstractDb $resourceCollection
      * @param ComponentRegistrarInterface $componentRegistrar
-     * @param ReadFactory                 $readFactory
-     * @param Json                        $jsonSerializer
-     * @param array                       $data
+     * @param ReadFactory $readFactory
+     * @param Json $jsonSerializer
+     * @param array $data
      */
     public function __construct(
         Context $context,

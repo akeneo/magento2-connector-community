@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Model\Backend;
 
+use Exception;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Data\Collection\AbstractDb;
@@ -72,10 +73,10 @@ class Json extends Value
             if ($json) {
                 $this->jsonSerializer->unserialize($json);
             }
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             throw new ValidatorException(__("%1 is not a valid json", $label));
         }
 
-        parent::beforeSave();
+        return parent::beforeSave();
     }
 }

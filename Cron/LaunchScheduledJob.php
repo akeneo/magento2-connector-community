@@ -51,17 +51,15 @@ class LaunchScheduledJob
      */
     public function execute()
     {
-        /** @var Collection $scheduledJobs */
         $scheduledJobs = $this->collectionFactory->create()->addFieldToFilter(
             JobInterface::STATUS,
             JobInterface::JOB_SCHEDULED
         )->addOrder(JobInterface::POSITION);
-        /** @var string $codes */
+
         $codes = '';
 
         /** @var JobInterface $job */
         foreach ($scheduledJobs as $job) {
-            /** @var string $code */
             $codes .= ',' . $job->getCode();
         }
 

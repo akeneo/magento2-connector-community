@@ -62,10 +62,10 @@ class MassReset extends Action
     public function execute()
     {
         /** @var int[] $ids */
-        $ids = $this->getRequest()->getParam('selected');
+        $ids = $this->_request->getParam('selected');
         /** @var Collection $collection */
         $collection = $this->collectionFactory->create();
-        if (!$this->getRequest()->getParam('excluded')) {
+        if (!$this->_request->getParam('excluded')) {
             $collection->addFieldToFilter(JobInterface::ENTITY_ID, ['in' => $ids]);
         }
         /** @var JobInterface $job */
