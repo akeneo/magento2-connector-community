@@ -4074,8 +4074,6 @@ class Product extends JobImport
         );
         /** @var string $productImageTable */
         $productImageTable = $this->entitiesHelper->getTable('catalog_product_entity_varchar');
-        /** @var string[] $medias */
-        $medias = [];
 
         $childOnlyImages = $this->configHelper->getMediaImportGalleryColumns(
             [ConfigHelper::PRODUCT_IMAGE_TYPE_CHILD]
@@ -4111,13 +4109,8 @@ class Product extends JobImport
                     continue;
                 }
 
-                if (!isset($medias[$row[$image]])) {
-                    $medias[$row[$image]] = $this->akeneoClient->getProductMediaFileApi()->get(
-                        $row[$image]
-                    );
-                }
                 /** @var string $name */
-                $name = $this->entitiesHelper->formatMediaName(basename($medias[$row[$image]]['code']));
+                $name = $this->entitiesHelper->formatMediaName(basename($row[$image]));
                 /** @var string $filePath */
                 $filePath = $this->configHelper->getMediaFullPath($name);
                 /** @var bool|string[] $databaseRecords */
