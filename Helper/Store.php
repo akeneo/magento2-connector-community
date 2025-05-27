@@ -107,7 +107,7 @@ class Store
             $websiteCode = $match['website'];
             $website = $this->storeManager->getWebsite($websiteCode);
             $websiteId = $website->getId();
-            if (!$websiteId) {
+            if ($websiteId === null) {
                 continue;
             }
 
