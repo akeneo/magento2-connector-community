@@ -536,3 +536,6 @@
 
 ### Version 105.0.1 :
 * PGTO-526: Fix setup with security patches 
+
+### Version 105.1.0 :
+* AMC-513: Code clean up
