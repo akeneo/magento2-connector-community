@@ -58,7 +58,7 @@ class MassDelete extends Action
         /** @var Collection $collection */
         $collection = $this->collectionFactory->create();
         /** @var mixed $logIds */
-        $logIds = $this->getRequest()->getParam('log_ids');
+        $logIds = $this->_request->getParam('log_ids');
         $collection->addFieldToFilter('log_id', $logIds);
         $collectionSize = $collection->getSize();
 

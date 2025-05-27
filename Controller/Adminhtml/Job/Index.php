@@ -1,8 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akeneo\Connector\Controller\Adminhtml\Job;
 
 use Magento\Backend\App\Action;
+use Magento\Backend\App\Action\Context;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\View\Result\PageFactory;
 
 /**
  * @author    Agence Dn'D <contact@dnd.fr>
@@ -12,28 +17,26 @@ use Magento\Backend\App\Action;
  */
 class Index extends Action
 {
-    /**
-     * Description execute function
-     *
-     * @return void
-     */
-    public function execute()
-    {
-        $this->_view->loadLayout();
+    public const ADMIN_RESOURCE = 'Akeneo_Connector::akeneo_connector_job';
 
-        $this->_setActiveMenu('Magento_Backend::system');
-        $this->_addBreadcrumb(__('Akeneo Connector'), __('Job'));
+    protected PageFactory $resultPageFactory;
 
-        $this->_view->renderLayout();
+    public function __construct(
+        Context $context,
+        PageFactory $resultPageFactory
+    ) {
+        parent::__construct($context);
+
+        $this->resultPageFactory = $resultPageFactory;
     }
 
-    /**
-     * Description _isAllowed function
-     *
-     * @return bool
-     */
-    protected function _isAllowed()
+    public function execute(): ResultInterface
     {
-        return $this->_authorization->isAllowed('Akeneo_Connector::akeneo_connector_job');
+        $resultPage = $this->resultPageFactory->create();
+        $resultPage->getConfig()->getTitle()->prepend(
+            join(' > ', [__('Akeneo Connector'), __('Jobs')])
+        );
+
+        return $resultPage;
     }
 }

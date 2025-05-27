@@ -12,7 +12,7 @@ use Akeneo\Connector\Helper\Store as StoreHelper;
 use Akeneo\Connector\Model\Source\Attribute\Metrics as AttributeMetrics;
 use Akeneo\Connector\Model\Source\Attribute\Tables as AttributeTables;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
-use Akeneo\Pim\ApiClient\Pagination\PageInterface;
+use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Eav\Model\Config;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\Serialize\Serializer\Json;
@@ -119,7 +119,7 @@ class ProductModel
      * Description createTable function
      *
      * @param AkeneoPimClientInterface $akeneoClient
-     * @param string[] $filters
+     * @param array $filters
      * @param string|null $family
      *
      * @return string[]
@@ -136,9 +136,8 @@ class ProductModel
         }
 
         foreach ($filters as $filter) {
-            /** @var PageInterface $productModels */
             $productModels = $akeneoClient->getProductModelApi()->listPerPage(1, false, $filter);
-            /** @var array $productModel */
+
             $productModels = $productModels->getItems();
 
             if (!empty($productModels)) {
@@ -206,13 +205,8 @@ class ProductModel
 
         /** @var mixed[] $filter */
         foreach ($filters as $filter) {
-            /** @var ResourceCursorInterface $productModels */
             $productModels = $akeneoClient->getProductModelApi()->all($paginationSize, $filter);
 
-            /**
-             * @var int   $index
-             * @var array $productModel
-             */
             foreach ($productModels as $productModel) {
 
                 /**
@@ -332,7 +326,7 @@ class ProductModel
                         }
                         /** @var string $unit */
                         $unit = $metric['data']['unit'];
-                        /** @var string|false $symbol */
+
                         $symbol = array_key_exists($unit, $metricSymbols);
 
                         if (!$symbol) {
@@ -448,11 +442,11 @@ class ProductModel
     {
         /** @var AdapterInterface $connection */
         $connection = $this->entitiesHelper->getConnection();
-        /** @var array $tmpTable */
+        /** @var string $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($code);
         /** @var array $except */
         $except = ['axis', 'type', '_entity_id', '_is_new'];
-        /** @var array $variantTable */
+        /** @var string $variantTable */
         $variantTable = $this->entitiesHelper->getTableName('product_model');
         /** @var array $columnsTmp */
         $columnsTmp = array_keys($connection->describeTable($tmpTable));

@@ -38,9 +38,7 @@ class ActionsColumn extends Column
             return $dataSource;
         }
 
-        /** @var string $scheduleJobPath */
         $scheduleJobPath = $this->getData('config/scheduleJobPath') ?: '#';
-        /** @var string $viewJobLogPath */
         $viewJobLogPath = $this->getData('config/viewJobLogPath') ?: '#';
 
         foreach ($dataSource['data']['items'] as &$item) {

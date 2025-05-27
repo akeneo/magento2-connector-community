@@ -7,6 +7,8 @@ namespace Akeneo\Connector\Model;
 use Akeneo\Connector\Api\Data\LogInterface;
 use Akeneo\Connector\Api\LogRepositoryInterface;
 use Akeneo\Connector\Model\ResourceModel\Log as LogResourceModel;
+use Exception;
+use Magento\Framework\Exception\AlreadyExistsException;
 
 /**
  * @author    Agence Dn'D <contact@dnd.fr>
@@ -81,8 +83,8 @@ class LogRepository implements LogRepositoryInterface
      * @param LogInterface $log
      *
      * @return $this
-     * @throws \Exception
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws Exception
+     * @throws AlreadyExistsException
      */
     public function save(LogInterface $log)
     {
@@ -103,5 +105,17 @@ class LogRepository implements LogRepositoryInterface
         $this->logResourceModel->delete($log);
 
         return $this;
+    }
+
+    public function addStep(array $data): LogRepository
+    {
+        $this->logResourceModel->addStep($data);
+
+        return $this;
+    }
+
+    public function getSteps(int $LogId): array
+    {
+        return $this->logResourceModel->getSteps($LogId);
     }
 }

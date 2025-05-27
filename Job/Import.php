@@ -53,7 +53,7 @@ abstract class Import extends DataObject implements ImportInterface
     /**
      * This variable contains a AkeneoPimClientInterface
      *
-     * @var AkeneoPimClientInterface $akeneoClient
+     * @var AkeneoPimClientInterface|false $akeneoClient
      */
     protected $akeneoClient;
     /**
@@ -80,6 +80,12 @@ abstract class Import extends DataObject implements ImportInterface
      * @var bool $status
      */
     protected $status;
+
+    protected Authenticator $authenticator;
+
+    protected OutputHelper $outputHelper;
+
+    protected ManagerInterface $eventManager;
 
     /**
      * Import constructor.
@@ -235,9 +241,8 @@ abstract class Import extends DataObject implements ImportInterface
         if ($logger) {
             /** @var AdapterInterface $connection */
             $connection = $this->entitiesHelper->getConnection();
-            /** @var string $tmpTable */
+
             $tmpTable = $this->entitiesHelper->getTableName($this->jobExecutor->getCurrentJob()->getCode());
-            /** @var \Magento\Framework\DB\Select $selectExistingEntities */
             $selectImportedEntities = $connection->select()->from($tmpTable, $identifierColumn);
             if ($newEntities) {
                 $selectImportedEntities = $selectImportedEntities->where('_is_new = ?', '1');

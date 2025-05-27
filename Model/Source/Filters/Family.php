@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Akeneo\Connector\Model\Source\Filters;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Exception;
 use Magento\Framework\Option\ArrayInterface;
 use Psr\Log\LoggerInterface as Logger;
 use Akeneo\Connector\Helper\Authenticator;
@@ -66,10 +66,8 @@ class Family implements ArrayInterface
         $families = [];
 
         try {
-            /** @var AkeneoPimClientInterface $client */
             $client = $this->akeneoAuthenticator->getAkeneoApiClient();
-
-            if (empty($client)) {
+            if (!$client) {
                 return $families;
             }
 
@@ -84,7 +82,7 @@ class Family implements ArrayInterface
                 }
                 $families[$family['code']] = $family['code'];
             }
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->logger->warning($exception->getMessage());
         }
 

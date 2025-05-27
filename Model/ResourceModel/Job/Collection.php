@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Model\ResourceModel\Job;
 
+use Akeneo\Connector\Model\ResourceModel\Job;
 use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
 
 /**
@@ -28,6 +29,6 @@ class Collection extends AbstractCollection
      */
     protected function _construct()
     {
-        $this->_init(\Akeneo\Connector\Model\Job::class, \Akeneo\Connector\Model\ResourceModel\Job::class);
+        $this->_init(\Akeneo\Connector\Model\Job::class, Job::class);
     }
 }

@@ -7,6 +7,7 @@ namespace Akeneo\Connector\Console\Command;
 use Akeneo\Connector\Api\Data\JobInterface;
 use Akeneo\Connector\Executor\JobExecutor;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Akeneo\Connector\Model\Job;
 use Akeneo\Connector\Model\JobRepository;
 use Akeneo\Pim\ApiClient\Exception\HttpException;
 use Magento\Framework\App\Area;
@@ -127,7 +128,7 @@ class AkeneoConnectorImportCommand extends Command
 
         // Codes
         $this->displayComment((string)__('Available codes:'), $output);
-        /** @var JobInterface $job */
+        /** @var Job $job */
         foreach ($jobs as $job) {
             $this->displayInfo($job->getCode(), $output);
         }

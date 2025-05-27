@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field;
 
+use Exception;
 use Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray;
 use Magento\Framework\Data\Form\Element\Factory;
 use Magento\Backend\Block\Template\Context;
@@ -14,7 +15,6 @@ use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Eav\Api\Data\AttributeSearchResultsInterface;
 use Magento\Framework\Api\SearchResults;
-use Magento\Catalog\Model\ResourceModel\Eav\Attribute as EavAttributeModel;
 
 /**
  * @author    Agence Dn'D <contact@dnd.fr>
@@ -76,7 +76,7 @@ class Image extends AbstractFieldArray
         $this->addColumn('attribute', ['label' => __('Adobe Commerce Attribute')]);
         $this->addColumn('column', ['label' => __('Akeneo Attribute')]);
         $this->_addAfter       = false;
-        $this->_addButtonLabel = __('Add');
+        $this->_addButtonLabel = (string)__('Add');
 
         parent::_construct();
     }
@@ -87,7 +87,7 @@ class Image extends AbstractFieldArray
      * @param string $columnName
      *
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
     public function renderCellTemplate($columnName)
     {

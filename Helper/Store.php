@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Akeneo\Connector\Helper;
 
 use Akeneo\Connector\Helper\Config as ConfigHelper;
+use Exception;
 use Magento\Directory\Helper\Data as DirectoryHelper;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\DB\Select;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Locale\Resolver;
 use Magento\Framework\Serialize\Serializer\Json;
-use Magento\Store\Api\Data\WebsiteInterface;
 use Magento\Store\Model\ResourceModel\Website as WebsiteResource;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -100,15 +103,11 @@ class Store
             if (empty($match['channel']) || empty($match['website'])) {
                 continue;
             }
-            /** @var string $channel */
             $channel = $match['channel'];
-            /** @var string $websiteCode */
             $websiteCode = $match['website'];
-            /** @var WebsiteInterface $website */
             $website = $this->storeManager->getWebsite($websiteCode);
-            /** @var int $websiteId */
             $websiteId = $website->getId();
-            if (!isset($websiteId)) {
+            if (!$websiteId) {
                 continue;
             }
 
@@ -120,9 +119,8 @@ class Store
             $currency = $website->getBaseCurrencyCode();
             /** @var string[] $siblings */
             $siblings = $website->getStoreIds();
-            /** @var Magento\Store\Model\Store\Interceptor[] $store */
+
             $stores = $website->getStores();
-            /** @var Magento\Store\Model\Store\Interceptor $store */
             foreach ($stores as $store) {
                 /** @var int $storeId */
                 $storeId = $store->getId();
@@ -208,7 +206,7 @@ class Store
      * Retrieve all store combination
      *
      * @return mixed[]
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function getAllStores()
     {
@@ -327,9 +325,9 @@ class Store
      */
     public function getWebsiteDefaultStores($withAdmin = false)
     {
-        /** @var \Magento\Store\Model\ResourceModel\Website $websiteResource */
+        /** @var WebsiteResource $websiteResource */
         $websiteResource = $this->websiteResource;
-        /** @var \Magento\Framework\DB\Select $select */
+        /** @var Select $select */
         $select = $websiteResource->getDefaultStoresSelect($withAdmin);
         /** @var string[] $websiteDefaultStores */
         $websiteDefaultStores = $websiteResource->getConnection()->fetchPairs($select);
@@ -347,10 +345,10 @@ class Store
     public function getAdminLang()
     {
         /** @var string $adminLang */
-        $adminLang = \Magento\Framework\Locale\Resolver::DEFAULT_LOCALE;
+        $adminLang = Resolver::DEFAULT_LOCALE;
 
-        if ($this->scopeConfig->isSetFlag(\Magento\Directory\Helper\Data::XML_PATH_DEFAULT_LOCALE)) {
-            $adminLang = $this->scopeConfig->getValue(\Magento\Directory\Helper\Data::XML_PATH_DEFAULT_LOCALE);
+        if ($this->scopeConfig->isSetFlag(DirectoryHelper::XML_PATH_DEFAULT_LOCALE)) {
+            $adminLang = $this->scopeConfig->getValue(DirectoryHelper::XML_PATH_DEFAULT_LOCALE);
         }
 
         return $adminLang;

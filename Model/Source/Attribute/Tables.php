@@ -9,6 +9,7 @@ use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Exception;
 use Magento\Eav\Model\Entity\Attribute\Source\AbstractSource;
 
 /**
@@ -68,9 +69,7 @@ class Tables extends AbstractSource
      */
     public function getAllOptions(): array
     {
-        /** @var ResourceCursorInterface|mixed[] $attributes */
         $attributes = $this->getAttributes();
-
         if (!$attributes) {
             return $this->_options;
         }
@@ -88,16 +87,14 @@ class Tables extends AbstractSource
     /**
      * Generate cursor interface of pim tables list
      *
-     * @return ResourceCursorInterface|mixed[]
+     * @return ResourceCursorInterface|array
      */
     public function getAttributes()
     {
         /** @var string|int $paginationSize */
         $paginationSize = $this->configHelper->getPaginationSize();
         try {
-            /** @var AkeneoPimClientInterface $akeneoClient */
             $akeneoClient = $this->akeneoAuthenticator->getAkeneoApiClient();
-
             if (!$akeneoClient) {
                 return $this->_options;
             }
@@ -113,7 +110,7 @@ class Tables extends AbstractSource
             $attributeTypeFilter['with_table_select_options'] = true;
 
             return $akeneoClient->getAttributeApi()->all($paginationSize, $attributeTypeFilter);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return [];
         }
     }
@@ -125,9 +122,7 @@ class Tables extends AbstractSource
      */
     public function getTablesAttributes(): array
     {
-        /** @var string[] $tables */
         $tables = [];
-        /** @var ResourceCursorInterface|mixed[] $attributes */
         $attributes = $this->getAttributes();
 
         if (!$attributes) {

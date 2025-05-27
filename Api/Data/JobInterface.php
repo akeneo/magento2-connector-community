@@ -108,4 +108,8 @@ interface JobInterface
      * @var string DEFAULT_PRODUCT_JOB_FAMILY_CODE
      */
     public const DEFAULT_PRODUCT_JOB_FAMILY_CODE = 'init_default_family_code';
+
+    public function getCode();
+
+    public function getStatus();
 }

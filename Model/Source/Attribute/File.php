@@ -7,9 +7,9 @@ namespace Akeneo\Connector\Model\Source\Attribute;
 use Akeneo\Connector\Helper\AttributeFilters;
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Connector\Model\Source\Edition;
 use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Exception;
 use Magento\Eav\Model\Entity\Attribute\Source\AbstractSource;
 
 /**
@@ -69,9 +69,7 @@ class File extends AbstractSource
      */
     public function getAllOptions()
     {
-        /** @var ResourceCursorInterface|mixed[] $attributes */
         $attributes = $this->getAttributes();
-
         if (!$attributes) {
             return $this->_options;
         }
@@ -89,14 +87,12 @@ class File extends AbstractSource
     /**
      * Generate cursor interface of pim file list
      *
-     * @return ResourceCursorInterface|mixed[]
+     * @return ResourceCursorInterface|array
      */
     public function getAttributes()
     {
         try {
-            /** @var AkeneoPimClientInterface $akeneoClient */
             $akeneoClient = $this->akeneoAuthenticator->getAkeneoApiClient();
-
             if (!$akeneoClient) {
                 return [];
             }
@@ -110,7 +106,7 @@ class File extends AbstractSource
             );
 
             return $akeneoClient->getAttributeApi()->all($paginationSize, $attributeTypeFilter);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return [];
         }
     }

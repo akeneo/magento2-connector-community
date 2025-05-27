@@ -64,7 +64,7 @@ class File extends AbstractFieldArray
             ]
         );
         $this->_addAfter       = false;
-        $this->_addButtonLabel = __('Add');
+        $this->_addButtonLabel = (string)__('Add');
 
         parent::_construct();
     }
@@ -78,14 +78,11 @@ class File extends AbstractFieldArray
      */
     public function renderCellTemplate($columnName)
     {
-        /** @var array $options */
         $options = [];
 
         if ($columnName === 'file_attribute') {
-            /** @var ResourceCursorInterface[] $channels */
             $attributes = $this->fileFilter->getAttributes();
 
-            /** @var ResourceCursorInterface $channel */
             foreach ($attributes as $attribute) {
                 if ($attribute['type'] != 'pim_catalog_file') {
                     continue;
@@ -94,7 +91,6 @@ class File extends AbstractFieldArray
             }
         }
 
-        /** @var \Magento\Framework\Data\Form\Element\Select $element */
         $element = $this->elementFactory->create('select');
         $element->setForm(
             $this->getForm()

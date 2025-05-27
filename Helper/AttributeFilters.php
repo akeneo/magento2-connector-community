@@ -181,10 +181,10 @@ class AttributeFilters
         /** @var string $codes */
         $codes = $this->configHelper->getAttributeFilterByCode();
 
-        if (!$codes || empty($codes)) {
+        if (empty($codes)) {
             return;
         }
-        $codes = explode(',', $codes ?? '');
+        $codes = explode(',', $codes);
         $this->searchBuilder->addFilter('code', 'IN', $codes);
     }
 }

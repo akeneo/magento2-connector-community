@@ -82,12 +82,12 @@ class MassSchedule extends Action
     public function execute()
     {
         /** @var int[] $ids */
-        $ids = $this->getRequest()->getParam('selected') ?? []; // Mass action from checkbox
-        $ids[] = $this->getRequest()->getParam('entity_id'); // Mass action from Action column
+        $ids = $this->_request->getParam('selected') ?? []; // Mass action from checkbox
+        $ids[] = $this->_request->getParam('entity_id'); // Mass action from Action column
         $condition = self::CONDITION_TYPE_IN;
 
-        if (!!$this->getRequest()->getParam('excluded')) {
-            $ids = $this->getRequest()->getParam('excluded');
+        if (!!$this->_request->getParam('excluded')) {
+            $ids = $this->_request->getParam('excluded');
             $condition = self::CONDITION_TYPE_NIN;
         }
 

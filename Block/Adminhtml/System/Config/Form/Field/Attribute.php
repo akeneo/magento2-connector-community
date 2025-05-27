@@ -24,7 +24,7 @@ class Attribute extends AbstractFieldArray
         $this->addColumn('akeneo_attribute', ['label' => __('Akeneo')]);
         $this->addColumn('magento_attribute', ['label' => __('Adobe Commerce')]);
         $this->_addAfter       = false;
-        $this->_addButtonLabel = __('Add');
+        $this->_addButtonLabel = (string)__('Add');
 
         parent::_construct();
     }

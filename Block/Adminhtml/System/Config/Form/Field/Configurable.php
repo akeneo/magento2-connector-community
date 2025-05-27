@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field;
 
+use Exception;
 use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray;
 use Magento\Framework\Data\Form\Element\Factory;
@@ -83,7 +84,7 @@ class Configurable extends AbstractFieldArray
         $this->addColumn('type', ['label' => __('Type')]);
         $this->addColumn('value', ['label' => __('Value')]);
         $this->_addAfter       = false;
-        $this->_addButtonLabel = __('Add');
+        $this->_addButtonLabel = (string)__('Add');
 
         parent::_construct();
     }
@@ -94,7 +95,7 @@ class Configurable extends AbstractFieldArray
      * @param string $columnName
      *
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
     public function renderCellTemplate($columnName)
     {

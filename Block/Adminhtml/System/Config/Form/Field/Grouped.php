@@ -6,8 +6,8 @@ namespace Akeneo\Connector\Block\Adminhtml\System\Config\Form\Field;
 
 use Akeneo\Connector\Helper\Authenticator;
 use Akeneo\Connector\Helper\Config as ConfigHelper;
-use Akeneo\Pim\ApiClient\AkeneoPimClientInterface;
 use Akeneo\Pim\ApiClient\Pagination\ResourceCursorInterface;
+use Exception;
 use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray;
 use Magento\Framework\Data\Form\Element\AbstractElement;
@@ -89,7 +89,7 @@ class Grouped extends AbstractFieldArray
         $this->addColumn(self::AKENEO_GROUPED_FAMILY_CODE, ['label' => __('Grouped product family code')]);
         $this->addColumn('akeneo_quantity_association', ['label' => __('Quantity association code')]);
         $this->_addAfter       = false;
-        $this->_addButtonLabel = __('Add');
+        $this->_addButtonLabel = (string)__('Add');
 
         parent::_construct();
     }
@@ -131,14 +131,11 @@ class Grouped extends AbstractFieldArray
      */
     public function getFamilies()
     {
-        /** @var array $families */
         $families = [];
 
         try {
-            /** @var AkeneoPimClientInterface $client */
             $client = $this->akeneoAuthenticator->getAkeneoApiClient();
-
-            if (empty($client)) {
+            if (!$client) {
                 return $families;
             }
 
@@ -153,7 +150,7 @@ class Grouped extends AbstractFieldArray
                 }
                 $families[$family['code']] = $family['code'];
             }
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->logger->warning($exception->getMessage());
         }
 

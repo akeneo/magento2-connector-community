@@ -41,7 +41,7 @@ class SwatchType extends AbstractFieldArray
         $this->addColumn('pim_type', ['label' => __('Akeneo')]);
         $this->addColumn('magento_type', ['label' => __('Magento')]);
         $this->_addAfter = false;
-        $this->_addButtonLabel = __('Add');
+        $this->_addButtonLabel = (string)__('Add');
         parent::_construct();
     }
 
