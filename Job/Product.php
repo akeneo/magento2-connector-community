@@ -524,28 +524,35 @@ class Product extends JobImport
             }
         }
 
-        // Stop the import if the family is not imported
         $family = $this->getFamily();
-        if ($family) {
-            /** @var string $connectorEntitiesTable */
-            $connectorEntitiesTable = $this->entities->getTable($this->entities::TABLE_NAME);
-            /** @var bool $isFamilyImported */
-            $isFamilyImported = (bool)$connection->fetchOne(
-                $connection->select()
-                    ->from($connectorEntitiesTable, ['code'])
-                    ->where('code = ?', $family)
-                    ->limit(1)
+        if (!$family) {
+            $this->jobExecutor->setMessage(
+                __('No family to import.', $family),
+                $this->logger
             );
+            $this->jobExecutor->afterRun(true);
 
-            if (!$isFamilyImported) {
-                $this->jobExecutor->setAdditionalMessage(
-                    __('The family %1 is not imported yet, please run Family import.', $family),
-                    $this->logger
-                );
-                $this->jobExecutor->afterRun(true);
+            return;
+        }
 
-                return;
-            }
+        /** @var string $connectorEntitiesTable */
+        $connectorEntitiesTable = $this->entities->getTable($this->entities::TABLE_NAME);
+        /** @var bool $isFamilyImported */
+        $isFamilyImported = (bool)$connection->fetchOne(
+            $connection->select()
+                ->from($connectorEntitiesTable, ['code'])
+                ->where('code = ?', $family)
+                ->limit(1)
+        );
+
+        if (!$isFamilyImported) {
+            $this->jobExecutor->setAdditionalMessage(
+                __('The family %1 is not imported yet, please run Family import.', $family),
+                $this->logger
+            );
+            $this->jobExecutor->afterRun(true);
+
+            return;
         }
 
         /** @var mixed[] $filters */
