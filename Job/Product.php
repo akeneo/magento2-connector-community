@@ -1343,7 +1343,7 @@ class Product extends JobImport
         }
 
         if ($this->configHelper->isUrlGenerationEnabled()) {
-            $data['url_key'] = 'v.code';
+            $data['url_key'] = new Expr('LOWER(v.code)');
         }
 
         $columnsModel = array_keys($connection->describeTable($productModelTable));
