@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+
+    <test name="AdminAkeneoGoToConfiguration">
+        <annotations>
+            <features value="Akeneo"/>
+            <stories value="Akeneo Connector go to Configuration"/>
+            <title value="Akeneo Connector go to Configuration"/>
+            <description value="Fill Akeneo go to credentials"/>
+            <severity value="MAJOR"/>
+        </annotations>
+
+        <before>
+            <actionGroup ref="AdminLoginActionGroup" stepKey="loginAsAdmin"/>
+        </before>
+
+        <actionGroup ref="AdminAkeneoConnectorGoToConfigurationActionGroup" stepKey="goToAkeneoConfiguration"/>
+    </test>
+
+</tests>

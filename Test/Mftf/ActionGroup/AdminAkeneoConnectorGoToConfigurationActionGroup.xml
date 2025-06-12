@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actionGroups xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/actionGroupSchema.xsd">
+
+    <actionGroup name="AdminAkeneoConnectorGoToConfigurationActionGroup">
+        <arguments>
+            <argument name="goToConfiguration" defaultValue="defaultGoToConfiguration"/>
+        </arguments>
+
+        <click selector="{{AdminMenuSection.stores}}" stepKey="clickStoresMenuOption"/>
+        <waitForLoadingMaskToDisappear stepKey="waitForStoresMenu" />
+        <waitForElementVisible selector="{{AdminMenuSection.configuration}}" stepKey="waitForConfigurationVisible"/>
+        <click selector="{{AdminMenuSection.configuration}}" stepKey="clickStoresConfigurationMenuOption"/>
+        <waitForPageLoad stepKey="waitForConfigurationPageLoad"/>
+        <seeCurrentUrlMatches regex="~\/admin\/system_config\/~" stepKey="seeCurrentUrlMatchesConfigPath"/>
+
+        <amOnPage url="{{AdminAkeneoConnectorConfigurationPage.url}}" stepKey="navigateToAkeneoApiConfiguration"/>
+        <waitForPageLoad stepKey="waitForAkeneoApiConfigurationLoad"/>
+
+    </actionGroup>
+
+</actionGroups>

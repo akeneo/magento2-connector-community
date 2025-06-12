@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actionGroups xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/actionGroupSchema.xsd">
+
+    <actionGroup name="AdminAkeneoConnectorViewFilteredLogActionGroup">
+        <arguments>
+            <argument name="viewLog" defaultValue="defaultViewLog"/>
+        </arguments>
+
+        <amOnPage url="{{AdminAkeneoConnectorJobPage.url}}" stepKey="navigateToAkeneoJobPage"/>
+        <waitForPageLoad stepKey="waitPageJobPageLoad"/>
+
+        <click selector="{{AdminAkeneoConnectorJobSection.viewLog}}" stepKey="viewCategoryLog"/>
+        <waitForPageLoad stepKey="waitPageLogPageLoad"/>
+
+        <grabValueFrom selector="{{AdminAkeneoConnectorFilteredLogSection.logGridFilterCode}}" stepKey="grabFilterCode"/>
+        <assertEquals stepKey="assertFilterCodeValue">
+            <actualResult type="string">category</actualResult>
+            <expectedResult type="string">{$grabFilterCode}</expectedResult>
+        </assertEquals>
+
+    </actionGroup>
+
+</actionGroups>

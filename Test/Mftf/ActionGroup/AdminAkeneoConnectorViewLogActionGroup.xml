@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actionGroups xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/actionGroupSchema.xsd">
+
+    <actionGroup name="AdminAkeneoConnectorViewLogActionGroup">
+        <arguments>
+            <argument name="viewLog" defaultValue="defaultViewLog"/>
+        </arguments>
+
+        <amOnPage url="{{AdminAkeneoConnectorLogPage.url}}" stepKey="navigateToAkeneoLogPage"/>
+        <waitForPageLoad stepKey="waitPageJobPageLoad"/>
+
+    </actionGroup>
+
+</actionGroups>

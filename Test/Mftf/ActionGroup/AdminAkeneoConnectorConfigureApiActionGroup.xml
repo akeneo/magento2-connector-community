@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actionGroups xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/actionGroupSchema.xsd">
+
+    <actionGroup name="AdminAkeneoConnectorConfigureApiActionGroup">
+        <arguments>
+            <argument name="configurationApi" defaultValue="defaultConfigurationApi"/>
+        </arguments>
+
+        <amOnPage url="{{AdminAkeneoConnectorConfigurationPage.url}}" stepKey="navigateToAkeneoApiConfiguration"/>
+        <waitForPageLoad stepKey="waitForAkeneoApiConfigurationLoad"/>
+
+        <helper class="Akeneo\Connector\Test\Mftf\Helper\Configuration" method="openApiConfigurationTab" stepKey="openApiConfigurationTab"/>
+        <waitForElementVisible time="2" selector="{{AdminAkeneoConnectorConfigurationSection.akeneoApiConfigurationContent}}" stepKey="waitForOpenApiConfigurationContent"/>
+
+        <fillField selector="{{AdminAkeneoConnectorConfigurationSection.akeneoApiBaseUrl}}" userInput="{{configurationApi.akeneoApiBaseUrl}}" stepKey="enterAkeneoApiBaseUrl"/>
+        <fillField selector="{{AdminAkeneoConnectorConfigurationSection.akeneoApiUsername}}" userInput="{{configurationApi.akeneoApiUsername}}" stepKey="enterAkeneoApiUsername"/>
+        <fillField selector="{{AdminAkeneoConnectorConfigurationSection.akeneoApiPassword}}" userInput="{{configurationApi.akeneoApiPassword}}" stepKey="enterAkeneoApiPassword"/>
+        <fillField selector="{{AdminAkeneoConnectorConfigurationSection.akeneoApiClientId}}" userInput="{{configurationApi.akeneoApiClientId}}" stepKey="enterAkeneoApiClientId"/>
+        <fillField selector="{{AdminAkeneoConnectorConfigurationSection.akeneoApiClientSecret}}" userInput="{{configurationApi.akeneoApiClientSecret}}" stepKey="enterAkeneoApiClientSecret"/>
+
+        <click selector="{{AdminMainActionsSection.save}}" stepKey="saveConfiguration"/>
+        <waitForPageLoad stepKey="waitForPageLoadAfterSaveConfig"/>
+        <see userInput="You saved the configuration." stepKey="seeSuccessMessage"/>
+
+    </actionGroup>
+
+</actionGroups>

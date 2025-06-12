@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+
+    <test name="AdminAkeneoConfigureApi">
+        <annotations>
+            <features value="Akeneo"/>
+            <stories value="Akeneo Connector API Configuration"/>
+            <title value="Akeneo Connector API Configuration"/>
+            <description value="Fill Akeneo API credentials"/>
+            <severity value="MAJOR"/>
+        </annotations>
+
+        <before>
+            <actionGroup ref="AdminLoginActionGroup" stepKey="loginAsAdmin"/>
+            <actionGroup ref="SetAdminAccountActionGroup" stepKey="setAdminAccountToUnitedStates">
+                <argument name="InterfaceLocaleByValue" value="en_US" />
+            </actionGroup>
+        </before>
+
+        <actionGroup ref="AdminAkeneoConnectorConfigureApiActionGroup" stepKey="fillAkeneoApiCredentials"/>
+    </test>
+
+</tests>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sections xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:mftf:Page/etc/SectionObject.xsd">
+
+    <section name="AdminAkeneoConnectorJobSection">
+        <element name="scheduleJob" type="button" selector="a[href*='akeneo_connector/job/massSchedule']"/>
+        <element name="viewLog" type="button" selector="a[href*='akeneo_connector/log/index']"/>
+    </section>
+
+</sections>
