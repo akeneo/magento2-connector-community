@@ -541,3 +541,7 @@
 * AMC-513: Code clean up
 * #714: Remove unnecessary API calls to media
 * #719: Prevent error on api php client for empty family on product import
+
+### Version 105.1.1 :
+* ACC-2: PHP 8.4 compatibility
+* ACC-2: Functional tests added
