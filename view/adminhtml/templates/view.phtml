@@ -7,6 +7,7 @@
  */
 
 /** @var Akeneo\Connector\Block\Adminhtml\Log\View $block **/
+/** @var \Magento\Framework\Escaper $escaper */
 ?>
 
 <div class="page-main-actions">
@@ -14,8 +15,8 @@
     <div class="page-actions" data-ui-id="page-actions-toolbar-content-header">
         <div class="page-actions-inner" data-title="Performance">
             <div class="page-actions-buttons">
-                <button type="button" class="action-default scalable action-back" onclick="setLocation('<?= $block->getBackUrl() ?>')" data-ui-id="page-actions-toolbar-back-button">
-                    <span><?= $block->escapeHtml(__('Back')) ?></span>
+                <button type="button" class="action-default scalable action-back" onclick="setLocation('<?= $escaper->escapeUrl($block->getBackUrl()) ?>')" data-ui-id="page-actions-toolbar-back-button">
+                    <span><?= $escaper->escapeHtml($block->escapeHtml(__('Back'))) ?></span>
                 </button>
             </div>
         </div>
@@ -24,11 +25,13 @@
 
 <ul class="akeneo-connector-console">
     <?php $log = $block->getLog(); ?>
-    <li><?= $log->getCode() ?> <?= $log->getFile() ?></li>
+    <li><?= $escaper->escapeHtml($log->getCode()) ?></li>
     <?php $steps = $block->getSteps(); ?>
     <?php $previous = null; ?>
     <?php foreach ($steps as $step): ?>
-        <li class="<?= !$step['status'] ? 'error' : ($previous == $step['number'] ? 'success' : '') ?>"><?= $step['message'] ?></li>
+        <li class="<?= !$step['status'] ? 'error' : ($previous == $step['number'] ? 'success' : '') ?>">
+            <?= $escaper->escapeHtml($step['message']) ?>
+        </li>
         <?php $previous = $step['number'] ?>
     <?php endforeach; ?>
 </ul>
