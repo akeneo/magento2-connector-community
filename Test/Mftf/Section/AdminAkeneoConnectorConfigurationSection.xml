@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sections xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:mftf:Page/etc/SectionObject.xsd">
+
+    <section name="AdminAkeneoConnectorConfigurationSection">
+        <element name="akeneoApiConfigurationContent" type="text" selector="#akeneo_connector_akeneo_api"/>
+        <element name="akeneoApiBaseUrl" type="text" selector="//input[@id='akeneo_connector_akeneo_api_base_url']"/>
+        <element name="akeneoApiUsername" type="text" selector="//input[@id='akeneo_connector_akeneo_api_username']"/>
+        <element name="akeneoApiPassword" type="text" selector="//input[@id='akeneo_connector_akeneo_api_password']"/>
+        <element name="akeneoApiClientId" type="text" selector="//input[@id='akeneo_connector_akeneo_api_client_id']"/>
+        <element name="akeneoApiClientSecret" type="text" selector="//input[@id='akeneo_connector_akeneo_api_client_secret']"/>
+    </section>
+
+</sections>

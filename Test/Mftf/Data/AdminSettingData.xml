@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:mftf:DataGenerator/etc/dataProfileSchema.xsd">
+
+    <entity name="defaultConfigurationApi" type="configurationApi">
+        <data key="akeneoApiBaseUrl">https://mftf.example.com</data>
+        <data key="akeneoApiUsername">mftf_username</data>
+        <data key="akeneoApiPassword">mftf_password</data>
+        <data key="akeneoApiClientId">mftf_client_id</data>
+        <data key="akeneoApiClientSecret">mftf_client_secret</data>
+    </entity>
+
+</entities>

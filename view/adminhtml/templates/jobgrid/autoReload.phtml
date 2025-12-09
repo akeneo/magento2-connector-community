@@ -10,10 +10,13 @@ declare(strict_types=1);
  * @link      https://www.dnd.fr/
  */
 use Akeneo\Connector\ViewModel\Jobgrid\AutoReloadConfig;
+use Magento\Framework\Escaper;
 use Magento\Framework\View\Element\Template;
 
-/** @var AutoReloadConfig $viewModel
+/**
+ * @var AutoReloadConfig $viewModel
  * @var Template $block
+ * @var Escaper $escaper
  */
 $viewModel = $block->getAkeneoConnectorJobgridAutoreloadconfigViewModel();
 ?>
@@ -22,8 +25,8 @@ $viewModel = $block->getAkeneoConnectorJobgridAutoreloadconfigViewModel();
     {
         "*": {
             "Akeneo_Connector/js/autoReload": {
-                "autoReloadEnabled": "<?= $viewModel->isAutoReloadEnabled() ?>",
-                "watchableStatusIds": "<?= $viewModel->getWatchableStatusIds() ?>"
+                "autoReloadEnabled": "<?= $escaper->escapeJs($viewModel->isAutoReloadEnabled()) ?>",
+                "watchableStatusIds": "<?= $escaper->escapeJs($viewModel->getWatchableStatusIds()) ?>"
             }
         }
     }

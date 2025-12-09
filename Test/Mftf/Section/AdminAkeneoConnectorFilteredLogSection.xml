@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sections xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:mftf:Page/etc/SectionObject.xsd">
+
+    <section name="AdminAkeneoConnectorFilteredLogSection">
+        <element name="logGridFilterCode" type="text" selector="#logGrid_filter_code"/>
+    </section>
+
+</sections>

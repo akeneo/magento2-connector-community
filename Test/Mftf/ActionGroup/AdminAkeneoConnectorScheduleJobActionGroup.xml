@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actionGroups xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/actionGroupSchema.xsd">
+
+    <actionGroup name="AdminAkeneoConnectorScheduleJobActionGroup">
+        <arguments>
+            <argument name="scheduleJob" defaultValue="defaultScheduleJob"/>
+        </arguments>
+
+        <amOnPage url="{{AdminAkeneoConnectorJobPage.url}}" stepKey="navigateToAkeneoJobPage"/>
+        <waitForPageLoad stepKey="waitPageJobPageLoad"/>
+
+        <click selector="{{AdminAkeneoConnectorJobSection.scheduleJob}}" stepKey="scheduleFirstJob"/>
+
+    </actionGroup>
+
+</actionGroups>

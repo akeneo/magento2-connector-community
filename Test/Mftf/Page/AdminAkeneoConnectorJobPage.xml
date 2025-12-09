@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pages xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:mftf:Page/etc/PageObject.xsd">
+
+    <page name="AdminAkeneoConnectorJobPage" url="/akeneo_connector/job/" area="admin" module="Akeneo_Connector">
+        <section name="AdminAkeneoConnectorJobPage"/>
+    </page>
+
+</pages>

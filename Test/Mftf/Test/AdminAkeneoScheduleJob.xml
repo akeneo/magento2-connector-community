@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+
+    <test name="AdminAkeneoScheduleJob">
+        <annotations>
+            <features value="Akeneo"/>
+            <stories value="Akeneo Connector Schedule Job"/>
+            <title value="Akeneo Connector Schedule Job"/>
+            <description value="Schedule a Job"/>
+            <severity value="MAJOR"/>
+        </annotations>
+
+        <before>
+            <actionGroup ref="AdminLoginActionGroup" stepKey="loginAsAdmin"/>
+        </before>
+
+        <actionGroup ref="AdminAkeneoConnectorScheduleJobActionGroup" stepKey="fillAkeneoApiCredentials"/>
+    </test>
+
+</tests>

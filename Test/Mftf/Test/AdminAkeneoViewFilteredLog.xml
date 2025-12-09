@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+
+    <test name="AdminAkeneoViewFilteredLog">
+        <annotations>
+            <features value="Akeneo"/>
+            <stories value="Akeneo Connector View Filtered Log"/>
+            <title value="Akeneo Connector View Filtered Log"/>
+            <description value="View a filtered job log"/>
+            <severity value="MAJOR"/>
+        </annotations>
+
+        <before>
+            <actionGroup ref="AdminLoginActionGroup" stepKey="loginAsAdmin"/>
+        </before>
+
+        <actionGroup ref="AdminAkeneoConnectorViewFilteredLogActionGroup" stepKey="ViewFirstLog"/>
+    </test>
+
+</tests>
