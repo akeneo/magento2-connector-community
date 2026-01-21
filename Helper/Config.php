@@ -1449,7 +1449,7 @@ class Config
      *
      * @return array
      */
-    public function getMediaImportGalleryColumns(?array $types = null): array
+    public function getMediaImportGalleryColumns(?array $types = null, $raw = false): array
     {
         if ($types === null) {
             $types = [
@@ -1478,10 +1478,18 @@ class Config
                 continue;
             }
 
+            if(!isset($image['position'])) {
+                $image['position'] = 0;
+            }
+            
             $imageType = $image['type'] ?? self::PRODUCT_IMAGE_TYPE_ALL;
 
             if (in_array($imageType, $types)) {
-                $images[] = $image['attribute'];
+                if ($raw) {
+                  $images[] = $image;
+                } else {
+                  $images[] = $image['attribute'];
+                }
             }
         }
 
