@@ -548,3 +548,6 @@
 
 ### Version 105.1.2 :
 * All template output escaped
+
+### Version 105.2.0 :
+* ACC-32: PHP 8.5 and Magento 2.4.9 compatibility
