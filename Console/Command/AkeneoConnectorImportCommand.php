@@ -79,7 +79,7 @@ class AkeneoConnectorImportCommand extends Command
      *
      * @throws AlreadyExistsException
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
             $this->appState->setAreaCode(Area::AREA_ADMINHTML);
