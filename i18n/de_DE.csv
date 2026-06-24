@@ -158,6 +158,7 @@ The attribute %1 was not imported because it starts with a number. Update it in 
 "Used As Variant","Als Variante verwenden"
 "Concat Metric Unit","Metrische Einheit zum Wert hinzufügen"
 "No family to import","Keine Familie zu importieren"
+"No family given for current product import","Für den aktuellen Produktimport ist keine Familie angegeben"
 "Info: No value found in the current batch for the attribute %1","Info: Im aktuellen Stapel wurde kein Wert für das Attribut gefunden %1"
 "Mysql version not recognized","Mysql-Version nicht erkannt"
 "Documentation link","Dokumentationslink"

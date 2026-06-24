@@ -158,6 +158,7 @@ For example :<br/>
 "Used As Variant","Used As Variant"
 "Concat Metric Unit","Add metric unit to value"
 "No family to import","No family to import"
+"No family given for current product import","No family given for current product import"
 "Info: No value found in the current batch for the attribute %1","Info: No value found in the current batch for the attribute %1"
 "Mysql version not recognized","Mysql version not recognized"
 "Documentation link","Documentation link"
