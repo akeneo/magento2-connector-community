@@ -3817,6 +3817,9 @@ class Product extends JobImport
                     if ($isCategoryUsedInProductUrl) {
                         $categoryPathIds = [];
                         foreach ($categoryIdsByProduct[$product->getEntityId()] as $productCategoryId) {
+                            if (!isset($filteredCategories[$productCategoryId])) {
+                                continue;
+                            }
                             $category = $filteredCategories[$productCategoryId];
                             $categoryPathIds[] = $category;
 
