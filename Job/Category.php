@@ -24,7 +24,6 @@ use Magento\Framework\DB\Select;
 use Magento\Framework\DB\Statement\Pdo\Mysql;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Indexer\Model\Indexer;
-use Magento\Staging\Model\VersionManager;
 use Magento\Indexer\Model\IndexerFactory;
 use Zend_Db_Expr as Expr;
 use Zend_Db_Statement_Interface;
@@ -625,7 +624,7 @@ class Category extends Import
             /** @var array $values */
             $values = [
                 'created_in' => new Expr(1),
-                'updated_in' => new Expr(VersionManager::MAX_VERSION),
+                'updated_in' => new Expr(constant('Magento\\Staging\\Model\\VersionManager::MAX_VERSION')),
             ];
             $connection->update($table, $values, 'created_in = 0 AND updated_in = 0');
         }

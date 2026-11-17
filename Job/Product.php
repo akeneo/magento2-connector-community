@@ -61,7 +61,6 @@ use Magento\Framework\Serialize\Serializer\Json;
 use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedType;
 use Magento\Indexer\Model\Indexer;
 use Magento\Indexer\Model\IndexerFactory;
-use Magento\Staging\Model\VersionManager;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\UrlRewrite\Model\OptionProvider;
 use Magento\UrlRewrite\Service\V1\Data\UrlRewrite;
@@ -1935,7 +1934,7 @@ class Product extends JobImport
         if ($rowIdExists) {
             $values = [
                 'created_in' => new Expr(1),
-                'updated_in' => new Expr(VersionManager::MAX_VERSION),
+                'updated_in' => new Expr(constant('Magento\\Staging\\Model\\VersionManager::MAX_VERSION')),
             ];
             $connection->update($table, $values, 'created_in = 0 AND updated_in = 0');
         }
@@ -4891,41 +4890,44 @@ class Product extends JobImport
         $binds = [];
 
         foreach ($visibilityColumnToUpdate as $column => $configuration) {
-            if (!$connection->tableColumnExists($tmpTable, $column)) {
-                if ($connection->tableColumnExists($tmpTable, $configuration['simpleOriginColumn'])
-                    || $connection->tableColumnExists($tmpTable, $configuration['configurableOriginColumn'])
-                ) {
-                    $connection->addColumn(
-                        $tmpTable,
-                        $column,
-                        [
-                            'type' => Table::TYPE_SMALLINT,
-                            'default' => $this->productDefaultVisibility,
-                            'COMMENT' => ' ',
-                            'nullable' => false,
-                        ]
-                    );
-                }
+            if ($connection->tableColumnExists($tmpTable, $column)) {
+                continue;
+            }
+            if (!$connection->tableColumnExists($tmpTable, $configuration['simpleOriginColumn'])
+                && !$connection->tableColumnExists($tmpTable, $configuration['configurableOriginColumn'])
+            ) {
+                continue;
+            }
 
-                if ($connection->tableColumnExists($tmpTable, $column)) {
-                    $configurationConfigurable = $connection->tableColumnExists(
-                        $tmpTable,
-                        $configuration['configurableOriginColumn']) ? $configuration['configurable'] : $this->productDefaultVisibility;
-                    $configurationSimple = $connection->tableColumnExists(
-                        $tmpTable,
-                        $configuration['simpleOriginColumn']) ? $configuration['simple'] : $this->productDefaultVisibility;
+            $connection->addColumn(
+                $tmpTable,
+                $column,
+                [
+                    'type' => Table::TYPE_SMALLINT,
+                    'default' => $this->productDefaultVisibility,
+                    'COMMENT' => ' ',
+                    'nullable' => false,
+                ]
+            );
 
-                    $binds[$column] = new Expr(
-                        'IF(`_type_id` <> "' . ProductConfigurable::TYPE_CODE . '",'
-                        . $configurationSimple . ','
-                        . $configurationConfigurable
-                        . ')'
-                    );
+            $configurationConfigurable = $connection->tableColumnExists(
+                $tmpTable,
+                $configuration['configurableOriginColumn']
+            ) ? $configuration['configurable'] : $this->productDefaultVisibility;
+            $configurationSimple = $connection->tableColumnExists(
+                $tmpTable,
+                $configuration['simpleOriginColumn']
+            ) ? $configuration['simple'] : $this->productDefaultVisibility;
 
-                    if(($key = array_search($column, $this->excludedColumns)) !== false) {
-                        unset($this->excludedColumns[$key]);
-                    }
-                }
+            $binds[$column] = new Expr(
+                'IF(`_type_id` <> "' . ProductConfigurable::TYPE_CODE . '",'
+                . $configurationSimple . ','
+                . $configurationConfigurable
+                . ')'
+            );
+
+            if (($key = array_search($column, $this->excludedColumns)) !== false) {
+                unset($this->excludedColumns[$key]);
             }
         }
 

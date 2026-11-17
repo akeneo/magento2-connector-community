@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Connector\Logger;
 
-use Monolog\Logger as AbstractLogger;
+use Magento\Framework\Logger\Monolog as AbstractLogger;
 
 /**
  * @author    Agence Dn'D <contact@dnd.fr>

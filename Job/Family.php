@@ -19,6 +19,7 @@ use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Eav\Model\Config;
 use Magento\Eav\Model\Entity\Attribute\Set;
 use Magento\Eav\Model\Entity\Attribute\SetFactory;
+use Magento\Eav\Model\ResourceModel\Entity\Attribute\Set as SetResource;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
@@ -55,6 +56,10 @@ class Family extends Import
      * @var SetFactory $attributeSetFactory
      */
     protected $attributeSetFactory;
+    /**
+     * @var SetResource
+     */
+    protected $attributeSetResource;
     /**
      * This variable contains a TypeListInterface
      *
@@ -114,6 +119,7 @@ class Family extends Import
      * @param Config            $eavConfig
      * @param FamilyFilters     $familyFilters
      * @param IndexerFactory    $indexFactory
+     * @param SetResource       $attributeSetResource
      * @param array             $data
      */
     public function __construct(
@@ -130,6 +136,7 @@ class Family extends Import
         Config $eavConfig,
         FamilyFilters $familyFilters,
         IndexerFactory $indexFactory,
+        SetResource $attributeSetResource,
         array $data = []
     ) {
         parent::__construct($outputHelper, $eventManager, $authenticator, $entitiesHelper, $configHelper, $data);
@@ -137,6 +144,7 @@ class Family extends Import
         $this->logger              = $logger;
         $this->handler             = $handler;
         $this->attributeSetFactory = $attributeSetFactory;
+        $this->attributeSetResource = $attributeSetResource;
         $this->cacheTypeList       = $cacheTypeList;
         $this->eavConfig           = $eavConfig;
         $this->storeHelper         = $storeHelper;
@@ -354,10 +362,11 @@ class Family extends Import
         while (($row = $query->fetch())) {
             /** @var Set $attributeSet */
             $attributeSet = $this->attributeSetFactory->create();
-            $attributeSet->load($row['_entity_id']);
+            $this->attributeSetResource->load($attributeSet, $row['_entity_id']);
 
             if ($attributeSet->hasData()) {
-                $attributeSet->initFromSkeleton($defaultAttributeSetId)->save();
+                $attributeSet->initFromSkeleton($defaultAttributeSetId);
+                $this->attributeSetResource->save($attributeSet);
             }
             $count++;
         }
