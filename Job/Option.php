@@ -196,6 +196,7 @@ class Option extends Import
             $this->logger->debug(__('Import identifier : %1', $this->jobExecutor->getIdentifier()));
         }
         $attributes = $this->getAllAttributes(true);
+        $options = null;
         $hasOptions = false;
         /** @var array $attribute */
         foreach ($attributes as $attribute) {
@@ -214,7 +215,7 @@ class Option extends Import
                 break;
             }
         }
-        if ($hasOptions === false) {
+        if ($hasOptions === false || $options === null) {
             $this->jobExecutor->setMessage(__('No options found'), $this->logger);
             $this->jobExecutor->afterRun();
 
